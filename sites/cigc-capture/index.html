@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIGC 2026 - Congresso Internacional de Gestores de Clínicas</title>
+    <meta name="description" content="04, 05 e 06 de setembro de 2026 | APCD São Paulo. O maior congresso da América Latina para gestores de clínicas.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Meta Pixel -->
+    <script>
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1012458911094117');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=1012458911094117&ev=PageView&noscript=1"/></noscript>
+
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --roxo: #9F2CC8;
+            --ciano: #FFFFFF;
+            --escuro: #09031E;
+            --escuro2: #12063A;
+            --branco: #FFFFFF;
+            --cinza: #CECECE;
+        }
+
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: var(--escuro);
+            color: var(--branco);
+            line-height: 1.6;
+        }
+
+        /* HEADER */
+        header {
+            padding: 24px 32px;
+            background: var(--escuro);
+            border-bottom: 1px solid rgba(159,44,200,0.3);
+        }
+        header img {
+            height: 48px;
+            width: auto;
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #09031E 0%, #1a0540 100%);
+            padding: 60px 32px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(159,44,200,0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: var(--ciano);
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 40px;
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .hero-title span {
+            color: var(--ciano);
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--cinza);
+            margin-bottom: 32px;
+            max-width: 520px;
+        }
+
+        .hero-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+        .hero-info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            color: var(--branco);
+        }
+        .hero-info-item .icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(159,44,200,0.2);
+            border: 1px solid rgba(159,44,200,0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* FORM CARD */
+        .form-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(159,44,200,0.35);
+            border-radius: 16px;
+            padding: 36px 32px;
+            backdrop-filter: blur(12px);
+        }
+        .form-card h3 {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .form-card .form-sub {
+            color: var(--cinza);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--cinza);
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: var(--branco);
+            font-family: 'Figtree', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--roxo);
+            background: rgba(159,44,200,0.08);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #9F2CC8 0%, #7B1FA2 100%);
+            border: none;
+            border-radius: 8px;
+            color: var(--branco);
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(159,44,200,0.45);
+        }
+        .btn-submit:active { transform: translateY(0); }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: default;
+            transform: none;
+        }
+
+        .form-privacy {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.35);
+            text-align: center;
+            margin-top: 14px;
+        }
+
+        /* DIVIDER */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(159,44,200,0.4), transparent);
+            margin: 0 32px;
+        }
+
+        /* SPEAKERS */
+        .speakers-section {
+            padding: 72px 32px;
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+        .section-tag {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--ciano);
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 48px;
+        }
+
+        .speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+        }
+        .speaker-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .speaker-card:hover {
+            border-color: rgba(159,44,200,0.5);
+            transform: translateY(-4px);
+        }
+        .speaker-photo {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            object-position: top;
+            display: block;
+            background: var(--escuro2);
+        }
+        .speaker-name {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 8px;
+            color: var(--branco);
+        }
+
+        /* EVENT INFO */
+        .event-section {
+            background: var(--escuro2);
+            padding: 72px 32px;
+        }
+        .event-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+        .event-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(159,44,200,0.25);
+            border-radius: 12px;
+            padding: 28px 24px;
+        }
+        .event-box-icon {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+        .event-box h4 {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--ciano);
+            margin-bottom: 8px;
+        }
+        .event-box p {
+            font-size: 1rem;
+            color: var(--branco);
+            line-height: 1.5;
+        }
+
+        /* GLAUCO */
+        .glauco-section {
+            padding: 72px 32px;
+            max-width: 1140px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 56px;
+            align-items: center;
+        }
+        .glauco-photos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .glauco-photos img {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            aspect-ratio: 3/4;
+        }
+
+        /* GALLERY */
+        .gallery-section {
+            background: var(--escuro2);
+            padding: 72px 32px;
+        }
+        .gallery-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 48px;
+        }
+        .gallery-grid img {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            aspect-ratio: 4/3;
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 32px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+        }
+
+        /* TOAST */
+        .toast {
+            display: none;
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 14px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 9999;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+        }
+        .toast.ok { background: #9F2CC8; color: #fff; display: block; }
+        .toast.err { background: #ef4444; color: #fff; display: block; }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .speakers-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero-title { font-size: 2rem; }
+            .speakers-grid { grid-template-columns: repeat(3, 1fr); }
+            .event-grid { grid-template-columns: 1fr; }
+            header { padding: 18px 20px; }
+            .hero { padding: 40px 20px 60px; }
+            .speakers-section { padding: 48px 20px; }
+            .event-section { padding: 48px 20px; }
+            .glauco-section { grid-template-columns: 1fr; padding: 48px 20px; }
+            .gallery-section { padding: 48px 20px; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .speakers-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-title { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/logo-branca-1024x452.png" alt="CIGC 2026">
+</header>
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-left">
+            <div class="hero-badge">O maior congresso da América Latina do segmento</div>
+            <h1 class="hero-title">
+                Congresso Internacional de<br>
+                <span>Gestores de Clínicas</span>
+            </h1>
+            <p class="hero-desc">
+                3 dias de imersão com palestrantes renomados. Gestão financeira, liderança, marketing, redução de impostos e networking de alto nível.
+            </p>
+            <div class="hero-info">
+                <div class="hero-info-item">
+                    <div class="icon">📅</div>
+                    <span>04, 05 e 06 de setembro de 2026</span>
+                </div>
+                <div class="hero-info-item">
+                    <div class="icon">📍</div>
+                    <span>APCD - Rua Voluntários da Pátria, 547 - Santana, São Paulo - SP</span>
+                </div>
+                <div class="hero-info-item">
+                    <div class="icon">🎤</div>
+                    <span>15+ palestrantes especialistas em gestão de clínicas</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3>Garanta sua vaga</h3>
+            <p class="form-sub">Preencha abaixo e receba todas as informações</p>
+            <form id="cigcForm">
+                <div class="form-group">
+                    <label for="name">Nome completo</label>
+                    <input type="text" id="name" name="name" placeholder="Seu nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">WhatsApp</label>
+                    <input type="tel" id="phone" name="phone" placeholder="(00) 90000-0000" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">Garantir minha vaga</button>
+            </form>
+            <p class="form-privacy">Seus dados estao protegidos. Nao compartilhamos com terceiros.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="speakers-section">
+    <p class="section-tag">Quem vai falar</p>
+    <h2 class="section-title">Palestrantes</h2>
+    <div class="speakers-grid">
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-glauco-costa-1.jpeg" alt="Glauco Costa">
+            <div class="speaker-name">Glauco Costa</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Rodrigo-Noronha-1.jpeg" alt="Rodrigo Noronha">
+            <div class="speaker-name">Rodrigo Noronha</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Rodrigo-almeida-1.jpeg" alt="Rodrigo Almeida">
+            <div class="speaker-name">Rodrigo Almeida</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Leonardo-Vieira-1.jpeg" alt="Leonardo Vieira">
+            <div class="speaker-name">Leonardo Vieira</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Alessandro_Casser-1.jpeg" alt="Alessandro Casser">
+            <div class="speaker-name">Alessandro Casser</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Isabela_Faria-1.jpeg" alt="Isabela Faria">
+            <div class="speaker-name">Isabela Faria</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Petruz_Vaz-1.jpeg" alt="Petruz Vaz">
+            <div class="speaker-name">Petruz Vaz</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-uelcon.jpeg" alt="Uelcon">
+            <div class="speaker-name">Uelcon</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/HULGO-LOBO.png" alt="Hugo Lobo">
+            <div class="speaker-name">Hugo Lobo</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Marcelo-Lavezzo.jpg" alt="Marcelo Lavezzo">
+            <div class="speaker-name">Marcelo Lavezzo</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-fabio-coelho-1.jpeg" alt="Fabio Coelho">
+            <div class="speaker-name">Fabio Coelho</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Casal-Bendo.jpeg" alt="Casal Bendo">
+            <div class="speaker-name">Casal Bendo</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-gabriela-aseka-1.jpeg" alt="Gabriela Aseka">
+            <div class="speaker-name">Gabriela Aseka</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-felipe-mota-1.jpeg" alt="Felipe Mota">
+            <div class="speaker-name">Felipe Mota</div>
+        </div>
+        <div class="speaker-card">
+            <img class="speaker-photo" src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-caio-1.jpeg" alt="Caio">
+            <div class="speaker-name">Caio</div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="event-section">
+    <div class="event-inner">
+        <p class="section-tag">O evento</p>
+        <h2 class="section-title">Detalhes do Congresso</h2>
+        <div class="event-grid">
+            <div class="event-box">
+                <div class="event-box-icon">📅</div>
+                <h4>Data</h4>
+                <p>04, 05 e 06 de setembro de 2026</p>
+            </div>
+            <div class="event-box">
+                <div class="event-box-icon">📍</div>
+                <h4>Local</h4>
+                <p>APCD - Associação Paulista de Cirurgiões-Dentistas<br>Rua Voluntários da Pátria, 547 - Santana, São Paulo - SP</p>
+            </div>
+            <div class="event-box">
+                <div class="event-box-icon">🎯</div>
+                <h4>Para quem e</h4>
+                <p>Donos e gestores de clínicas de todos os portes que querem crescer com estratégia</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- GLAUCO -->
+<section class="glauco-section">
+    <div>
+        <p class="section-tag">Idealizador do Congresso</p>
+        <h2 class="section-title">Glauco Costa</h2>
+        <p style="color:var(--cinza); font-size:1rem; line-height:1.7; max-width:480px;">
+            Especialista em gestão de clínicas, Glauco Costa criou o CIGC para reunir os maiores nomes do segmento e transformar a forma como donos e gestores de clínicas conduzem seus negócios. Mais de 580 gestores já viveram essa experiência.
+        </p>
+    </div>
+    <div class="glauco-photos">
+        <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-glauco-costa-1.jpeg" alt="Glauco Costa" loading="lazy">
+        <img src="https://cigc.com.br/wp-content/uploads/2026/03/WhatsApp-Image-2026-03-22-at-09.02.20-e1774396622955.jpeg" alt="Glauco Costa no evento" loading="lazy">
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- GALERIA -->
+<section class="gallery-section">
+    <div class="gallery-inner">
+        <p class="section-tag">Edições anteriores</p>
+        <h2 class="section-title">Momentos do Congresso</h2>
+        <div class="gallery-grid">
+            <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7060.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+            <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7062.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+            <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7064.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+        </div>
+    </div>
+</section>
+
+<footer>
+    &copy; 2026 CIGC - Congresso Internacional de Gestores de Clínicas. Todos os direitos reservados.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Máscara telefone
+    document.getElementById('phone').addEventListener('input', function() {
+        let v = this.value.replace(/\D/g,'');
+        if (v.length > 11) v = v.slice(0,11);
+        if (v.length > 10)
+            this.value = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+        else if (v.length > 6)
+            this.value = '(' + v.slice(0,2) + ') ' + v.slice(2,6) + '-' + v.slice(6);
+        else if (v.length > 2)
+            this.value = '(' + v.slice(0,2) + ') ' + v.slice(2);
+        else if (v.length > 0)
+            this.value = '(' + v;
+    });
+
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + type;
+        setTimeout(() => { t.className = 'toast'; }, 5000);
+    }
+
+    function getFbc() {
+        const m = document.cookie.match(/_fbc=([^;]+)/);
+        return m ? m[1] : null;
+    }
+    function getFbp() {
+        const m = document.cookie.match(/_fbp=([^;]+)/);
+        return m ? m[1] : null;
+    }
+
+    document.getElementById('cigcForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.replace(/\D/g,'');
+        const email = document.getElementById('email').value.trim();
+        const eventId = 'cigc_lead_' + Date.now();
+
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Lead', { content_name: 'CIGC 2026', currency: 'BRL', value: 0 }, { eventID: eventId });
+        }
+
+        try {
+            const resp = await fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, email, event_id: eventId, fbc: getFbc(), fbp: getFbp() })
+            });
+
+            if (resp.ok) {
+                showToast('Inscricao confirmada! Em breve entraremos em contato.', 'ok');
+                this.reset();
+            } else {
+                throw new Error('erro');
+            }
+        } catch {
+            showToast('Erro ao enviar. Tente novamente.', 'err');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Garantir minha vaga';
+        }
+    });
+</script>
+
+</body>
+</html>

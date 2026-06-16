@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login · Alpha Clientes</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth">
+<% if (typeof flash !== 'undefined' && flash) { %><div class="flash flash-<%= flash.type %>" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:400px;width:calc(100% - 28px);z-index:5"><%= flash.message %></div><% } %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand"><span class="dot"></span> ALPHA · Clientes</div>
+    <% if (step === 'password') { %>
+      <h1>Acessar painel</h1>
+      <p class="lead">Login restrito à equipe Alpha.</p>
+      <form method="post" action="/login">
+        <label>Email</label>
+        <input type="email" name="email" required autocomplete="username" autofocus>
+        <label>Senha</label>
+        <input type="password" name="password" required autocomplete="current-password">
+        <div style="margin-top:20px"><button type="submit" class="btn btn-primary" style="width:100%">Entrar</button></div>
+      </form>
+      <div style="margin-top:18px;text-align:center;font-size:13px;opacity:.85">
+        <a href="/forgot-password" style="color:#C4FF0E;text-decoration:none;font-weight:600">Esqueceu sua senha?</a>
+        &nbsp;&middot;&nbsp;
+        Sem cadastro? <a href="/signup" style="color:#C4FF0E;text-decoration:none;font-weight:600">Criar conta</a>
+      </div>
+    <% } else if (step === 'forgot') { %>
+      <h1>Redefinir senha</h1>
+      <p class="lead">Digite seu email. Voce recebera um link de redefinicao via WhatsApp.</p>
+      <form method="post" action="/forgot-password">
+        <label>Email</label>
+        <input type="email" name="email" required autocomplete="username" autofocus>
+        <div style="margin-top:20px"><button type="submit" class="btn btn-primary" style="width:100%">Enviar link</button></div>
+      </form>
+      <div style="margin-top:18px;text-align:center;font-size:13px;opacity:.85">
+        <a href="/login" style="color:#C4FF0E;text-decoration:none;font-weight:600">Voltar ao login</a>
+      </div>
+    <% } else if (step === 'reset') { %>
+      <h1>Nova senha</h1>
+      <p class="lead">Escolha uma nova senha para sua conta.</p>
+      <form method="post" action="/reset-password/<%= token %>">
+        <label>Nova senha</label>
+        <input type="password" name="password" required minlength="8" autocomplete="new-password" autofocus>
+        <label>Confirmar nova senha</label>
+        <input type="password" name="password2" required minlength="8" autocomplete="new-password">
+        <div style="margin-top:20px"><button type="submit" class="btn btn-primary" style="width:100%">Salvar senha</button></div>
+      </form>
+    <% } else if (step === 'totp') { %>
+      <h1>Código de 6 dígitos</h1>
+      <p class="lead">Abra seu autenticador (Google Authenticator, Authy, etc.) e digite o código.</p>
+      <form method="post" action="/login/totp">
+        <label>Código TOTP</label>
+        <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" required autofocus>
+        <div style="margin-top:20px"><button type="submit" class="btn btn-primary" style="width:100%">Verificar</button></div>
+      </form>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

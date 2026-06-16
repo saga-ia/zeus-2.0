@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Onboarding Alpha Digital — Consultoria Estratégica</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <span class="brand-name">Alpha Digital</span>
+    <span class="brand-sep">·</span>
+    <span class="brand-sub">Consultoria Estratégica</span>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel">0%</div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card hero" data-section="0">
+    <h1>Onboarding inicial para novo cliente</h1>
+    <p class="lede">Bem-vindo. Esta é a etapa de pente fino que vamos usar para mapear quem você é, o que você vende e onde você quer chegar. Suas respostas vão alimentar nossa equipe e o agente estratégico que vai construir seu plano de posicionamento.</p>
+    <div class="intro-box">
+      <h3>O que é Posicionamento de Marca Pessoal no Mercado Digital</h3>
+      <p>Posicionamento de marca pessoal é o processo de definir e projetar a imagem que você deseja que o mercado perceba sobre você. No ambiente digital, isso significa mostrar quem você é, o que você faz, e quais são seus diferenciais de forma clara, consistente e estratégica.</p>
+      <p>O objetivo é fazer com que as pessoas se lembrem de você quando precisarem dos serviços ou produtos que você oferece — e que confiem em você antes de qualquer concorrente.</p>
+      <details>
+        <summary>Por que isso é importante para você ser conhecido e vender mais</summary>
+        <ul>
+          <li><strong>Visibilidade.</strong> Ser visto pelo público certo, não por todo mundo.</li>
+          <li><strong>Autoridade.</strong> Construir reputação como referência no setor.</li>
+          <li><strong>Diferenciação.</strong> Destacar o que te faz único num mercado lotado.</li>
+          <li><strong>Engajamento.</strong> Comunicação direta com sua audiência.</li>
+          <li><strong>Credibilidade.</strong> Confiança gerada por presença consistente.</li>
+          <li><strong>Alcance.</strong> Sem limite geográfico.</li>
+          <li><strong>Automação.</strong> Funil que vende enquanto você dorme.</li>
+        </ul>
+      </details>
+    </div>
+    <div class="actions">
+      <button class="btn primary pulse" data-action="next">Começar</button>
+    </div>
+  </section>
+
+  <!-- Sections rendered dynamically -->
+  <div id="sectionMount"></div>
+
+  <section class="card done" data-section="done" hidden>
+    <h2>Recebemos suas respostas</h2>
+    <p>Obrigado pela sua resposta. A partir de agora nossa equipe vai cruzar tudo que você compartilhou e estruturar seu posicionamento. Em breve entramos em contato.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Alpha Digital · Consultoria Estratégica</span>
+  <span id="sessionTag"></span>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<%- include('partials/header', { title: 'Leads · Alpha' }) %>
+<div class="page-head">
+  <div>
+    <h1>Leads</h1>
+    <p>Cadastros vindos do formulário público de onboarding.</p>
+  </div>
+  <div class="actions"><a href="/dashboard" class="btn">← Clientes</a></div>
+</div>
+
+<div class="tabs">
+  <% ['pending','approved','rejected'].forEach(s => { %>
+    <a href="/leads?status=<%= s %>" class="<%= status === s ? 'active' : '' %>"><%= s === 'pending' ? 'Pendentes' : s === 'approved' ? 'Aprovados' : 'Rejeitados' %> <span style="opacity:.5">(<%= counts[s] || 0 %>)</span></a>
+  <% }) %>
+</div>
+
+<div class="card">
+  <% if (!leads.length) { %>
+    <div class="empty">Nenhum lead em <%= status %>.</div>
+  <% } else { %>
+    <table class="tbl">
+      <thead><tr><th>Empresa</th><th>Contato</th><th>Telefone</th><th>Segmento</th><th>Recebido</th><th></th></tr></thead>
+      <tbody>
+      <% leads.forEach(l => { %>
+        <tr>
+          <td><b><%= l.business_name || '-' %></b></td>
+          <td><%= l.contact_name || '-' %></td>
+          <td><%= l.contact_phone || '-' %></td>
+          <td><%= l.segment || '-' %></td>
+          <td style="color:var(--fg-3);font-size:13px"><%= l.created_at %></td>
+          <td><a href="/leads/<%= l.id %>" class="btn btn-sm">Abrir</a></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

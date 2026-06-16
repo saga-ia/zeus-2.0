@@ -1,0 +1,194 @@
+[
+  {
+    "name": "jeff-ads-dashboard",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-ads-dashboard",
+    "script": "/opt/jeff-apps/jeff-ads-dashboard/server.js",
+    "mode": "cluster_mode",
+    "uptime_days": 21.2
+  },
+  {
+    "name": "jeff-vps-monitor",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-vps-monitor",
+    "script": "/opt/jeff-apps/jeff-vps-monitor/server.js",
+    "mode": "cluster_mode",
+    "uptime_days": 22.5
+  },
+  {
+    "name": "jeff-onboarding",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-onboarding",
+    "script": "/opt/jeff-apps/jeff-onboarding/server.js",
+    "mode": "cluster_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-farias-clientarea",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-farias-clientarea",
+    "script": "/opt/jeff-apps/jeff-farias-clientarea/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-disparador",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-disparador",
+    "script": "/opt/jeff-apps/jeff-disparador/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-meta-dashboard",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-meta-dashboard",
+    "script": "/opt/jeff-apps/jeff-meta-dashboard/server.js",
+    "mode": "cluster_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "agent-runner",
+    "status": "online",
+    "cwd": "/root/.claude",
+    "script": "/opt/jeff-worker/scripts/agent-runner.sh",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-cigc-forms",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-cigc-forms",
+    "script": "/opt/jeff-apps/jeff-cigc-forms/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "farias-monitor",
+    "status": "online",
+    "cwd": "/opt/jeff-worker",
+    "script": "/opt/jeff-worker/scripts/farias-monitor.sh",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-clickup-webhook",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-clickup-webhook",
+    "script": "/opt/jeff-apps/jeff-clickup-webhook/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "zeus-platform",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/zeus-platform",
+    "script": "/opt/jeff-apps/zeus-platform/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-cigc-congresso",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-cigc-congresso",
+    "script": "/opt/jeff-apps/jeff-cigc-congresso/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-asaas-dashboard",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-asaas-dashboard",
+    "script": "/opt/jeff-apps/jeff-asaas-dashboard/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-zapsign-webhook",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-zapsign-webhook",
+    "script": "/opt/jeff-apps/jeff-zapsign-webhook/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "zeus-contacts",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/zeus-contacts",
+    "script": "/opt/jeff-apps/zeus-contacts/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-cigc-clientarea",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-cigc-clientarea",
+    "script": "/opt/jeff-apps/jeff-cigc-clientarea/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-alpha-clientes",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-alpha-clientes",
+    "script": "/opt/jeff-apps/jeff-alpha-clientes/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-sistemas",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-sistemas",
+    "script": "/opt/jeff-apps/jeff-sistemas/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-instagram-webhook",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-instagram-webhook",
+    "script": "/opt/jeff-apps/jeff-instagram-webhook/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-google-oauth",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-google-oauth",
+    "script": "/opt/jeff-apps/jeff-google-oauth/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-cigc-comercial",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-cigc-comercial",
+    "script": "/opt/jeff-apps/jeff-cigc-comercial/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 29.3
+  },
+  {
+    "name": "jeff-cigc-crm",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-cigc-crm",
+    "script": "/opt/jeff-apps/jeff-cigc-crm/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 25.5
+  },
+  {
+    "name": "whatsapp-worker",
+    "status": "online",
+    "cwd": "/opt/jeff-worker",
+    "script": "/opt/jeff-worker/src/index.js",
+    "mode": "fork_mode",
+    "uptime_days": 14.4
+  },
+  {
+    "name": "jeff-farias-forms",
+    "status": "online",
+    "cwd": "/opt/jeff-apps/jeff-farias-forms",
+    "script": "/opt/jeff-apps/jeff-farias-forms/server.js",
+    "mode": "fork_mode",
+    "uptime_days": 3.2
+  }
+]

@@ -1,0 +1,106 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3001:3001"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      evolution:
+        condition: service_started
+    environment:
+      # Override em runtime: aponta pro Evolution interno desta stack.
+      EVOLUTION_API_URL: http://evolution:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      evolution:
+        condition: service_started
+    environment:
+      EVOLUTION_API_URL: http://evolution:8080
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # Sem ports: para fora — só clientes da rede aula-agente acessam.
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Evolution API isolada do aula-agente. Não compartilha banco nem chave com a
+  # Evolution do labastia-setup nem com o sagazeus.
+  evolution:
+    image: atendai/evolution-api:latest
+    # Porta NÃO exposta para o host — Evolution só fala com api/worker
+    # internamente via http://evolution:8080. Webhook callback usa
+    # http://api:3001 (também interno).
+    depends_on:
+      evolution-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SERVER_TYPE: http
+      SERVER_PORT: 8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${EVOLUTION_DB_PASSWORD}@evolution-postgres:5432/evolution
+      DATABASE_CONNECTION_CLIENT_NAME: evolution_aula
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/1
+      CACHE_REDIS_PREFIX_KEY: evolution_aula
+      WEBHOOK_GLOBAL_ENABLED: "false"
+      DEL_INSTANCE: "false"
+      LANGUAGE: pt-BR
+      CONFIG_SESSION_PHONE_CLIENT: "Aula Agente"
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      QRCODE_LIMIT: "30"
+    volumes:
+      - evolution_instances:/evolution/instances
+    restart: unless-stopped
+
+  evolution-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${EVOLUTION_DB_PASSWORD}
+    volumes:
+      - evolution_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  evolution_instances:
+  evolution_pg_data:

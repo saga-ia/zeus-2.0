@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title : 'Alpha Clientes' %></title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="/dashboard" class="brand">
+      <span class="dot"></span>
+      <span class="brand-text">ALPHA · Clientes</span>
+    </a>
+    <% if (session && session.userId && session.totpVerified) { %>
+      <nav class="nav">
+        <a href="/dashboard">Inicio</a>
+        <a href="/clientes">Clientes</a>
+        <a href="/leads">Leads</a>
+        <a href="/admin/form">Editor do form</a>
+        <a href="/admin/aba-padrao">Aba padrao</a>
+        <a href="/admin/users">Usuarios</a>
+      </nav>
+      <form method="post" action="/logout" class="logout">
+        <span class="who"><%= session.userEmail %></span>
+        <button type="submit">Sair</button>
+      </form>
+    <% } %>
+  </div>
+</header>
+<% if (typeof flash !== 'undefined' && flash) { %>
+  <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+<% } %>
+<main class="container">

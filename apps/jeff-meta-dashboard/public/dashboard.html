@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meta Ads Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ─── Reset & Base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; max-width: 100%; }
+:root {
+  --bg: #0A0E12; --card: #0F1419; --border: #1F2632; --bg2: #151A22;
+  --gold: #00FF41; --green: #00FF41; --blue: #58A6FF; --red: #E06C75;
+  --purple: #A371F7; --text: #E6EDF3; --muted: #7A8896;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse at 50% 50%, rgba(0,255,65,.12) 0%, transparent 60%), radial-gradient(ellipse at 15% 25%, rgba(88,166,255,.04) 0%, transparent 50%), radial-gradient(ellipse at 85% 82%, rgba(163,113,247,.04) 0%, transparent 40%); pointer-events:none; z-index:0; }
+.sidebar, .main { position:relative; z-index:1; }
+
+/* ─── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar { width: 248px; background: rgba(9,13,17,0.98); border-right: 1px solid rgba(0,255,65,0.07); display: flex; flex-direction: column; padding: 0; flex-shrink: 0; z-index: 100; overflow-y: auto; transition: width .22s cubic-bezier(.4,0,.2,1); }
+.sidebar.collapsed { width: 60px; }
+.sidebar.collapsed .logo-text, .sidebar.collapsed .logo-sub, .sidebar.collapsed .nav-group-label, .sidebar.collapsed .nb-text, .sidebar.collapsed .nav-sub-list { display: none !important; }
+.sidebar.collapsed .sidebar-header { justify-content: center; padding: 18px 0; }
+.sidebar.collapsed .nav-btn { justify-content: center; padding: 11px 0; }
+.sidebar.collapsed .sidebar-toggle { margin-left: 0; }
+.sidebar.collapsed .sidebar-bottom .nav-btn { justify-content: center; padding: 11px 0; }
+
+.sidebar-header { padding: 20px 14px 16px; border-bottom: 1px solid rgba(0,255,65,0.06); display: flex; align-items: center; gap: 11px; }
+.sidebar-header .logo-icon { font-size: 24px; flex-shrink: 0; }
+.sidebar-header .logo-text { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.sidebar-header .logo-sub { font-size: 10px; color: var(--muted); }
+.sidebar-toggle { margin-left: auto; background: transparent; border: 1px solid rgba(255,255,255,0.06); border-radius: 7px; cursor: pointer; color: var(--muted); font-size: 14px; padding: 5px 7px; transition: all .15s; flex-shrink: 0; line-height: 1; }
+.sidebar-toggle:hover { color: var(--gold); border-color: rgba(0,255,65,0.3); background: rgba(0,255,65,0.05); }
+
+.nav-group { padding: 14px 10px 4px; }
+.nav-group-label { font-size: 9px; color: rgba(122,136,150,0.55); text-transform: uppercase; letter-spacing: 2px; padding: 0 8px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; }
+
+.nav-btn { width: 100%; border-radius: 8px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; transition: all .18s; text-align: left; font-family: inherit; position: relative; }
+.nav-btn::after { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0); width: 3px; height: 60%; background: var(--gold); border-radius: 0 3px 3px 0; box-shadow: 0 0 10px rgba(0,255,65,0.7); transition: transform .2s ease; }
+.nav-btn:hover { background: rgba(0,255,65,0.05); color: var(--text); }
+.nav-btn.active { background: rgba(0,255,65,0.09); color: var(--gold); font-weight: 600; }
+.nav-btn.active::after { transform: translateY(-50%) scaleY(1); }
+.nav-btn .nb-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
+.nav-btn .nb-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.nav-sub-list { margin: 0; max-height: 0; overflow: hidden; transition: max-height .28s ease; }
+.nav-sub-list.open { max-height: 800px; margin-bottom: 8px; }
+.nav-sub { width: 100%; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 9px; padding: 7px 12px 7px 44px; border-radius: 7px; transition: all .15s; text-align: left; font-family: inherit; }
+.nav-sub:hover { background: rgba(0,255,65,0.04); color: var(--text); }
+.nav-sub.active-sub { color: rgba(0,255,65,0.9); }
+.nav-sub .ns-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; transition: all .18s; }
+.nav-sub:hover .ns-dot { background: var(--muted); }
+.nav-sub.active-sub .ns-dot { background: var(--gold); box-shadow: 0 0 7px rgba(0,255,65,0.8); }
+
+.sidebar-bottom { margin-top: auto; padding: 10px 10px 14px; border-top: 1px solid rgba(0,255,65,0.06); }
+
+/* ─── Main ────────────────────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; max-width: 100%; }
+
+/* ─── Topbar ──────────────────────────────────────────────────────────────── */
+.topbar { background: rgba(10,14,18,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,255,65,0.07); padding: 12px 22px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.client-brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.client-logo { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.client-name { font-size: 13px; }
+.client-name strong { display: block; font-size: 14px; }
+.filter-btn { display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text); cursor: pointer; white-space: nowrap; }
+.filter-btn select { background: transparent; border: none; color: var(--text); font-size: 12px; outline: none; cursor: pointer; max-width: 220px; }
+input[type=date] { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--text); outline: none; }
+input[type=date]:focus { border-color: var(--gold); }
+.btn-load { background: linear-gradient(135deg,#1F6FEB,#388BFD); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 0 12px rgba(88,166,255,0.35); transition: all .15s; }
+.btn-load:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(88,166,255,0.55); }
+.btn-load:active { transform: translateY(0); }
+.topbar-compact { padding: 8px 16px; gap: 8px; }
+.topbar-compact .client-brand { gap: 8px; }
+.topbar-compact .client-logo { width: 28px; height: 28px; font-size: 14px; }
+.topbar-compact .client-name strong { font-size: 12px; }
+.topbar-compact .client-name span { font-size: 9px; }
+.topbar-compact .filter-btn { padding: 5px 9px; font-size: 11px; }
+.topbar-compact .filter-btn select { font-size: 11px; }
+
+/* ─── Health & Recomendações ─────────────────────────────────────────────── */
+.health-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,2fr); gap: 14px; margin-bottom: 16px; }
+.health-card { display: flex; align-items: center; gap: 16px; padding: 18px; }
+.health-score { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.health-score canvas { width: 100% !important; height: 100% !important; }
+.health-score-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; }
+.health-score-val .hsv-num { font-size: 28px; color: var(--gold); }
+.health-score-val .hsv-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.health-info h3 { font-size: 14px; margin-bottom: 4px; }
+.health-info p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.rec-list { padding: 12px 16px; max-height: 220px; overflow-y: auto; }
+.rec-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bg2); font-size: 12px; }
+.rec-item:last-child { border-bottom: none; }
+.rec-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px; flex-shrink: 0; }
+.rec-badge.alta { background: rgba(224,108,117,0.15); color: var(--red); border: 1px solid rgba(224,108,117,0.4); }
+.rec-badge.media { background: rgba(212,168,67,0.15); color: var(--gold); border: 1px solid rgba(212,168,67,0.4); }
+.rec-badge.baixa { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.4); }
+.rec-text { flex: 1; line-height: 1.4; color: var(--text); }
+
+/* ─── Criativos grid com scroll interno ──────────────────────────────────── */
+.creatives-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 12px 16px; max-height: 460px; overflow-y: auto; }
+.creatives-grid::-webkit-scrollbar { width: 8px; }
+.creatives-grid::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+.creatives-grid::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.2); border-radius: 4px; }
+.creatives-grid::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.4); }
+.creative-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: transform .15s ease; }
+.creative-card:hover { transform: translateY(-2px); border-color: rgba(0,255,65,0.3); }
+.creative-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 28px; }
+.creative-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.creative-info { padding: 8px 10px; }
+.creative-name { font-size: 10px; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; margin-bottom: 6px; min-height: 26px; }
+.creative-stats { display: flex; justify-content: space-between; font-size: 10px; }
+.creative-stats .cs-impr { color: var(--muted); }
+.creative-stats .cs-leads { color: var(--green); font-weight: 700; }
+
+/* ─── Legenda de faixa etária com scroll ─────────────────────────────────── */
+.donut-legend-scroll { max-height: 110px; overflow-y: auto; padding-right: 4px; }
+.donut-legend-scroll::-webkit-scrollbar { width: 6px; }
+.donut-legend-scroll::-webkit-scrollbar-track { background: transparent; }
+.donut-legend-scroll::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.2); border-radius: 3px; }
+
+/* ─── Top Regiões com barra ──────────────────────────────────────────────── */
+.region-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--bg2); font-size: 12px; }
+.region-row:last-child { border-bottom: none; }
+.region-name { width: 100px; flex-shrink: 0; font-size: 11px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.region-bar-wrap { flex: 1; background: var(--bg2); border-radius: 4px; height: 8px; overflow: hidden; }
+.region-bar-fill { height: 100%; background: linear-gradient(90deg, #58A6FF, #A371F7); border-radius: 4px; transition: width .6s ease; }
+.region-val { width: 70px; flex-shrink: 0; text-align: right; font-size: 11px; color: var(--blue); font-weight: 600; }
+
+/* ─── Tabela de campanhas simples (aba Campanhas) ────────────────────────── */
+.camp-tbl-actions { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid rgba(0,255,65,0.06); flex-wrap: wrap; }
+.camp-search { flex: 1; min-width: 200px; background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 12px; font-size: 12px; color: var(--text); outline: none; }
+.camp-search:focus { border-color: var(--gold); }
+.btn-apply { background: linear-gradient(135deg,#1F6FEB,#388BFD); color: #fff; border: none; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-clear { background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 7px; padding: 7px 14px; font-size: 12px; cursor: pointer; }
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
+.simple-camp-tbl th input[type=checkbox], .simple-camp-tbl td input[type=checkbox] { cursor: pointer; accent-color: var(--gold); }
+.simple-camp-tbl tr.selected td { background: rgba(88,166,255,0.08); }
+.camp-period-row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid rgba(0,255,65,0.04); flex-wrap: wrap; background: rgba(0,0,0,0.15); }
+.camp-period-row label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.camp-period-row input[type=date] { background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 11px; color: var(--text); outline: none; }
+.camp-period-row input[type=date]:focus { border-color: var(--gold); }
+.btn-camp-search { background: linear-gradient(135deg,#1F6FEB,#388BFD); color:#fff; border:none; border-radius:7px; padding:5px 12px; font-size:11px; font-weight:600; cursor:pointer; }
+.camp-status-pills { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.camp-pill { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; transition: all .15s; font-family: inherit; }
+.camp-pill.active { background: rgba(0,255,65,0.12); border-color: rgba(0,255,65,0.4); color: var(--gold); font-weight: 600; }
+
+/* ─── Content ─────────────────────────────────────────────────────────────── */
+.content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 32px; scroll-behavior: smooth; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── Section label ───────────────────────────────────────────────────────── */
+.section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; margin-top: 4px; padding-left: 2px; scroll-margin-top: 8px; }
+
+/* ─── KPI Cards ───────────────────────────────────────────────────────────── */
+.kpi-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi-card { background: rgba(15,20,25,0.8); border: 1px solid rgba(0,255,65,0.15); border-radius: 12px; padding: 14px 16px; overflow: hidden; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 4px 24px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px rgba(0,255,65,0.08); transition: transform .2s ease, box-shadow .2s ease; }
+.kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.kpi-val { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.kpi-var { font-size: 11px; }
+.kpi-var.up { color: var(--green); }
+.kpi-var.down { color: var(--red); }
+.spark-wrap { height: 36px; margin-top: 8px; width: 100%; overflow: hidden; }
+
+/* ─── Grid layouts ────────────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.grid-60-40 { display: grid; grid-template-columns: minmax(0, 60fr) minmax(0, 40fr); gap: 14px; margin-bottom: 14px; }
+.grid-40-60 { display: grid; grid-template-columns: minmax(0, 40fr) minmax(0, 60fr); gap: 14px; margin-bottom: 14px; }
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+.card { background: rgba(15,20,25,0.75); border: 1px solid rgba(0,255,65,0.12); border-radius: 12px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 4px 24px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 15px rgba(0,255,65,0.06); transition: transform .2s ease, box-shadow .2s ease; scroll-margin-top: 12px; }
+.card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-header h4 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.card-body { padding: 16px; }
+.chart-wrap { position: relative; height: 220px; }
+
+/* ─── Funnel ──────────────────────────────────────────────────────────────── */
+.funnel-section { display: grid; grid-template-columns: 1fr 180px; gap: 0; }
+.funnel-bars { padding: 20px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.funnel-item { display: flex; align-items: center; gap: 10px; }
+.funnel-label { width: 80px; font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
+.funnel-bar-wrap { flex: 1; }
+.funnel-bar { height: 48px; border-radius: 6px; display: flex; align-items: center; padding: 0 14px; font-size: 13px; font-weight: 700; color: #fff; transition: width .6s ease; }
+.funnel-bar-val { flex: 1; }
+.funnel-bar-sub { font-size: 10px; font-weight: 400; opacity: 0.85; }
+.funnel-conv { height: 16px; display: flex; align-items: center; padding-left: 90px; }
+.funnel-conv-arrow { font-size: 10px; color: var(--muted); }
+.funnel-meta { padding: 16px 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; border-left: 1px solid var(--border); }
+.funnel-stat { padding: 7px 14px; }
+.funnel-stat .fs-val { font-size: 14px; font-weight: 700; color: var(--text); }
+.funnel-stat .fs-lbl { font-size: 10px; color: var(--muted); }
+
+/* ─── Cost cards ──────────────────────────────────────────────────────────── */
+.cost-card { padding: 16px; }
+.cost-val { font-size: 26px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.cost-lbl { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; background: var(--green); transition: width .6s; }
+.progress-fill.warn { background: var(--red); }
+.progress-pct { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ─── Campaign table ──────────────────────────────────────────────────────── */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { padding: 9px 12px; text-align: left; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; background: var(--bg); border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
+th:hover { color: var(--text); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--bg2); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr.top-row td { background: rgba(0,255,65,0.08); }
+.td-campaign { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pager { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
+.pager-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; color: var(--text); }
+.pager-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ─── Gauge ───────────────────────────────────────────────────────────────── */
+.gauge-wrap { position: relative; height: 150px; display: flex; align-items: flex-end; justify-content: center; }
+.gauge-center { position: absolute; bottom: 10px; text-align: center; }
+.gauge-val { font-size: 28px; font-weight: 700; color: var(--gold); }
+.gauge-lbl { font-size: 11px; color: var(--muted); }
+
+/* ─── Ad gallery ──────────────────────────────────────────────────────────── */
+.ad-gallery { display: flex; gap: 12px; overflow-x: auto; padding: 12px 16px; }
+.ad-card { flex-shrink: 0; width: 140px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ad-thumb { width: 140px; height: 100px; object-fit: cover; background: var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 30px; }
+.ad-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ad-info { padding: 8px; }
+.ad-name { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
+.ad-stat { display: flex; justify-content: space-between; font-size: 11px; }
+.ad-stat span:last-child { color: var(--green); font-weight: 600; }
+
+/* ─── Map ─────────────────────────────────────────────────────────────────── */
+#map { height: 280px; border-radius: 0 0 10px 10px; }
+.leaflet-container { background: #161B22; }
+
+/* ─── Sheets ──────────────────────────────────────────────────────────────── */
+.upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 40px; text-align: center; margin: 16px; cursor: pointer; transition: border-color .2s; }
+.upload-zone:hover, .upload-zone.drag { border-color: var(--gold); background: #1A1508; }
+.upload-zone h3 { color: var(--muted); margin-bottom: 8px; }
+.upload-zone p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.btn-upload { background: var(--gold); color: #0D1117; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.sheets-source { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+.sheets-source a { color: var(--blue); }
+.sheets-table th { background: var(--bg2); }
+.sheets-table td { font-size: 12px; }
+
+/* ─── Loading / Error ─────────────────────────────────────────────────────── */
+.loading { text-align: center; padding: 60px; color: var(--muted); }
+.loading .spinner { font-size: 28px; animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.no-data { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+.api-error { background: #2D1515; border: 1px solid var(--red); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--red); margin-bottom: 14px; }
+
+/* ─── Misc ────────────────────────────────────────────────────────────────── */
+.section-meta { display: flex; gap: 12px; }
+.meta-item { flex: 1; padding: 10px; text-align: center; }
+.meta-item .mv { font-size: 15px; font-weight: 700; }
+.meta-item .ml { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.badge-gold { background: #2B1D0A; color: var(--gold); border: 1px solid #9E6A03; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 600; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.donut-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.donut-legend-pct { margin-left: auto; color: var(--muted); }
+
+/* ─── Hover elevação ────────────────────────────────────────────────────── */
+.kpi-card:hover { transform: translateY(-5px); box-shadow: 0 14px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,0.09); }
+.card:hover { transform: translateY(-3px); box-shadow: 0 10px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,0.09); }
+
+/* ─── Glow nos KPIs principais ───────────────────────────────────────────── */
+#kpi-spend { text-shadow: 0 0 20px rgba(224,108,117,.85); }
+#kpi-leads { text-shadow: 0 0 40px rgba(0,255,65,.95), 0 0 80px rgba(0,255,65,.7); }
+#kpi-impressions { text-shadow: 0 0 30px rgba(0,255,65,.8); }
+
+/* ─── Objective blocks ────────────────────────────────────────────────────── */
+.obj-block { border: 1px solid rgba(0,255,65,0.12); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.obj-block-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; background: rgba(15,20,25,0.8); transition: background .15s; gap: 12px; }
+.obj-block-header:hover { background: rgba(0,255,65,0.05); }
+.obj-block-header.open { background: rgba(0,255,65,0.08); }
+.obj-block-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.obj-block-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+.obj-block-stats { display: flex; gap: 20px; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+.obj-block-stats .obs-item { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.obj-block-stats .obs-val { font-size: 13px; font-weight: 600; color: var(--text); }
+.obj-block-arrow { font-size: 12px; color: var(--muted); transition: transform .22s; flex-shrink: 0; }
+.obj-block-arrow.open { transform: rotate(180deg); }
+.obj-block-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.obj-block-body.open { max-height: 1000px; }
+.obj-status-bar { display: flex; gap: 6px; padding: 10px 16px 0; }
+.obj-status-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; transition: all .15s; font-family: inherit; }
+.obj-status-btn.active { background: rgba(0,255,65,0.12); border-color: rgba(0,255,65,0.4); color: var(--gold); }
+.obj-block-table { padding: 8px 0 12px; }
+
+/* ─── Invest-obj table ────────────────────────────────────────────────────── */
+.invest-obj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.invest-obj-card { background: rgba(15,20,25,0.8); border: 1px solid rgba(0,255,65,0.12); border-radius: 10px; padding: 14px 16px; }
+.invest-obj-card .ioc-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.invest-obj-card .ioc-invest { font-size: 18px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+.invest-obj-card .ioc-leads { font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 4px; }
+.invest-obj-card .ioc-cpl { font-size: 12px; color: var(--gold); }
+.invest-obj-card .ioc-clicks { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─── Desktop estreito (< 1300px) ──────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1300px) {
+  .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-60-40, .grid-40-60 { grid-template-columns: 1fr; }
+  .funnel-section { grid-template-columns: 1fr; }
+  .funnel-meta { border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 18px;
+  padding: 5px 9px;
+  line-height: 1;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.mobile-menu-btn:hover { color: var(--gold); border-color: rgba(0,255,65,0.3); }
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 150;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active { display: block; }
+
+@media (max-width: 768px) {
+  body { display: block; max-width: 100vw; overflow-x: hidden; }
+
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 248px !important;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    z-index: 200;
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar.collapsed { width: 248px !important; transform: translateX(-100%); }
+  .sidebar.collapsed.mobile-open { transform: translateX(0); }
+  .sidebar.collapsed .logo-text,
+  .sidebar.collapsed .logo-sub,
+  .sidebar.collapsed .nav-group-label,
+  .sidebar.collapsed .nb-text,
+  .sidebar.collapsed .nav-sub-list { display: block !important; }
+  .sidebar.collapsed .sidebar-header { justify-content: flex-start; padding: 20px 14px 16px; }
+  .sidebar.collapsed .nav-btn { justify-content: flex-start; padding: 10px 12px; }
+  .sidebar.collapsed .sidebar-toggle { margin-left: auto; }
+  .sidebar.collapsed .sidebar-bottom .nav-btn { justify-content: flex-start; padding: 10px 12px; }
+
+  .mobile-menu-btn { display: block; }
+  .main { width: 100%; max-width: 100vw; overflow-x: hidden; }
+
+  /* Topbar mobile: logo na primeira linha, filtros na segunda */
+  .topbar {
+    padding: 10px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .mobile-menu-btn { flex-shrink: 0; }
+  .client-brand { flex: 1; min-width: 0; }
+  #lastUpdate { display: none; }
+
+  /* Filtros empilham na segunda linha */
+  .filter-btn {
+    flex: 1 1 calc(50% - 4px);
+    font-size: 11px;
+    padding: 6px 8px;
+    min-width: 0;
+    max-width: calc(50vw - 14px);
+    overflow: hidden;
+  }
+  .filter-btn select { font-size: 11px; max-width: 100%; width: 100%; min-width: 0; }
+  .filter-btn span:first-child { flex-shrink: 0; }
+  input[type=date] { font-size: 11px; padding: 6px 7px; flex: 1 1 calc(50% - 4px); }
+  .btn-load { flex: 1 1 100%; text-align: center; padding: 9px 12px; }
+
+  .content { padding: 12px 10px 28px; }
+
+  /* Grids */
+  .health-row { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-val { font-size: 18px; }
+  .kpi-var { font-size: 10px; }
+  .spark-wrap { height: 28px; }
+
+  .grid-2, .grid-3, .grid-60-40, .grid-40-60 { grid-template-columns: 1fr; gap: 10px; }
+
+  .funnel-section { grid-template-columns: 1fr; }
+  .funnel-meta { border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; }
+
+  .chart-wrap { height: 180px; }
+  .gauge-wrap { height: 130px; }
+  .gauge-val { font-size: 22px; }
+
+  /* Health card */
+  .health-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .health-score { width: 80px; height: 80px; }
+  .health-score-val .hsv-num { font-size: 22px; }
+
+  .kpi-card:hover, .card:hover { transform: none; }
+
+  /* Blocos de objetivo: ocultar stats secundárias, colapsar grid */
+  .invest-obj-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .obj-block-stats { gap: 10px; }
+  .obj-block-stats .obs-item { display: none; }
+  .obj-block-stats .obs-item:first-child { display: flex; }
+
+  /* Criativos */
+  .creatives-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+
+  /* Topbar: não quebrar em altura demais */
+  .topbar { position: sticky; top: 0; z-index: 90; }
+
+  /* Inputs que têm min-width fixo */
+  .camp-search { min-width: 0; }
+
+  /* Donuts inline-flex — deixar quebrar em coluna no mobile */
+  .card-body[style*="display:flex"] { flex-wrap: wrap; }
+  [style*="width:130px"][style*="flex-shrink:0"] { width: 80px !important; height: 80px !important; }
+
+  /* Select do mapa */
+  [style*="min-width:170px"] { min-width: 0 !important; width: 100% !important; max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .kpi-val { font-size: 16px; }
+  .kpi-card { padding: 10px 12px; }
+  .filter-btn { flex: 1 1 100%; }
+  input[type=date] { flex: 1 1 100%; }
+  .content { padding: 10px 8px 24px; }
+  .invest-obj-grid { grid-template-columns: 1fr; }
+  .obj-block-stats { display: none; }
+  /* Donut charts: wrap em coluna pra não vazar */
+  .card-body[style*="display:flex"] { flex-wrap: wrap; }
+  [style*="width:110px"][style*="flex-shrink:0"] { width: 80px !important; height: 80px !important; }
+  /* Funil */
+  .funnel-label { width: 60px; font-size: 10px; }
+  .funnel-conv { padding-left: 70px; }
+  /* Obj block header */
+  .obj-block-title { font-size: 12px; }
+  /* Region */
+  .region-name { width: 70px; }
+  .region-val { width: 55px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <span class="logo-icon">📊</span>
+    <div>
+      <div class="logo-text">MetaDash</div>
+      <div class="logo-sub">Meta Ads Analytics</div>
+    </div>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">☰</button>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Visão Geral</div>
+    <button class="nav-btn active" id="nav-overview" onclick="togglePage('overview')">
+      <span class="nb-icon">🏠</span><span class="nb-text">Visão Geral</span>
+    </button>
+    <div class="nav-sub-list open" id="sub-overview">
+      <button class="nav-sub" id="nsub-sec-kpis" onclick="goTo('overview','sec-kpis')"><span class="ns-dot"></span> KPIs de Performance</button>
+      <button class="nav-sub" id="nsub-sec-funnel" onclick="goToFunnelObj(null)"><span class="ns-dot"></span> Funil de Tráfego</button>
+      <div id="funnel-obj-nav"></div>
+      <button class="nav-sub" id="nsub-sec-timechart" onclick="goTo('overview','sec-timechart')"><span class="ns-dot"></span> Invest. × Leads</button>
+      <button class="nav-sub" id="nsub-sec-campaigns" onclick="goTo('overview','sec-campaigns')"><span class="ns-dot"></span> Campanhas</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Análise</div>
+    <button class="nav-btn" id="nav-detail" onclick="togglePage('detail')">
+      <span class="nb-icon">📈</span><span class="nb-text">Detalhamento</span>
+    </button>
+    <div class="nav-sub-list" id="sub-detail">
+      <button class="nav-sub" id="nsub-sec-demographics" onclick="goTo('detail','sec-demographics')"><span class="ns-dot"></span> Demografias</button>
+      <button class="nav-sub" id="nsub-sec-leadschart" onclick="goTo('detail','sec-leadschart')"><span class="ns-dot"></span> Leads × CPL</button>
+      <button class="nav-sub" id="nsub-sec-adgallery" onclick="goTo('detail','sec-adgallery')"><span class="ns-dot"></span> Anúncios</button>
+      <button class="nav-sub" id="nsub-sec-mapview" onclick="goTo('detail','sec-mapview')"><span class="ns-dot"></span> Mapa de Alcance</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Dados</div>
+    <button class="nav-btn" id="nav-sheets" onclick="showPage('sheets')">
+      <span class="nb-icon">📋</span><span class="nb-text">Planilha</span>
+    </button>
+  </div>
+
+  <div class="sidebar-bottom">
+    <button class="nav-btn" onclick="logout()">
+      <span class="nb-icon">🚪</span><span class="nb-text">Sair</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <!-- Topbar compacto -->
+  <div class="topbar topbar-compact">
+    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menu">☰</button>
+    <div class="client-brand">
+      <div class="client-logo" id="clientLogo">🏢</div>
+      <div class="client-name">
+        <span style="color:var(--muted)">Meta Ads</span>
+        <strong id="clientName">Carregando...</strong>
+      </div>
+    </div>
+
+    <div class="filter-btn" title="Business Manager">
+      <span>🏢</span>
+      <select id="bmFilter">
+        <option value="all">Todos os BMs</option>
+      </select>
+    </div>
+
+    <div class="filter-btn" title="Conta de Anúncios">
+      <span>📊</span>
+      <select id="adAccountFilter">
+        <option value="all">Conta de Anúncios</option>
+      </select>
+    </div>
+
+    <div class="filter-btn" title="Período">
+      <span>📅</span>
+      <select id="periodFilter" onchange="onPeriodChange()">
+        <option value="7">7 dias</option>
+        <option value="15">15 dias</option>
+        <option value="30" selected>30 dias</option>
+        <option value="60">60 dias</option>
+        <option value="90">90 dias</option>
+        <option value="custom">Personalizado</option>
+      </select>
+    </div>
+
+    <div class="filter-btn" id="customDatesBox" style="display:none">
+      <input type="date" id="dateSince">
+      <span style="color:var(--muted)">até</span>
+      <input type="date" id="dateUntil">
+    </div>
+    <input type="hidden" id="dateSinceHidden">
+    <input type="hidden" id="dateUntilHidden">
+
+    <button class="btn-load" onclick="reload()">Carregar</button>
+
+    <div id="lastUpdate" style="font-size:10px;color:var(--muted);margin-left:auto"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="mainContent">
+
+    <!-- ═══════════════════════════════════════════ PAGE: VISÃO GERAL -->
+    <div id="page-overview" class="page active">
+      <div id="errorBanner" class="api-error" style="display:none"></div>
+
+      <!-- Saúde da Conta + Recomendações IA -->
+      <div id="sec-health" style="scroll-margin-top:12px">
+        <div class="health-row">
+          <div class="card health-card">
+            <div class="health-score">
+              <canvas id="healthScoreChart"></canvas>
+              <div class="health-score-val">
+                <div class="hsv-num" id="healthScoreVal">—</div>
+                <div class="hsv-lbl">Score</div>
+              </div>
+            </div>
+            <div class="health-info">
+              <h3>Saúde da Conta</h3>
+              <p id="healthDesc">Calculando indicadores…</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h4>Recomendações da IA</h4></div>
+            <div class="rec-list" id="recList">
+              <div class="no-data">Aguardando dados…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div id="sec-kpis" style="scroll-margin-top:12px">
+        <div class="section-title">KPIs de Performance</div>
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Investimento</div>
+            <div class="kpi-val" id="kpi-spend" style="color:var(--red)">—</div>
+            <div class="kpi-var" id="var-spend">—</div>
+            <div class="spark-wrap"><canvas id="spark-spend"></canvas></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Leads</div>
+            <div class="kpi-val" id="kpi-leads" style="color:var(--green)">—</div>
+            <div class="kpi-var" id="var-leads">—</div>
+            <div class="spark-wrap"><canvas id="spark-leads"></canvas></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Cliques</div>
+            <div class="kpi-val" id="kpi-clicks" style="color:var(--blue)">—</div>
+            <div class="kpi-var" id="var-clicks">—</div>
+            <div class="spark-wrap"><canvas id="spark-clicks"></canvas></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Alcance</div>
+            <div class="kpi-val" id="kpi-reach" style="color:var(--purple)">—</div>
+            <div class="kpi-var" id="var-reach">—</div>
+            <div class="spark-wrap"><canvas id="spark-reach"></canvas></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Impressões</div>
+            <div class="kpi-val" id="kpi-impressions" style="color:var(--gold)">—</div>
+            <div class="kpi-var" id="var-impressions">—</div>
+            <div class="spark-wrap"><canvas id="spark-impressions"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funnel + Métricas -->
+      <div id="sec-funnel" style="scroll-margin-top:12px">
+        <div class="section-title">Funil de Tráfego</div>
+        <div class="grid-60-40" style="margin-bottom:14px">
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap;gap:8px">
+              <h4 id="funnelCardTitle">Funil de Tráfego — Geral</h4>
+              <div id="funnelObjTabs" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+            </div>
+            <div class="funnel-section">
+              <div class="funnel-bars" id="funnelBars">
+                <div class="loading"><span class="spinner">⟳</span></div>
+              </div>
+              <div class="funnel-meta" id="funnelMeta"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-header"><h4>Custo por Lead</h4></div>
+              <div class="cost-card">
+                <div class="cost-val" id="cpl-val">—</div>
+                <div class="cost-lbl">Meta: <span id="cpl-goal">—</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="cpl-bar" style="width:0%"></div></div>
+                <div class="progress-pct" id="cpl-pct"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h4>CPC — Custo por Clique no Link</h4></div>
+              <div class="cost-card">
+                <div class="cost-val" id="cpc-val">—</div>
+                <div class="cost-lbl">Meta: <span id="cpc-goal">—</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="cpc-bar" style="width:0%"></div></div>
+                <div class="progress-pct" id="cpc-pct"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Investimento x Leads por Objetivo -->
+      <div id="sec-timechart" style="scroll-margin-top:12px">
+        <div class="section-title">Invest. × Leads</div>
+        <div id="investObjGrid" class="invest-obj-grid">
+          <div class="loading" style="grid-column:1/-1"><span class="spinner">⟳</span></div>
+        </div>
+        <div class="grid-60-40" style="margin-bottom:14px">
+          <div class="card">
+            <div class="card-header"><h4>Investimento × Leads (diário)</h4></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="timeChart"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h4>Melhores Anúncios (Leads)</h4></div>
+            <div class="card-body" style="display:flex;gap:16px;align-items:center">
+              <div style="width:130px;height:130px;flex-shrink:0"><canvas id="topAdsChart"></canvas></div>
+              <div class="donut-legend" id="topAdsLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campanhas (tabela simples + filtro) -->
+      <div id="sec-campaigns" style="scroll-margin-top:12px">
+        <div class="section-title">Campanhas (selecione pra filtrar dashboard)</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="camp-tbl-actions">
+            <input type="text" class="camp-search" id="campSearch" placeholder="Buscar campanha…" oninput="filterCampTable()">
+            <button class="btn-apply" onclick="applyCampFilter()">Aplicar filtro</button>
+            <button class="btn-clear" onclick="clearCampFilter()">Limpar</button>
+            <span id="campSelectedInfo" style="font-size:11px;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div class="camp-period-row">
+            <label>Periodo:</label>
+            <label style="font-size:11px;color:var(--muted)">De</label>
+            <input type="date" id="campPeriodSince">
+            <label style="font-size:11px;color:var(--muted)">Ate</label>
+            <input type="date" id="campPeriodUntil">
+            <button class="btn-camp-search" onclick="reloadCampByPeriod()">Buscar</button>
+            <button class="btn-clear" style="font-size:11px;padding:5px 10px" onclick="clearCampPeriod()">Limpar periodo</button>
+            <div class="camp-status-pills">
+              <button class="camp-pill active" id="campPillAll" onclick="setCampTableStatus('all')">Todas</button>
+              <button class="camp-pill" id="campPillActive" onclick="setCampTableStatus('ACTIVE')">Ativas</button>
+              <button class="camp-pill" id="campPillPaused" onclick="setCampTableStatus('PAUSED')">Pausadas</button>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="max-height:520px;overflow-y:auto">
+            <table class="simple-camp-tbl" id="simpleCampTable">
+              <thead>
+                <tr>
+                  <th style="width:36px"><input type="checkbox" id="campSelectAll" onchange="toggleSelectAllCamp()"></th>
+                  <th style="width:40px">#</th>
+                  <th>Campanha</th>
+                  <th style="text-align:right">Investimento</th>
+                  <th style="text-align:right">Cliques</th>
+                  <th style="text-align:right;color:var(--green)">Leads</th>
+                </tr>
+              </thead>
+              <tbody id="simpleCampBody">
+                <tr><td colspan="6" class="no-data">Carregando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ PAGE: DETALHAMENTO -->
+    <div id="page-detail" class="page">
+
+      <!-- Demographics -->
+      <div id="sec-demographics" style="scroll-margin-top:12px">
+        <div class="section-title">Público & Demografias</div>
+        <div class="grid-3" style="margin-bottom:14px">
+          <div class="card">
+            <div class="card-header"><h4>Taxa de Leads</h4></div>
+            <div class="card-body">
+              <div class="gauge-wrap">
+                <canvas id="gaugeChart"></canvas>
+                <div class="gauge-center">
+                  <div class="gauge-val" id="gaugeVal">—</div>
+                  <div class="gauge-lbl">leads/impressoes</div>
+                </div>
+              </div>
+              <div id="gaugeVar" style="text-align:center;font-size:12px;margin-top:4px"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h4>Gênero</h4></div>
+            <div class="card-body" style="display:flex;gap:12px;align-items:center">
+              <div style="width:110px;height:110px;flex-shrink:0"><canvas id="genderChart"></canvas></div>
+              <div class="donut-legend" id="genderLegend"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h4>Faixa Etária</h4></div>
+            <div class="card-body" style="display:flex;gap:12px;align-items:center">
+              <div style="width:110px;height:110px;flex-shrink:0"><canvas id="ageChart"></canvas></div>
+              <div class="donut-legend" id="ageLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leads x CPL -->
+      <div id="sec-leadschart" style="scroll-margin-top:12px">
+        <div class="section-title">Leads × Custo por Lead</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><h4>Leads × Custo por Lead (diário)</h4></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="leadsChart"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- Top Anúncios com Criativos (grid com scroll interno) -->
+      <div id="sec-adgallery" style="scroll-margin-top:12px">
+        <div class="section-title">Top Anúncios com Criativos</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <h4>Top Anúncios</h4>
+            <span id="adCount" style="font-size:11px;color:var(--muted)"></span>
+          </div>
+          <div class="creatives-grid" id="adGallery">
+            <div class="loading" style="grid-column:1/-1"><span class="spinner">⟳</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map + Regions -->
+      <div id="sec-mapview" style="scroll-margin-top:12px">
+        <div class="section-title">Top Regiões</div>
+        <div class="grid-40-60">
+          <div class="card">
+            <div class="card-header"><h4>Top Regiões</h4></div>
+            <div id="regionsBody" style="padding:8px 4px;max-height:320px;overflow-y:auto">
+              <div class="no-data">Carregando…</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap;gap:8px">
+              <h4>Mapa de Alcance</h4>
+              <select id="regionSelect" onchange="zoomToRegion()" style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text);outline:none;min-width:170px">
+                <option value="">Brasil completo</option>
+                <option value="São Paulo">São Paulo</option>
+                <option value="Rio de Janeiro">Rio de Janeiro</option>
+                <option value="Minas Gerais">Minas Gerais</option>
+                <option value="Bahia">Bahia</option>
+                <option value="Paraná">Paraná</option>
+                <option value="Rio Grande do Sul">Rio Grande do Sul</option>
+                <option value="Santa Catarina">Santa Catarina</option>
+                <option value="Goiás">Goiás</option>
+                <option value="Pernambuco">Pernambuco</option>
+                <option value="Ceará">Ceará</option>
+                <option value="Amazonas">Amazonas</option>
+                <option value="Pará">Pará</option>
+                <option value="Mato Grosso">Mato Grosso</option>
+                <option value="Mato Grosso do Sul">Mato Grosso do Sul</option>
+                <option value="Maranhão">Maranhão</option>
+                <option value="Espírito Santo">Espírito Santo</option>
+                <option value="Alagoas">Alagoas</option>
+                <option value="Sergipe">Sergipe</option>
+                <option value="Rio Grande do Norte">Rio Grande do Norte</option>
+                <option value="Piauí">Piauí</option>
+                <option value="Paraíba">Paraíba</option>
+                <option value="Rondônia">Rondônia</option>
+                <option value="Tocantins">Tocantins</option>
+                <option value="Acre">Acre</option>
+                <option value="Roraima">Roraima</option>
+                <option value="Amapá">Amapá</option>
+                <option value="Distrito Federal">Distrito Federal</option>
+              </select>
+            </div>
+            <div id="map"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════ PAGE: PLANILHA -->
+    <div id="page-sheets" class="page">
+      <div class="card">
+        <div class="card-header">
+          <h4>Dados da Planilha</h4>
+          <div style="display:flex;gap:8px">
+            <span id="sheetsSource" class="badge-gold" style="display:none"></span>
+            <button id="refreshSheets" onclick="loadSheets()" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text);cursor:pointer">↻ Atualizar</button>
+          </div>
+        </div>
+        <div id="sheetsContent">
+          <div id="uploadZone" class="upload-zone">
+            <h3>📂 Nenhuma planilha conectada</h3>
+            <p>Conecte um Google Sheets ou faça upload de um arquivo CSV com os dados do cliente.</p>
+            <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="uploadCSV()">
+            <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 Upload CSV</button>
+            <p style="margin-top:12px;font-size:11px">ou peça ao administrador para conectar um Google Sheets</p>
+          </div>
+          <div id="sheetsData" style="display:none">
+            <div class="sheets-source" id="sheetsInfo"></div>
+            <div class="tbl-wrap">
+              <table class="sheets-table" id="sheetsTable">
+                <thead id="sheetsHead"></thead>
+                <tbody id="sheetsBody"></tbody>
+              </table>
+            </div>
+            <div style="padding:10px 16px;font-size:11px;color:var(--muted)">
+              <input type="file" id="csvFileUpdate" accept=".csv" style="display:none" onchange="uploadCSV()">
+              <button onclick="document.getElementById('csvFileUpdate').click()" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text);cursor:pointer">📤 Atualizar CSV</button>
+              <span style="margin-left:8px">Linha(s): <strong id="sheetsRows">0</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ─── Count-up animation ──────────────────────────────────────────────────────
+function countUp(el, finalVal, formatter, duration = 900) {
+  const start = performance.now();
+  const step = (ts) => {
+    const progress = Math.min((ts - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = formatter(finalVal * ease);
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = formatter(finalVal);
+  };
+  requestAnimationFrame(step);
+}
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let CLIENT_ID = null;
+let clientInfo = {};
+let chartInstances = {};
+let campaignData = [];
+let allCampaignsData = [];
+const PAGE_SIZE = 10;
+let leafletMap = null;
+let mapMarkers = [];
+let lastRegionsData = [];
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+const token  = localStorage.getItem('meta_token');
+const role   = localStorage.getItem('meta_role');
+const viewAs = localStorage.getItem('meta_admin_preview_client');
+
+if (!token) { window.location.href = '/login.html'; }
+
+if (role === 'admin' && viewAs) {
+  CLIENT_ID = viewAs;
+  localStorage.removeItem('meta_admin_preview_client');
+} else if (role === 'client') {
+  CLIENT_ID = localStorage.getItem('meta_client_id');
+} else if (role === 'admin') {
+  window.location.href = '/admin.html';
+}
+
+if (!CLIENT_ID) { window.location.href = '/login.html'; }
+
+// ─── API helper ─────────────────────────────────────────────────────────────
+const API = async (path) => {
+  const r = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+  if (r.status === 401) { logout(); return null; }
+  if (!r.ok) { const d = await r.json(); throw new Error(d.error || 'Erro na API'); }
+  return r.json();
+};
+
+// ─── Formatters ─────────────────────────────────────────────────────────────
+const fmt  = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(Math.round(n) || 0);
+const brl  = n => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const pct  = n => (Number(n || 0) * 100).toFixed(2) + '%';
+const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+const LEAD_TYPES = [
+  'leadgen_grouped',
+  'onsite_conversion.lead_grouped',
+  'lead',
+  'onsite_conversion.flow_complete',
+  'onsite_conversion.messaging_conversation_started_7d',
+  'messaging_conversation_started_7d',
+  'contact',
+  'complete_registration',
+];
+
+const getLeads = (d) => {
+  if (!d?.actions) return 0;
+  for (const t of LEAD_TYPES) {
+    const a = d.actions.find(x => x.action_type === t);
+    if (a && Number(a.value) > 0) return Number(a.value);
+  }
+  const fallback = d.actions.find(x => x.action_type.includes('lead') && Number(x.value) > 0);
+  return fallback ? Number(fallback.value) : 0;
+};
+const getCPL = (d) => {
+  if (!d?.cost_per_action_type) return 0;
+  for (const t of LEAD_TYPES) {
+    const a = d.cost_per_action_type.find(x => x.action_type === t);
+    if (a && Number(a.value) > 0) return Number(a.value);
+  }
+  const fallback = d.cost_per_action_type.find(x => x.action_type.includes('lead') && Number(x.value) > 0);
+  return fallback ? Number(fallback.value) : 0;
+};
+
+// ─── Date init ──────────────────────────────────────────────────────────────
+function applyPeriodDays(days) {
+  const until = new Date();
+  const since = new Date(); since.setDate(since.getDate() - (days - 1));
+  const sinceStr = since.toISOString().split('T')[0];
+  const untilStr = until.toISOString().split('T')[0];
+  document.getElementById('dateSince').value = sinceStr;
+  document.getElementById('dateUntil').value = untilStr;
+  document.getElementById('dateSinceHidden').value = sinceStr;
+  document.getElementById('dateUntilHidden').value = untilStr;
+}
+
+function onPeriodChange() {
+  const v = document.getElementById('periodFilter').value;
+  const box = document.getElementById('customDatesBox');
+  if (v === 'custom') {
+    box.style.display = 'flex';
+  } else {
+    box.style.display = 'none';
+    applyPeriodDays(parseInt(v, 10));
+  }
+}
+
+(() => { applyPeriodDays(30); })();
+
+const getDates = () => {
+  const period = document.getElementById('periodFilter').value;
+  if (period === 'custom') {
+    return {
+      since: document.getElementById('dateSince').value,
+      until: document.getElementById('dateUntil').value
+    };
+  }
+  return {
+    since: document.getElementById('dateSinceHidden').value,
+    until: document.getElementById('dateUntilHidden').value
+  };
+};
+
+// IDs de campanhas selecionadas via tabela da aba Campanhas
+let selectedCampaignIds = [];
+
+// ─── Navigation ─────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  const subList = document.getElementById(`sub-${name}`);
+  if (subList && !subList.classList.contains('open')) {
+    document.querySelectorAll('.nav-sub-list').forEach(el => el.classList.remove('open'));
+    subList.classList.add('open');
+  }
+  if (name === 'detail') {
+    if (!leafletMap) initMap();
+    if (lastRegionsData.length) updateMapMarkers(lastRegionsData);
+  }
+  if (name === 'sheets') loadSheets();
+  if (window.innerWidth <= 768) closeMobileSidebar();
+}
+
+function togglePage(name) {
+  const subList = document.getElementById(`sub-${name}`);
+  document.querySelectorAll('.nav-sub-list').forEach(el => el.classList.remove('open'));
+  if (subList) subList.classList.add('open');
+  showPage(name);
+}
+
+function goTo(page, sectionId) {
+  showPage(page);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(sectionId);
+      const container = document.getElementById('mainContent');
+      if (el && container) {
+        const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 12;
+        container.scrollTo({ top, behavior: 'smooth' });
+      }
+      setActiveSub(sectionId);
+    });
+  });
+}
+
+function goToFunnelObj(label) {
+  setFunnelObj(label);
+  goTo('overview', 'sec-funnel');
+}
+
+function setActiveSub(sectionId) {
+  document.querySelectorAll('.nav-sub').forEach(b => b.classList.remove('active-sub'));
+  const el = document.getElementById('nsub-' + sectionId);
+  if (el) el.classList.add('active-sub');
+}
+
+function toggleSidebar() {
+  if (window.innerWidth <= 768) {
+    toggleMobileSidebar();
+  } else {
+    document.querySelector('.sidebar').classList.toggle('collapsed');
+  }
+}
+function toggleMobileSidebar() {
+  document.querySelector('.sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeMobileSidebar() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+function initScrollSpy() {
+  const sections = ['sec-kpis','sec-funnel','sec-timechart','sec-campaigns','sec-demographics','sec-leadschart','sec-adgallery','sec-mapview'];
+  const container = document.getElementById('mainContent');
+  if (!container) return;
+  container.addEventListener('scroll', () => {
+    const cTop = container.getBoundingClientRect().top;
+    let closest = null, minDist = Infinity;
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || el.closest('.page:not(.active)')) return;
+      const dist = Math.abs(el.getBoundingClientRect().top - cTop - 24);
+      if (dist < minDist) { minDist = dist; closest = id; }
+    });
+    if (closest) setActiveSub(closest);
+  }, { passive: true });
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    clientInfo = await API(`/api/clients/${CLIENT_ID}`);
+    document.getElementById('clientName').textContent = clientInfo.name || 'Dashboard';
+    if (clientInfo.logo_url) {
+      const img = document.createElement('img');
+      img.src = clientInfo.logo_url;
+      img.style.cssText = 'width:36px;height:36px;border-radius:8px;object-fit:cover';
+      img.onerror = () => {};
+      document.getElementById('clientLogo').replaceWith(img);
+    }
+    await reload();
+    loadCampaignList();
+  } catch(e) { showError(e.message); }
+}
+
+// ─── Reload all data ─────────────────────────────────────────────────────────
+async function reload() {
+  const { since, until } = getDates();
+  const campaign_ids = selectedCampaignIds.join(',');
+  const qs = `since=${since}&until=${until}` + (campaign_ids ? `&campaign_ids=${encodeURIComponent(campaign_ids)}` : '');
+  document.getElementById('lastUpdate').textContent = 'Atualizando...';
+  try {
+    const [overview, comparison, timeseries, campaigns] = await Promise.all([
+      API(`/api/meta/${CLIENT_ID}/overview?${qs}`),
+      API(`/api/meta/${CLIENT_ID}/comparison?${qs}`),
+      API(`/api/meta/${CLIENT_ID}/timeseries?${qs}`),
+      API(`/api/meta/${CLIENT_ID}/campaigns?${qs}`),
+    ]);
+    overviewData = overview;
+    renderKPIs(overview, comparison);
+    renderFunnel(overview);
+    renderCostCards(overview);
+    renderTimeChart(timeseries);
+    renderTopAdsChart(campaigns);
+    renderCampaignTable(campaigns);
+    renderHealthScore(overview, comparison, campaigns);
+    loadDetailData(qs);
+    loadCampaignsByObjective();
+    document.getElementById('lastUpdate').textContent = `Atualizado ${new Date().toLocaleTimeString('pt-BR')}`;
+    document.getElementById('errorBanner').style.display = 'none';
+  } catch(e) { showError(e.message); }
+}
+
+async function loadCampaignList() {
+  // Campaign list is now populated via renderCampaignTable called inside reload()
+}
+
+async function loadDetailData(qs) {
+  try {
+    const [demo, regions, ads] = await Promise.all([
+      API(`/api/meta/${CLIENT_ID}/demographics?${qs}`),
+      API(`/api/meta/${CLIENT_ID}/regions?${qs}`),
+      API(`/api/meta/${CLIENT_ID}/ads?${qs}`),
+    ]);
+    renderDemographics(demo);
+    renderRegions(regions);
+    renderAdGallery(ads);
+  } catch(e) { console.warn('Detail load error:', e.message); }
+}
+
+// ─── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs(cur, comp) {
+  const leads   = getLeads(cur);
+  const pLeads  = comp?.previous ? getLeads(comp.previous) : 0;
+  const pSpend  = comp?.previous ? Number(comp.previous.spend || 0) : 0;
+  const pClick  = comp?.previous ? Number(comp.previous.clicks || 0) : 0;
+  const pReach  = comp?.previous ? Number(comp.previous.reach || 0) : 0;
+  const pImpr   = comp?.previous ? Number(comp.previous.impressions || 0) : 0;
+
+  setKPI('kpi-spend',       Number(cur?.spend || 0),        brl,                    varPct(cur?.spend, pSpend),      'var-spend');
+  setKPI('kpi-leads',       leads,                          n => fmt(Math.round(n)), varPct(leads, pLeads),           'var-leads');
+  setKPI('kpi-clicks',      Number(cur?.clicks || 0),       n => fmt(Math.round(n)), varPct(cur?.clicks, pClick),     'var-clicks');
+  setKPI('kpi-reach',       Number(cur?.reach || 0),        n => fmt(Math.round(n)), varPct(cur?.reach, pReach),      'var-reach');
+  setKPI('kpi-impressions', Number(cur?.impressions || 0),  n => fmt(Math.round(n)), varPct(cur?.impressions, pImpr), 'var-impressions');
+
+  const impr = Number(cur?.impressions || 0);
+  const lr   = impr > 0 ? (leads / impr * 100) : 0;
+  renderGauge(lr, varPct(leads / (impr || 1), pLeads / (pImpr || 1)));
+}
+
+function setKPI(valId, rawVal, formatter, { pct: p, dir }, varId) {
+  countUp(document.getElementById(valId), rawVal, formatter);
+  const el = document.getElementById(varId);
+  el.textContent = (dir >= 0 ? '↑ +' : '↓ ') + p + '% vs período anterior';
+  el.className = 'kpi-var ' + (dir >= 0 ? 'up' : 'down');
+}
+
+function varPct(curr, prev) {
+  curr = Number(curr || 0); prev = Number(prev || 0);
+  if (prev === 0) return { pct: '∞', dir: curr > 0 ? 1 : 0 };
+  const v = ((curr - prev) / prev * 100);
+  return { pct: Math.abs(v).toFixed(1), dir: v >= 0 ? 1 : -1 };
+}
+
+// ─── Sparklines ──────────────────────────────────────────────────────────────
+function renderSparklines(ts) {
+  const dates  = ts.map(d => d.date_start);
+  const colors = { spend: '#E06C75', leads: '#3FB950', clicks: '#58A6FF', reach: '#A371F7', impressions: '#D4A843' };
+
+  Object.entries(colors).forEach(([key, color]) => {
+    const id  = `spark-${key}`;
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    if (chartInstances[id]) chartInstances[id].destroy();
+    const vals = ts.map(d => key === 'leads' ? getLeads(d) : Number(d[key] || 0));
+    chartInstances[id] = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dates, datasets: [{ data: vals, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: true, backgroundColor: color + '22' }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                 scales: { x: { display: false }, y: { display: false } }, animation: false }
+    });
+  });
+}
+
+// ─── Funnel ───────────────────────────────────────────────────────────────────
+function renderFunnel(d) {
+  const impr   = Number(d?.impressions || 0);
+  const reach  = Number(d?.reach || 0);
+  const clicks = Number(d?.clicks || 0);
+  const leads  = getLeads(d);
+  const freq   = Number(d?.frequency || 0);
+  const cpm    = Number(d?.cpm || 0);
+  const ctr    = Number(d?.ctr || 0);
+  const cpl    = getCPL(d);
+  const cpc    = Number(d?.cpc || 0);
+
+  const items = [
+    { label: 'Impressoes', val: impr,   color: '#58A6FF', w: 100,
+      sub: freq > 0 ? `freq ${freq.toFixed(1)}x` : '' },
+    { label: 'Alcance',    val: reach,  color: '#A371F7',
+      w: impr > 0 ? Math.max(20, reach/impr*100) : 80,
+      conv: impr > 0 ? (reach/impr*100).toFixed(1)+'%' : null },
+    { label: 'Cliques',    val: clicks, color: '#D4A843',
+      w: impr > 0 ? Math.max(15, Math.min(85, clicks/impr*100*12)) : 50,
+      sub: ctr > 0 ? `CTR ${(ctr*100).toFixed(2)}%` : '',
+      conv: reach > 0 ? (clicks/reach*100).toFixed(2)+'%' : null },
+    { label: 'Leads',      val: leads,  color: '#3FB950',
+      w: clicks > 0 ? Math.max(10, Math.min(70, leads/clicks*100*5)) : (leads > 0 ? 30 : 10),
+      sub: cpl > 0 ? `CPL ${brl(cpl)}` : '',
+      conv: clicks > 0 ? (leads/clicks*100).toFixed(2)+'%' : null },
+  ];
+
+  let html = '';
+  items.forEach((item, i) => {
+    if (i > 0 && item.conv) {
+      html += `<div class="funnel-conv"><span class="funnel-conv-arrow">↓ ${item.conv} de conversao</span></div>`;
+    }
+    html += `
+      <div class="funnel-item">
+        <div class="funnel-label">${item.label}</div>
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="width:${item.w}%;background:linear-gradient(to right,${item.color}48,${item.color}12);border-left:3px solid ${item.color};color:${item.color}">
+            <span class="funnel-bar-val">${fmt(item.val)}</span>
+            ${item.sub ? `<span class="funnel-bar-sub">${item.sub}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('funnelBars').innerHTML = html;
+
+  document.getElementById('funnelMeta').innerHTML = [
+    { val: (ctr*100).toFixed(2) + '%', lbl: 'CTR' },
+    { val: freq.toFixed(2),            lbl: 'Frequencia' },
+    { val: brl(cpm),                   lbl: 'CPM' },
+    { val: cpc > 0 ? brl(cpc) : '—',  lbl: 'CPC Link' },
+    { val: cpl > 0 ? brl(cpl) : '—',  lbl: 'Custo/Lead' },
+  ].map(i => `<div class="funnel-stat"><div class="fs-val">${i.val}</div><div class="fs-lbl">${i.lbl}</div></div>`).join('');
+}
+
+// ─── Cost Cards ───────────────────────────────────────────────────────────────
+function renderCostCards(d) {
+  const cpl    = getCPL(d);
+  const cpc    = Number(d?.cpc || 0);
+  const goals  = clientInfo.goals || {};
+  renderCost('cpl', cpl, goals.cpl, 'Meta CPL');
+  renderCost('cpc', cpc, goals.cpc, 'Meta CPC');
+}
+
+function renderCost(id, val, goal, label) {
+  document.getElementById(`${id}-val`).textContent = brl(val);
+  document.getElementById(`${id}-goal`).textContent = goal ? brl(goal) : 'Não definida';
+  if (goal) {
+    const pctVal = Math.min(100, (val / goal) * 100);
+    const good   = val <= goal;
+    document.getElementById(`${id}-bar`).style.width  = pctVal + '%';
+    document.getElementById(`${id}-bar`).className    = 'progress-fill' + (good ? '' : ' warn');
+    document.getElementById(`${id}-pct`).textContent  = (good ? '✓ ' : '⚠ ') + pctVal.toFixed(0) + '% da meta';
+  }
+}
+
+// ─── Time chart ───────────────────────────────────────────────────────────────
+function renderTimeChart(ts) {
+  renderSparklines(ts);
+  const ctx = document.getElementById('timeChart');
+  if (!ctx) return;
+  if (chartInstances['time']) chartInstances['time'].destroy();
+  const labels = ts.map(d => d.date_start?.slice(5));
+  const spend  = ts.map(d => Number(d.spend || 0));
+  const leads  = ts.map(d => getLeads(d));
+  const maxLeads = Math.max(...leads, 1);
+  const leadsMax = Math.ceil(maxLeads * 3);
+  chartInstances['time'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Investimento (R$)', data: spend, borderColor: '#3FB950', backgroundColor: '#3FB95022', borderWidth: 2, pointRadius: 3, fill: true, yAxisID: 'y' },
+        { label: 'Leads',             data: leads, borderColor: '#58A6FF', backgroundColor: '#58A6FF22', borderWidth: 2, pointRadius: 3, fill: true, yAxisID: 'y1' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8B949E', font: { size: 11 } } } },
+      scales: {
+        x:  { ticks: { color: '#8B949E', font: { size: 10 } }, grid: { color: '#21262D' } },
+        y:  { beginAtZero: true, ticks: { color: '#3FB950', font: { size: 10 }, callback: v => 'R$'+v }, grid: { color: '#21262D' }, position: 'left' },
+        y1: { beginAtZero: true, suggestedMax: leadsMax, ticks: { color: '#58A6FF', font: { size: 10 } }, grid: { display: false }, position: 'right' },
+      }
+    }
+  });
+}
+
+// ─── Top Ads Donut ────────────────────────────────────────────────────────────
+function renderTopAdsChart(campaigns) {
+  const topAds = [...campaigns]
+    .sort((a,b) => getLeads(b) - getLeads(a))
+    .slice(0, 8)
+    .filter(a => getLeads(a) > 0);
+
+  const COLORS = ['#D4A843','#B8860B','#3FB950','#58A6FF','#A371F7','#E06C75','#F0A500','#5B9BD5'];
+  const ctx = document.getElementById('topAdsChart');
+  if (!ctx) return;
+  if (chartInstances['topAds']) chartInstances['topAds'].destroy();
+  const total = topAds.reduce((s,a) => s + getLeads(a), 0);
+
+  chartInstances['topAds'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: topAds.map(a => a.ad_name),
+      datasets: [{ data: topAds.map(a => getLeads(a)), backgroundColor: COLORS, borderColor: '#161B22', borderWidth: 2 }]
+    },
+    options: { cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} leads` } } } }
+  });
+
+  document.getElementById('topAdsLegend').innerHTML = topAds.slice(0,6).map((a,i) => `
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${COLORS[i]}"></div>
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;font-size:10px">${esc(a.ad_name)}</div>
+      <div class="donut-legend-pct">${total > 0 ? (getLeads(a)/total*100).toFixed(1) : 0}%</div>
+    </div>
+  `).join('');
+}
+
+// ─── Campaign by Objective ────────────────────────────────────────────────────
+let campStatusFilter = 'all';
+let objBlocksData = [];
+let funnelObjFilter = null;
+let overviewData = null;
+
+const OBJ_COLORS = {
+  'Tráfego': '#58A6FF', 'Alcance': '#A371F7', 'Engajamento': '#D4A843',
+  'Lead': '#3FB950', 'Venda Direta': '#E06C75', 'Visualização de Vídeo': '#F0A500',
+  'Mensagens': '#9ECBFF', 'Instalação de App': '#7D5BFF',
+};
+
+function setCampStatus(status) {
+  campStatusFilter = status;
+  document.querySelectorAll('.obj-status-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('campStatus' + (status === 'all' ? 'All' : status === 'active' ? 'Active' : 'Paused'))
+    ?.classList.add('active');
+  loadCampaignsByObjective();
+}
+
+async function loadCampaignsByObjective() {
+  const { since, until } = getDates();
+  const qs = `since=${since}&until=${until}&status=${campStatusFilter}`;
+  const el = document.getElementById('campaignObjBlocks');
+  if (el) el.innerHTML = '<div class="loading"><span class="spinner">⟳</span> Carregando...</div>';
+  try {
+    const data = await API(`/api/meta/${CLIENT_ID}/campaigns-by-objective?${qs}`);
+    objBlocksData = data || [];
+    renderObjBlocks(objBlocksData);
+    renderInvestObjGrid(objBlocksData);
+    buildFunnelObjTabs(objBlocksData);
+    if (funnelObjFilter) setFunnelObj(funnelObjFilter);
+  } catch(e) { if (el) el.innerHTML = `<div class="no-data">Erro: ${esc(e.message)}</div>`; }
+}
+
+function renderInvestObjGrid(groups) {
+  const el = document.getElementById('investObjGrid');
+  if (!el) return;
+  if (!groups || groups.length === 0) {
+    el.innerHTML = '<div class="no-data" style="grid-column:1/-1">Sem dados de objetivo no período</div>';
+    return;
+  }
+  const sorted = [...groups].sort((a,b) => b.total_spend - a.total_spend);
+  el.innerHTML = sorted.map(g => {
+    const color = OBJ_COLORS[g.label] || 'var(--muted)';
+    const cpl   = g.total_leads > 0 ? g.total_spend / g.total_leads : 0;
+    return `
+    <div class="invest-obj-card">
+      <div class="ioc-label" style="color:${color}">${esc(g.label)}</div>
+      <div class="ioc-invest">${brl(g.total_spend)}</div>
+      <div class="ioc-leads">${g.total_leads} leads</div>
+      <div class="ioc-cpl">${cpl > 0 ? 'CPL ' + brl(cpl) : 'Sem leads'}</div>
+      <div class="ioc-clicks">${fmt(g.total_clicks)} cliques</div>
+    </div>`;
+  }).join('');
+}
+
+function renderObjBlocks(groups) {
+  const el = document.getElementById('campaignObjBlocks');
+  if (!el) return;
+  if (!groups || groups.length === 0) {
+    el.innerHTML = '<div class="no-data">Nenhuma campanha encontrada para o filtro selecionado</div>';
+    return;
+  }
+  const sorted = [...groups].sort((a,b) => b.total_leads - a.total_leads || b.total_spend - a.total_spend);
+  el.innerHTML = sorted.map((g, idx) => {
+    const color = OBJ_COLORS[g.label] || '#8B949E';
+    const cpl   = g.total_leads > 0 ? g.total_spend / g.total_leads : 0;
+    const campRows = g.campaigns.map(c => {
+      const statusColor = c.status === 'ACTIVE' ? 'var(--green)' : 'var(--muted)';
+      const statusLabel = c.status === 'ACTIVE' ? 'Ativa' : c.status === 'PAUSED' ? 'Pausada' : (c.status || '—');
+      return `
+        <tr>
+          <td class="td-campaign" title="${esc(c.name)}">${esc(c.name)}</td>
+          <td style="color:${statusColor};font-size:11px">${statusLabel}</td>
+          <td style="color:var(--red)">${brl(c.spend)}</td>
+          <td>${fmt(c.clicks)}</td>
+          <td style="color:var(--green);font-weight:700">${c.leads}</td>
+          <td style="color:var(--gold)">${c.cpl > 0 ? brl(c.cpl) : '—'}</td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="6" class="no-data">Sem campanhas</td></tr>`;
+
+    return `
+    <div class="obj-block" id="obj-block-${idx}">
+      <div class="obj-block-header" onclick="toggleObjBlock(${idx})" id="obj-header-${idx}">
+        <div class="obj-block-title">
+          <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
+          ${esc(g.label)}
+          <span class="obj-block-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${g.campaigns.length} campanha${g.campaigns.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="obj-block-stats">
+          <div class="obs-item"><span class="obs-val" style="color:var(--red)">${brl(g.total_spend)}</span><span style="font-size:10px">invest.</span></div>
+          <div class="obs-item"><span class="obs-val" style="color:var(--green)">${g.total_leads}</span><span style="font-size:10px">leads</span></div>
+          ${cpl > 0 ? `<div class="obs-item"><span class="obs-val" style="color:var(--gold)">${brl(cpl)}</span><span style="font-size:10px">CPL</span></div>` : ''}
+        </div>
+        <span class="obj-block-arrow" id="obj-arrow-${idx}">▼</span>
+      </div>
+      <div class="obj-block-body" id="obj-body-${idx}">
+        <div class="obj-block-table">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Campanha</th><th>Status</th><th>Investimento</th><th>Cliques</th><th style="color:var(--green)">Leads</th><th>CPL</th>
+              </tr></thead>
+              <tbody>${campRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleObjBlock(idx) {
+  const body   = document.getElementById(`obj-body-${idx}`);
+  const header = document.getElementById(`obj-header-${idx}`);
+  const arrow  = document.getElementById(`obj-arrow-${idx}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+}
+
+// ─── Funnel objective tabs ────────────────────────────────────────────────────
+function buildFunnelObjTabs(groups) {
+  const container = document.getElementById('funnelObjTabs');
+  if (!container || !groups || groups.length === 0) return;
+  const sorted = [...groups].sort((a,b) => b.total_spend - a.total_spend);
+  let html = `<button class="obj-status-btn${funnelObjFilter === null ? ' active' : ''}" onclick="setFunnelObj(null)">Geral</button>`;
+  sorted.forEach(g => {
+    const color = OBJ_COLORS[g.label] || 'var(--muted)';
+    const isActive = funnelObjFilter === g.label;
+    html += `<button class="obj-status-btn${isActive ? ' active' : ''}"
+      style="${isActive ? `background:${color}22;border-color:${color}66;color:${color}` : ''}"
+      onclick="setFunnelObj('${esc(g.label)}')">${esc(g.label)}</button>`;
+  });
+  container.innerHTML = html;
+  buildFunnelSidenavItems(groups);
+}
+
+function buildFunnelSidenavItems(groups) {
+  const nav = document.getElementById('funnel-obj-nav');
+  if (!nav || !groups || groups.length === 0) return;
+  const sorted = [...groups].sort((a,b) => b.total_spend - a.total_spend);
+  nav.innerHTML = sorted.map(g => {
+    const color = OBJ_COLORS[g.label] || 'var(--muted)';
+    const isActive = funnelObjFilter === g.label;
+    return `<button class="nav-sub${isActive ? ' active-sub' : ''}" style="padding-left:60px" onclick="goToFunnelObj('${esc(g.label)}')">
+      <span class="ns-dot" style="${isActive ? `background:${color};box-shadow:0 0 7px ${color}` : ''}"></span> ${esc(g.label)}
+    </button>`;
+  }).join('');
+}
+
+function setFunnelObj(label) {
+  funnelObjFilter = label;
+  buildFunnelObjTabs(objBlocksData);
+  const titleEl = document.getElementById('funnelCardTitle');
+  if (!label) {
+    if (titleEl) titleEl.textContent = 'Funil de Tráfego — Geral';
+    if (overviewData) renderFunnel(overviewData);
+    return;
+  }
+  const group = objBlocksData.find(g => g.label === label);
+  if (!group) return;
+  if (titleEl) titleEl.textContent = `Funil de Tráfego — ${label}`;
+  const synth = {
+    impressions: group.total_impressions || 0,
+    reach:       group.total_reach || 0,
+    clicks:      group.total_clicks || 0,
+    actions:     group.total_leads > 0
+      ? [{ action_type: 'lead', value: String(group.total_leads) }] : [],
+    cost_per_action_type: group.total_leads > 0
+      ? [{ action_type: 'lead', value: String(group.total_spend / group.total_leads) }] : [],
+    spend:       group.total_spend,
+    frequency:   0,
+    cpm:         group.total_impressions > 0 ? (group.total_spend / group.total_impressions * 1000) : 0,
+    ctr:         group.total_impressions > 0 ? group.total_clicks / group.total_impressions : 0,
+    cpc:         group.total_clicks > 0 ? group.total_spend / group.total_clicks : 0,
+  };
+  renderFunnel(synth);
+}
+
+function renderCampaignTable(data) {
+  campaignData = data.map(d => ({
+    ...d,
+    leads: getLeads(d),
+    cpl:   getCPL(d),
+    spend: Number(d.spend || 0),
+    clicks:Number(d.clicks || 0),
+  }));
+  drawCampRows(campaignData);
+}
+
+function drawCampRows(rows) {
+  const tbody = document.getElementById('simpleCampBody');
+  if (!tbody) return;
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nenhuma campanha encontrada</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((c, i) => {
+    const checked = selectedCampaignIds.includes(c.id) ? 'checked' : '';
+    const sel = selectedCampaignIds.includes(c.id) ? ' class="selected"' : '';
+    const statusColor = c.status === 'ACTIVE' ? 'var(--green)' : 'var(--muted)';
+    const statusDot = `<span style="width:7px;height:7px;border-radius:50%;background:${statusColor};display:inline-block;margin-right:4px"></span>`;
+    return `<tr${sel} data-id="${esc(c.id)}" data-name="${esc(c.name || '')}" data-status="${esc(c.status || '')}">
+      <td><input type="checkbox" onchange="toggleCampRow(this)" ${checked} value="${esc(c.id)}"></td>
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td class="td-campaign" title="${esc(c.name)}">${statusDot}${esc(c.name)}</td>
+      <td style="text-align:right;color:var(--red)">${brl(c.spend)}</td>
+      <td style="text-align:right;color:var(--blue)">${fmt(c.clicks)}</td>
+      <td style="text-align:right;color:var(--green);font-weight:700">${c.leads}</td>
+    </tr>`;
+  }).join('');
+  updateCampInfo();
+  applyLocalCampFilters();
+}
+
+function toggleCampRow(checkbox) {
+  const id = checkbox.value;
+  const row = checkbox.closest('tr');
+  if (checkbox.checked) {
+    if (!selectedCampaignIds.includes(id)) selectedCampaignIds.push(id);
+    row.classList.add('selected');
+  } else {
+    selectedCampaignIds = selectedCampaignIds.filter(x => x !== id);
+    row.classList.remove('selected');
+  }
+  updateCampInfo();
+}
+
+function toggleSelectAllCamp() {
+  const master = document.getElementById('campSelectAll');
+  const tbody = document.getElementById('simpleCampBody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach(row => {
+    if (row.style.display === 'none') return;
+    const cb = row.querySelector('input[type=checkbox]');
+    if (!cb) return;
+    cb.checked = master.checked;
+    const id = cb.value;
+    if (master.checked) {
+      if (!selectedCampaignIds.includes(id)) selectedCampaignIds.push(id);
+      row.classList.add('selected');
+    } else {
+      selectedCampaignIds = selectedCampaignIds.filter(x => x !== id);
+      row.classList.remove('selected');
+    }
+  });
+  updateCampInfo();
+}
+
+function filterCampTable() {
+  applyLocalCampFilters();
+}
+
+function updateCampInfo() {
+  const el = document.getElementById('campSelectedInfo');
+  if (el) el.textContent = selectedCampaignIds.length > 0 ? `${selectedCampaignIds.length} selecionada(s)` : '';
+}
+
+function applyCampFilter() {
+  reload();
+}
+
+function clearCampFilter() {
+  selectedCampaignIds = [];
+  const q = document.getElementById('campSearch');
+  if (q) q.value = '';
+  const master = document.getElementById('campSelectAll');
+  if (master) master.checked = false;
+  drawCampRows(campaignData);
+  reload();
+}
+
+// ─── Filtros locais da tabela de campanhas ────────────────────────────────────
+let campTableStatusFilter = 'all';
+
+function setCampTableStatus(status) {
+  campTableStatusFilter = status;
+  document.getElementById('campPillAll')?.classList.toggle('active', status === 'all');
+  document.getElementById('campPillActive')?.classList.toggle('active', status === 'ACTIVE');
+  document.getElementById('campPillPaused')?.classList.toggle('active', status === 'PAUSED');
+  applyLocalCampFilters();
+}
+
+function applyLocalCampFilters() {
+  const q = (document.getElementById('campSearch')?.value || '').toLowerCase().trim();
+  const tbody = document.getElementById('simpleCampBody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach(row => {
+    const name = (row.dataset.name || '').toLowerCase();
+    const status = (row.dataset.status || '');
+    const matchName = !q || name.includes(q);
+    const matchStatus = campTableStatusFilter === 'all' || status === campTableStatusFilter;
+    row.style.display = (matchName && matchStatus) ? '' : 'none';
+  });
+}
+
+async function reloadCampByPeriod() {
+  const since = document.getElementById('campPeriodSince')?.value;
+  const until = document.getElementById('campPeriodUntil')?.value;
+  if (!since || !until) { alert('Preencha De e Ate para buscar por periodo.'); return; }
+  const qs = `since=${since}&until=${until}`;
+  try {
+    const data = await API(`/api/meta/${CLIENT_ID}/campaigns?${qs}`);
+    renderCampaignTable(data);
+  } catch(e) { alert('Erro ao buscar campanhas: ' + e.message); }
+}
+
+function clearCampPeriod() {
+  const s = document.getElementById('campPeriodSince');
+  const u = document.getElementById('campPeriodUntil');
+  if (s) s.value = '';
+  if (u) u.value = '';
+  drawCampRows(campaignData);
+}
+
+// ─── Gauge ────────────────────────────────────────────────────────────────────
+function renderGauge(lr, variation) {
+  document.getElementById('gaugeVal').textContent = lr.toFixed(2) + '%';
+  const el = document.getElementById('gaugeVar');
+  el.textContent = (variation.dir >= 0 ? '↑ +' : '↓ ') + variation.pct + '% vs anterior';
+  el.style.color = variation.dir >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const ctx = document.getElementById('gaugeChart');
+  if (!ctx) return;
+  if (chartInstances['gauge']) chartInstances['gauge'].destroy();
+  const v = Math.min(100, lr);
+  chartInstances['gauge'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [v, 100-v], backgroundColor: ['#D4A843','#21262D'], borderColor: ['#D4A843','#21262D'], borderWidth: 0 }] },
+    options: { circumference: 180, rotation: 270, cutout: '72%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+  });
+}
+
+// ─── Leads × CPL Chart ───────────────────────────────────────────────────────
+function renderLeadsChart(ts) {
+  const ctx = document.getElementById('leadsChart');
+  if (!ctx) return;
+  if (chartInstances['leads']) chartInstances['leads'].destroy();
+  const labels = ts.map(d => d.date_start?.slice(5));
+  const leads  = ts.map(d => getLeads(d));
+  const cpls   = ts.map(d => getCPL(d));
+  chartInstances['leads'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Leads', data: leads, borderColor: '#D4A843', pointBackgroundColor: '#D4A843', borderWidth: 2, pointRadius: 4, fill: false, yAxisID: 'y' },
+        { label: 'Custo por Lead', data: cpls, borderColor: '#58A6FF', borderWidth: 1.5, pointRadius: 2, fill: false, yAxisID: 'y1', borderDash: [4,3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8B949E', font: { size: 11 } } } },
+      scales: {
+        x:  { ticks: { color: '#8B949E', font: { size: 10 } }, grid: { color: '#21262D' } },
+        y:  { ticks: { color: '#D4A843', font: { size: 10 } }, grid: { color: '#21262D' }, position: 'left' },
+        y1: { ticks: { color: '#58A6FF', font: { size: 10 }, callback: v => 'R$'+v.toFixed(0) }, grid: { display: false }, position: 'right' },
+      }
+    }
+  });
+}
+
+// ─── Demographics ─────────────────────────────────────────────────────────────
+function renderDemographics(data) {
+  const genderMap = {};
+  const ageMap    = {};
+  data.forEach(d => {
+    const g = d.gender || 'unknown';
+    const a = d.age    || 'unknown';
+    genderMap[g] = (genderMap[g] || 0) + Number(d.reach || 0);
+    ageMap[a]    = (ageMap[a]    || 0) + Number(d.reach || 0);
+  });
+
+  const gColors = { male: '#58A6FF', female: '#D4A843', unknown: '#8B949E' };
+  const gLabels = { male: 'Masculino', female: 'Feminino', unknown: 'Desconhecido' };
+  renderDonut('genderChart', 'genderLegend', genderMap, gColors, gLabels);
+
+  const aColors = { '18-24':'#D4A843','25-34':'#B8860B','35-44':'#3FB950','45-54':'#58A6FF','55-64':'#A371F7','65+':'#E06C75','unknown':'#8B949E' };
+  renderDonut('ageChart', 'ageLegend', ageMap, aColors, {});
+
+  const { since, until } = getDates();
+  API(`/api/meta/${CLIENT_ID}/timeseries?since=${since}&until=${until}`).then(ts => {
+    if (ts) renderLeadsChart(ts);
+  });
+}
+
+function renderDonut(chartId, legendId, dataMap, colors, labels) {
+  const entries = Object.entries(dataMap).sort((a,b) => b[1]-a[1]);
+  const total   = entries.reduce((s,[,v]) => s+v, 0);
+  const FALLBACK_COLORS = ['#D4A843','#3FB950','#58A6FF','#A371F7','#E06C75','#8B949E','#B8860B','#5B9BD5'];
+
+  const ctx = document.getElementById(chartId);
+  if (!ctx) return;
+  if (chartInstances[chartId]) chartInstances[chartId].destroy();
+  chartInstances[chartId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k]) => labels[k] || k),
+      datasets: [{ data: entries.map(([,v]) => v),
+        backgroundColor: entries.map(([k],i) => colors[k] || FALLBACK_COLORS[i % FALLBACK_COLORS.length]),
+        borderColor: '#161B22', borderWidth: 2 }]
+    },
+    options: { cutout: '65%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.label}: ${fmt(c.parsed)}` } } } }
+  });
+
+  document.getElementById(legendId).innerHTML = entries.slice(0,6).map(([k,v],i) => `
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${colors[k] || FALLBACK_COLORS[i]}"></div>
+      <div style="font-size:10px">${esc(labels[k] || k)}</div>
+      <div class="donut-legend-pct">${total > 0 ? (v/total*100).toFixed(1) : 0}%</div>
+    </div>
+  `).join('');
+}
+
+// ─── Regions ─────────────────────────────────────────────────────────────────
+const STATE_COORDS = {
+  'São Paulo': [-23.55, -46.63], 'Rio de Janeiro': [-22.91, -43.17],
+  'Minas Gerais': [-19.92, -43.93], 'Bahia': [-12.97, -38.50],
+  'Paraná': [-25.43, -49.27], 'Rio Grande do Sul': [-30.03, -51.22],
+  'Santa Catarina': [-27.59, -48.55], 'Goiás': [-16.69, -49.26],
+  'Pernambuco': [-8.05, -34.88], 'Ceará': [-3.72, -38.54],
+  'Amazonas': [-3.10, -60.02], 'Pará': [-1.46, -48.49],
+  'Mato Grosso': [-15.60, -56.09], 'Mato Grosso do Sul': [-20.44, -54.65],
+  'Maranhão': [-2.53, -44.30], 'Espírito Santo': [-20.32, -40.31],
+  'Alagoas': [-9.67, -35.74], 'Sergipe': [-10.95, -37.07],
+  'Rio Grande do Norte': [-5.79, -35.21], 'Piauí': [-5.09, -42.80],
+  'Paraíba': [-7.12, -34.85], 'Rondônia': [-8.76, -63.90],
+  'Tocantins': [-10.21, -48.36], 'Acre': [-9.98, -67.82],
+  'Roraima': [2.82, -60.68], 'Amapá': [0.03, -51.07],
+  'Distrito Federal': [-15.83, -47.92],
+};
+
+function renderRegions(data) {
+  lastRegionsData = [...data];
+  const sorted = [...data].sort((a,b) => Number(b.reach||0) - Number(a.reach||0));
+  document.getElementById('regionsBody').innerHTML = sorted.slice(0,10).map(r => `
+    <tr>
+      <td>${esc(r.region)}</td>
+      <td style="color:var(--blue)">${Number(r.reach||0).toLocaleString('pt-BR')}</td>
+      <td style="color:var(--muted)">${Number(r.impressions||0).toLocaleString('pt-BR')}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="3" class="no-data">Sem dados de região</td></tr>';
+
+  if (leafletMap) updateMapMarkers(sorted);
+}
+
+function initMap() {
+  leafletMap = L.map('map', { zoomControl: true, scrollWheelZoom: false })
+               .setView([-14.2, -51.9], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© CartoDB', subdomains: 'abcd', maxZoom: 14
+  }).addTo(leafletMap);
+}
+
+function updateMapMarkers(regions) {
+  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  mapMarkers = [];
+  const allData = lastRegionsData.length ? lastRegionsData : regions;
+  const maxReach = Math.max(...allData.map(r => Number(r.reach||0)), 1);
+  regions.forEach(r => {
+    const coords = STATE_COORDS[r.region];
+    if (!coords) return;
+    const ratio  = Number(r.reach||0) / maxReach;
+    const radius = 8 + ratio * 36;
+    const heat   = `hsl(${120 - ratio*60},90%,${40+ratio*20}%)`;
+    const m = L.circleMarker(coords, {
+      radius, fillColor: heat, fillOpacity: 0.65 + ratio * 0.3, color: heat, weight: 1, opacity: 0.9
+    }).addTo(leafletMap);
+    m.bindPopup(`<strong>${r.region}</strong><br>Alcance: ${Number(r.reach||0).toLocaleString('pt-BR')}<br>Impressoes: ${Number(r.impressions||0).toLocaleString('pt-BR')}`);
+    mapMarkers.push(m);
+  });
+}
+
+function zoomToRegion() {
+  if (!leafletMap) return;
+  const val = document.getElementById('regionSelect').value;
+  if (!val) {
+    leafletMap.setView([-14.2, -51.9], 4);
+    updateMapMarkers(lastRegionsData);
+  } else {
+    const coords = STATE_COORDS[val];
+    if (coords) leafletMap.setView(coords, 8);
+    const stateData = lastRegionsData.filter(r => r.region === val);
+    updateMapMarkers(stateData.length ? stateData : lastRegionsData);
+  }
+}
+
+// ─── Ad Gallery ───────────────────────────────────────────────────────────────
+function renderAdGallery(ads) {
+  const sorted = [...ads].sort((a,b) => getLeads(b) - getLeads(a));
+  document.getElementById('adCount').textContent = `${sorted.length} anúncios`;
+  document.getElementById('adGallery').innerHTML = sorted.map(ad => `
+    <div class="ad-card">
+      <div class="ad-thumb">
+        ${ad.thumbnail_url ? `<img src="${esc(ad.thumbnail_url)}" alt="" onerror="this.parentElement.textContent='🖼'">` : '🖼'}
+      </div>
+      <div class="ad-info">
+        <div class="ad-name" title="${esc(ad.ad_name)}">${esc(ad.ad_name)}</div>
+        <div class="ad-stat">
+          <span style="color:var(--muted)">${fmt(Number(ad.impressions||0))} imp</span>
+          <span>${getLeads(ad)} leads</span>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<div class="no-data">Sem anúncios no período</div>';
+}
+
+// ─── Sheets ───────────────────────────────────────────────────────────────────
+async function loadSheets() {
+  document.getElementById('sheetsContent').innerHTML = '<div class="loading"><span class="spinner">⟳</span> Carregando planilha...</div>';
+  try {
+    const d = await API(`/api/clients/${CLIENT_ID}/sheets`);
+    if (!d || !d.data || d.data.length === 0) {
+      renderUploadZone();
+    } else {
+      renderSheetsTable(d);
+    }
+  } catch(e) { renderUploadZone(); }
+}
+
+function renderUploadZone() {
+  document.getElementById('sheetsContent').innerHTML = `
+    <div class="upload-zone" id="uploadZone">
+      <h3>📂 Nenhuma planilha conectada</h3>
+      <p>Faça upload de um CSV com dados adicionais do cliente.<br>
+         O administrador também pode conectar um Google Sheets diretamente.</p>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 Upload CSV</button>
+    </div>
+  `;
+  ['dragover','dragenter'].forEach(e => document.getElementById('uploadZone')?.addEventListener(e, ev => { ev.preventDefault(); ev.currentTarget.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(e => document.getElementById('uploadZone')?.addEventListener(e, ev => { ev.preventDefault(); ev.currentTarget.classList.remove('drag'); if(e==='drop') handleDrop(ev); }));
+}
+
+function renderSheetsTable(d) {
+  const rows = d.data || [];
+  const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const src = d.source === 'google_sheets'
+    ? `Google Sheets — <a href="${d.url}" target="_blank" style="color:var(--blue)">Abrir planilha</a>`
+    : `Upload CSV — ${new Date(d.updated_at||Date.now()).toLocaleDateString('pt-BR')}`;
+
+  document.getElementById('sheetsContent').innerHTML = `
+    <div style="padding:12px 16px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <span>Fonte: ${src}</span>
+      <span>|</span>
+      <span><strong>${rows.length}</strong> linhas</span>
+      <span>|</span>
+      <input type="file" id="csvFileUpdate" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      <button onclick="document.getElementById('csvFileUpdate').click()" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text);cursor:pointer">📤 Atualizar CSV</button>
+    </div>
+    <div class="tbl-wrap" style="max-height:500px;overflow-y:auto">
+      <table class="sheets-table">
+        <thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(row => `<tr>${headers.map(h => `<td>${esc(row[h])}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function uploadCSV(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(`/api/clients/${CLIENT_ID}/sheets/upload`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    await loadSheets();
+  } catch(e) { alert('Erro ao enviar: ' + e.message); }
+}
+
+function handleDrop(ev) {
+  const file = ev.dataTransfer.files[0];
+  if (!file) return;
+  const inp = document.getElementById('csvFile');
+  if (inp) { const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; uploadCSV(inp); }
+}
+
+// ─── Health Score + Recomendações da IA ───────────────────────────────────────
+function renderHealthScore(overview, comparison, campaigns) {
+  const spend  = Number(overview?.spend || 0);
+  const leads  = getLeads(overview);
+  const impr   = Number(overview?.impressions || 0);
+  const freq   = Number(overview?.frequency || 0);
+  const ctr    = Number(overview?.ctr || 0) * 100;
+  const cpl    = getCPL(overview);
+  const goals  = clientInfo.goals || {};
+  const pLeads = comparison?.previous ? getLeads(comparison.previous) : 0;
+
+  let score = 70;
+  const issues = [], positives = [];
+
+  if (impr > 0) {
+    if (ctr >= 2)        { score += 10; positives.push(`CTR excelente (${ctr.toFixed(2)}%)`); }
+    else if (ctr >= 1)   { score += 5; }
+    else if (ctr < 0.5)  { score -= 10; issues.push({ icon: '📉', text: `CTR baixo (${ctr.toFixed(2)}%) — teste novos criativos`, p: 'high' }); }
+  }
+
+  if (freq > 4)       { score -= 15; issues.push({ icon: '🔁', text: `Frequência alta (${freq.toFixed(1)}x) — renove os criativos`, p: 'high' }); }
+  else if (freq > 3)  { score -= 8;  issues.push({ icon: '🔁', text: `Frequência elevada (${freq.toFixed(1)}x) — monitore fadiga de audiência`, p: 'medium' }); }
+  else if (freq > 0 && freq <= 2.5) { score += 5; }
+
+  if (leads === 0 && spend > 0) {
+    score -= 20;
+    issues.push({ icon: '⚠️', text: 'Sem leads com verba ativa — verifique pixel e configuração de conversão', p: 'high' });
+  } else if (leads > 0) {
+    score += 5;
+    if (pLeads > 0) {
+      const v = (leads - pLeads) / pLeads * 100;
+      if (v >= 20)       { score += 8;  positives.push(`Leads cresceram ${v.toFixed(0)}% vs período anterior`); }
+      else if (v <= -20) { score -= 8;  issues.push({ icon: '📉', text: `Leads caíram ${Math.abs(v).toFixed(0)}% vs período anterior`, p: 'medium' }); }
+    }
+  }
+
+  if (goals.cpl && cpl > 0) {
+    const r = cpl / goals.cpl;
+    if (r <= 0.9)    { score += 8;  positives.push(`CPL ${brl(cpl)} abaixo da meta (${brl(goals.cpl)})`); }
+    else if (r > 1.3){ score -= 10; issues.push({ icon: '💰', text: `CPL ${brl(cpl)} está ${((r-1)*100).toFixed(0)}% acima da meta`, p: 'high' }); }
+  }
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const color = score >= 75 ? '#3FB950' : score >= 50 ? '#D4A843' : '#E06C75';
+  const label = score >= 75 ? 'Conta saudável' : score >= 50 ? 'Atenção necessária' : 'Performance crítica';
+
+  document.getElementById('healthScoreVal').textContent = score;
+  document.getElementById('healthScoreVal').style.color = color;
+  document.getElementById('healthDesc').textContent = label;
+
+  const ctx = document.getElementById('healthScoreChart');
+  if (ctx) {
+    if (chartInstances['healthScore']) chartInstances['healthScore'].destroy();
+    chartInstances['healthScore'] = new Chart(ctx, {
+      type: 'doughnut',
+      data: { datasets: [{ data: [score, 100 - score], backgroundColor: [color, '#21262D'], borderColor: [color, '#21262D'], borderWidth: 0 }] },
+      options: { cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+    });
+  }
+
+  const recs = [
+    ...issues.sort((a, b) => (a.p === 'high' ? 0 : 1) - (b.p === 'high' ? 0 : 1)),
+    ...positives.slice(0, 2).map(t => ({ icon: '✅', text: t, p: 'ok' }))
+  ];
+
+  const recEl = document.getElementById('recList');
+  if (!recs.length) {
+    recEl.innerHTML = '<div class="no-data">Boa performance no período. Continue monitorando.</div>';
+  } else {
+    recEl.innerHTML = recs.map(r => {
+      const bg  = r.p === 'high' ? '#E06C7512' : r.p === 'medium' ? '#D4A84312' : '#3FB95012';
+      const bdr = r.p === 'high' ? '#E06C75'   : r.p === 'medium' ? '#D4A843'   : '#3FB950';
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-left:3px solid ${bdr};background:${bg};border-radius:0 6px 6px 0;margin-bottom:8px;font-size:12px;line-height:1.5">
+        <span>${r.icon}</span><span style="color:var(--text)">${esc(r.text)}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ─── Misc ─────────────────────────────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  if (el) { el.textContent = '⚠ ' + msg; el.style.display = 'block'; }
+  document.getElementById('lastUpdate').textContent = 'Erro ao atualizar';
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login.html';
+}
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+init();
+initScrollSpy();
+</script>
+</body>
+</html>

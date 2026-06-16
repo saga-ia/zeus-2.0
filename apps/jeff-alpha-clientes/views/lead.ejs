@@ -1,0 +1,49 @@
+<%- include('partials/header', { title: (lead.business_name || 'Lead') + ' · Alpha' }) %>
+<div class="page-head">
+  <div>
+    <h1><%= lead.business_name || 'Lead sem nome' %></h1>
+    <p><span class="status-pill status-<%= lead.status %>"><%= lead.status %></span> &nbsp;·&nbsp; recebido em <%= lead.created_at %></p>
+  </div>
+  <div class="actions"><a href="/leads" class="btn">← Leads</a></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Dados do contato</h2>
+    <div style="line-height:2;font-size:14px">
+      <div><b>Nome:</b> <%= lead.contact_name || '-' %></div>
+      <div><b>Telefone:</b> <%= lead.contact_phone || '-' %></div>
+      <div><b>Email:</b> <%= lead.contact_email || '-' %></div>
+      <div><b>Segmento:</b> <%= lead.segment || '-' %></div>
+      <div><b>Receita mensal:</b> <%= lead.monthly_revenue || '-' %></div>
+      <div><b>Marketing atual:</b> <%= lead.current_marketing || '-' %></div>
+      <div><b>Metas:</b> <%= lead.goals || '-' %></div>
+      <% if (lead.notes) { %><div style="margin-top:10px"><b>Notas:</b><br><%= lead.notes %></div><% } %>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Ações</h2>
+    <% if (lead.status === 'pending') { %>
+      <form method="post" action="/leads/<%= lead.id %>/aprovar" style="margin-bottom:14px">
+        <p style="color:var(--fg-3);font-size:13px;margin:0 0 12px">Aprovar transforma este lead em cliente ativo na lista principal.</p>
+        <button class="btn btn-primary" style="width:100%">Aprovar e virar cliente</button>
+      </form>
+      <form method="post" action="/leads/<%= lead.id %>/rejeitar">
+        <label>Motivo (opcional)</label>
+        <textarea name="reason" placeholder="Por que não vai pra frente?"></textarea>
+        <div style="margin-top:12px"><button class="btn btn-danger" style="width:100%">Rejeitar</button></div>
+      </form>
+    <% } else if (lead.status === 'approved') { %>
+      <p style="color:var(--ok)">Lead aprovado. <% if (lead.approved_client_id) { %><a href="/clientes/<%= lead.approved_client_id %>" style="color:var(--accent)">Ver cliente →</a><% } %></p>
+    <% } else { %>
+      <p style="color:var(--fg-3)">Lead rejeitado.</p>
+      <% if (lead.rejected_reason) { %><div style="background:var(--bg-2);padding:10px;border-radius:8px;font-size:13px"><%= lead.rejected_reason %></div><% } %>
+    <% } %>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <h2>Payload bruto</h2>
+  <div class="payload-box"><%= JSON.stringify(payload, null, 2) %></div>
+</div>
+<%- include('partials/footer') %>

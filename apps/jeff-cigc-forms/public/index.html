@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadastro — CIGC 2026</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%236d28d9'/%3E%3Ctext x='16' y='22' font-family='Inter,sans-serif' font-size='10' font-weight='800' fill='%23d6b56a' text-anchor='middle'%3ECIGC%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1012458911094117');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1012458911094117&ev=PageView&noscript=1"/></noscript>
+
+<style>
+:root {
+  --bg-0: #0b0617;
+  --bg-1: #15082a;
+  --bg-2: #1f0d3e;
+  --violet-400: #9874f9;
+  --violet-500: #7c4dff;
+  --violet-600: #6d28d9;
+  --violet-700: #5b21b6;
+  --violet-900: #2e1065;
+  --gold: #d6b56a;
+  --gold-light: #f0d08a;
+  --text-100: #f8f6ff;
+  --text-300: #cfc6e8;
+  --text-500: #8e85ad;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.15);
+  --card: rgba(255,255,255,0.04);
+  --radius: 16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;overflow-x:hidden;width:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background: radial-gradient(ellipse at top, var(--bg-2) 0%, var(--bg-1) 40%, var(--bg-0) 80%);
+  color:var(--text-100);
+  -webkit-font-smoothing:antialiased;
+  padding: 24px 16px 48px;
+}
+
+/* Header */
+.header{text-align:center;padding:24px 0 20px;max-width:560px;margin:0 auto}
+.logo-wrap{margin-bottom:18px}
+.logo-wrap img{height:40px;width:auto;object-fit:contain}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(214,181,106,0.12);border:1px solid rgba(214,181,106,0.3);
+  color:var(--gold);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  padding:6px 14px;border-radius:100px;margin-bottom:16px;
+}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.header h1{
+  font-size:clamp(22px,5vw,34px);font-weight:900;letter-spacing:-0.03em;
+  line-height:1.15;margin-bottom:10px;
+}
+.header h1 span{
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header p{color:var(--text-300);font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}
+
+/* Form card */
+.form-wrap{max-width:560px;margin:0 auto;width:100%}
+.form-card{
+  background:linear-gradient(180deg,rgba(46,16,101,0.45),rgba(11,6,23,0.75));
+  border:1px solid var(--border-strong);border-radius:24px;padding:32px 28px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 40px 80px -20px rgba(124,77,255,0.35);
+  width:100%;
+}
+@media(max-width:480px){.form-card{padding:22px 18px;border-radius:20px}}
+
+/* Progress bar */
+.progress-wrap{margin-bottom:28px}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-label{font-size:12px;color:var(--text-500);font-weight:500}
+.progress-step{font-size:12px;color:var(--gold);font-weight:600}
+.progress-track{height:4px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--violet-500),var(--gold));border-radius:100px;transition:width 0.4s ease}
+
+/* Steps */
+.step{display:none}
+.step.active{display:block}
+
+.step-question{
+  font-size:20px;font-weight:800;color:var(--text-100);margin-bottom:6px;line-height:1.3;
+}
+.step-hint{font-size:13px;color:var(--text-500);margin-bottom:22px;line-height:1.5}
+
+.field{margin-bottom:0}
+.field label{display:block;font-size:13px;color:var(--text-300);margin-bottom:7px;font-weight:500}
+.field input,.field select{
+  width:100%;padding:16px 18px;border-radius:14px;
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);
+  color:var(--text-100);font-size:16px;font-family:inherit;outline:none;
+  transition:border-color 0.15s,background 0.15s;
+  -webkit-appearance:none;appearance:none;
+}
+.field input::placeholder{color:var(--text-500)}
+.field input:focus,.field select:focus{border-color:var(--violet-400);background:rgba(0,0,0,0.45)}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238e85ad' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:44px}
+.field select option{background:#1f0d3e;color:var(--text-100)}
+
+/* Radio group */
+.radio-group{display:flex;flex-direction:column;gap:10px}
+.radio-option{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 18px;border-radius:14px;border:1px solid var(--border);
+  background:rgba(0,0,0,0.25);cursor:pointer;
+  transition:border-color 0.15s,background 0.15s;font-size:15px;font-weight:500;
+}
+.radio-option input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.radio-option:has(input:checked){
+  border-color:var(--violet-400);background:rgba(124,77,255,0.15);
+}
+.radio-dot{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--border-strong);
+  display:grid;place-items:center;transition:border-color 0.15s;flex-shrink:0;
+}
+.radio-option:has(input:checked) .radio-dot{
+  border-color:var(--violet-400);background:var(--violet-500);
+}
+.radio-option:has(input:checked) .radio-dot::after{
+  content:'';width:6px;height:6px;border-radius:50%;background:white;
+}
+
+/* Navigation */
+.nav-wrap{display:flex;gap:10px;margin-top:24px}
+.btn-back{
+  padding:16px 20px;border-radius:14px;
+  background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  color:var(--text-300);font-size:15px;font-weight:600;cursor:pointer;
+  transition:background 0.15s;flex-shrink:0;
+}
+.btn-back:hover{background:rgba(255,255,255,0.1)}
+.btn-next,.btn-submit{
+  flex:1;padding:16px 20px;border-radius:14px;
+  background:linear-gradient(135deg,var(--violet-500),var(--violet-700));
+  color:white;font-size:15px;font-weight:700;border:1px solid rgba(214,181,106,0.2);cursor:pointer;
+  transition:transform 0.12s,box-shadow 0.12s,opacity 0.15s;
+  box-shadow:0 14px 40px -8px rgba(124,77,255,0.5);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-next:hover,.btn-submit:hover{transform:translateY(-2px);box-shadow:0 18px 48px -8px rgba(124,77,255,0.7)}
+.btn-next:active,.btn-submit:active{transform:translateY(0)}
+.btn-submit:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+
+/* Error */
+.error-msg{
+  background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
+  color:#fca5a5;border-radius:10px;padding:10px 14px;
+  font-size:13px;margin-top:12px;display:none;
+}
+.error-msg.visible{display:block}
+
+/* Success */
+.success-wrap{
+  text-align:center;padding:40px 20px;display:none;
+}
+.success-wrap.visible{display:block}
+.success-icon{
+  width:68px;height:68px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(22,163,74,0.3),rgba(22,163,74,0.1));
+  border:2px solid rgba(22,163,74,0.5);
+  display:grid;place-items:center;margin:0 auto 18px;font-size:30px;
+}
+.success-wrap h2{font-size:22px;font-weight:800;margin-bottom:10px}
+.success-wrap p{color:var(--text-300);font-size:14px;line-height:1.6}
+
+/* Footer */
+.footer{text-align:center;margin-top:24px;color:var(--text-500);font-size:12px}
+.footer strong{color:var(--gold);font-weight:600}
+
+/* Spinner */
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-wrap">
+    <img src="/logo-branca.png" alt="CIGC 2026">
+  </div>
+  <div class="badge"><span class="badge-dot"></span>Setembro 2026 &mdash; São Paulo</div>
+  <h1>Congresso Internacional<br>para <span>Gestores de Clínica</span></h1>
+  <p>Preencha seus dados para garantir sua vaga e receber todas as informações do evento.</p>
+</div>
+
+<div class="form-wrap">
+  <div class="form-card" id="form-card">
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label" id="progress-label">Etapa 1 de 6</span>
+        <span class="progress-step" id="progress-pct">17%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:17%"></div>
+      </div>
+    </div>
+
+    <form id="cadastro-form" novalidate>
+
+      <!-- ETAPA 1: Nome -->
+      <div class="step active" data-step="1">
+        <div class="step-question">Qual é o seu nome?</div>
+        <div class="step-hint">Vamos nos conhecer primeiro.</div>
+        <div class="field">
+          <input type="text" id="nome" name="nome" placeholder="Seu nome completo" autocomplete="name" inputmode="text">
+        </div>
+        <div class="error-msg" id="err-1"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-next" id="next-1">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 2: WhatsApp -->
+      <div class="step" data-step="2">
+        <div class="step-question">Qual é o seu WhatsApp?</div>
+        <div class="step-hint">DDD + número. Usaremos apenas para enviar as informações do evento.</div>
+        <div class="field">
+          <input type="tel" id="telefone" name="telefone" placeholder="DDD 9XXXX-XXXX" autocomplete="tel" inputmode="tel">
+        </div>
+        <div class="error-msg" id="err-2"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back="1">&larr;</button>
+          <button type="button" class="btn-next" id="next-2">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 3: E-mail -->
+      <div class="step" data-step="3">
+        <div class="step-question">Qual é o seu e-mail?</div>
+        <div class="step-hint">Para enviarmos sua confirmação de inscrição.</div>
+        <div class="field">
+          <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
+        </div>
+        <div class="error-msg" id="err-3"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back="2">&larr;</button>
+          <button type="button" class="btn-next" id="next-3">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 4: Dono de clinica? -->
+      <div class="step" data-step="4">
+        <div class="step-question">Você é dono de clínica?</div>
+        <div class="step-hint">Selecione a opção que melhor te descreve.</div>
+        <div class="field">
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="dono_clinica" value="Sim">
+              <span class="radio-dot"></span>
+              Sim, sou dono
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="dono_clinica" value="Nao">
+              <span class="radio-dot"></span>
+              Não sou dono
+            </label>
+          </div>
+        </div>
+        <div class="error-msg" id="err-4"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back="3">&larr;</button>
+          <button type="button" class="btn-next" id="next-4">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 5: Nome e Instagram da clinica (só para donos) -->
+      <div class="step" data-step="5">
+        <div class="step-question">Dados da sua clínica</div>
+        <div class="step-hint">Informe o nome e o Instagram da sua clínica.</div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="nome_clinica">Nome da clínica</label>
+          <input type="text" id="nome_clinica" name="nome_clinica" placeholder="Nome da sua clínica" inputmode="text">
+        </div>
+        <div class="field">
+          <label for="instagram">Instagram da clínica</label>
+          <input type="text" id="instagram" name="instagram" placeholder="@suaclinica" inputmode="text">
+        </div>
+        <div class="error-msg" id="err-5"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back="4">&larr;</button>
+          <button type="button" class="btn-next" id="next-5">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 6: Segmento -->
+      <div class="step" data-step="6">
+        <div class="step-question">Qual é o segmento da sua clínica?</div>
+        <div class="step-hint">Selecione o mais próximo da sua atuação.</div>
+        <div class="field">
+          <select id="segmento" name="segmento">
+            <option value="" disabled selected>Selecione o segmento</option>
+            <option value="Multidisciplinar">Multidisciplinar</option>
+            <option value="Medica">Médica</option>
+            <option value="Odontologica">Odontológica</option>
+            <option value="Outros segmentos">Outros segmentos</option>
+          </select>
+        </div>
+        <div class="error-msg" id="err-6"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back-dynamic="true">&larr;</button>
+          <button type="button" class="btn-next" id="next-6">Continuar &rarr;</button>
+        </div>
+      </div>
+
+      <!-- ETAPA 7: Estado -->
+      <div class="step" data-step="7">
+        <div class="step-question">De qual estado você é?</div>
+        <div class="step-hint">Ultima etapa. Promessa!</div>
+        <div class="field">
+          <select id="regiao" name="regiao">
+            <option value="" disabled selected>Selecione seu estado</option>
+            <option value="AC - Acre">AC - Acre</option>
+            <option value="AL - Alagoas">AL - Alagoas</option>
+            <option value="AM - Amazonas">AM - Amazonas</option>
+            <option value="AP - Amapa">AP - Amapá</option>
+            <option value="BA - Bahia">BA - Bahia</option>
+            <option value="CE - Ceara">CE - Ceará</option>
+            <option value="DF - Distrito Federal">DF - Distrito Federal</option>
+            <option value="ES - Espirito Santo">ES - Espírito Santo</option>
+            <option value="GO - Goias">GO - Goiás</option>
+            <option value="MA - Maranhao">MA - Maranhão</option>
+            <option value="MG - Minas Gerais">MG - Minas Gerais</option>
+            <option value="MS - Mato Grosso do Sul">MS - Mato Grosso do Sul</option>
+            <option value="MT - Mato Grosso">MT - Mato Grosso</option>
+            <option value="PA - Para">PA - Pará</option>
+            <option value="PB - Paraiba">PB - Paraíba</option>
+            <option value="PE - Pernambuco">PE - Pernambuco</option>
+            <option value="PI - Piaui">PI - Piauí</option>
+            <option value="PR - Parana">PR - Paraná</option>
+            <option value="RJ - Rio de Janeiro">RJ - Rio de Janeiro</option>
+            <option value="RN - Rio Grande do Norte">RN - Rio Grande do Norte</option>
+            <option value="RO - Rondonia">RO - Rondônia</option>
+            <option value="RR - Roraima">RR - Roraima</option>
+            <option value="RS - Rio Grande do Sul">RS - Rio Grande do Sul</option>
+            <option value="SC - Santa Catarina">SC - Santa Catarina</option>
+            <option value="SE - Sergipe">SE - Sergipe</option>
+            <option value="SP - Sao Paulo">SP - São Paulo</option>
+            <option value="TO - Tocantins">TO - Tocantins</option>
+          </select>
+        </div>
+        <div class="error-msg" id="err-7"></div>
+        <div class="nav-wrap">
+          <button type="button" class="btn-back" data-back="6">&larr;</button>
+          <button type="submit" class="btn-submit" id="btn-submit">
+            <span id="btn-text">Garantir minha vaga</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    <div class="success-wrap" id="success-wrap">
+      <div class="success-icon">&#10003;</div>
+      <h2>Cadastro realizado!</h2>
+      <p>Seus dados foram registrados com sucesso.<br>Em breve você receberá todas as informações do CIGC 2026.</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <strong>CIGC 2026</strong> &middot; Congresso Internacional para Gestores de Clínica &middot; 04-06 set, São Paulo
+  </div>
+</div>
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var tracking = {
+    utm_content:    params.get('utm_content')   || params.get('ad_name') || '',
+    plataforma:     params.get('utm_source')    || '',
+    posicionamento: params.get('utm_placement') || params.get('placement') || '',
+  };
+
+  function getCookie(name) {
+    var m = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  function genUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  var eventId = genUUID();
+  var fbp = getCookie('_fbp');
+  var fbc = getCookie('_fbc');
+  if (!fbc && params.get('fbclid')) {
+    fbc = 'fb.1.' + Date.now() + '.' + params.get('fbclid');
+  }
+
+  var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  var conexao = '';
+  if (conn) {
+    var type = (conn.type || '').toLowerCase();
+    var eff = (conn.effectiveType || '').toLowerCase();
+    if (type === 'wifi' || type === '802.11' || type === 'ethernet') {
+      conexao = 'WiFi';
+    } else if (type === 'cellular' || type === '4g' || type === '5g' || type === '3g' || type === '2g') {
+      conexao = '5G/4G';
+    } else if (typeof conn.downlink === 'number' && conn.downlink >= 10 && !conn.saveData) {
+      // Heuristica: downlink alto sem saveData = provavel WiFi
+      conexao = 'WiFi';
+    } else if (eff === '4g' || eff === '5g' || eff === '3g' || eff === '2g' || eff === 'slow-2g') {
+      conexao = '5G/4G';
+    } else if (eff) {
+      conexao = eff;
+    }
+  }
+
+  var isDono = false;
+  var TOTAL_STEPS = 7;
+
+  function getVisibleTotal() {
+    return isDono ? 7 : 6;
+  }
+
+  function getVisibleIndex(step) {
+    if (!isDono && step >= 6) return step - 1;
+    return step;
+  }
+
+  function updateProgress(step) {
+    var visTotal = getVisibleTotal();
+    var visIdx = getVisibleIndex(step);
+    var pct = Math.round((visIdx / visTotal) * 100);
+    document.getElementById('progress-label').textContent = 'Etapa ' + visIdx + ' de ' + visTotal;
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
+    var el = document.querySelector('.step[data-step="' + n + '"]');
+    if (el) el.classList.add('active');
+    updateProgress(n);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function showError(step, msg) {
+    var el = document.getElementById('err-' + step);
+    if (el) { el.textContent = msg; el.classList.add('visible'); }
+  }
+  function clearError(step) {
+    var el = document.getElementById('err-' + step);
+    if (el) el.classList.remove('visible');
+  }
+
+  // Mascara telefone
+  var telInput = document.getElementById('telefone');
+  telInput.addEventListener('input', function() {
+    var v = this.value.replace(/\D/g,'');
+    if (v.length <= 10) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+    else v = v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');
+    this.value = v.replace(/-$/,'');
+  });
+
+  // Avançar com Enter nos inputs
+  document.querySelectorAll('.step input').forEach(function(inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var step = parseInt(inp.closest('.step').dataset.step);
+        var btn = document.getElementById('next-' + step);
+        if (btn) btn.click();
+      }
+    });
+  });
+
+  // Botoes voltar fixos
+  document.querySelectorAll('.btn-back[data-back]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      showStep(parseInt(this.dataset.back));
+    });
+  });
+
+  // Botao voltar dinamico (step 6 volta pra 5 se dono, ou pra 4 se nao dono)
+  document.querySelector('.btn-back[data-back-dynamic]').addEventListener('click', function() {
+    showStep(isDono ? 5 : 4);
+  });
+
+  // Avançar etapa 1
+  document.getElementById('next-1').addEventListener('click', function() {
+    var v = document.getElementById('nome').value.trim();
+    if (!v) { showError(1, 'Informe seu nome.'); return; }
+    clearError(1); showStep(2);
+    document.getElementById('telefone').focus();
+  });
+
+  // Avançar etapa 2
+  document.getElementById('next-2').addEventListener('click', function() {
+    var v = document.getElementById('telefone').value.replace(/\D/g,'');
+    if (v.length < 10) { showError(2, 'Informe um WhatsApp válido com DDD.'); return; }
+    clearError(2); showStep(3);
+    document.getElementById('email').focus();
+  });
+
+  // Avançar etapa 3
+  document.getElementById('next-3').addEventListener('click', function() {
+    var v = document.getElementById('email').value.trim();
+    if (!v || !v.includes('@')) { showError(3, 'Informe um e-mail válido.'); return; }
+    clearError(3); showStep(4);
+  });
+
+  // Avançar etapa 4
+  document.getElementById('next-4').addEventListener('click', function() {
+    var checked = document.querySelector('input[name="dono_clinica"]:checked');
+    if (!checked) { showError(4, 'Selecione uma opção.'); return; }
+    isDono = checked.value === 'Sim';
+    clearError(4);
+    showStep(isDono ? 5 : 6);
+  });
+
+  // Avançar etapa 5
+  document.getElementById('next-5').addEventListener('click', function() {
+    clearError(5); showStep(6);
+  });
+
+  // Avançar etapa 6
+  document.getElementById('next-6').addEventListener('click', function() {
+    var v = document.getElementById('segmento').value;
+    if (!v) { showError(6, 'Selecione o segmento da clínica.'); return; }
+    clearError(6); showStep(7);
+  });
+
+  // Submit
+  document.getElementById('cadastro-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn-submit');
+    var btnText = document.getElementById('btn-text');
+    var errorEl = document.getElementById('err-7');
+
+    var regiao = document.getElementById('regiao').value;
+    if (!regiao) {
+      errorEl.textContent = 'Selecione seu estado.';
+      errorEl.classList.add('visible');
+      return;
+    }
+    errorEl.classList.remove('visible');
+
+    btn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span>';
+
+    var dono = document.querySelector('input[name="dono_clinica"]:checked');
+
+    var data = {
+      nome:           document.getElementById('nome').value.trim(),
+      telefone:       document.getElementById('telefone').value.trim(),
+      email:          document.getElementById('email').value.trim(),
+      instagram:      document.getElementById('instagram').value.trim(),
+      dono_clinica:   dono ? dono.value : '',
+      nome_clinica:   document.getElementById('nome_clinica').value.trim(),
+      segmento:       document.getElementById('segmento').value,
+      regiao:         regiao,
+      conexao:        conexao,
+      plataforma:     tracking.plataforma,
+      posicionamento: tracking.posicionamento,
+      utm_content:    tracking.utm_content,
+      event_id:       eventId,
+      fbc:            fbc,
+      fbp:            fbp,
+    };
+
+    fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result.ok) {
+        if (typeof fbq !== 'undefined') {
+          fbq('track', 'Lead', {
+            content_name: 'CIGC 2026',
+            content_category: data.segmento,
+            value: 0,
+            currency: 'BRL'
+          }, { eventID: eventId });
+        }
+        document.getElementById('progress-wrap').style.display = 'none';
+        document.getElementById('cadastro-form').style.display = 'none';
+        document.getElementById('success-wrap').classList.add('visible');
+      } else {
+        throw new Error(result.error || 'Erro desconhecido');
+      }
+    })
+    .catch(function(err) {
+      errorEl.textContent = err.message || 'Erro ao enviar. Tente novamente.';
+      errorEl.classList.add('visible');
+      btn.disabled = false;
+      btnText.textContent = 'Garantir minha vaga';
+    });
+  });
+
+  updateProgress(1);
+})();
+</script>
+</body>
+</html>

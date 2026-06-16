@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Sistemas</title>
+<link rel="stylesheet" href="/_styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot"></span> ALPHA SISTEMAS</div>
+    <div class="right">
+      <span id="hello"></span>
+      <a class="btn-link" id="adminLink" href="/admin" style="display:none">admin</a>
+      <button class="btn-link" id="logout">sair</button>
+    </div>
+  </header>
+  <main class="dash">
+    <h1>Sistemas</h1>
+    <p class="sub">Sistema administrativo de sistemas Alpha. Tudo o que construímos vive aqui.</p>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+<script>
+const grid = document.getElementById('grid');
+const hello = document.getElementById('hello');
+document.getElementById('logout').onclick = async () => {
+  await fetch('/api/logout', { method:'POST' });
+  location.href = '/login';
+};
+(async () => {
+  const me = await (await fetch('/api/me')).json();
+  if (!me.user) return location.href = '/login';
+  if (me.user.status !== 'approved') return location.href = '/pending';
+  hello.textContent = me.user.name.split(' ')[0];
+  if (me.user.role === 'admin') document.getElementById('adminLink').style.display = 'inline';
+  const { systems } = await (await fetch('/api/systems')).json();
+  grid.innerHTML = systems.map(s => `
+    <a class="tile" href="${s.url}" target="_blank" rel="noopener">
+      <div class="icon" style="color:${s.color};border-color:${s.color}33;background:linear-gradient(135deg,${s.color}1f,${s.color}08)">${s.icon}</div>
+      <div class="name">${s.name}</div>
+      <div class="desc">${s.description || ''}</div>
+    </a>
+  `).join('');
+  if (!systems.length) grid.innerHTML = '<div class="empty">Nenhum sistema cadastrado.</div>';
+})();
+</script>
+</body>
+</html>

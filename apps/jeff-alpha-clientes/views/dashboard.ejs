@@ -1,0 +1,106 @@
+<%- include('partials/header', { title: 'Início · Alpha' }) %>
+<div class="home-wrap">
+  <div class="home-greeting">
+    <h1>Bem-vindo, <%= session.userName || (session.userEmail || '').split('@')[0] %>.</h1>
+    <p>O que deseja fazer?</p>
+  </div>
+  <div class="home-grid">
+    <a href="/clientes" class="home-card">
+      <div class="home-card-label">Clientes</div>
+      <div class="home-card-desc">Ver e gerenciar clientes ativos</div>
+    </a>
+    <button type="button" class="home-card" onclick="openModal('novoClienteModal')">
+      <div class="home-card-label">Cadastrar novo cliente</div>
+      <div class="home-card-desc">Cadastrar nome e telefone, enviar o formulário automaticamente no WhatsApp</div>
+    </button>
+    <a href="/admin/form" class="home-card">
+      <div class="home-card-label">Editor do formulário</div>
+      <div class="home-card-desc">Adicionar, editar e remover perguntas do formulário de onboarding</div>
+    </a>
+    <a href="/admin/aba-padrao" class="home-card">
+      <div class="home-card-label">Aba padrão</div>
+      <div class="home-card-desc">Editar template do painel personalizado (replica em todos os clientes)</div>
+    </a>
+  </div>
+</div>
+
+<div class="modal-overlay" id="novoClienteModal" onclick="if(event.target===this)closeModal('novoClienteModal')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Cadastrar novo cliente</h2>
+      <button type="button" onclick="closeModal('novoClienteModal')" class="modal-close">&#x2715;</button>
+    </div>
+    <p style="color:var(--fg-3);font-size:13px;margin:0 0 16px">O cliente recebe o link do formulário no WhatsApp automaticamente.</p>
+    <form id="novoClienteForm">
+      <label>Nome do cliente</label>
+      <input type="text" id="ncNome" placeholder="Nome completo" autocomplete="off">
+      <label>Telefone (WhatsApp com DDD)</label>
+      <input type="tel" id="ncTelefone" placeholder="5511999999999" autocomplete="off">
+      <label>E-mail (opcional, pré-preenche signup do painel)</label>
+      <input type="email" id="ncEmail" placeholder="cliente@email.com" autocomplete="off">
+      <div id="ncMsg" style="margin-top:12px;font-size:13px;display:none"></div>
+      <div style="margin-top:20px">
+        <button type="submit" class="btn btn-primary" style="width:100%">Cadastrar e provisionar subdomínio</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  var msg = document.getElementById('ncMsg');
+  if (msg) msg.style.display = 'none';
+}
+
+document.getElementById('novoClienteForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var nome = document.getElementById('ncNome').value.trim();
+  var tel = document.getElementById('ncTelefone').value.replace(/\D/g,'');
+  var email = document.getElementById('ncEmail').value.trim();
+  var msg = document.getElementById('ncMsg');
+  var btn = e.target.querySelector('button[type=submit]');
+
+  if (!nome || tel.length < 10) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Preencha nome e telefone (com DDD).';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Cadastrando...';
+  msg.style.display = 'none';
+
+  try {
+    var r = await fetch('/clientes/cadastrar-rapido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nome, phone: tel, email: email })
+    });
+    var data = await r.json();
+    msg.style.display = 'block';
+    if (data.ok) {
+      msg.style.color = data.wa_error ? 'var(--danger)' : 'var(--ok)';
+      msg.innerHTML = (data.wa_error ? data.wa_error + '<br>' : 'Cliente cadastrado e subdomínio sendo criado.<br>')
+        + 'Onboarding: <a href="' + data.link + '" target="_blank" style="color:var(--accent)">' + data.link + '</a><br>'
+        + 'Painel: <a href="' + data.painelLink + '" target="_blank" style="color:var(--accent)">' + data.painelLink + '</a> (alguns minutos pra ficar pronto)';
+      document.getElementById('ncNome').value = '';
+      document.getElementById('ncTelefone').value = '';
+      document.getElementById('ncEmail').value = '';
+    } else {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = data.error || 'Erro ao cadastrar.';
+    }
+  } catch (err) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Erro de conexao. Tente novamente.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Cadastrar cliente e enviar formulario';
+});
+</script>
+<%- include('partials/footer') %>

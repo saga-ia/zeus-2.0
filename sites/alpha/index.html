@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Alpha Digital — Consultoria Estratégica</title>
+<meta name="description" content="Alpha Digital é a consultoria estratégica que combate a mediania das agências brasileiras. Um cliente por vez, ciclo de seis meses, imersão total em posicionamento, lançamento e escala. Liderada por Jeferson Henrike, um dos maiores estrategistas do Brasil." />
+<meta name="theme-color" content="#0A0A0A" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Alpha Digital — Consultoria Estratégica" />
+<meta property="og:description" content="Combatendo a mediania. Um cliente por vez. Ciclo de seis meses. Imersão estratégica completa, comandada por Jeferson Henrike." />
+<meta property="og:url" content="https://alpha.jefersonhenrike.com" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230A0A0A'/%3E%3Cpath d='M30 72 L50 28 L70 72 M38 58 L62 58' stroke='%23C4FF0E' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  :root{
+    --bg:#0A0A0A;
+    --bg-page:#0F0F0F;
+    --bg-card:#1A1A1A;
+    --bg-input:#161616;
+    --bg-surface:#282828;
+    --border:#1F1F1F;
+    --border-strong:#313131;
+    --primary:#C4FF0E;
+    --primary-2:#A3FF33;
+    --primary-glow:rgba(196,255,14,0.18);
+    --primary-glow-strong:rgba(196,255,14,0.45);
+    --success:#00C758;
+    --text:#FFFFFF;
+    --text-2:#C9D2E0;
+    --muted:#717680;
+    --muted-2:#6A7282;
+    --tag-bg:#1F3A0D;
+    --tag-text:#7EBA8B;
+    --error:#FB2C36;
+    --warn:#EDB200;
+    --r-sm:8px;
+    --r-md:10px;
+    --r-lg:16px;
+    --r-xl:24px;
+    --shadow-glow:0 0 0 1px rgba(196,255,14,0.35), 0 14px 40px -12px rgba(196,255,14,0.25);
+    --shadow-card:0 1px 0 rgba(255,255,255,0.03) inset, 0 24px 60px -28px rgba(0,0,0,0.8);
+  }
+  html{background:var(--bg);color-scheme:dark;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+  body{
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(1200px 800px at 80% -10%, rgba(196,255,14,0.06), transparent 60%),
+               radial-gradient(900px 700px at -10% 30%, rgba(196,255,14,0.04), transparent 60%),
+               var(--bg);
+    color:var(--text);
+    line-height:1.55;
+    font-size:16px;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--primary);color:#0A0A0A}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  button,input,textarea{font:inherit;color:inherit}
+  .wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 24px}
+  @media (max-width:640px){.wrap{padding:0 20px}}
+
+  /* HEADER */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(140%) blur(14px);
+    -webkit-backdrop-filter:saturate(140%) blur(14px);
+    background:rgba(10,10,10,0.72);
+    border-bottom:1px solid var(--border);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px;gap:24px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+  .brand-mark{width:28px;height:28px;border-radius:8px;background:#0F0F0F;display:grid;place-items:center;border:1px solid var(--border-strong)}
+  .brand-mark svg{width:18px;height:18px;display:block}
+  .brand-text{font-size:15px}
+  .brand-text span{color:var(--primary)}
+  .nav-links{display:flex;gap:28px;align-items:center;font-size:14px;color:var(--text-2)}
+  .nav-links a{transition:color .2s}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 16px;border-radius:9999px;
+    background:var(--primary);color:#0A0A0A;font-weight:600;font-size:13.5px;
+    border:1px solid transparent;
+    transition:transform .15s ease, box-shadow .2s ease, background .2s;
+  }
+  .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px -10px var(--primary-glow-strong);background:var(--primary-2)}
+  .nav-toggle{display:none;background:transparent;border:1px solid var(--border-strong);border-radius:8px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer}
+  .nav-toggle svg{width:18px;height:18px}
+  @media (max-width:820px){
+    .nav-links{display:none}
+    .nav-toggle{display:inline-flex}
+  }
+
+  /* HERO */
+  .hero{position:relative;padding:88px 0 96px;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:48px}}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px;border-radius:9999px;
+    background:var(--tag-bg);color:var(--tag-text);
+    font-size:12.5px;font-weight:500;letter-spacing:.04em;
+    border:1px solid rgba(126,186,139,0.18);
+  }
+  .pill-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);box-shadow:0 0 12px var(--primary-glow-strong);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.86)}}
+
+  h1.hero-title{
+    font-size:clamp(40px,6.4vw,74px);
+    line-height:1.02;
+    letter-spacing:-.025em;
+    font-weight:700;
+    margin:22px 0 22px;
+  }
+  .hero-title .accent{color:var(--primary)}
+  .hero-sub{
+    font-size:clamp(16px,1.6vw,18.5px);
+    color:var(--text-2);
+    max-width:560px;margin:0 0 32px;
+    line-height:1.6;
+  }
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    padding:14px 22px;border-radius:9999px;
+    font-weight:600;font-size:15px;
+    transition:transform .15s, box-shadow .2s, background .2s, border-color .2s;
+    border:1px solid transparent;cursor:pointer;
+  }
+  .btn-primary{background:var(--primary);color:#0A0A0A}
+  .btn-primary:hover{background:var(--primary-2);transform:translateY(-1px);box-shadow:0 16px 40px -12px var(--primary-glow-strong)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--border-strong)}
+  .btn-ghost:hover{border-color:#4a4a4a;background:#161616}
+  .btn svg{width:16px;height:16px}
+
+  .hero-meta{display:flex;gap:28px;margin-top:42px;flex-wrap:wrap}
+  .meta-item{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+  .meta-item strong{color:var(--text);font-size:14.5px;font-weight:600}
+
+  /* HERO PANEL (visual da direita) */
+  .hero-panel{
+    position:relative;border-radius:var(--r-lg);overflow:hidden;
+    background:linear-gradient(180deg,#141414 0%,#0E0E0E 100%);
+    border:1px solid var(--border-strong);
+    box-shadow:var(--shadow-card);
+    padding:22px;
+  }
+  .panel-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .panel-dots{display:flex;gap:6px}
+  .panel-dots i{width:10px;height:10px;border-radius:50%;background:#2a2a2a}
+  .panel-tag{font-size:11.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;font-weight:500}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  .stat{
+    background:#0E0E0E;border:1px solid var(--border-strong);
+    border-radius:var(--r-md);padding:16px;
+    position:relative;overflow:hidden;
+  }
+  .stat .lab{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .stat .val{font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .stat .val .small{font-size:14px;color:var(--muted-2);font-weight:500;margin-left:4px}
+  .stat .delta{margin-top:8px;font-size:12px;color:var(--success);font-weight:600}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:46px;margin-top:10px}
+  .bars i{flex:1;border-radius:3px;background:linear-gradient(180deg,var(--primary),#74A20B)}
+  .bars i:nth-child(1){height:30%}.bars i:nth-child(2){height:55%}.bars i:nth-child(3){height:42%}
+  .bars i:nth-child(4){height:78%}.bars i:nth-child(5){height:64%}.bars i:nth-child(6){height:90%}
+  .bars i:nth-child(7){height:72%}
+  .panel-rows{display:flex;flex-direction:column;gap:10px}
+  .row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#0E0E0E;border:1px solid var(--border-strong);
+    border-radius:var(--r-md);padding:12px 14px;font-size:13.5px;
+  }
+  .row-l{display:flex;align-items:center;gap:10px;color:var(--text-2)}
+  .row-l .num{
+    width:24px;height:24px;border-radius:7px;
+    background:#1A1A1A;color:var(--primary);
+    display:grid;place-items:center;font-size:12px;font-weight:700;
+    border:1px solid var(--border-strong);
+  }
+  .row-r{font-size:12.5px;color:var(--muted)}
+  .row-r b{color:var(--primary);font-weight:600}
+
+  /* SECTION COMMON */
+  section{padding:96px 0;position:relative}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--primary);font-weight:600;
+  }
+  .eyebrow::before{content:"";width:24px;height:1px;background:var(--primary)}
+  h2.section-title{
+    font-size:clamp(30px,3.8vw,46px);
+    line-height:1.1;letter-spacing:-.02em;font-weight:700;
+    margin:18px 0 18px;max-width:760px;
+  }
+  .section-sub{font-size:17px;color:var(--text-2);max-width:680px;margin:0 0 56px;line-height:1.65}
+
+  /* TESE */
+  .tese{border-top:1px solid var(--border)}
+  .tese-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+  @media (max-width:900px){.tese-grid{grid-template-columns:1fr;gap:40px}}
+  .tese-quote{
+    border-left:2px solid var(--primary);padding:6px 0 6px 22px;
+    font-size:22px;line-height:1.45;letter-spacing:-.005em;color:var(--text);
+    font-weight:500;
+  }
+  .tese-quote em{color:var(--primary);font-style:normal;font-weight:600}
+  .tese-points{display:flex;flex-direction:column;gap:18px}
+  .tp{display:flex;gap:14px;align-items:flex-start}
+  .tp .tpi{
+    flex:0 0 auto;width:32px;height:32px;border-radius:8px;
+    background:#161616;border:1px solid var(--border-strong);
+    color:var(--primary);display:grid;place-items:center;
+  }
+  .tp .tpi svg{width:16px;height:16px}
+  .tp h4{margin:0 0 4px;font-size:15.5px;font-weight:600}
+  .tp p{margin:0;color:var(--text-2);font-size:14.5px;line-height:1.6}
+
+  /* MÉTODO */
+  .method{background:linear-gradient(180deg,transparent, rgba(196,255,14,0.025), transparent)}
+  .step-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:980px){.step-grid{grid-template-columns:1fr}}
+  .step{
+    position:relative;
+    background:var(--bg-card);
+    border:1px solid var(--border-strong);
+    border-radius:var(--r-lg);
+    padding:32px 28px;
+    transition:transform .25s ease, border-color .25s ease, box-shadow .3s ease;
+    overflow:hidden;
+  }
+  .step::after{
+    content:"";position:absolute;inset:auto -30% -60% auto;width:280px;height:280px;
+    background:radial-gradient(circle, var(--primary-glow), transparent 70%);
+    opacity:0;transition:opacity .35s ease;pointer-events:none;
+  }
+  .step:hover{transform:translateY(-3px);border-color:#3a3a3a;box-shadow:0 24px 60px -32px rgba(0,0,0,0.9)}
+  .step:hover::after{opacity:1}
+  .step-num{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--primary);font-weight:600;margin-bottom:18px;
+  }
+  .step-num .n{
+    width:28px;height:28px;border-radius:8px;background:rgba(196,255,14,0.12);
+    color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:13px;
+    border:1px solid rgba(196,255,14,0.2);
+  }
+  .step h3{margin:0 0 10px;font-size:22px;letter-spacing:-.01em}
+  .step .step-desc{color:var(--text-2);font-size:14.5px;line-height:1.6;margin:0 0 18px}
+  .step .ask{
+    background:#0F0F0F;border:1px solid var(--border-strong);border-radius:var(--r-md);
+    padding:14px;font-size:13.5px;color:var(--text-2);font-style:italic;line-height:1.5;
+    border-left:2px solid var(--primary);
+  }
+  .step .ask::before{content:"Pergunta-mãe — ";color:var(--primary);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:11px;font-style:normal;display:block;margin-bottom:6px}
+  .step .out{margin-top:14px;font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .step .out b{color:var(--text);font-weight:600}
+
+  /* SERVICES */
+  .services{border-top:1px solid var(--border)}
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:900px){.svc-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){.svc-grid{grid-template-columns:1fr}}
+  .svc{
+    background:var(--bg-card);border:1px solid var(--border-strong);
+    border-radius:var(--r-md);padding:22px;
+    display:flex;flex-direction:column;gap:8px;
+    transition:transform .2s, border-color .2s, background .2s;
+  }
+  .svc:hover{transform:translateY(-2px);border-color:#3a3a3a;background:#1d1d1d}
+  .svc-icon{
+    width:38px;height:38px;border-radius:10px;
+    background:#0F0F0F;border:1px solid var(--border-strong);
+    color:var(--primary);display:grid;place-items:center;
+    margin-bottom:8px;
+  }
+  .svc-icon svg{width:18px;height:18px}
+  .svc h4{margin:0;font-size:15.5px;font-weight:600;letter-spacing:-.005em}
+  .svc p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+  /* MODELO */
+  .modelo-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:start}
+  @media (max-width:900px){.modelo-grid{grid-template-columns:1fr;gap:36px}}
+  .timeline{display:flex;flex-direction:column;gap:0}
+  .tl{display:grid;grid-template-columns:36px 1fr;gap:18px;padding:18px 0;border-top:1px solid var(--border-strong);position:relative}
+  .tl:first-child{border-top:none;padding-top:0}
+  .tl:last-child{padding-bottom:0}
+  .tl .dot{
+    width:36px;height:36px;border-radius:10px;
+    background:#0F0F0F;border:1px solid var(--border-strong);
+    color:var(--primary);display:grid;place-items:center;font-size:13px;font-weight:700;
+  }
+  .tl h4{margin:6px 0 4px;font-size:15.5px;font-weight:600}
+  .tl p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+  .price-card{
+    background:linear-gradient(180deg,#1A1A1A 0%,#101010 100%);
+    border:1px solid var(--border-strong);border-radius:var(--r-lg);
+    padding:32px 30px;position:relative;overflow:hidden;
+    box-shadow:var(--shadow-card);
+  }
+  .price-card::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(700px 240px at 100% -20%, var(--primary-glow), transparent 70%);
+    pointer-events:none;
+  }
+  .price-card > *{position:relative}
+  .price-card .pc-tag{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--primary);font-weight:600;margin-bottom:14px;display:inline-block}
+  .price-card h3{margin:0 0 10px;font-size:22px;letter-spacing:-.01em}
+  .price-card .pc-price{font-size:42px;font-weight:700;letter-spacing:-.025em;margin:18px 0 4px}
+  .price-card .pc-price .small{font-size:16px;color:var(--muted-2);font-weight:500;margin-left:6px}
+  .price-card .pc-plus{font-size:14.5px;color:var(--text-2);margin:0 0 22px}
+  .price-card .pc-plus b{color:var(--primary);font-weight:600}
+  .price-card ul{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:10px}
+  .price-card li{font-size:14px;color:var(--text-2);display:flex;gap:10px;align-items:flex-start}
+  .price-card li svg{flex:0 0 auto;width:16px;height:16px;color:var(--primary);margin-top:3px}
+
+  /* ICP */
+  .icp{background:linear-gradient(180deg,transparent, rgba(255,255,255,0.015), transparent)}
+  .icp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:820px){.icp-grid{grid-template-columns:1fr}}
+  .icp-col{
+    background:var(--bg-card);border:1px solid var(--border-strong);
+    border-radius:var(--r-lg);padding:30px 28px;
+  }
+  .icp-col.yes{border-color:rgba(196,255,14,0.25);box-shadow:0 0 0 1px rgba(196,255,14,0.05) inset}
+  .icp-col h3{margin:0 0 4px;font-size:19px;letter-spacing:-.005em;display:flex;align-items:center;gap:10px}
+  .icp-col .h-tag{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:3px 9px;border-radius:9999px}
+  .icp-col.yes .h-tag{background:rgba(196,255,14,0.12);color:var(--primary)}
+  .icp-col.no .h-tag{background:rgba(251,44,54,0.12);color:#ff8c92}
+  .icp-col p.icp-desc{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+  .icp-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+  .icp-list li{display:flex;gap:12px;align-items:flex-start;color:var(--text-2);font-size:14.5px;line-height:1.55}
+  .icp-list li svg{flex:0 0 auto;width:18px;height:18px;margin-top:2px}
+  .icp-col.yes li svg{color:var(--primary)}
+  .icp-col.no li svg{color:#ff8c92}
+
+  /* CLOSER */
+  .closer{padding:120px 0 110px;text-align:center;border-top:1px solid var(--border);position:relative;overflow:hidden}
+  .closer::before{
+    content:"";position:absolute;left:50%;top:-220px;transform:translateX(-50%);
+    width:780px;height:780px;border-radius:50%;
+    background:radial-gradient(circle, var(--primary-glow), transparent 65%);
+    pointer-events:none;
+  }
+  .closer > *{position:relative}
+  .closer h2{
+    font-size:clamp(34px,5vw,58px);
+    line-height:1.05;letter-spacing:-.025em;font-weight:700;
+    margin:18px auto 18px;max-width:880px;
+  }
+  .closer h2 .accent{color:var(--primary)}
+  .closer p{font-size:17px;color:var(--text-2);max-width:600px;margin:0 auto 36px;line-height:1.6}
+  .closer .micro{margin-top:22px;font-size:13px;color:var(--muted)}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--border);padding:36px 0;color:var(--muted);font-size:13px}
+  .ftr{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+  .ftr-brand{display:flex;align-items:center;gap:10px;color:var(--text-2);font-weight:500}
+  .ftr-brand .brand-mark{width:24px;height:24px}
+  .ftr-brand .brand-mark svg{width:14px;height:14px}
+  .ftr a{color:var(--text-2);transition:color .2s}
+  .ftr a:hover{color:var(--primary)}
+  .ftr-links{display:flex;gap:22px;flex-wrap:wrap}
+
+  /* MOBILE NAV PANEL */
+  .mobile-panel{
+    position:fixed;inset:64px 0 0 0;background:rgba(10,10,10,0.96);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    z-index:40;transform:translateY(-12px);opacity:0;pointer-events:none;
+    transition:opacity .2s, transform .2s;border-top:1px solid var(--border);
+  }
+  .mobile-panel.open{opacity:1;transform:translateY(0);pointer-events:auto}
+  .mp-inner{display:flex;flex-direction:column;gap:0;padding:8px 24px 24px}
+  .mp-inner a{padding:18px 0;font-size:18px;color:var(--text);border-bottom:1px solid var(--border)}
+  .mp-inner a.cta{margin-top:18px;padding:14px 18px;background:var(--primary);color:#0A0A0A;border-radius:9999px;text-align:center;font-weight:600;border:none}
+
+  /* fade-in */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .8s ease, transform .8s ease}
+  .reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="brand" aria-label="Alpha Digital">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4FF0E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L12 5 L19 19"/><path d="M8.5 14 L15.5 14"/></svg>
+      </span>
+      <span class="brand-text">Alpha <span>Digital</span></span>
+    </a>
+
+    <nav class="nav-links" aria-label="Principal">
+      <a href="#tese">Tese</a>
+      <a href="#metodo">Método</a>
+      <a href="#servicos">Esteira</a>
+      <a href="#modelo">Modelo</a>
+      <a href="#fit">Para quem é</a>
+    </nav>
+
+    <a href="#contato" class="nav-cta">
+      Aplicar para vaga
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </a>
+
+    <button class="nav-toggle" aria-label="Menu" id="navToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="mp-inner">
+      <a href="#tese">Tese</a>
+      <a href="#metodo">Método</a>
+      <a href="#servicos">Esteira</a>
+      <a href="#modelo">Modelo</a>
+      <a href="#fit">Para quem é</a>
+      <a href="#contato" class="cta">Aplicar para vaga</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="pill"><span class="pill-dot"></span>1 vaga ativa por ciclo · próximo onboard em curadoria</span>
+      <h1 class="hero-title">
+        Combatendo a <span class="accent">mediania</span> do mercado de agências.
+      </h1>
+      <p class="hero-sub">
+        Alpha Digital é a consultoria estratégica de Jeferson Henrike. Um cliente por vez. Ciclo de seis meses. Imersão total em diagnóstico, posicionamento e escala — para quem já saiu do zero e quer chegar em ordem de magnitude.
+      </p>
+      <div class="cta-row">
+        <a href="#contato" class="btn btn-primary">
+          Aplicar para a vaga
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#metodo" class="btn btn-ghost">
+          Ver o método
+        </a>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item"><strong>1 cliente</strong>por ciclo ativo</div>
+        <div class="meta-item"><strong>6 meses</strong>de imersão estratégica</div>
+        <div class="meta-item"><strong>R$ 60.000</strong>de entrada + 30% do lucro líquido</div>
+      </div>
+    </div>
+
+    <div class="hero-panel reveal" aria-hidden="true">
+      <div class="panel-bar">
+        <div class="panel-dots"><i></i><i></i><i></i></div>
+        <span class="panel-tag">Diagnóstico Alpha · live</span>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="lab">Posicionamento</div>
+          <div class="val">94<span class="small">/100</span></div>
+          <div class="delta">+38 vs benchmark</div>
+        </div>
+        <div class="stat">
+          <div class="lab">Eficiência de oferta</div>
+          <div class="val">3.7<span class="small">x ROAS</span></div>
+          <div class="bars" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-rows">
+        <div class="row"><span class="row-l"><span class="num">01</span>Diagnóstico estratégico</span><span class="row-r"><b>concluído</b></span></div>
+        <div class="row"><span class="row-l"><span class="num">02</span>Identificação de falha</span><span class="row-r"><b>em análise</b></span></div>
+        <div class="row"><span class="row-l"><span class="num">03</span>Ação estratégica</span><span class="row-r">aguardando</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESE -->
+<section id="tese" class="tese">
+  <div class="wrap">
+    <span class="eyebrow reveal">A tese</span>
+    <h2 class="section-title reveal">A maioria das agências entrega métrica de vaidade. A Alpha entrega ordem de magnitude.</h2>
+    <p class="section-sub reveal">O mercado brasileiro virou volume disfarçado de profissionalismo: estagiário no atendimento, lançamento solto sem posicionamento, relatório bonito sem retenção. A Alpha é o oposto disso, por desenho.</p>
+
+    <div class="tese-grid">
+      <div class="tese-quote reveal">
+        “<em>Um cliente por vez.</em> Atendimento personalizado. Trabalho profundo, baseado em dados reais, posicionamento arquetípico, mapeamento comportamental, liderança, PNL e vendas. Resultado em ordem de magnitude exige processo, não milagre.”
+      </div>
+
+      <div class="tese-points">
+        <div class="tp reveal">
+          <span class="tpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><h4>Ciclo de 6 meses</h4><p>Sem entrega solta. Sem terceirização do estratégico. Jeferson dentro da operação do cliente, do diagnóstico ao acompanhamento de escala.</p></div>
+        </div>
+        <div class="tp reveal">
+          <span class="tpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+          <div><h4>Dado cruzado, não achismo</h4><p>Cada decisão sai de evidência: comportamento de público, retenção, fadiga de criativo, gap de posicionamento. Diagnóstico raso é a falha mais cara que existe.</p></div>
+        </div>
+        <div class="tp reveal">
+          <span class="tpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+          <div><h4>Diagnóstico brutal</h4><p>Se a estratégia do cliente está fraca, ela é barrada antes de virar campanha. Aqui não se busca aprovação — busca-se o erro que impede a escala.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MÉTODO -->
+<section id="metodo" class="method">
+  <div class="wrap">
+    <span class="eyebrow reveal">O método Alpha</span>
+    <h2 class="section-title reveal">Três etapas. Sempre nesta ordem. Sem atalho.</h2>
+    <p class="section-sub reveal">O método Alpha não é template. É o sistema operacional que sustenta toda decisão dentro do ciclo do cliente — do primeiro briefing à escala.</p>
+
+    <div class="step-grid">
+      <article class="step reveal">
+        <div class="step-num"><span class="n">01</span>Diagnóstico</div>
+        <h3>A varredura de inteligência</h3>
+        <p class="step-desc">Mapeia a realidade do cliente sem suposição. Cruza dados de mercado, retenção real, comportamento de público e referências científicas que dão lastro à mensagem.</p>
+        <div class="ask">O que os dados estão dizendo que o criador ainda não percebeu?</div>
+        <div class="out"><b>Output:</b>&nbsp;Matriz Situacional — fato, não opinião.</div>
+      </article>
+
+      <article class="step reveal">
+        <div class="step-num"><span class="n">02</span>Identificação de falha</div>
+        <h3>O olhar crítico no ponto cego</h3>
+        <p class="step-desc">Cruza a Big Idea pretendida com as falhas reais detectadas. Mapeia fadiga de criativo, gancho fraco, quebras de confiança, gaps de posicionamento que sabotam escala.</p>
+        <div class="ask">Onde está o erro aqui que ainda não foi visto?</div>
+        <div class="out"><b>Output:</b>&nbsp;Diagnóstico Brutal de Ineficiência.</div>
+      </article>
+
+      <article class="step reveal">
+        <div class="step-num"><span class="n">03</span>Ação estratégica</div>
+        <h3>A engenharia da execução</h3>
+        <p class="step-desc">Constrói a solução baseada em lógica de mercado e psicologia comportamental. Narrativa multi-camada — emocional, racional, confrontadora e educacional.</p>
+        <div class="ask">Qual movimento, executado com precisão, transforma esse cenário em ordem de magnitude?</div>
+        <div class="out"><b>Output:</b>&nbsp;Plano de execução com posicionamento, esteira, narrativa e marcos.</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- SERVIÇOS -->
+<section id="servicos" class="services">
+  <div class="wrap">
+    <span class="eyebrow reveal">A esteira</span>
+    <h2 class="section-title reveal">O que entra dentro do ciclo Alpha.</h2>
+    <p class="section-sub reveal">Após o método aplicado, a operação Alpha entrega o trabalho de base e o trabalho de escala — em sequência, com integridade.</p>
+
+    <div class="svc-grid">
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg></div>
+        <h4>Posicionamento estratégico</h4>
+        <p>Definição de mensagem, território e diferencial competitivo para players já estabelecidos.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4-9 4-9-4 9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg></div>
+        <h4>Posicionamento arquetípico</h4>
+        <p>Alinhamento da marca com o arquétipo dominante do criador e do mercado-alvo.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <h4>Esteira de produto</h4>
+        <p>Entrada, escala, premium, alta performance. Cada etapa puxa a próxima com economia de atrito.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v6H4zM4 14h10v6H4zM18 14l3 3-3 3"/></svg></div>
+        <h4>Lançamento estruturado</h4>
+        <p>Online ou presencial, com narrativa de aquecimento, sequência de criativos e pico calculado.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 16l7 5 7-5"/></svg></div>
+        <h4>Consultoria estratégica</h4>
+        <p>Pontos de inflexão de decisão — quando uma escolha errada custa um ano de escala.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l9-9 4 4 7-7"/><path d="M14 7h7v7"/></svg></div>
+        <h4>Identidade visual e branding</h4>
+        <p>Sistema visual alinhado ao posicionamento. Sem inversão de causa: marca vem depois da tese.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></div>
+        <h4>Tráfego pago Meta + Google</h4>
+        <p>Performance ligada à narrativa, não solta. Mídia que executa a tese — não substitui.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>
+        <h4>Acompanhamento de escala</h4>
+        <p>Reuniões estratégicas, ajustes táticos e marcos de decisão durante o ciclo de seis meses.</p>
+      </div>
+      <div class="svc reveal">
+        <div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4"/><path d="M4 7v6c0 4.4 3.6 8 8 8s8-3.6 8-8V7"/><path d="M9 11l2 2 4-4"/></svg></div>
+        <h4>Confidencialidade total</h4>
+        <p>NDA padrão. Estratégia, dado e narrativa do cliente não circulam. Régua premium em tudo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELO -->
+<section id="modelo">
+  <div class="wrap">
+    <span class="eyebrow reveal">O modelo</span>
+    <h2 class="section-title reveal">Como o ciclo Alpha funciona — do primeiro contato à escala.</h2>
+    <p class="section-sub reveal">Um único cliente ativo por vez. Seis meses de imersão. Ticket alinhado ao tipo de transformação que a Alpha entrega.</p>
+
+    <div class="modelo-grid">
+      <div class="timeline">
+        <div class="tl reveal"><span class="dot">1</span><div><h4>Mapeamento estratégico</h4><p>Imersão no negócio do cliente. Dados reais, conversas com o time, leitura de mercado. A linha de base.</p></div></div>
+        <div class="tl reveal"><span class="dot">2</span><div><h4>Posicionamento estratégico</h4><p>Definição de território e mensagem competitiva. Onde a marca vai brigar e por que ela ganha.</p></div></div>
+        <div class="tl reveal"><span class="dot">3</span><div><h4>Posicionamento arquetípico</h4><p>Arquétipo dominante, voz, promessa central — alinhados com o criador e com o público.</p></div></div>
+        <div class="tl reveal"><span class="dot">4</span><div><h4>Esteira de produto</h4><p>Entrada, escala, premium, alta performance. Cada produto puxa o próximo na jornada.</p></div></div>
+        <div class="tl reveal"><span class="dot">5</span><div><h4>Lançamento estruturado</h4><p>Aquecimento, criativos, oferta, pico. Cada peça com função clara dentro da narrativa.</p></div></div>
+        <div class="tl reveal"><span class="dot">6</span><div><h4>Acompanhamento e escala</h4><p>Ajuste fino, marcos de decisão e expansão. Resultado sustentado, não pico isolado.</p></div></div>
+      </div>
+
+      <aside class="price-card reveal">
+        <span class="pc-tag">Investimento Alpha</span>
+        <h3>Imersão estratégica de 6 meses</h3>
+        <div class="pc-price">R$ 60.000<span class="small">de entrada</span></div>
+        <p class="pc-plus">+ <b>30%</b> do lucro líquido gerado durante o ciclo.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Jeferson dentro da operação. Não é assessoria distante.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Um único cliente ativo por ciclo — bandwidth real.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Esteira completa: posicionamento, lançamento, mídia, escala.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Diagnóstico brutal antes de qualquer execução.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Confidencialidade absoluta sobre cliente, dado e estratégia.</li>
+        </ul>
+        <a href="#contato" class="btn btn-primary" style="width:100%">
+          Aplicar para a próxima vaga
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ICP -->
+<section id="fit" class="icp">
+  <div class="wrap">
+    <span class="eyebrow reveal">Para quem é (e para quem não é)</span>
+    <h2 class="section-title reveal">Filtro Alpha: o ciclo é para player estabelecido que entendeu que método vence atalho.</h2>
+    <p class="section-sub reveal">Não é elitismo. É proteção da entrega. Cliente fora do filtro custa caro para os dois lados.</p>
+
+    <div class="icp-grid">
+      <div class="icp-col yes reveal">
+        <h3><span class="h-tag">Atende</span></h3>
+        <p class="icp-desc">Quem já tem tração e quer escala em ordem de magnitude.</p>
+        <ul class="icp-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Players de mercado já estabelecidos, insatisfeitos com a escala atual.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Empresários com negócio físico maduro expandindo para o digital.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Quem já está no digital e busca o próximo patamar de receita e marca.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Estrutura financeira para o ticket Alpha sem comprometer caixa.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Aceita processo, etapas e diagnóstico brutal sem disputar ego.</li>
+        </ul>
+      </div>
+
+      <div class="icp-col no reveal">
+        <h3><span class="h-tag">Linha vermelha</span></h3>
+        <p class="icp-desc">Quem chega aqui hoje será redirecionado.</p>
+        <ul class="icp-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Quem está em início de carreira ou sem resultado prévio comprovado.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Imediatista que quer resultado em 30 dias sem trabalho de base.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Lançamento isolado sem trabalho de posicionamento.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Microgerenciador que tenta dirigir a Alpha em vez de delegar.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Quem discute preço antes de discutir valor — sinal de fit errado.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSER -->
+<section id="contato" class="closer">
+  <div class="wrap">
+    <span class="eyebrow reveal">Próximo passo</span>
+    <h2 class="reveal">A Alpha tem <span class="accent">uma vaga ativa</span> por vez. <br/>Aplica e entra na curadoria.</h2>
+    <p class="reveal">Você descreve o cenário. Eu leio em até 48 horas. Se houver fit técnico para o ciclo atual, marcamos uma sessão de diagnóstico — sem promessa, sem milagre, sem teatro de vendas.</p>
+    <div class="cta-row reveal" style="justify-content:center">
+      <a href="https://wa.me/5511910075450?text=Quero%20aplicar%20para%20a%20vaga%20da%20Alpha%20Digital" class="btn btn-primary">
+        Conversar com a Alpha agora
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a href="mailto:contato@jefersonhenrike.com?subject=Aplica%C3%A7%C3%A3o%20Alpha%20Digital" class="btn btn-ghost">Enviar dossiê por e-mail</a>
+    </div>
+    <p class="micro reveal">Resposta em até 48 horas úteis. Aplicação não garante aceite no ciclo.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap ftr">
+    <div class="ftr-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4FF0E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L12 5 L19 19"/><path d="M8.5 14 L15.5 14"/></svg>
+      </span>
+      <span>Alpha Digital · Consultoria Estratégica</span>
+    </div>
+    <div class="ftr-links">
+      <a href="#tese">Tese</a>
+      <a href="#metodo">Método</a>
+      <a href="#servicos">Esteira</a>
+      <a href="#modelo">Modelo</a>
+      <a href="#fit">Para quem é</a>
+      <a href="#contato">Aplicar</a>
+    </div>
+    <div>© <span id="yr"></span> Alpha Digital · Jeferson Henrike</div>
+  </div>
+</footer>
+
+<script>
+  // year
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // mobile nav
+  const t=document.getElementById('navToggle'), p=document.getElementById('mobilePanel');
+  if(t){t.addEventListener('click',()=>p.classList.toggle('open'));}
+  document.querySelectorAll('.mp-inner a').forEach(a=>a.addEventListener('click',()=>p.classList.remove('open')));
+
+  // reveal on scroll
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

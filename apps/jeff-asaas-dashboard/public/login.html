@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha Digital — Acesso</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c4ff0e;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .sub {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  input[type=password] {
+    width: 100%;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 15px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=password]:focus { border-color: #c4ff0e; }
+  .error {
+    background: #2a1010;
+    border: 1px solid #4a1a1a;
+    border-radius: 6px;
+    color: #ff6b6b;
+    font-size: 13px;
+    padding: 9px 12px;
+    margin-top: 14px;
+    display: none;
+  }
+  .error.show { display: block; }
+  button {
+    width: 100%;
+    background: #c4ff0e;
+    border: none;
+    border-radius: 8px;
+    color: #0a0a0a;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 20px;
+    letter-spacing: 0.04em;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .88; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Alpha Digital</div>
+  <h1>Acesso restrito</h1>
+  <p class="sub">Insira a senha para continuar.</p>
+  <form method="POST" action="/api/login">
+    <label for="pwd">Senha</label>
+    <input type="password" id="pwd" name="password" autocomplete="current-password" autofocus>
+    <div class="error" id="err">Senha incorreta. Tente novamente.</div>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('error')) document.getElementById('err').classList.add('show');
+</script>
+</body>
+</html>

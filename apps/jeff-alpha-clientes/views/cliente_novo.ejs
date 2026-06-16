@@ -1,0 +1,47 @@
+<%- include('partials/header', { title: 'Novo cliente · Alpha' }) %>
+<div class="page-head">
+  <div>
+    <h1>Novo cliente</h1>
+    <p>Dados básicos. Você completa as 9 abas depois.</p>
+  </div>
+  <div class="actions"><a href="/dashboard" class="btn">← Voltar</a></div>
+</div>
+
+<form method="post" action="/clientes/novo" class="card">
+  <div class="grid grid-2">
+    <div>
+      <label>Nome do cliente *</label>
+      <input type="text" name="name" required value="<%= form.name || '' %>">
+    </div>
+    <div>
+      <label>Slug (URL interna)</label>
+      <input type="text" name="slug" placeholder="auto" value="<%= form.slug || '' %>">
+    </div>
+    <div>
+      <label>Status</label>
+      <select name="status">
+        <option value="ativo">Ativo</option>
+        <option value="pausado">Pausado</option>
+        <option value="encerrado">Encerrado</option>
+        <option value="perdido">Perdido</option>
+      </select>
+    </div>
+    <div>
+      <label>Nome do contato</label>
+      <input type="text" name="contact_name" value="<%= form.contact_name || '' %>">
+    </div>
+    <div>
+      <label>Telefone</label>
+      <input type="text" name="contact_phone" value="<%= form.contact_phone || '' %>">
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" name="contact_email" value="<%= form.contact_email || '' %>">
+    </div>
+  </div>
+  <div style="margin-top:24px;display:flex;gap:10px">
+    <button type="submit" class="btn btn-primary">Criar cliente</button>
+    <a href="/dashboard" class="btn">Cancelar</a>
+  </div>
+</form>
+<%- include('partials/footer') %>

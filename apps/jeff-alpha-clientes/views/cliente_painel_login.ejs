@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login · <%= client.name %></title>
+<link rel="stylesheet" href="/static/painel.css">
+</head>
+<body class="auth-body">
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-dot"></span>
+      <span><%= client.name %></span>
+    </div>
+    <h1>Entrar</h1>
+    <p class="lead">Acesse seu painel personalizado.</p>
+    <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+    <form method="post" action="/login">
+      <label>E-mail</label>
+      <input name="email" type="email" required autocomplete="email">
+      <label>Senha</label>
+      <input name="password" type="password" required autocomplete="current-password">
+      <button class="btn primary" style="margin-top:18px;width:100%">Entrar</button>
+    </form>
+    <p class="auth-foot">
+      <% if (!hasUsers) { %>
+        Primeira vez aqui? <a href="/signup">Crie seu acesso</a>
+      <% } else { %>
+        Não tem conta? <a href="/signup">Cadastrar</a>
+      <% } %>
+    </p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VPS Operations · Jeff</title>
+<style>
+:root{
+  --bg:#0d1117;
+  --bg-2:#0a0e14;
+  --panel:#151b24;
+  --panel-2:#1c2330;
+  --panel-3:#222a38;
+  --border:#222b3a;
+  --border-soft:#1a2231;
+  --text:#eef2f7;
+  --text-2:#c9d2e0;
+  --muted:#7c8aa1;
+  --muted-2:#566378;
+  --lime:#c8fa4d;
+  --lime-2:#b3eb38;
+  --lime-soft:rgba(200,250,77,0.14);
+  --lime-glow:rgba(200,250,77,0.35);
+  --green:#3ddc84;
+  --yellow:#f5b740;
+  --red:#ff5a5a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:var(--bg-2);
+  color:var(--text);
+  min-height:100vh;
+  font-feature-settings:'tnum' 1,'cv11' 1;
+  -webkit-font-smoothing:antialiased;
+}
+
+.app{
+  display:grid;
+  grid-template-columns:240px 1fr 320px;
+  min-height:100vh;
+}
+@media (max-width:1280px){ .app{ grid-template-columns:220px 1fr; } .right-rail{ grid-column:1/-1; } }
+@media (max-width:760px){ .app{ grid-template-columns:1fr; } .sidebar{ position:static; height:auto; } }
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--bg);
+  border-right:1px solid var(--border-soft);
+  padding:22px 16px;
+  position:sticky; top:0; height:100vh;
+  display:flex; flex-direction:column; gap:24px;
+}
+.brand{ display:flex; align-items:center; gap:10px; padding:4px 8px; }
+.brand .logo{
+  width:32px; height:32px; border-radius:8px;
+  background:linear-gradient(135deg,var(--lime),var(--lime-2));
+  display:grid; place-items:center; color:#0a0e14; font-weight:800; font-size:14px;
+  box-shadow:0 0 18px var(--lime-glow);
+}
+.brand .name{ font-weight:600; font-size:15px; letter-spacing:-0.01em; }
+.brand .name small{ display:block; color:var(--muted); font-size:11px; font-weight:400; letter-spacing:0.04em; }
+
+.search{ position:relative; }
+.search input{
+  width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+  padding:9px 12px 9px 34px; border-radius:9px; font-size:13px; outline:none; transition:.2s;
+}
+.search input:focus{ border-color:var(--lime); box-shadow:0 0 0 3px var(--lime-soft); }
+.search svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); }
+
+.nav-section{ font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted-2); padding:0 8px; margin-top:4px; }
+.nav{ display:flex; flex-direction:column; gap:2px; }
+.nav a{
+  display:flex; align-items:center; gap:11px;
+  padding:9px 12px; border-radius:8px;
+  color:var(--text-2); text-decoration:none; font-size:13.5px; font-weight:500;
+  transition:.15s;
+}
+.nav a:hover{ background:var(--panel); color:var(--text); }
+.nav a.active{ background:var(--lime); color:#0a0e14; box-shadow:0 0 16px var(--lime-glow); }
+.nav a svg{ width:16px; height:16px; }
+
+.side-foot{ margin-top:auto; padding:10px; color:var(--muted); font-size:11px; line-height:1.5; }
+.side-foot b{ color:var(--text-2); font-weight:500; }
+
+/* MAIN */
+.main{ padding:22px 28px 40px; min-width:0; }
+.topbar{
+  display:flex; align-items:center; gap:16px; margin-bottom:22px;
+}
+.crumbs{ color:var(--muted); font-size:13px; }
+.crumbs b{ color:var(--text); font-weight:500; }
+.topbar .right{ margin-left:auto; display:flex; align-items:center; gap:12px; }
+.status-pill{
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--panel); border:1px solid var(--border); padding:7px 12px;
+  border-radius:999px; font-size:12.5px; font-weight:500;
+}
+.status-pill .d{ width:8px; height:8px; border-radius:50%; }
+.status-pill.green{ border-color:rgba(61,220,132,0.35); }
+.status-pill.green .d{ background:var(--green); box-shadow:0 0 8px var(--green); }
+.status-pill.yellow{ border-color:rgba(245,183,64,0.35); }
+.status-pill.yellow .d{ background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+.status-pill.red{ border-color:rgba(255,90,90,0.45); }
+.status-pill.red .d{ background:var(--red); box-shadow:0 0 8px var(--red); animation:pulse 1.4s infinite; }
+@keyframes pulse{ 0%,100%{box-shadow:0 0 6px currentColor} 50%{box-shadow:0 0 18px currentColor} }
+.icon-btn{
+  width:36px; height:36px; border-radius:9px; background:var(--panel); border:1px solid var(--border);
+  display:grid; place-items:center; color:var(--muted); cursor:pointer; transition:.2s;
+}
+.icon-btn:hover{ color:var(--text); border-color:var(--border); background:var(--panel-2); }
+
+.section-head{
+  display:flex; align-items:baseline; justify-content:space-between; margin:0 0 14px;
+}
+.section-head h2{ margin:0; font-size:18px; font-weight:600; letter-spacing:-0.01em; }
+.section-head .hint{ color:var(--muted); font-size:12.5px; }
+
+/* KPI CARDS */
+.kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+@media (max-width:1080px){ .kpis{ grid-template-columns:repeat(2,1fr); } }
+.kpi{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:14px;
+  padding:16px 18px 12px; position:relative; overflow:hidden;
+}
+.kpi .lbl{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+.kpi .val{ font-size:30px; font-weight:700; letter-spacing:-0.02em; margin-top:4px; }
+.kpi .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.kpi .tag{
+  position:absolute; top:14px; right:14px; font-size:11px; font-weight:600;
+  padding:3px 9px; border-radius:999px;
+}
+.tag.green{ background:rgba(61,220,132,0.12); color:var(--green); }
+.tag.yellow{ background:rgba(245,183,64,0.14); color:var(--yellow); }
+.tag.red{ background:rgba(255,90,90,0.16); color:var(--red); }
+.tag.lime{ background:var(--lime-soft); color:var(--lime); }
+.kpi .spark{ height:42px; margin-top:8px; }
+
+/* PRIMARY HIGHLIGHT */
+.kpi.hl{
+  background:linear-gradient(180deg,#1a2230 0%,#13191f 100%);
+  border-color:rgba(200,250,77,0.18);
+}
+
+/* SPLIT (sales overview + total profit) */
+.split{ display:grid; grid-template-columns:1.1fr 1fr; gap:14px; margin-bottom:22px; }
+@media (max-width:1080px){ .split{ grid-template-columns:1fr; } }
+.panel{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:14px;
+  padding:18px;
+}
+.panel h3{ margin:0 0 4px; font-size:15px; font-weight:600; }
+.panel .panel-sub{ color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+
+.donut-row{ display:grid; grid-template-columns:160px 1fr; gap:18px; align-items:center; }
+@media (max-width:540px){ .donut-row{ grid-template-columns:1fr; } }
+.legend{ display:flex; flex-direction:column; gap:10px; }
+.legend .item{ display:grid; grid-template-columns:14px 1fr auto; gap:10px; align-items:center; font-size:13px; }
+.legend .item .sw{ width:10px; height:10px; border-radius:3px; }
+.legend .item .lbl{ color:var(--text-2); }
+.legend .item .v{ color:var(--muted); font-family:ui-monospace,monospace; font-size:12.5px; }
+
+.profit-stat{ display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; }
+.profit-stat .num{ font-size:30px; font-weight:700; letter-spacing:-0.02em; color:var(--lime); }
+.profit-stat .delta{ font-size:12.5px; padding:4px 9px; border-radius:6px; background:var(--lime-soft); color:var(--lime); font-weight:600; }
+.profit-stat .label{ color:var(--muted); font-size:12.5px; }
+
+/* TABLE */
+.tbl{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:14px;
+  overflow:hidden; margin-bottom:22px;
+}
+.tbl-head{ display:flex; align-items:center; padding:16px 18px; }
+.tbl-head h3{ margin:0; font-size:15px; font-weight:600; }
+.tbl-head .pill{ margin-left:10px; background:var(--lime-soft); color:var(--lime); padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
+.tbl-head .filters{ margin-left:auto; display:flex; gap:8px; }
+.tbl-head .filters button{
+  background:var(--panel-2); border:1px solid var(--border); color:var(--muted); border-radius:7px;
+  padding:6px 11px; font-size:12px; cursor:pointer; transition:.15s;
+}
+.tbl-head .filters button:hover{ color:var(--text); }
+.tbl-head .filters button.on{ background:var(--lime); color:#0a0e14; border-color:transparent; font-weight:600; }
+table{ width:100%; border-collapse:collapse; font-size:13px; }
+table th{ text-align:left; color:var(--muted); font-weight:500; padding:10px 18px; border-bottom:1px solid var(--border-soft); text-transform:uppercase; font-size:10.5px; letter-spacing:0.06em; }
+table td{ padding:13px 18px; border-bottom:1px solid var(--border-soft); }
+table tr:last-child td{ border-bottom:none; }
+table tr:hover td{ background:rgba(255,255,255,0.015); }
+.cell-name{ display:flex; align-items:center; gap:10px; font-weight:500; }
+.avatar{ width:30px; height:30px; border-radius:50%; background:var(--panel-3); display:grid; place-items:center; color:var(--text-2); font-size:12px; font-weight:600; flex-shrink:0; }
+.cell-mono{ font-family:ui-monospace,monospace; font-size:12.5px; color:var(--text-2); }
+.dot-inline{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+.dot-inline.green{ background:var(--green); box-shadow:0 0 6px var(--green); }
+.dot-inline.yellow{ background:var(--yellow); box-shadow:0 0 6px var(--yellow); }
+.dot-inline.red{ background:var(--red); box-shadow:0 0 6px var(--red); }
+
+/* RIGHT RAIL */
+.right-rail{
+  background:var(--bg);
+  border-left:1px solid var(--border-soft);
+  padding:22px 18px;
+  display:flex; flex-direction:column; gap:18px;
+  position:sticky; top:0; max-height:100vh; overflow-y:auto;
+}
+.right-rail::-webkit-scrollbar{ width:6px; }
+.right-rail::-webkit-scrollbar-thumb{ background:var(--panel-2); border-radius:6px; }
+
+.rail-section h4{ margin:0 0 10px; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between; }
+.rail-section h4 .c{ color:var(--muted); font-size:11px; font-weight:400; }
+.rail-section .item{
+  display:grid; grid-template-columns:32px 1fr; gap:11px;
+  padding:10px 0; border-bottom:1px solid var(--border-soft); font-size:13px;
+}
+.rail-section .item:last-child{ border-bottom:none; }
+.rail-section .item .ic{
+  width:32px; height:32px; border-radius:9px; background:var(--panel-2);
+  display:grid; place-items:center; color:var(--lime);
+}
+.rail-section .item .ic.red{ color:var(--red); background:rgba(255,90,90,0.1); }
+.rail-section .item .ic.yellow{ color:var(--yellow); background:rgba(245,183,64,0.1); }
+.rail-section .item .ic.green{ color:var(--green); background:rgba(61,220,132,0.1); }
+.rail-section .item .t{ font-weight:500; color:var(--text); line-height:1.35; }
+.rail-section .item .s{ color:var(--muted); font-size:12px; line-height:1.35; margin-top:2px; }
+.rail-section .item .ts{ color:var(--muted-2); font-size:11px; margin-top:3px; }
+
+/* CTA card (premium plan style) */
+.cta{
+  background:linear-gradient(160deg,var(--lime) 0%,#9fd72c 100%);
+  color:#0a0e14; border-radius:16px; padding:18px;
+  position:relative; overflow:hidden; box-shadow:0 12px 40px rgba(200,250,77,0.18);
+}
+.cta::before{
+  content:''; position:absolute; right:-30px; top:-30px; width:140px; height:140px;
+  border-radius:50%; background:rgba(255,255,255,0.12); pointer-events:none;
+}
+.cta h4{ margin:0 0 4px; font-size:13px; font-weight:600; opacity:0.85; text-transform:uppercase; letter-spacing:0.06em; }
+.cta .price{ font-size:30px; font-weight:800; letter-spacing:-0.02em; line-height:1; margin:8px 0 4px; }
+.cta .price small{ font-size:13px; font-weight:600; opacity:0.7; }
+.cta p{ margin:8px 0 14px; font-size:12.5px; line-height:1.4; opacity:0.82; }
+.cta button{
+  background:#0a0e14; color:var(--lime); border:none; padding:10px 18px;
+  border-radius:9px; font-weight:600; font-size:13px; cursor:pointer; width:100%;
+  transition:.2s;
+}
+.cta button:hover{ background:#1a2230; }
+.cta button:disabled{ opacity:0.6; cursor:not-allowed; }
+.cta .spinner{ display:inline-block; width:13px; height:13px; border:2px solid var(--lime-soft); border-top-color:var(--lime); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+/* ANALYSIS modal-ish panel */
+.analysis-block{
+  display:none;
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:14px;
+  padding:20px; margin-bottom:22px;
+}
+.analysis-block.show{ display:block; }
+.analysis-block h3{ margin:0 0 4px; font-size:16px; }
+.analysis-block .panel-sub{ color:var(--muted); font-size:12.5px; margin-bottom:16px; }
+.advice{
+  display:flex; gap:12px; padding:12px 14px; border-radius:9px;
+  background:var(--panel-2); border-left:3px solid var(--green); margin-bottom:8px; font-size:13px;
+}
+.advice.yellow{ border-left-color:var(--yellow); }
+.advice.red{ border-left-color:var(--red); }
+.advice .sev{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); min-width:60px; padding-top:2px; font-weight:600; }
+.advice.yellow .sev{ color:var(--yellow); }
+.advice.red .sev{ color:var(--red); }
+.advice.green .sev{ color:var(--green); }
+.tiers{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:14px; }
+.tier{ background:var(--panel-2); border:1px solid var(--border-soft); border-radius:11px; padding:16px; }
+.tier .nm{ font-size:15px; font-weight:600; margin-bottom:2px; }
+.tier .pr{ color:var(--lime); font-size:13px; font-weight:600; margin-bottom:10px; }
+.tier .specs{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:10px; font-size:12.5px; color:var(--muted); }
+.tier .specs span b{ color:var(--text); font-weight:600; }
+.tier ul{ margin:0; padding-left:16px; font-size:12.5px; line-height:1.5; color:var(--text-2); }
+.tier ul li{ margin-bottom:5px; }
+.tier .delta{ display:inline-block; background:var(--lime-soft); color:var(--lime); padding:1px 6px; border-radius:4px; font-size:10.5px; font-weight:600; margin-left:5px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">VPS</div>
+      <div class="name">Operations<small>Jeff Holding</small></div>
+    </div>
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar processos…" id="filter-input">
+    </div>
+    <div>
+      <div class="nav-section">Dashboard</div>
+      <nav class="nav">
+        <a href="#overview" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Visão geral
+        </a>
+        <a href="#processes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+          Processos
+        </a>
+        <a href="#docker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V5a2 2 0 012-2h6a2 2 0 012 2v3"/></svg>
+          Docker
+        </a>
+        <a href="#disks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+          Discos
+        </a>
+      </nav>
+    </div>
+    <div>
+      <div class="nav-section">Sistema</div>
+      <nav class="nav">
+        <a href="#analysis">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+          Auto-análise
+        </a>
+        <a href="#help">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 4M12 17h.01"/></svg>
+          Sobre
+        </a>
+      </nav>
+    </div>
+    <div class="side-foot">
+      <b id="side-host">…</b><br>
+      <span id="side-distro">…</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="crumbs"><b>Dashboards</b> / Visão geral</div>
+      <div class="right">
+        <div class="status-pill" id="status-pill">
+          <span class="d"></span><span id="status-label">carregando…</span>
+        </div>
+        <div class="icon-btn" id="btn-refresh" title="Atualizar agora">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Visão geral</h2>
+      <div class="hint" id="last-update">atualizando…</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis" id="kpis"></div>
+
+    <!-- SPLIT: distribuição RAM + carga em tempo real -->
+    <div class="split">
+      <div class="panel">
+        <h3>Distribuição da memória</h3>
+        <div class="panel-sub">RAM em uso, cache e disponível</div>
+        <div class="donut-row">
+          <svg width="160" height="160" viewBox="0 0 160 160" id="donut">
+            <circle cx="80" cy="80" r="62" fill="none" stroke="var(--panel-2)" stroke-width="20"/>
+            <circle id="donut-arc" cx="80" cy="80" r="62" fill="none" stroke="var(--lime)" stroke-width="20" stroke-dasharray="0 999" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+            <text x="80" y="76" text-anchor="middle" fill="var(--text)" font-size="22" font-weight="700" id="donut-pct">0%</text>
+            <text x="80" y="96" text-anchor="middle" fill="var(--muted)" font-size="11" id="donut-cap">0 / 0 GB</text>
+          </svg>
+          <div class="legend" id="donut-legend"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Carga em tempo real</h3>
+        <div class="panel-sub">CPU % nos últimos minutos</div>
+        <div class="profit-stat" style="margin-bottom:12px">
+          <div class="num" id="cpu-big">0%</div>
+          <div class="delta" id="cpu-delta">load —</div>
+          <div class="label" id="cpu-cap">— vCores</div>
+        </div>
+        <svg id="cpu-chart" viewBox="0 0 400 120" preserveAspectRatio="none" width="100%" height="120">
+          <defs>
+            <linearGradient id="cpu-grad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="var(--lime)" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="var(--lime)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="cpu-area" d="" fill="url(#cpu-grad)"/>
+          <path id="cpu-line" d="" fill="none" stroke="var(--lime)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div class="analysis-block" id="analysis-panel">
+      <h3>Análise operacional</h3>
+      <div class="panel-sub" id="analysis-ts">—</div>
+      <div id="advice-list"></div>
+      <h3 style="margin-top:18px">Recomendação de upgrade</h3>
+      <div class="panel-sub" id="upgrade-summary">—</div>
+      <div class="tiers" id="tiers"></div>
+    </div>
+
+    <!-- PM2 TABLE -->
+    <div class="tbl" id="processes">
+      <div class="tbl-head">
+        <h3>Processos PM2</h3>
+        <span class="pill" id="pm2-count">0</span>
+        <div class="filters">
+          <button class="on" data-f="all">Todos</button>
+          <button data-f="online">Online</button>
+          <button data-f="bad">Com erro</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Nome</th><th>Status</th><th>Uptime</th><th>Restarts</th><th>CPU</th><th>RAM</th></tr></thead>
+        <tbody id="pm2-body"></tbody>
+      </table>
+    </div>
+
+    <!-- DOCKER + DISKS -->
+    <div class="split">
+      <div class="tbl" id="docker">
+        <div class="tbl-head"><h3>Containers Docker</h3><span class="pill" id="docker-count">0</span></div>
+        <table>
+          <thead><tr><th>Nome</th><th>Imagem</th><th>Status</th></tr></thead>
+          <tbody id="docker-body"></tbody>
+        </table>
+      </div>
+      <div class="tbl" id="disks">
+        <div class="tbl-head"><h3>Discos</h3></div>
+        <table>
+          <thead><tr><th>Mount</th><th>Total</th><th>Usado</th><th>%</th></tr></thead>
+          <tbody id="disks-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TOP processos -->
+    <div class="tbl">
+      <div class="tbl-head"><h3>Top processos por CPU</h3></div>
+      <table>
+        <thead><tr><th>PID</th><th>User</th><th>CPU%</th><th>RAM%</th><th>RSS</th><th>Comando</th></tr></thead>
+        <tbody id="top-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- RIGHT RAIL -->
+  <aside class="right-rail">
+    <div class="rail-section">
+      <h4>Alertas <span class="c" id="alerts-count">0 ativos</span></h4>
+      <div id="alerts-list"></div>
+    </div>
+
+    <div class="rail-section">
+      <h4>Status do sistema</h4>
+      <div id="semaforo-list"></div>
+    </div>
+
+    <div class="cta">
+      <h4>Auto-análise</h4>
+      <div class="price">IA <small>operacional</small></div>
+      <p>Reavalia tudo, classifica gargalos por severidade e recomenda o próximo tier de VPS com benchmark.</p>
+      <button id="btn-analyze">Executar análise</button>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+const fmtBytes = (n) => {
+  if (n === null || n === undefined) return '—';
+  const u = ['B','KB','MB','GB','TB'];
+  let i = 0; let v = n;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return v.toFixed(v < 10 ? 1 : 0) + ' ' + u[i];
+};
+const fmtRate = (b) => fmtBytes(b) + '/s';
+const fmtUptime = (ms) => {
+  let s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600); s %= 3600;
+  const m = Math.floor(s / 60);
+  if (d) return `${d}d ${h}h`;
+  if (h) return `${h}h ${m}m`;
+  return `${m}m`;
+};
+const fmtUpSec = (s) => {
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d) return `${d}d ${h}h`;
+  return `${h}h ${m}m`;
+};
+const colorFor = (pct) => pct > 85 ? 'red' : pct > 70 ? 'yellow' : 'green';
+const tagFor = (pct) => pct > 85 ? 'red' : pct > 70 ? 'yellow' : 'lime';
+
+// rolling histories
+const hist = { cpu:[], rx:[], tx:[], ram:[], disk:[] };
+const HIST = 30;
+const push = (a,v) => { a.push(v); if (a.length > HIST) a.shift(); };
+
+function sparklinePath(values, w, h, max){
+  if (!values.length) return '';
+  const step = w / Math.max(values.length - 1, 1);
+  const m = max != null ? max : Math.max(...values, 1);
+  const pts = values.map((v,i) => [i*step, h - (v / m) * h]);
+  return 'M ' + pts.map(p => p.map(n => n.toFixed(1)).join(',')).join(' L ');
+}
+function sparklineArea(values, w, h, max){
+  if (!values.length) return '';
+  const line = sparklinePath(values, w, h, max);
+  const last = (values.length - 1) * (w / Math.max(values.length - 1, 1));
+  return line + ` L ${last.toFixed(1)},${h} L 0,${h} Z`;
+}
+
+function kpiCard({lbl, val, sub, tag, tagClass, sparkValues, sparkMax}){
+  const w = 120, hh = 42;
+  const path = sparklinePath(sparkValues || [], w, hh, sparkMax);
+  return `<div class="kpi">
+    ${tag ? `<span class="tag ${tagClass||'lime'}">${tag}</span>` : ''}
+    <div class="lbl">${lbl}</div>
+    <div class="val">${val}</div>
+    <div class="sub">${sub}</div>
+    ${(sparkValues && sparkValues.length > 1) ? `
+    <svg class="spark" viewBox="0 0 ${w} ${hh}" preserveAspectRatio="none" width="100%" height="${hh}">
+      <path d="${sparklineArea(sparkValues, w, hh, sparkMax)}" fill="var(--lime-soft)"/>
+      <path d="${path}" fill="none" stroke="var(--lime)" stroke-width="1.6"/>
+    </svg>` : ''}
+  </div>`;
+}
+
+function renderKpis(d){
+  const root = document.getElementById('kpis');
+  const root_disk = d.disks.find(x => x.mount === '/') || d.disks[0] || {};
+  push(hist.cpu, d.cpu.percent);
+  push(hist.ram, d.memory.percent);
+  push(hist.disk, root_disk.percent || 0);
+  push(hist.rx, d.network.rxRate || 0);
+  const cpuColor = colorFor(d.cpu.percent);
+  const ramColor = colorFor(d.memory.percent);
+  const diskColor = colorFor(root_disk.percent || 0);
+
+  root.innerHTML = [
+    kpiCard({lbl:'CPU', val: d.cpu.percent + '%', sub:`${d.cpu.cores} vCores · load ${d.cpu.load1}`, tag: cpuColor === 'green' ? 'saudável' : (cpuColor === 'yellow' ? 'atenção' : 'crítico'), tagClass: tagFor(d.cpu.percent), sparkValues: hist.cpu, sparkMax: 100}),
+    kpiCard({lbl:'RAM', val: d.memory.percent + '%', sub: `${fmtBytes(d.memory.used)} de ${fmtBytes(d.memory.total)}`, tag: ramColor === 'green' ? 'OK' : (ramColor === 'yellow' ? 'apertando' : 'crítico'), tagClass: tagFor(d.memory.percent), sparkValues: hist.ram, sparkMax: 100}),
+    kpiCard({lbl:`Disco ${root_disk.mount || '/'}`, val: (root_disk.percent || 0) + '%', sub:`${fmtBytes(root_disk.used || 0)} / ${fmtBytes(root_disk.total || 0)}`, tag: diskColor === 'green' ? 'folga' : (diskColor === 'yellow' ? 'apertando' : 'crítico'), tagClass: tagFor(root_disk.percent || 0), sparkValues: hist.disk, sparkMax: 100}),
+    kpiCard({lbl:'Rede ↓', val: fmtRate(d.network.rxRate || 0), sub:`acumulado ${fmtBytes(d.network.totalRx)}`, tag:'live', tagClass:'lime', sparkValues: hist.rx}),
+  ].join('');
+}
+
+function renderDonut(d){
+  const used = d.memory.used;
+  const cached = d.memory.cached;
+  const free = d.memory.available;
+  const total = d.memory.total || 1;
+  const pct = d.memory.percent;
+  const arc = document.getElementById('donut-arc');
+  const circ = 2 * Math.PI * 62;
+  arc.setAttribute('stroke-dasharray', `${(pct/100)*circ} ${circ}`);
+  document.getElementById('donut-pct').textContent = pct + '%';
+  document.getElementById('donut-cap').textContent = `${fmtBytes(used)} / ${fmtBytes(total)}`;
+  const legend = document.getElementById('donut-legend');
+  legend.innerHTML = [
+    {sw:'var(--lime)', lbl:'Em uso', v: fmtBytes(used)},
+    {sw:'#3a4a63', lbl:'Cache', v: fmtBytes(cached)},
+    {sw:'#222a38', lbl:'Disponível', v: fmtBytes(free)},
+  ].map(x => `<div class="item"><span class="sw" style="background:${x.sw}"></span><span class="lbl">${x.lbl}</span><span class="v">${x.v}</span></div>`).join('');
+}
+
+function renderCpuChart(d){
+  document.getElementById('cpu-big').textContent = d.cpu.percent + '%';
+  document.getElementById('cpu-delta').textContent = `load ${d.cpu.load1}`;
+  document.getElementById('cpu-cap').textContent = `${d.cpu.cores} vCores · ${d.cpu.percent1}% por core`;
+  const w = 400, h = 120;
+  document.getElementById('cpu-line').setAttribute('d', sparklinePath(hist.cpu, w, h, 100));
+  document.getElementById('cpu-area').setAttribute('d', sparklineArea(hist.cpu, w, h, 100));
+}
+
+function renderStatus(d){
+  const pill = document.getElementById('status-pill');
+  pill.classList.remove('green','yellow','red');
+  pill.classList.add(d.overall);
+  document.getElementById('status-label').textContent =
+    d.overall === 'green' ? 'Saudável' :
+    d.overall === 'yellow' ? 'Atenção' : 'Crítico';
+  document.getElementById('last-update').textContent =
+    'Atualizado às ' + new Date(d.timestamp).toLocaleTimeString('pt-BR');
+  document.getElementById('side-host').textContent = d.info.hostname;
+  document.getElementById('side-distro').textContent = `${d.info.distro} · ${d.info.cpu_cores} vCores · ${fmtBytes(d.memory.total)} · uptime ${fmtUpSec(d.uptime.seconds)}`;
+}
+
+function renderRail(d){
+  const reds = d.status_items.filter(i => i.color === 'red');
+  const yellows = d.status_items.filter(i => i.color === 'yellow');
+  const alerts = [...reds, ...yellows];
+  document.getElementById('alerts-count').textContent = alerts.length ? `${alerts.length} ativos` : 'tudo ok';
+
+  const aroot = document.getElementById('alerts-list');
+  if (!alerts.length) {
+    aroot.innerHTML = `<div class="item"><div class="ic green">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+    </div><div><div class="t">Sistema saudável</div><div class="s">Nenhum gargalo detectado nos últimos 5s.</div></div></div>`;
+  } else {
+    aroot.innerHTML = alerts.slice(0,6).map(a => `<div class="item">
+      <div class="ic ${a.color}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.7 3.86a2 2 0 00-3.4 0z"/></svg>
+      </div>
+      <div><div class="t">${a.key}</div><div class="s">${a.value}</div></div>
+    </div>`).join('');
+  }
+
+  const sroot = document.getElementById('semaforo-list');
+  sroot.innerHTML = d.status_items.map(i => `<div class="item">
+    <div class="ic ${i.color}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <div><div class="t">${i.key}</div><div class="s">${i.value}</div></div>
+  </div>`).join('');
+}
+
+let pm2Filter = 'all';
+let lastPm2 = [];
+function renderPm2(){
+  const body = document.getElementById('pm2-body');
+  const filter = pm2Filter;
+  let items = lastPm2;
+  if (filter === 'online') items = items.filter(p => p.status === 'online');
+  if (filter === 'bad') items = items.filter(p => p.status && p.status !== 'online');
+  document.getElementById('pm2-count').textContent = lastPm2.length;
+  if (!items.length){
+    body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px">nenhum processo</td></tr>';
+    return;
+  }
+  body.innerHTML = items.map(p => {
+    const initial = (p.name || '?').substring(0,2).toUpperCase();
+    const ok = p.status === 'online';
+    return `<tr>
+      <td><div class="cell-name"><div class="avatar">${initial}</div>${p.name}</div></td>
+      <td><span class="dot-inline ${ok?'green':'red'}"></span>${p.status || '?'}</td>
+      <td class="cell-mono">${fmtUptime(p.uptime)}</td>
+      <td class="cell-mono">${p.restarts}</td>
+      <td class="cell-mono">${p.cpu}%</td>
+      <td class="cell-mono">${fmtBytes(p.memory)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDocker(d){
+  document.getElementById('docker-count').textContent = (d.docker || []).length;
+  const body = document.getElementById('docker-body');
+  if (!d.docker || !d.docker.length){
+    body.innerHTML = '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:18px">nenhum container</td></tr>';
+    return;
+  }
+  body.innerHTML = d.docker.map(c => {
+    const initial = (c.name || '?').substring(0,2).toUpperCase();
+    return `<tr>
+      <td><div class="cell-name"><div class="avatar">${initial}</div>${c.name}</div></td>
+      <td class="cell-mono" style="color:var(--muted)">${c.image}</td>
+      <td><span class="dot-inline ${c.healthy?'green':'red'}"></span>${c.status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDisks(d){
+  const body = document.getElementById('disks-body');
+  body.innerHTML = (d.disks || []).map(x => {
+    return `<tr>
+      <td class="cell-mono">${x.mount}</td>
+      <td class="cell-mono">${fmtBytes(x.total)}</td>
+      <td class="cell-mono">${fmtBytes(x.used)}</td>
+      <td><span class="dot-inline ${colorFor(x.percent)}"></span>${x.percent}%</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">sem dados</td></tr>';
+}
+
+function renderTop(d){
+  const body = document.getElementById('top-body');
+  body.innerHTML = (d.top_processes || []).slice(0,8).map(p => `<tr>
+    <td class="cell-mono">${p.pid}</td>
+    <td class="cell-mono" style="color:var(--muted)">${p.user}</td>
+    <td class="cell-mono">${p.cpu}%</td>
+    <td class="cell-mono">${p.mem}%</td>
+    <td class="cell-mono">${fmtBytes(p.rss)}</td>
+    <td class="cell-mono" style="color:var(--text-2)">${(p.cmd || '').substring(0,50)}</td>
+  </tr>`).join('');
+}
+
+async function refresh(){
+  try{
+    const r = await fetch('/api/metrics');
+    const d = await r.json();
+    renderStatus(d);
+    renderKpis(d);
+    renderDonut(d);
+    renderCpuChart(d);
+    renderRail(d);
+    lastPm2 = d.pm2 || [];
+    renderPm2();
+    renderDocker(d);
+    renderDisks(d);
+    renderTop(d);
+  }catch(e){
+    console.error(e);
+    document.getElementById('status-label').textContent = 'erro de conexão';
+  }
+}
+
+async function analyze(){
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analisando…';
+  try{
+    const r = await fetch('/api/analyze',{method:'POST'});
+    const d = await r.json();
+    document.getElementById('analysis-ts').textContent = 'gerada em ' + new Date().toLocaleString('pt-BR');
+    document.getElementById('advice-list').innerHTML = d.advice.map(a => `<div class="advice ${a.severity}"><div class="sev">${a.severity}</div><div>${a.text}</div></div>`).join('');
+    const u = d.upgrade;
+    document.getElementById('upgrade-summary').innerHTML = u.upgrade_recommended
+      ? `Detectado: <b style="color:var(--text)">${u.detected_specs.cores} vCores · ${u.detected_specs.ram_gb} GB RAM · ${u.detected_specs.disk_gb} GB disco</b>. Upgrade recomendado: ${Object.entries(u.pressure).filter(([,v])=>v).map(([k])=>k).join(', ') || 'preventivo'}.`
+      : `Detectado: <b style="color:var(--text)">${u.detected_specs.cores} vCores · ${u.detected_specs.ram_gb} GB RAM · ${u.detected_specs.disk_gb} GB disco</b>. Sem upgrade urgente. Opções abaixo se quiser folga.`;
+    document.getElementById('tiers').innerHTML = (u.options || []).map(t => `<div class="tier">
+      <div class="nm">${t.name}</div>
+      <div class="pr">~ R$ ${t.price_brl}/mês</div>
+      <div class="specs">
+        <span><b>${t.cores}</b> vCores ${t.delta_cores>0?`<span class="delta">+${t.delta_cores}</span>`:''}</span>
+        <span><b>${t.ram_gb}</b> GB RAM ${t.delta_ram_gb>0?`<span class="delta">+${t.delta_ram_gb}</span>`:''}</span>
+        <span><b>${t.disk_gb}</b> GB disco ${t.delta_disk_gb>0?`<span class="delta">+${t.delta_disk_gb}</span>`:''}</span>
+      </div>
+      <ul>${t.benefits.map(b => `<li>${b}</li>`).join('')}</ul>
+    </div>`).join('');
+    document.getElementById('analysis-panel').classList.add('show');
+    document.getElementById('analysis-panel').scrollIntoView({behavior:'smooth', block:'start'});
+  }catch(e){
+    alert('Falha na análise: ' + e.message);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = 'Executar análise';
+  }
+}
+
+document.getElementById('btn-analyze').addEventListener('click', analyze);
+document.getElementById('btn-refresh').addEventListener('click', refresh);
+document.querySelectorAll('.tbl-head .filters button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.tbl-head .filters button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    pm2Filter = b.dataset.f;
+    renderPm2();
+  });
+});
+
+// nav active state
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

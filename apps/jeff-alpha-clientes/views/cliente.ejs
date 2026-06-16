@@ -1,0 +1,257 @@
+<%- include('partials/header', { title: client.name + ' · Alpha' }) %>
+<div class="page-head">
+  <div>
+    <h1><%= client.name %></h1>
+    <p><span class="status-pill status-<%= client.status %>"><%= client.status %></span> &nbsp;·&nbsp; <%= client.contact_name || '-' %> &nbsp;·&nbsp; <%= client.contact_phone || '-' %></p>
+  </div>
+  <div class="actions"><a href="/dashboard" class="btn">← Clientes</a></div>
+</div>
+
+<div class="client-meta">
+  <div class="card">
+    <h2>Identidade</h2>
+    <form method="post" action="/clientes/<%= client.id %>/meta">
+      <div class="grid grid-2">
+        <div><label>Nome</label><input name="name" value="<%= client.name %>"></div>
+        <div><label>Status</label><select name="status">
+          <% ['ativo','pausado','encerrado','perdido'].forEach(s => { %>
+            <option value="<%= s %>" <%= client.status === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select></div>
+        <div><label>Contato</label><input name="contact_name" value="<%= client.contact_name || '' %>"></div>
+        <div><label>Telefone</label><input name="contact_phone" value="<%= client.contact_phone || '' %>"></div>
+        <div style="grid-column:1/-1"><label>Email</label><input name="contact_email" value="<%= client.contact_email || '' %>"></div>
+      </div>
+      <div style="margin-top:16px"><button class="btn btn-sm">Salvar identidade</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Resumo</h2>
+    <div style="font-size:13px;color:var(--fg-3);line-height:1.7">
+      <div><b style="color:var(--fg)">ID:</b> <%= client.id %></div>
+      <div><b style="color:var(--fg)">Slug:</b> <%= client.slug %></div>
+      <div><b style="color:var(--fg)">Criado:</b> <%= client.created_at %></div>
+      <div><b style="color:var(--fg)">Atualizado:</b> <%= client.updated_at %></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <% tabs.forEach(t => { %>
+    <a href="/clientes/<%= client.id %>?tab=<%= t.key %>" class="<%= tab === t.key ? 'active' : '' %>"><%= t.label %></a>
+  <% }) %>
+</div>
+
+<div class="card">
+  <% if (tab === 'informacoes') { %>
+    <h2>Informações sobre o cliente</h2>
+    <% if (!info.session) { %>
+      <div class="empty">
+        Cliente ainda não preencheu o formulário de onboarding.
+        <% if (info.onboardingLink) { %>
+          <div style="margin-top:12px">
+            Link pra ele preencher: <a href="<%= info.onboardingLink %>" target="_blank" style="color:var(--accent)"><%= info.onboardingLink %></a>
+          </div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="grid grid-2" style="margin-bottom:20px">
+        <div class="kpi"><div class="kpi-label">Onboarding</div><div class="kpi-value accent"><%= info.session.completed_at ? 'finalizado' : 'em andamento' %></div></div>
+        <div class="kpi"><div class="kpi-label">Respondidas</div><div class="kpi-value"><%= info.answered %>/<%= info.totalQs %></div></div>
+      </div>
+
+      <div class="card" style="background:var(--bg-2);margin-bottom:20px">
+        <h2 style="display:flex;justify-content:space-between;align-items:center">
+          <span>Link público (LLM-friendly)</span>
+          <form method="post" action="/clientes/<%= client.id %>/regenerar-token" style="margin:0" onsubmit="return confirm('Regenerar o token? O link antigo deixa de funcionar.')">
+            <button class="btn btn-sm" type="submit">Regenerar</button>
+          </form>
+        </h2>
+        <p style="color:var(--fg-3);font-size:13px;margin:0 0 10px">Cole esse link em qualquer IA (Claude, ChatGPT, Gemini) e ela vai conseguir ler todas as respostas do cliente.</p>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="publicLink" type="text" readonly value="<%= info.publicLink || '' %>" style="font-family:ui-monospace,monospace;font-size:12px">
+          <button type="button" class="btn btn-sm" onclick="copyLink()">Copiar</button>
+          <a class="btn btn-sm" href="<%= info.publicLink %>" target="_blank">Abrir</a>
+        </div>
+        <div id="copyMsg" style="font-size:12px;color:var(--ok);margin-top:6px;display:none">Copiado.</div>
+      </div>
+
+      <div class="card" style="background:var(--bg-2);margin-bottom:20px">
+        <h2>Perguntar à IA sobre o cliente</h2>
+        <% if (!info.iaConfigured) { %>
+          <p style="color:var(--fg-3);font-size:13px;margin:0 0 10px">Chave Claude ainda não configurada. Cole a chave em <code>/root/.zeus/anthropic_api_key</code> (chmod 600) que o sistema passa a usar automaticamente. Enquanto isso você pode usar o link público acima em qualquer IA externa.</p>
+        <% } %>
+        <form id="iaForm" onsubmit="return askAI(event)" style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="iaPergunta" type="text" placeholder="Ex: quem é o público-alvo dele?" style="flex:1;min-width:280px">
+          <button class="btn btn-primary" type="submit">Perguntar</button>
+        </form>
+        <div id="iaResposta" style="margin-top:14px;white-space:pre-wrap;font-size:14px;line-height:1.6;display:none;padding:14px;background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius-sm)"></div>
+      </div>
+
+      <h2>Respostas do onboarding</h2>
+      <% info.schema.forEach(sec => { %>
+        <% const hasAny = sec.questions.some(q => (info.answers[q.qkey] || '').trim() || (q.qtype === 'photo' && info.answers[q.qkey])); %>
+        <% if (!hasAny) return; %>
+        <details style="background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px" open>
+          <summary style="cursor:pointer;font-weight:600;color:var(--accent)"><%= sec.title %></summary>
+          <div style="margin-top:12px">
+            <% sec.questions.forEach(q => { %>
+              <% const v = (info.answers[q.qkey] || '').trim(); %>
+              <% if (q.qtype === 'photo') { %>
+                <% if (v) { %>
+                  <div style="margin:10px 0">
+                    <div style="font-size:11px;color:var(--fg-3);text-transform:uppercase;margin-bottom:6px"><%= q.label %></div>
+                    <img src="/api/form/photo/<%= info.session.id %>" alt="foto" style="max-width:200px;border-radius:8px;border:1px solid var(--line)">
+                  </div>
+                <% } %>
+              <% } else if (v) { %>
+                <div style="margin:10px 0;padding-bottom:10px;border-bottom:1px solid var(--line)">
+                  <div style="font-size:11px;color:var(--fg-3);text-transform:uppercase;margin-bottom:4px"><%= q.label %></div>
+                  <div style="white-space:pre-wrap;font-size:14px;line-height:1.55"><%= v %></div>
+                </div>
+              <% } %>
+            <% }) %>
+          </div>
+        </details>
+      <% }) %>
+    <% } %>
+
+    <script>
+      function copyLink() {
+        var inp = document.getElementById('publicLink');
+        if (!inp.value) return;
+        inp.select(); inp.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(inp.value).then(() => {
+          document.getElementById('copyMsg').style.display = 'block';
+          setTimeout(() => { document.getElementById('copyMsg').style.display = 'none'; }, 1800);
+        });
+      }
+      async function askAI(e) {
+        e.preventDefault();
+        var inp = document.getElementById('iaPergunta');
+        var pergunta = inp.value.trim();
+        var box = document.getElementById('iaResposta');
+        if (!pergunta) return false;
+        box.style.display = 'block';
+        box.style.color = 'var(--fg-3)';
+        box.textContent = 'Pensando...';
+        try {
+          var r = await fetch('/clientes/<%= client.id %>/perguntar-ia', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ pergunta: pergunta }),
+          });
+          var j = await r.json();
+          if (j.ok) {
+            box.style.color = 'var(--fg)';
+            box.textContent = j.resposta;
+          } else {
+            box.style.color = 'var(--danger)';
+            box.textContent = j.error || 'Erro';
+          }
+        } catch(err) {
+          box.style.color = 'var(--danger)';
+          box.textContent = 'Falha de rede: ' + err.message;
+        }
+        return false;
+      }
+    </script>
+
+  <% } else if (tab === 'painel') { %>
+    <link rel="stylesheet" href="/static/painel.css">
+    <style>
+      /* override pra encaixar dentro do layout admin */
+      body{background:var(--bg) !important}
+      .painel-admin-frame .layout{display:block;min-height:auto}
+      .painel-admin-frame .sidebar{display:none}
+      .painel-admin-frame main{padding:0;max-width:none}
+      .painel-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+      .painel-tabs .pt{padding:8px 14px;border-radius:8px;font-size:13px;color:var(--fg-3);cursor:pointer;border:1px solid transparent}
+      .painel-tabs .pt.active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600}
+      .painel-tabs .pt:hover{color:var(--accent)}
+    </style>
+    <h2 style="display:flex;justify-content:space-between;align-items:center;margin:0 0 14px">
+      <span>Painel personalizado</span>
+      <% if (painel.subdomainUrl) { %>
+        <a href="<%= painel.subdomainUrl %>" target="_blank" class="btn btn-sm">Abrir <%= client.slug %>.jefersonhenrike.com →</a>
+      <% } %>
+    </h2>
+    <% if (!painel.blocks.length) { %>
+      <div class="empty">
+        Template ainda vazio. <a href="/admin/aba-padrao" style="color:var(--accent)">Editar a aba padrão →</a>
+      </div>
+    <% } else { %>
+      <div class="painel-admin-frame">
+        <div class="layout">
+          <main>
+            <nav id="tabs" class="painel-tabs"></nav>
+            <div id="content"></div>
+          </main>
+        </div>
+      </div>
+      <div id="popup" class="popup hidden"></div>
+      <script>
+        window.__INITIAL__ = {
+          blocks: <%- JSON.stringify(painel.blocks) %>,
+          state: <%- JSON.stringify(painel.state) %>,
+          client_name: <%- JSON.stringify(client.name) %>,
+          adminMode: true,
+          actionUrl: '/clientes/<%= client.id %>/painel/action',
+          uploadBaseUrl: '/clientes/<%= client.id %>/painel/uploads',
+        };
+      </script>
+      <script src="/static/painel.js"></script>
+      <script>
+        // adapta as tabs pro layout horizontal admin
+        var origRender = null;
+        setTimeout(function(){
+          var t = document.getElementById('tabs');
+          if (t) t.className = 'painel-tabs';
+          // re-render com classes adaptadas
+          document.querySelectorAll('.side-tab').forEach(function(el){
+            el.className = 'pt' + (el.className.indexOf('active') >= 0 ? ' active' : '');
+          });
+        }, 100);
+      </script>
+    <% } %>
+  <% } else if (tab === 'anexos') { %>
+    <h2>Anexos</h2>
+    <form method="post" action="/clientes/<%= client.id %>/anexos" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:20px">
+      <div style="flex:1;min-width:240px"><label>Arquivo (até 25MB)</label><input type="file" name="file" required></div>
+      <button class="btn btn-primary">Enviar</button>
+    </form>
+    <% if (!attachments.length) { %>
+      <div class="empty">Nenhum anexo ainda.</div>
+    <% } else { %>
+      <% attachments.forEach(a => { %>
+        <div class="attachment-row">
+          <div class="meta">
+            <div class="name"><%= a.original_name %></div>
+            <div class="info"><%= a.mimetype || '-' %> · <%= Math.round((a.size || 0)/1024) %>KB · <%= a.uploaded_at %></div>
+          </div>
+          <a href="/clientes/<%= client.id %>/anexos/<%= a.id %>" class="btn btn-sm">Baixar</a>
+          <form method="post" action="/clientes/<%= client.id %>/anexos/<%= a.id %>/delete" onsubmit="return confirm('Remover este anexo?')" style="margin:0">
+            <button class="btn btn-sm btn-danger">Excluir</button>
+          </form>
+        </div>
+      <% }) %>
+    <% } %>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+  <% } %>
+
+  <% if (tabFields.length) { %>
+    <h2><%= tabs.find(t => t.key === tab).label %></h2>
+    <form method="post" action="/clientes/<%= client.id %>/tab/<%= tab %>">
+      <% tabFields.forEach(f => { %>
+        <% const longText = ['resumo','metas','planos','observacoes','plataformas','campanhas_ativas','lista','posicionamento','objetivo','icp'].includes(f); %>
+        <label><%= f.replace(/_/g,' ') %></label>
+        <% if (longText) { %>
+          <textarea name="<%= f %>"><%= tabData[f] || '' %></textarea>
+        <% } else { %>
+          <input type="text" name="<%= f %>" value="<%= tabData[f] || '' %>">
+        <% } %>
+      <% }) %>
+      <div style="margin-top:20px"><button class="btn btn-primary">Salvar</button></div>
+    </form>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

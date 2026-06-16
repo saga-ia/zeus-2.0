@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 *)",
+      "Bash(*/scripts/wapi.sh *)",
+      "Bash(curl *)",
+      "Bash(pm2 *)",
+      "Bash(grep *)",
+      "Bash(cat *)",
+      "Bash(tail *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(TOKEN=*)",
+      "Bash(echo *)",
+      "Bash(jq *)",
+      "Bash(wc *)",
+      "Bash(date *)",
+      "Bash(awk *)",
+      "Bash(sed *)"
+    ]
+  },
+  "model": "claude-opus-4-7"
+}

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CIGC · Comercial · Distribuição de Clínicas TEA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231f0d3e'/%3E%3Ctext x='32' y='42' font-family='Inter,sans-serif' font-size='30' font-weight='700' text-anchor='middle' fill='%23d6b56a'%3EC%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg-0: #0b0617;
+    --bg-1: #15082a;
+    --bg-2: #1f0d3e;
+    --bg: #0b0617;
+    --panel: rgba(255, 255, 255, 0.04);
+    --panel-2: rgba(255, 255, 255, 0.06);
+    --panel-solid: #1a0f33;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --text: #f8f6ff;
+    --muted: #cfc6e8;
+    --muted-2: #8e85ad;
+    --violet-300: #b59dfc;
+    --violet-400: #9874f9;
+    --violet-500: #7c4dff;
+    --violet-700: #5b21b6;
+    --accent: #7c4dff;
+    --accent-soft: rgba(124, 77, 255, 0.18);
+    --gold: #d6b56a;
+    --green: #34d399;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; color: var(--text); font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: radial-gradient(ellipse at top, var(--bg-2) 0%, var(--bg-1) 35%, var(--bg-0) 75%); min-height: 100vh; }
+  a { color: var(--violet-300); text-decoration: none; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 3vw, 32px); }
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }
+  header .sub { color: var(--muted); font-size: 14px; max-width: 620px; line-height: 1.5; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--violet-300); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; border: 1px solid rgba(124, 77, 255, 0.35); }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn { background: linear-gradient(135deg, var(--violet-500), var(--violet-700)); color: #fff; border: none; border-radius: 10px; padding: 11px 18px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: transform .12s ease, box-shadow .12s, opacity .12s; box-shadow: 0 12px 32px -8px rgba(124, 77, 255, 0.55); }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 38px -8px rgba(124, 77, 255, 0.7); }
+  .btn:disabled { opacity: 0.5; cursor: progress; transform: none; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border-strong); box-shadow: none; }
+  .last { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 8px; }
+  .last b { color: var(--text); font-weight: 600; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 28px 0 22px; }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; backdrop-filter: blur(8px); }
+  .kpi .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-2); }
+  .kpi .value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.02em; color: var(--text); }
+  .kpi .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-top: 18px; backdrop-filter: blur(8px); }
+  .panel h2 { margin: 0 0 4px; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .panel p.muted { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--panel-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+  th, td { padding: 11px 14px; text-align: left; vertical-align: top; }
+  thead th { background: rgba(31, 13, 62, 0.6); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-strong); position: sticky; top: 0; }
+  tbody tr { border-top: 1px solid var(--border); }
+  tbody tr:hover { background: rgba(124, 77, 255, 0.08); }
+  td.uf { font-weight: 700; color: var(--gold); width: 56px; }
+  td.estado { font-weight: 600; min-width: 130px; }
+  td.regiao { color: var(--muted); width: 110px; font-size: 13px; }
+  td.qtd { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; width: 90px; }
+  td.qtd small { color: var(--muted-2); font-weight: 400; }
+  td.cidades { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  td.notas { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 380px; }
+  .bar { height: 4px; background: linear-gradient(90deg, var(--violet-500), var(--gold)); border-radius: 2px; margin-top: 4px; }
+  .empty { color: var(--muted-2); font-style: italic; }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel-solid); border: 1px solid var(--border-strong); padding: 12px 16px; border-radius: 10px; font-size: 13px; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: var(--text); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.ok { border-color: var(--green); color: var(--green); }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer { color: var(--muted-2); font-size: 12px; margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--border); }
+  @media (max-width: 700px) {
+    td.notas { max-width: 240px; }
+    .kpi .value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="badge">CIGC · Comercial</span>
+      <h1>Distribuição de clínicas TEA · Brasil</h1>
+      <div class="sub">Mapa de concentração de clínicas multidisciplinares de autismo por estado, cruzado com inscritos do CIGC 2025. Botão "Atualizar" dispara pesquisa em tempo real (web search) pra trazer dados novos.</div>
+      <div class="last" id="last"></div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="btnAtualizar">
+        <span id="btnIcon">↻</span>
+        <span id="btnLabel">Atualizar pesquisa</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="panel">
+    <h2>Ranking por estado</h2>
+    <p class="muted">Ordenado por inscritos do CIGC 2025 (dados reais de conversão). Coluna "Mercado" reúne hotspots de cidades + notas estratégicas da pesquisa.</p>
+    <div class="table-wrap">
+      <table id="tabela">
+        <thead>
+          <tr>
+            <th>UF</th>
+            <th>Estado</th>
+            <th>Região</th>
+            <th style="text-align:right">Inscritos 2025</th>
+            <th>Cidades-chave</th>
+            <th>Diagnóstico</th>
+          </tr>
+        </thead>
+        <tbody><tr><td colspan="6" class="empty">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Fonte inscritos 2025: planilha do Glauco (468 registros, 248 com UF preenchido). · Diagnóstico: pesquisa enviada por Jeferson em 2026-05-06. · Atualização web search via Claude.
+  </footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const btn = $('#btnAtualizar');
+const btnIcon = $('#btnIcon');
+const btnLabel = $('#btnLabel');
+
+function fmtDate(s) {
+  if (!s) return '—';
+  try {
+    const d = new Date(s);
+    return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  } catch { return s; }
+}
+
+function toast(msg, kind='ok') {
+  const t = document.createElement('div');
+  t.className = `toast ${kind}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 6000);
+}
+
+async function carregar() {
+  const r = await fetch('/api/estados');
+  const data = await r.json();
+  const rows = data.estados || [];
+  const total = data.totalInscritos2025 || 0;
+  const max = Math.max(...rows.map(x => x.inscritos_2025 || 0), 1);
+
+  const ufsComDiag = rows.filter(x => x.notas && x.notas.length).length;
+  const regioesAtivas = new Set(rows.filter(x => (x.inscritos_2025||0) > 0).map(x => x.regiao)).size;
+
+  const kpisHtml = `
+    <div class="kpi">
+      <div class="label">Estados ativos</div>
+      <div class="value">${rows.filter(x => (x.inscritos_2025||0) > 0).length}</div>
+      <div class="hint">de 27 UFs</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Regiões com público</div>
+      <div class="value">${regioesAtivas}</div>
+      <div class="hint">de 5 regiões</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Top estado</div>
+      <div class="value">${rows[0]?.uf || '—'}</div>
+      <div class="hint">${rows[0]?.inscritos_2025 || 0} inscritos · ${((rows[0]?.inscritos_2025||0)/Math.max(total,1)*100).toFixed(1)}%</div>
+    </div>
+  `;
+  $('#kpis').innerHTML = kpisHtml;
+
+  const trs = rows.map(r => {
+    const pct = (r.inscritos_2025 || 0) / max * 100;
+    const inscritos = r.inscritos_2025 ? `<b>${r.inscritos_2025}</b>` : '<small>0</small>';
+    const bar = r.inscritos_2025 ? `<div class="bar" style="width:${pct.toFixed(1)}%"></div>` : '';
+    return `<tr>
+      <td class="uf">${r.uf}</td>
+      <td class="estado">${r.estado || ''}</td>
+      <td class="regiao">${r.regiao || ''}</td>
+      <td class="qtd">${inscritos}${bar}</td>
+      <td class="cidades">${r.cidades || '<span class="empty">—</span>'}</td>
+      <td class="notas">${r.notas || '<span class="empty">sem diagnóstico ainda</span>'}</td>
+    </tr>`;
+  }).join('');
+  $('#tabela tbody').innerHTML = trs || `<tr><td colspan="6" class="empty">Sem dados ainda.</td></tr>`;
+
+  const last = data.ultimaPesquisa;
+  if (last) {
+    const stTxt = last.status === 'ok' ? '✓ ok' : `✗ ${last.status}`;
+    $('#last').innerHTML = `Última pesquisa: <b>${fmtDate(last.finished_at || last.started_at)}</b> · <span style="color:${last.status==='ok'?'var(--green)':'var(--red)'}">${stTxt}</span>${last.summary?` · ${last.summary}`:''}`;
+  } else {
+    $('#last').innerHTML = `<span class="empty">Pesquisa em tempo real ainda não foi rodada. Clique em <b>Atualizar pesquisa</b> pra puxar dados frescos da web.</span>`;
+  }
+}
+
+async function atualizar() {
+  btn.disabled = true;
+  btnIcon.outerHTML = '<span class="spinner" id="btnIcon"></span>';
+  btnLabel.textContent = 'Pesquisando na web…';
+  try {
+    const r = await fetch('/api/atualizar', { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      toast('Erro na pesquisa: ' + (data.error || r.status), 'error');
+    } else {
+      toast(`Atualizado: ${data.total} estados · ${data.summary || ''}`, 'ok');
+      await carregar();
+    }
+  } catch (e) {
+    toast('Falha de rede: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('btnIcon').outerHTML = '<span id="btnIcon">↻</span>';
+    btnLabel.textContent = 'Atualizar pesquisa';
+  }
+}
+
+btn.addEventListener('click', atualizar);
+carregar();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "cigc-capture",
+  "version": "1.0.0",
+  "description": "Landing de captura de leads - CIGC 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  }
+}

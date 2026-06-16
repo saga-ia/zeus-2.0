@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>Board Academy — Os 5 Pontos Cegos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1920px;
+    background: #0a1f0a;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ---- GEOMETRIC BACKGROUND ELEMENTS ---- */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(57,211,83,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,211,83,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .bg-glow-top {
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(57,211,83,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .bg-glow-bottom {
+    position: absolute;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 350px;
+    background: radial-gradient(ellipse, rgba(46,160,67,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .bg-line-left {
+    position: absolute;
+    left: 60px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(57,211,83,0.25) 15%, rgba(57,211,83,0.25) 85%, transparent);
+    pointer-events: none;
+  }
+
+  .bg-line-right {
+    position: absolute;
+    right: 60px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(57,211,83,0.25) 15%, rgba(57,211,83,0.25) 85%, transparent);
+    pointer-events: none;
+  }
+
+  /* ---- HEADER ---- */
+  .header {
+    position: relative;
+    z-index: 10;
+    padding: 64px 80px 0 80px;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(57,211,83,0.12);
+    border: 1px solid rgba(57,211,83,0.30);
+    border-radius: 4px;
+    padding: 6px 16px;
+    margin-bottom: 28px;
+  }
+
+  .header-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #39d353;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #39d353;
+  }
+
+  .header-badge-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #39d353;
+  }
+
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 98px;
+    line-height: 0.92;
+    letter-spacing: 1px;
+    color: #F3F6FA;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .header-title span.accent {
+    color: #39d353;
+  }
+
+  .header-divider {
+    width: 64px;
+    height: 3px;
+    background: linear-gradient(90deg, #39d353, transparent);
+    margin-bottom: 16px;
+  }
+
+  .header-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #8aad8a;
+    letter-spacing: 0.3px;
+    line-height: 1.5;
+    font-style: italic;
+    margin-bottom: 40px;
+  }
+
+  .header-separator {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(57,211,83,0.40), transparent);
+    margin-bottom: 32px;
+  }
+
+  /* ---- CARDS CONTAINER ---- */
+  .cards {
+    position: relative;
+    z-index: 10;
+    padding: 0 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: linear-gradient(135deg, #0d2b0d 0%, #0a2010 100%);
+    border: 1px solid rgba(57,211,83,0.18);
+    border-radius: 8px;
+    padding: 22px 24px 22px 0;
+    display: flex;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(57,211,83,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .card-left {
+    width: 96px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 4px;
+    position: relative;
+  }
+
+  .card-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 58px;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(57,211,83,0.35);
+    letter-spacing: -1px;
+    user-select: none;
+  }
+
+  .card-icon {
+    margin-top: 8px;
+    font-size: 20px;
+    color: #39d353;
+    opacity: 0.85;
+  }
+
+  .card-vline {
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(57,211,83,0.40), rgba(57,211,83,0.10));
+    margin: 0 20px;
+    flex-shrink: 0;
+    border-radius: 1px;
+  }
+
+  .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .card-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #39d353;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .card-subtitle-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #2ea043;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .card-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #b8ccb8;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+
+  .card-ponto-cego {
+    background: rgba(57,211,83,0.07);
+    border-left: 2px solid #39d353;
+    border-radius: 0 4px 4px 0;
+    padding: 8px 12px;
+  }
+
+  .card-ponto-cego .card-subtitle-label {
+    color: #39d353;
+  }
+
+  .card-ponto-cego .card-text {
+    color: #d0e8d0;
+    margin-bottom: 0;
+    font-weight: 500;
+  }
+
+  /* ---- FOOTER ---- */
+  .footer {
+    position: absolute;
+    z-index: 10;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 80px 52px 80px;
+  }
+
+  .footer-separator {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(57,211,83,0.40), transparent);
+    margin-bottom: 28px;
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 3px;
+    color: #F3F6FA;
+    line-height: 1;
+  }
+
+  .footer-logo span {
+    color: #39d353;
+  }
+
+  .footer-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #2ea043;
+  }
+
+  .footer-badge {
+    background: rgba(57,211,83,0.10);
+    border: 1px solid rgba(57,211,83,0.25);
+    border-radius: 4px;
+    padding: 10px 18px;
+    text-align: center;
+  }
+
+  .footer-badge-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #39d353;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .footer-badge-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    color: #5a8a5a;
+    letter-spacing: 0.5px;
+  }
+
+  /* ---- CORNER ACCENTS ---- */
+  .corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    z-index: 20;
+  }
+  .corner-tl { top: 24px; left: 24px; border-top: 2px solid #39d353; border-left: 2px solid #39d353; }
+  .corner-tr { top: 24px; right: 24px; border-top: 2px solid #39d353; border-right: 2px solid #39d353; }
+  .corner-bl { bottom: 24px; left: 24px; border-bottom: 2px solid #39d353; border-left: 2px solid #39d353; }
+  .corner-br { bottom: 24px; right: 24px; border-bottom: 2px solid #39d353; border-right: 2px solid #39d353; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — Infográfico Vertical Board Academy 1080x1920 -->
+<div class="slide">
+
+  <!-- Background layers -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow-top"></div>
+  <div class="bg-glow-bottom"></div>
+  <div class="bg-line-left"></div>
+  <div class="bg-line-right"></div>
+
+  <!-- Corner accents -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">
+      <div class="header-badge-dot"></div>
+      <span class="header-badge-text">Governança Executiva</span>
+    </div>
+
+    <div class="header-title">
+      OS <span class="accent">5</span> PONTOS<br>
+      CEGOS QUE<br>
+      DESTROEM<br>
+      <span class="accent">CONSELHEIROS</span>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <div class="header-subtitle">
+      "Falhas que transformam experts em espectadores de luxo"
+    </div>
+
+    <div class="header-separator"></div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+
+    <!-- CARD 01 -->
+    <div class="card">
+      <div class="card-left">
+        <div class="card-number">01</div>
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-vline"></div>
+      <div class="card-content">
+        <div class="card-title">Síndrome do Operador<br>("O Consultor Disfarçado")</div>
+        <span class="card-subtitle-label">A Falha</span>
+        <div class="card-text">O conselheiro quer resolver o problema, pede planilhas, desenha processos e tenta gerenciar os diretores.</div>
+        <div class="card-ponto-cego">
+          <span class="card-subtitle-label">O Ponto Cego</span>
+          <div class="card-text">Conselhos existem para governar, validar estratégia e mitigar riscos, não para executar. O conselheiro direciona por meio de perguntas, não de ordens.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 02 -->
+    <div class="card">
+      <div class="card-left">
+        <div class="card-number">02</div>
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-vline"></div>
+      <div class="card-content">
+        <div class="card-title">Métrica de Vaidade vs.<br>Governança de Valor</div>
+        <span class="card-subtitle-label">A Falha</span>
+        <div class="card-text">Focar em relatórios superficiais de marketing, seguidores ou faturamento bruto de curto prazo, sem analisar a operação.</div>
+        <div class="card-ponto-cego">
+          <span class="card-subtitle-label">O Ponto Cego</span>
+          <div class="card-text">No board, é obrigatório cruzar caixa, margens, LTV/CAC, passivos ocultos e retenção de talentos. Topo de funil sem caixa é negligência estrutural.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 03 -->
+    <div class="card">
+      <div class="card-left">
+        <div class="card-number">03</div>
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L6 7h12l-2-4z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-vline"></div>
+      <div class="card-content">
+        <div class="card-title">Falta de Letramento em<br>Capital &amp; M&amp;A</div>
+        <span class="card-subtitle-label">A Falha</span>
+        <div class="card-text">Acreditar que a experiência na área vertical é suficiente para sentar à mesa de conselho.</div>
+        <div class="card-ponto-cego">
+          <span class="card-subtitle-label">O Ponto Cego</span>
+          <div class="card-text">Não entender diluição, dívida, captação ou cenários de M&amp;A transforma o conselheiro em espectador. Sem ler balanço com visão do acionista, não se agrega.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 04 -->
+    <div class="card">
+      <div class="card-left">
+        <div class="card-number">04</div>
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-vline"></div>
+      <div class="card-content">
+        <div class="card-title">Silêncio Político ou<br>Confronto Excessivo</div>
+        <span class="card-subtitle-label">A Falha</span>
+        <div class="card-text">Oscilar entre concordar com tudo sem exigir ou adotar postura inquisitória que trava as decisões.</div>
+        <div class="card-ponto-cego">
+          <span class="card-subtitle-label">O Ponto Cego</span>
+          <div class="card-text">A eficácia está no confronto construtivo. Falhar em construir pontes de consenso isola o conselheiro. Arrogância técnica sem inteligência política destrói reputações.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 05 -->
+    <div class="card">
+      <div class="card-left">
+        <div class="card-number">05</div>
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-vline"></div>
+      <div class="card-content">
+        <div class="card-title">Ignorar Riscos &amp; Compliance<br>(Foco Apenas no Upside)</div>
+        <span class="card-subtitle-label">A Falha</span>
+        <div class="card-text">Validar crescimento acelerado sem exigir o mapeamento dos riscos operacionais, jurídicos e de mercado.</div>
+        <div class="card-ponto-cego">
+          <span class="card-subtitle-label">O Ponto Cego</span>
+          <div class="card-text">Aprovar expansão sem avaliar LGPD, governança, blindagem patrimonial e contingências trabalhistas é um erro que custa cadeiras e reputações.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- END CARDS -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-separator"></div>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">BOARD <span>ACADEMY</span></div>
+        <div class="footer-tagline">Governança que gera valor</div>
+      </div>
+      <div class="footer-badge">
+        <span class="footer-badge-text">Conselho de Alto Impacto</span>
+        <span class="footer-badge-sub">boardacademy.com.br</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- END SLIDE -->
+
+</body>
+</html>

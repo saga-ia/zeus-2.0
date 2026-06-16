@@ -1,0 +1,13 @@
+{
+  "name": "jeff-cigc-crm",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.2.2",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  }
+}

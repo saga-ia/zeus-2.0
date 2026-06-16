@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EBC Financial Group | CRM</title>
+<link rel="icon" href="https://www.ebcfin.co.uk/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red-deep:#1f0000;
+    --red:#3d0101;
+    --red-bright:#760006;
+    --gold:#c49a6c;
+    --gold-dark:#a97c50;
+    --bronze:#8b4513;
+    --ink:#1a1a1a;
+    --mute:#8b8b8b;
+    --line:#e6e2dc;
+    --bg:#fbfaf7;
+    --card:#ffffff;
+    --green:#2c8557;
+    --green-bright:#3da870;
+    --amber:#b07a14;
+    --status-esperando:#b07a14;
+    --status-em_atendimento:#3d6a9c;
+    --status-negociando:#a97c50;
+    --status-fechado:#2c8557;
+    --status-perdido:#760006;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  a { color: var(--bronze); text-decoration: none; }
+  a:hover { color: var(--red-bright); }
+  button { font-family: inherit; }
+
+  /* Brand */
+  .brand-serif { font-family: 'Noto Serif', serif; font-weight: 700; }
+  .brand-libre { font-family: 'Libre Baskerville', serif; }
+
+  /* Auth screens */
+  .auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      linear-gradient(180deg, rgba(31,0,0,.92) 0%, rgba(31,0,0,.78) 60%, rgba(31,0,0,.95) 100%),
+      radial-gradient(circle at 75% 30%, rgba(196,154,108,.18), transparent 50%);
+    background-color: var(--red-deep);
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 40px 36px 32px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.5);
+    border-top: 3px solid var(--gold);
+  }
+  .auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .auth-brand img { height: 28px; width: auto; }
+  .auth-brand .lbl {
+    color: var(--gold-dark);
+    font-family: 'Libre Baskerville', serif;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+  }
+  .auth-card h1 {
+    font-family: 'Noto Serif', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--red-deep);
+    margin-bottom: 6px;
+  }
+  .auth-card .sub { color: var(--mute); font-size: 13px; margin-bottom: 24px; }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(196,154,108,.15);
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 13px 18px;
+    border: 0;
+    border-radius: 3px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .2s, transform .1s, border-color .2s, color .2s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--red-bright);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .btn-primary:hover { background: var(--red); }
+  .btn-primary.full { width: 100%; padding: 15px; }
+  .btn-ghost {
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--red-deep); }
+  .btn-sm { padding: 7px 11px; font-size: 12px; letter-spacing: .03em; }
+  .btn-wa {
+    background: var(--green);
+    color: #fff;
+  }
+  .btn-wa:hover { background: var(--green-bright); }
+
+  .switch-link {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--mute);
+  }
+  .switch-link a { color: var(--bronze); text-decoration: underline; }
+
+  .alert {
+    padding: 11px 13px;
+    border-radius: 3px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+  .alert-error { background: #fdf0f0; border-color: var(--red-bright); color: var(--red-bright); }
+  .alert-success { background: #effaf3; border-color: var(--green); color: var(--green); }
+  .alert-info { background: #f3f6fa; border-color: #3d6a9c; color: #3d6a9c; }
+
+  /* App */
+  .app { display: none; }
+  header.topbar {
+    background: var(--red-deep);
+    border-bottom: 1px solid rgba(196,154,108,.25);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  header.topbar .wrap {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    height: 68px;
+    gap: 18px;
+  }
+  header.topbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header.topbar img { height: 28px; width: auto; filter: brightness(0) invert(1); }
+  header.topbar .brand-text {
+    color: var(--gold);
+    font-family: 'Libre Baskerville', serif;
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  header.topbar nav { display: flex; gap: 4px; flex: 1; margin-left: 24px; }
+  .navbtn {
+    background: transparent;
+    border: 0;
+    color: #d6c9b3;
+    padding: 8px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    transition: color .2s, background .2s;
+  }
+  .navbtn:hover { color: #fff; }
+  .navbtn.active { color: var(--gold); background: rgba(196,154,108,.12); }
+  header.topbar .me { color: #d6c9b3; font-size: 13px; }
+  .role-badge {
+    background: var(--gold);
+    color: var(--red-deep);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: .08em;
+  }
+  header.topbar .btn-logout {
+    background: transparent;
+    border: 1px solid rgba(196,154,108,.4);
+    color: #e8d8be;
+    padding: 7px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: .04em;
+  }
+  header.topbar .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+
+  .container { padding: 32px 24px; max-width: 1600px; margin: 0 auto; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h2 {
+    font-family: 'Noto Serif', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--red-deep);
+    letter-spacing: -.01em;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px 18px;
+    border-top: 2px solid var(--gold);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    cursor: default;
+  }
+  .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -16px rgba(31,0,0,.28);
+    border-color: var(--gold);
+  }
+  .stat .lbl {
+    font-size: 11px;
+    color: var(--mute);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .stat .val {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--red-bright);
+    margin-top: 6px;
+    line-height: 1;
+  }
+
+  /* Kanban */
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(260px, 1fr));
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+  .col {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .col:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -18px rgba(31,0,0,.22);
+    border-color: var(--gold);
+  }
+  .col-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Noto Serif', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--red-deep);
+  }
+  .col-head .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .col[data-status="esperando"] .dot { background: var(--status-esperando); }
+  .col[data-status="em_atendimento"] .dot { background: var(--status-em_atendimento); }
+  .col[data-status="negociando"] .dot { background: var(--status-negociando); }
+  .col[data-status="fechado"] .dot { background: var(--status-fechado); }
+  .col[data-status="perdido"] .dot { background: var(--status-perdido); }
+
+  .col-count {
+    background: var(--bg);
+    color: var(--mute);
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Libre Baskerville', serif;
+    border: 1px solid var(--line);
+  }
+  .col-body {
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lead-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .lead-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 14px 28px -14px rgba(31,0,0,.28);
+    transform: translateY(-4px);
+  }
+  .lead-card .name {
+    font-family: 'Noto Serif', serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--red-deep);
+    margin-bottom: 4px;
+  }
+  .lead-card .phone { color: var(--mute); font-size: 12px; margin-bottom: 10px; }
+  .lead-card .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag {
+    font-size: 10px;
+    background: rgba(196,154,108,.12);
+    color: var(--gold-dark);
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .lead-card .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .empty-col {
+    color: var(--mute);
+    font-size: 12px;
+    text-align: center;
+    padding: 24px 12px;
+    font-style: italic;
+  }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(31,0,0,.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(2px);
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 4px;
+    padding: 32px 28px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-top: 3px solid var(--gold);
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.5);
+  }
+  .modal h3 {
+    font-family: 'Noto Serif', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--red-deep);
+    margin-bottom: 4px;
+  }
+  .modal .sub-info {
+    color: var(--mute);
+    font-size: 13px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .modal .meta-info {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--mute);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .modal .meta-info strong { color: var(--ink); font-weight: 600; }
+  .modal .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* Tables */
+  .table-wrap {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .table-wrap:hover {
+    border-color: var(--gold);
+    box-shadow: 0 14px 28px -14px rgba(31,0,0,.18);
+    transform: translateY(-3px);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid var(--line);
+    transition: background .2s ease, transform .2s ease;
+  }
+  th {
+    background: var(--bg);
+    color: var(--mute);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 600;
+  }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+  tbody tr:hover { background: #fdfbf7; transform: translateX(4px); box-shadow: inset 3px 0 0 var(--gold); }
+  td a { color: var(--red-deep); font-weight: 600; }
+  td a:hover { color: var(--red-bright); }
+
+  .badge {
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .badge-pending { background: rgba(176,122,20,.15); color: var(--amber); }
+  .badge-approved { background: rgba(44,133,87,.15); color: var(--green); }
+  .badge-admin { background: var(--gold); color: var(--red-deep); }
+
+  @media (max-width: 900px) {
+    .kanban { grid-template-columns: 1fr; }
+    header.topbar .wrap { flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 10px; }
+    header.topbar nav { width: 100%; margin-left: 0; overflow-x: auto; }
+    header.topbar .me { display: none; }
+    .container { padding: 24px 16px; }
+  }
+
+  /* Pending approval screen */
+  .pending-card { text-align: center; padding: 48px 36px 40px; }
+  .pending-card h1 { font-family: 'Noto Serif', serif; font-size: 22px; color: var(--red-deep); margin-bottom: 10px; }
+  .pending-card .sub { color: var(--mute); font-size: 13px; line-height: 1.6; margin-bottom: 28px; }
+  .pending-card .who { color: var(--ink); font-weight: 600; margin-bottom: 4px; }
+  .pending-card .tip {
+    margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--mute); line-height: 1.6;
+  }
+  .pending-card .tip strong { color: var(--bronze); font-weight: 600; }
+  .spinner {
+    width: 56px; height: 56px; margin: 8px auto 24px;
+    border: 4px solid rgba(196,154,108,.18);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pending-actions { display:flex; gap:8px; justify-content:center; margin-top:18px; }
+  .pending-actions .btn { font-size:12px; padding:8px 14px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN / REGISTER -->
+<div id="auth" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="logo.png" alt="EBC Financial Group">
+      <span class="lbl">EBC Financial Group</span>
+    </div>
+    <h1>CRM &middot; Acesso</h1>
+    <div class="sub">Área restrita à equipe. Acesso por aprovação.</div>
+    <div id="auth-alert"></div>
+
+    <!-- Login form -->
+    <div id="login-form">
+      <div class="field"><label for="login-email">E-mail</label><input type="email" id="login-email" autocomplete="email"></div>
+      <div class="field"><label for="login-password">Senha</label><input type="password" id="login-password" autocomplete="current-password"></div>
+      <button class="btn btn-primary full" onclick="doLogin()">Entrar</button>
+      <div class="switch-link">Sem conta? <a href="#" onclick="showRegister();return false">Solicitar acesso</a></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" style="display:none">
+      <div class="field"><label>Nome completo</label><input id="reg-name"></div>
+      <div class="field"><label>E-mail</label><input type="email" id="reg-email"></div>
+      <div class="field"><label>WhatsApp (com DDI 55)</label><input id="reg-whatsapp" placeholder="5511999999999"></div>
+      <div class="field"><label>Senha (mín. 6)</label><input type="password" id="reg-password"></div>
+      <button class="btn btn-primary full" onclick="doRegister()">Solicitar acesso</button>
+      <div class="switch-link">Já tem conta? <a href="#" onclick="showLogin();return false">Entrar</a></div>
+    </div>
+
+    <!-- Pending approval screen -->
+    <div id="pending-screen" style="display:none" class="pending-card">
+      <div class="spinner"></div>
+      <h1>Aguarde a liberação do seu acesso</h1>
+      <div class="sub">
+        <div class="who" id="pending-name"></div>
+        <div id="pending-email"></div>
+      </div>
+      <div class="sub">O Jeferson recebeu uma notificação no WhatsApp e vai liberar em instantes.<br>Esta tela atualiza sozinha.</div>
+      <div class="tip">Pode deixar a aba aberta. Assim que <strong>liberado</strong>, o painel carrega automaticamente.</div>
+      <div class="pending-actions">
+        <button class="btn btn-ghost" onclick="cancelPending()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <img src="logo.png" alt="EBC Financial Group">
+        <span class="brand-text">EBC &middot; CRM</span>
+      </div>
+      <nav>
+        <button class="navbtn active" data-page="kanban" onclick="goPage('kanban')">Kanban</button>
+        <button class="navbtn" data-page="leads" onclick="goPage('leads')">Leads</button>
+        <button class="navbtn admin-only" data-page="users" onclick="goPage('users')" style="display:none">Usuários</button>
+      </nav>
+      <span class="me" id="me-name"></span>
+      <span class="role-badge" id="me-role"></span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Page: Kanban -->
+    <div id="page-kanban">
+      <div class="page-header">
+        <h2>Pipeline de Leads</h2>
+        <button class="btn btn-primary" onclick="openNewLead()">+ Novo lead</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="kanban" id="kanban"></div>
+    </div>
+
+    <!-- Page: Leads list -->
+    <div id="page-leads" style="display:none">
+      <div class="page-header"><h2>Todos os leads</h2></div>
+      <div id="leads-table"></div>
+    </div>
+
+    <!-- Page: Users -->
+    <div id="page-users" style="display:none">
+      <div class="page-header"><h2>Usuários da equipe</h2></div>
+      <div id="users-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal lead -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+const STATUSES = [
+  { key: 'esperando', label: 'Esperando atendimento' },
+  { key: 'em_atendimento', label: 'Em atendimento' },
+  { key: 'negociando', label: 'Negociando' },
+  { key: 'fechado', label: 'Fechado' },
+  { key: 'perdido', label: 'Perdido' },
+];
+let me = null;
+let leadsCache = [];
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { credentials: 'same-origin', ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+function showAlert(type, msg) {
+  document.getElementById('auth-alert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+function _hideAllForms() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('pending-screen').style.display = 'none';
+  document.getElementById('auth-alert').innerHTML = '';
+}
+function showLogin() { _hideAllForms(); stopPendingPoll(); document.getElementById('login-form').style.display = ''; }
+function showRegister() { _hideAllForms(); stopPendingPoll(); document.getElementById('register-form').style.display = ''; }
+function showPending(name, email) {
+  _hideAllForms();
+  document.getElementById('pending-name').textContent = name;
+  document.getElementById('pending-email').textContent = email;
+  document.getElementById('pending-screen').style.display = '';
+}
+
+async function doLogin(emailOverride, passwordOverride) {
+  const email = emailOverride || document.getElementById('login-email').value;
+  const password = passwordOverride || document.getElementById('login-password').value;
+  try {
+    const data = await api('/api/login', { method: 'POST', body: JSON.stringify({ email, password })});
+    me = data.user;
+    enterApp();
+    return true;
+  } catch (e) {
+    if (!emailOverride) showAlert('error', e.message);
+    return false;
+  }
+}
+
+let _pendingCreds = null;
+let _pendingTimer = null;
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+  const password = document.getElementById('reg-password').value;
+  try {
+    await api('/api/register', { method: 'POST', body: JSON.stringify({ name, email, whatsapp, password })});
+    _pendingCreds = { email, password };
+    showPending(name, email);
+    startPendingPoll();
+  } catch (e) { showAlert('error', e.message); }
+}
+function startPendingPoll() {
+  stopPendingPoll();
+  _pendingTimer = setInterval(checkPending, 3000);
+  checkPending();
+}
+function stopPendingPoll() {
+  if (_pendingTimer) { clearInterval(_pendingTimer); _pendingTimer = null; }
+}
+async function checkPending() {
+  if (!_pendingCreds) return;
+  try {
+    const r = await api(`/api/register-status?email=${encodeURIComponent(_pendingCreds.email)}`);
+    if (r.approved) {
+      stopPendingPoll();
+      const ok = await doLogin(_pendingCreds.email, _pendingCreds.password);
+      if (!ok) { showLogin(); showAlert('info', 'Acesso liberado. Entre com sua senha.'); }
+      _pendingCreds = null;
+    }
+  } catch (_) { /* segue tentando */ }
+}
+function cancelPending() {
+  stopPendingPoll();
+  _pendingCreds = null;
+  showLogin();
+}
+async function doLogout() {
+  await api('/api/logout', { method: 'POST' });
+  location.reload();
+}
+
+function enterApp() {
+  document.getElementById('auth').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('me-name').textContent = me.name;
+  document.getElementById('me-role').textContent = me.role;
+  if (me.role === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+  }
+  loadKanban();
+}
+
+function goPage(page) {
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  document.getElementById('page-kanban').style.display = page === 'kanban' ? '' : 'none';
+  document.getElementById('page-leads').style.display = page === 'leads' ? '' : 'none';
+  document.getElementById('page-users').style.display = page === 'users' ? '' : 'none';
+  if (page === 'kanban') loadKanban();
+  if (page === 'leads') loadLeadsTable();
+  if (page === 'users') loadUsers();
+}
+
+async function loadKanban() {
+  const [{leads}, {counts, total, today}] = await Promise.all([api('/api/leads'), api('/api/stats')]);
+  leadsCache = leads;
+
+  const statsEl = document.getElementById('stats');
+  statsEl.innerHTML = `
+    <div class="stat"><div class="lbl">Total leads</div><div class="val">${total}</div></div>
+    <div class="stat"><div class="lbl">Hoje</div><div class="val">${today}</div></div>
+    ${STATUSES.map(s => {
+      const n = counts.find(c => c.status === s.key)?.n || 0;
+      return `<div class="stat"><div class="lbl">${s.label}</div><div class="val">${n}</div></div>`;
+    }).join('')}
+  `;
+
+  const k = document.getElementById('kanban');
+  k.innerHTML = STATUSES.map(s => {
+    const ls = leads.filter(l => l.status === s.key);
+    return `<div class="col" data-status="${s.key}">
+      <div class="col-head"><span><span class="dot"></span>${s.label}</span><span class="col-count">${ls.length}</span></div>
+      <div class="col-body">
+        ${ls.map(leadCardHtml).join('') || '<div class="empty-col">vazio</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const TEMP_LABEL = { quente: 'Quente', morno: 'Morno', frio: 'Frio' };
+const TEMP_COLOR = { quente: '#c0392b', morno: '#c49a6c', frio: '#5b8a91' };
+
+function tempBadge(t) {
+  if (!t || !TEMP_LABEL[t]) return '';
+  return `<span class="tag" style="background:${TEMP_COLOR[t]};color:#fff;border:0">${TEMP_LABEL[t]}</span>`;
+}
+
+function leadCardHtml(l) {
+  const tags = [];
+  if (l.temperature) tags.push(tempBadge(l.temperature));
+  if (l.origem) tags.push(`<span class="tag">${escapeHtml(l.origem)}</span>`);
+  if (l.utm_campaign) tags.push(`<span class="tag">${escapeHtml(l.utm_campaign)}</span>`);
+  if (l.assigned_name) tags.push(`<span class="tag">→ ${escapeHtml(l.assigned_name)}</span>`);
+  const actions = [];
+  if (l.status === 'esperando') {
+    actions.push(`<button class="btn btn-wa btn-sm" onclick="event.stopPropagation();iniciarAtendimento(${l.id})">Iniciar atendimento</button>`);
+  } else {
+    actions.push(`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openWa('${l.phone}')">WhatsApp</button>`);
+  }
+  return `<div class="lead-card" onclick="openLead(${l.id})">
+    <div class="name">${escapeHtml(l.name)}</div>
+    <div class="phone">${escapeHtml(l.phone)}</div>
+    <div class="meta">${tags.join('')}</div>
+    <div class="actions">${actions.join('')}</div>
+  </div>`;
+}
+
+async function iniciarAtendimento(id) {
+  try {
+    const { wa_url } = await api(`/api/leads/${id}/iniciar`, { method: 'POST' });
+    window.open(wa_url, '_blank');
+    await loadKanban();
+  } catch (e) { alert(e.message); }
+}
+function openWa(phone) {
+  const p = String(phone).replace(/\D/g, '');
+  window.open(`https://wa.me/${p}`, '_blank');
+}
+
+function openLead(id) {
+  const l = leadsCache.find(x => x.id === id);
+  if (!l) return;
+  const m = document.getElementById('modal');
+  m.innerHTML = `
+    <h3>${escapeHtml(l.name)}</h3>
+    <div class="sub-info">${escapeHtml(l.phone)} ${l.email ? '&middot; ' + escapeHtml(l.email) : ''}</div>
+    <div class="field"><label>Status</label>
+      <select id="m-status">${STATUSES.map(s => `<option value="${s.key}" ${l.status===s.key?'selected':''}>${s.label}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Anotações</label>
+      <textarea id="m-notes" rows="4">${escapeHtml(l.notes || '')}</textarea>
+    </div>
+    <div class="meta-info">
+      ${l.temperature ? `<strong>Temperatura:</strong> ${TEMP_LABEL[l.temperature] || l.temperature}<br>` : ''}
+      ${l.experience ? `<strong>Experiência:</strong> ${escapeHtml(l.experience)}<br>` : ''}
+      ${l.motivation ? `<strong>Motivação:</strong> ${escapeHtml(l.motivation)}<br>` : ''}
+      ${l.timing ? `<strong>Quando vai operar:</strong> ${escapeHtml(l.timing)}<br>` : ''}
+      ${l.wants_specialist ? `<strong>Quer especialista:</strong> ${escapeHtml(l.wants_specialist)}<br>` : ''}
+      ${l.content_pref ? `<strong>Conteúdo preferido:</strong> ${escapeHtml(l.content_pref)}<br>` : ''}
+      ${l.origem ? `<strong>Origem:</strong> ${escapeHtml(l.origem)}<br>` : ''}
+      ${l.utm_campaign ? `<strong>Campanha:</strong> ${escapeHtml(l.utm_campaign)}<br>` : ''}
+      ${l.utm_source ? `<strong>Source:</strong> ${escapeHtml(l.utm_source)}<br>` : ''}
+      ${l.geo ? `<strong>Geo:</strong> ${escapeHtml(l.geo)}<br>` : ''}
+      ${l.device ? `<strong>Device:</strong> ${escapeHtml(l.device)}<br>` : ''}
+      <strong>Criado:</strong> ${escapeHtml(l.created_at)}
+    </div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="saveLead(${l.id})">Salvar</button>
+      <button class="btn btn-wa" onclick="openWa('${l.phone}')">Abrir WhatsApp</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('show');
+}
+async function saveLead(id) {
+  try {
+    await api(`/api/leads/${id}/status`, { method: 'POST', body: JSON.stringify({ status: document.getElementById('m-status').value }) });
+    await api(`/api/leads/${id}/notes`, { method: 'POST', body: JSON.stringify({ notes: document.getElementById('m-notes').value }) });
+    closeModal();
+    loadKanban();
+  } catch (e) { alert(e.message); }
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
+
+function openNewLead() {
+  const m = document.getElementById('modal');
+  m.innerHTML = `
+    <h3>Novo lead</h3>
+    <div class="sub-info">Cadastro manual de lead na base.</div>
+    <div class="field"><label>Nome</label><input id="nl-name"></div>
+    <div class="field"><label>Telefone (DDI+DDD)</label><input id="nl-phone" placeholder="5511999999999"></div>
+    <div class="field"><label>E-mail</label><input id="nl-email"></div>
+    <div class="field"><label>Origem</label><input id="nl-origem" value="manual"></div>
+    <div class="field"><label>Anotações</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="createLead()">Criar lead</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('show');
+}
+async function createLead() {
+  try {
+    await api('/api/leads', { method: 'POST', body: JSON.stringify({
+      name: document.getElementById('nl-name').value,
+      phone: document.getElementById('nl-phone').value,
+      email: document.getElementById('nl-email').value,
+      origem: document.getElementById('nl-origem').value,
+      notes: document.getElementById('nl-notes').value,
+    })});
+    closeModal();
+    loadKanban();
+  } catch (e) { alert(e.message); }
+}
+
+async function loadLeadsTable() {
+  const { leads } = await api('/api/leads');
+  const html = `<div class="table-wrap"><table><thead><tr>
+    <th>Nome</th><th>Telefone</th><th>E-mail</th><th>Status</th><th>Origem</th><th>Atribuído</th><th>Criado</th>
+  </tr></thead><tbody>
+  ${leads.map(l => `<tr>
+    <td><a href="#" onclick="openLead(${l.id});return false">${escapeHtml(l.name)}</a></td>
+    <td>${escapeHtml(l.phone)}</td>
+    <td>${escapeHtml(l.email||'')}</td>
+    <td>${escapeHtml(STATUSES.find(s=>s.key===l.status)?.label || l.status)}</td>
+    <td>${escapeHtml(l.origem||'')}</td>
+    <td>${escapeHtml(l.assigned_name||'')}</td>
+    <td>${escapeHtml(l.created_at)}</td>
+  </tr>`).join('')}
+  </tbody></table></div>`;
+  document.getElementById('leads-table').innerHTML = html;
+  leadsCache = leads;
+}
+
+async function loadUsers() {
+  const { users } = await api('/api/users');
+  const html = `<div class="table-wrap"><table><thead><tr>
+    <th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Papel</th><th>Status</th><th>Cadastro</th><th>Ações</th>
+  </tr></thead><tbody>
+  ${users.map(u => {
+    const status = u.approved ? '<span class="badge badge-approved">aprovado</span>' : '<span class="badge badge-pending">pendente</span>';
+    const roleHtml = u.role === 'admin' ? '<span class="badge badge-admin">admin</span>' : escapeHtml(u.role);
+    const acts = [];
+    if (!u.approved) acts.push(`<button class="btn btn-primary btn-sm" onclick="approveUser(${u.id})">Aprovar</button>`);
+    if (u.role !== 'admin') acts.push(`<button class="btn btn-ghost btn-sm" onclick="rejectUser(${u.id})">Remover</button>`);
+    return `<tr>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.whatsapp||'')}</td>
+      <td>${roleHtml}</td>
+      <td>${status}</td>
+      <td>${escapeHtml(u.created_at)}</td>
+      <td>${acts.join(' ')}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table></div>`;
+  document.getElementById('users-table').innerHTML = html;
+}
+async function approveUser(id) { await api(`/api/users/${id}/approve`, { method: 'POST' }); loadUsers(); }
+async function rejectUser(id) { if (!confirm('Remover usuário?')) return; await api(`/api/users/${id}/reject`, { method: 'POST' }); loadUsers(); }
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+(async () => {
+  try {
+    const { user } = await api('/api/me');
+    me = user;
+    enterApp();
+  } catch (e) { /* unauthenticated, stay on login */ }
+})();
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

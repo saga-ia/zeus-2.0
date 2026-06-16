@@ -1,0 +1,62 @@
+<%- include('partials/header', { title: 'Usuários · Alpha Clientes' }) %>
+
+<div class="page-head">
+  <h1>Usuários</h1>
+  <p class="lead">Gerencie acessos. Cadastros novos chegam como pendentes.</p>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden">
+  <table class="tbl" style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="text-align:left;background:#0e0e0e">
+        <th style="padding:12px 14px">Status</th>
+        <th style="padding:12px 14px">Nome</th>
+        <th style="padding:12px 14px">Email</th>
+        <th style="padding:12px 14px">Papel</th>
+        <th style="padding:12px 14px">2FA</th>
+        <th style="padding:12px 14px">Cadastrado</th>
+        <th style="padding:12px 14px">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(u) { %>
+        <tr style="border-top:1px solid #1f1f1f">
+          <td style="padding:12px 14px">
+            <% if (u.status === 'pending') { %>
+              <span style="background:#3b2f00;color:#ffd54a;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600">pendente</span>
+            <% } else if (u.status === 'active') { %>
+              <span style="background:#1f3a1f;color:#C4FF0E;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600">ativo</span>
+            <% } else { %>
+              <span style="background:#3a1f1f;color:#ff8a8a;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600"><%= u.status %></span>
+            <% } %>
+          </td>
+          <td style="padding:12px 14px"><%= u.name || '—' %></td>
+          <td style="padding:12px 14px"><%= u.email %></td>
+          <td style="padding:12px 14px"><%= u.role %></td>
+          <td style="padding:12px 14px"><%= u.totp_enabled ? 'sim' : 'não' %></td>
+          <td style="padding:12px 14px;font-size:12px;opacity:.7"><%= u.created_at %></td>
+          <td style="padding:12px 14px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <% if (u.status === 'pending') { %>
+                <form method="post" action="/admin/users/<%= u.id %>/aprovar" style="display:inline">
+                  <button type="submit" class="btn btn-primary" style="padding:6px 12px;font-size:12px">Aprovar</button>
+                </form>
+                <form method="post" action="/admin/users/<%= u.id %>/rejeitar" style="display:inline">
+                  <button type="submit" class="btn" style="padding:6px 12px;font-size:12px;background:#3a1f1f;color:#ff8a8a">Rejeitar</button>
+                </form>
+              <% } %>
+              <form method="post" action="/admin/users/<%= u.id %>/excluir" style="display:inline" onsubmit="return confirm('Excluir <%= u.email %>?')">
+                <button type="submit" class="btn" style="padding:6px 12px;font-size:12px;background:#222;color:#aaa">Excluir</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }); %>
+      <% if (users.length === 0) { %>
+        <tr><td colspan="7" style="padding:30px;text-align:center;opacity:.6">Nenhum usuário ainda.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

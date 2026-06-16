@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIGC 2026 — Congresso Internacional de Gestores de Clínicas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09031E;
+      --primary: #9F2CC8;
+      --secondary: #ffffff;
+      --accent: #CE81EA;
+      --text: #CECECE;
+      --white: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Figtree', sans-serif;
+      font-size: 18px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    header img { height: 52px; width: auto; }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 72px 24px 60px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(159,44,200,0.28) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: 'Figtree', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+      border-radius: 100px;
+      padding: 6px 18px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: clamp(28px, 5vw, 56px);
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1.15;
+      max-width: 820px;
+      margin: 0 auto 20px;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text);
+      max-width: 620px;
+      margin: 0 auto 40px;
+    }
+
+    /* BADGES */
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--white);
+    }
+    .badge svg { flex-shrink: 0; }
+
+    /* CTA BUTTON */
+    .btn-cta {
+      display: inline-block;
+      background: linear-gradient(135deg, #9F2CC8, #CE81EA);
+      color: #fff;
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 18px 48px;
+      border-radius: 100px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 0 40px rgba(159,44,200,0.45);
+    }
+    .btn-cta:hover { opacity: .9; transform: translateY(-2px); }
+
+    .hero-note {
+      margin-top: 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+      margin: 0 24px;
+    }
+
+    /* SECTION */
+    section { padding: 72px 24px; max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      font-family: 'Figtree', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: clamp(24px, 3.5vw, 40px);
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 17px;
+      color: var(--text);
+      max-width: 640px;
+      margin-bottom: 48px;
+    }
+
+    /* SPEAKERS GRID */
+    .speakers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+    }
+    .speaker-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: center;
+      transition: transform .2s, border-color .2s;
+    }
+    .speaker-card:hover { transform: translateY(-4px); border-color: rgba(159,44,200,0.4); }
+    .speaker-card img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+    }
+    .speaker-name {
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--white);
+      padding: 10px 8px 12px;
+      line-height: 1.3;
+    }
+
+    /* FORM SECTION */
+    .form-section {
+      background: rgba(159,44,200,0.08);
+      border-top: 1px solid rgba(159,44,200,0.2);
+      border-bottom: 1px solid rgba(159,44,200,0.2);
+      padding: 80px 24px;
+    }
+    .form-wrapper {
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .form-wrapper .section-title { margin-bottom: 8px; }
+    .form-wrapper .section-desc { margin: 0 auto 36px; }
+
+    form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"] {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      color: var(--white);
+      font-family: 'Figtree', sans-serif;
+      font-size: 16px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus { border-color: var(--primary); }
+    input::placeholder { color: rgba(255,255,255,0.25); }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #9F2CC8, #CE81EA);
+      color: #fff;
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 18px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 0 40px rgba(159,44,200,0.45);
+      margin-top: 8px;
+    }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    #form-msg {
+      text-align: center;
+      font-size: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    #form-msg.success { background: rgba(255,255,255,0.08); color: var(--secondary); display: block; }
+    #form-msg.error { background: rgba(207,46,46,0.12); color: #f77; display: block; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      font-size: 13px;
+      color: rgba(255,255,255,0.25);
+    }
+    footer img { height: 36px; margin-bottom: 16px; opacity: .6; }
+
+    /* GLAUCO SECTION */
+    .glauco-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .glauco-photos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .glauco-photos img {
+      width: 100%;
+      border-radius: 12px;
+      object-fit: cover;
+      aspect-ratio: 3/4;
+    }
+
+    /* GALLERY */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .gallery-grid img {
+      width: 100%;
+      border-radius: 12px;
+      object-fit: cover;
+      aspect-ratio: 4/3;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .speakers-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      section { padding: 56px 20px; }
+      .glauco-section { grid-template-columns: 1fr; }
+      .glauco-photos { grid-template-columns: 1fr 1fr; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- META PIXEL -->
+<script id="meta-pixel-script">
+(function(pixel){
+  if(!pixel) return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', pixel);
+  fbq('track', 'PageView');
+})(window.__META_PIXEL_ID__);
+</script>
+
+<header>
+  <img src="logo-branca.png" alt="CIGC 2026">
+</header>
+
+<!-- HERO -->
+<section class="hero" style="max-width:none; padding-left:24px; padding-right:24px;">
+  <div class="hero-eyebrow">Inscrições abertas — Vagas limitadas</div>
+  <h1>O Maior Congresso da<br><span>América Latina</span><br>do Segmento</h1>
+  <p class="hero-sub">
+    Congresso Internacional de Gestores de Clínicas — imersão presencial com os maiores nomes da gestão em saúde do Brasil.
+  </p>
+
+  <div class="hero-badges">
+    <div class="badge">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      04, 05 e 06 de Setembro de 2026
+    </div>
+    <div class="badge">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      APCD — Santana, São Paulo - SP
+    </div>
+    <div class="badge">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      100% Presencial
+    </div>
+  </div>
+
+  <a href="#inscricao" class="btn-cta">Garantir minha vaga agora</a>
+  <p class="hero-note">Preencha o formulário abaixo — nossa equipe entra em contato</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- SOBRE -->
+<section>
+  <p class="section-label">Sobre o Congresso</p>
+  <h2 class="section-title">O maior congresso de gestores<br>clínicos da América Latina</h2>
+  <p class="section-desc">
+    Um evento presencial voltado exclusivamente para donos e gestores de clínicas que desejam estruturar suas empresas, melhorar resultados financeiros e evoluir da operação para uma gestão estratégica de alto nível.
+  </p>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:20px;">
+    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:28px 24px;">
+      <div style="color:var(--secondary); font-size:32px; font-family:'Kumbh Sans',sans-serif; font-weight:700; margin-bottom:8px;">+329</div>
+      <div style="font-size:15px; color:var(--text);">inscritos em 2025</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:28px 24px;">
+      <div style="color:var(--secondary); font-size:32px; font-family:'Kumbh Sans',sans-serif; font-weight:700; margin-bottom:8px;">580+</div>
+      <div style="font-size:15px; color:var(--text);">público total no evento</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:28px 24px;">
+      <div style="color:var(--secondary); font-size:32px; font-family:'Kumbh Sans',sans-serif; font-weight:700; margin-bottom:8px;">15+</div>
+      <div style="font-size:15px; color:var(--text);">palestrantes confirmados</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:28px 24px;">
+      <div style="color:var(--secondary); font-size:32px; font-family:'Kumbh Sans',sans-serif; font-weight:700; margin-bottom:8px;">3</div>
+      <div style="font-size:15px; color:var(--text);">dias de imersão presencial</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- GLAUCO -->
+<section class="glauco-section">
+  <div class="glauco-text">
+    <p class="section-label">Idealizador do Congresso</p>
+    <h2 class="section-title">Glauco Costa</h2>
+    <p class="section-desc" style="margin-bottom:0;">
+      Especialista em gestão de clínicas, Glauco Costa criou o CIGC para reunir os maiores nomes do segmento e transformar a forma como donos e gestores de clínicas conduzem seus negócios. Mais de 580 gestores já viveram essa experiência.
+    </p>
+  </div>
+  <div class="glauco-photos">
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-glauco-costa-1.jpeg" alt="Glauco Costa" loading="lazy">
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/WhatsApp-Image-2026-03-22-at-09.02.20-e1774396622955-768x586.jpeg" alt="Glauco Costa no evento" loading="lazy">
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PALESTRANTES -->
+<section>
+  <p class="section-label">Palestrantes</p>
+  <h2 class="section-title">Quem vai fazer acontecer<br>no evento</h2>
+  <p class="section-desc">Profissionais que transformam pessoas e negócios, gerando resultados reais por todo o Brasil.</p>
+
+  <div class="speakers-grid">
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Rodrigo-Noronha-1.jpeg" alt="Rodrigo Noronha" loading="lazy">
+      <div class="speaker-name">Rodrigo Noronha</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Rodrigo-almeida-1.jpeg" alt="Rodrigo Almeida" loading="lazy">
+      <div class="speaker-name">Rodrigo Almeida</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Leonardo-Vieira-1.jpeg" alt="Leonardo Vieira" loading="lazy">
+      <div class="speaker-name">Leonardo Vieira</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Alessandro_Casser-1.jpeg" alt="Alessandro Casser" loading="lazy">
+      <div class="speaker-name">Alessandro Casser</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Isabela_Faria-1.jpeg" alt="Isabela Faria" loading="lazy">
+      <div class="speaker-name">Isabela Faria</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/04/palestrante_Petruz_Vaz-1.jpeg" alt="Petruz Vaz" loading="lazy">
+      <div class="speaker-name">Petruz Vaz</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-uelcon.jpeg" alt="Uelcon" loading="lazy">
+      <div class="speaker-name">Uelcon</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Marcelo-Lavezzo.jpg" alt="Marcelo Lavezzo" loading="lazy">
+      <div class="speaker-name">Marcelo Lavezzo</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-fabio-coelho-1.jpeg" alt="Fabio Coelho" loading="lazy">
+      <div class="speaker-name">Fabio Coelho</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-Casal-Bendo.jpeg" alt="Casal Bendo" loading="lazy">
+      <div class="speaker-name">Casal Bendo</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-caio-1.jpeg" alt="Caio" loading="lazy">
+      <div class="speaker-name">Caio</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-glauco-costa-1.jpeg" alt="Glauco Costa" loading="lazy">
+      <div class="speaker-name">Glauco Costa</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-gabriela-aseka-1.jpeg" alt="Gabriela Aseka" loading="lazy">
+      <div class="speaker-name">Gabriela Aseka</div>
+    </div>
+    <div class="speaker-card">
+      <img src="https://cigc.com.br/wp-content/uploads/2026/03/palestrante-felipe-mota-1.jpeg" alt="Felipe Mota" loading="lazy">
+      <div class="speaker-name">Felipe Mota</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- GALERIA -->
+<section>
+  <p class="section-label">Edições anteriores</p>
+  <h2 class="section-title">Momentos do Congresso</h2>
+  <p class="section-desc">Veja como foi o CIGC 2025 — um evento que reuniu centenas de gestores de clínicas em imersão total.</p>
+  <div class="gallery-grid">
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7060.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7062.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+    <img src="https://cigc.com.br/wp-content/uploads/2026/03/DSC7064.JPG-scaled.jpeg" alt="CIGC 2025" loading="lazy">
+  </div>
+</section>
+
+<!-- FORM -->
+<div class="form-section" id="inscricao">
+  <div class="form-wrapper">
+    <p class="section-label" style="text-align:center;">Inscrições abertas</p>
+    <h2 class="section-title">Garanta sua vaga no<br>CIGC 2026</h2>
+    <p class="section-desc" style="margin-left:auto; margin-right:auto;">
+      Preencha abaixo — nossa equipe entra em contato para confirmar sua inscrição.
+    </p>
+
+    <form id="lead-form" novalidate>
+      <div>
+        <label for="nome">Nome completo</label>
+        <input type="text" id="nome" name="nome" placeholder="Seu nome" required autocomplete="name">
+      </div>
+      <div>
+        <label for="telefone">WhatsApp</label>
+        <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" required autocomplete="tel">
+      </div>
+      <div>
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" placeholder="seu@email.com" required autocomplete="email">
+      </div>
+      <div id="form-msg"></div>
+      <button type="submit" class="btn-submit" id="submit-btn">Quero garantir minha vaga</button>
+    </form>
+    <p style="text-align:center; font-size:13px; color:rgba(255,255,255,0.3); margin-top:16px;">
+      Seus dados estão protegidos. Sem spam.
+    </p>
+  </div>
+</div>
+
+<footer>
+  <img src="logo-branca.png" alt="CIGC">
+  <p>Copyright CIGC &copy; 2026. Todos os direitos reservados.</p>
+</footer>
+
+<script>
+(function () {
+  // inject pixel id via server template if available
+  var pixelId = window.__META_PIXEL_ID__;
+
+  function genEventId() {
+    return 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+  }
+
+  function formatPhone(val) {
+    return val.replace(/\D/g, '');
+  }
+
+  var form = document.getElementById('lead-form');
+  var btn = document.getElementById('submit-btn');
+  var msg = document.getElementById('form-msg');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nome = document.getElementById('nome').value.trim();
+    var telefone = document.getElementById('telefone').value.trim();
+    var email = document.getElementById('email').value.trim();
+
+    if (!nome || !telefone || !email) {
+      msg.textContent = 'Preencha todos os campos.';
+      msg.className = 'error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    msg.className = '';
+    msg.style.display = 'none';
+
+    var eventId = genEventId();
+    var fbc = getCookie('_fbc');
+    var fbp = getCookie('_fbp');
+
+    // fire pixel Lead event
+    if (window.fbq) {
+      fbq('track', 'Lead', {}, { eventID: eventId });
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var utm_content = params.get('utm_content') || '';
+
+    fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: nome, telefone: formatPhone(telefone), email: email, event_id: eventId, fbc: fbc, fbp: fbp, utm_content: utm_content })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          msg.textContent = 'Recebemos sua inscrição! Nossa equipe vai entrar em contato em breve.';
+          msg.className = 'success';
+          form.reset();
+        } else {
+          throw new Error(data.error || 'Erro ao salvar.');
+        }
+      })
+      .catch(function (err) {
+        msg.textContent = err.message || 'Erro ao enviar. Tente novamente.';
+        msg.className = 'error';
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = 'Quero garantir minha vaga';
+      });
+  });
+})();
+</script>
+
+</body>
+</html>

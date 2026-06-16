@@ -1,0 +1,78 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "WhatsApp Worker API",
+    "description": "HTTP API for WhatsApp operations via whatsapp-web.js. Use either `Authorization: Bearer <API_TOKEN>` or the admin session cookie set by /auth/login.",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "https://agente.imersaoparadigma.com.br" }],
+  "components": {
+    "securitySchemes": {
+      "bearer": { "type": "http", "scheme": "bearer" },
+      "cookie": { "type": "apiKey", "in": "cookie", "name": "ww_session" }
+    }
+  },
+  "security": [{ "bearer": [] }, { "cookie": [] }],
+  "paths": {
+    "/health": { "get": { "summary": "Health check", "security": [], "responses": { "200": { "description": "ok" } } } },
+    "/auth/login": {
+      "post": {
+        "summary": "Admin login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": { "username": { "type": "string" }, "password": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" }, "401": { "description": "invalid" } }
+      }
+    },
+    "/status": { "get": { "summary": "WhatsApp client state" } },
+    "/qr": { "get": { "summary": "QR code (png|svg|text)", "parameters": [{ "name": "format", "in": "query", "schema": { "enum": ["png", "svg", "text"] } }] } },
+    "/messages/private": {
+      "post": {
+        "summary": "Send text to private chat",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["to", "body"], "properties": { "to": { "type": "string" }, "body": { "type": "string" }, "typing": { "type": "boolean" }, "priority": { "type": "integer" } } } } } }
+      }
+    },
+    "/messages/group": {
+      "post": {
+        "summary": "Send text to group",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["groupId", "body"], "properties": { "groupId": { "type": "string" }, "body": { "type": "string" } } } } } }
+      }
+    },
+    "/messages/{messageId}/reply": { "post": { "summary": "Reply quoting a message" } },
+    "/messages/{messageId}/react": { "post": { "summary": "React to a message" } },
+    "/messages/{messageId}/media": { "get": { "summary": "Download media (base64)" } },
+    "/groups": { "get": { "summary": "List groups" }, "post": { "summary": "Create group" } },
+    "/groups/{id}/participants": { "get": { "summary": "Group participants" }, "post": { "summary": "Add participants" } },
+    "/groups/{id}/participants/{jid}": { "delete": { "summary": "Remove participant" } },
+    "/groups/{id}/participants/{jid}/promote": { "post": { "summary": "Promote to admin" } },
+    "/groups/{id}/participants/{jid}/demote": { "post": { "summary": "Demote admin" } },
+    "/groups/{id}/name": { "patch": { "summary": "Rename group" } },
+    "/groups/{id}/description": { "patch": { "summary": "Set description" } },
+    "/send-message": { "post": { "summary": "Send text (blueprint shortcut)" } },
+    "/send-media": { "post": { "summary": "Send media (base64)" } },
+    "/send-audio": { "post": { "summary": "Send audio (ptt)" } },
+    "/history": { "get": { "summary": "History from local DB" } },
+    "/history/fetch": { "post": { "summary": "Fetch history from WhatsApp" } },
+    "/contacts/check": { "post": { "summary": "Check if number is registered" } },
+    "/contacts": { "get": { "summary": "List known contacts" } },
+    "/webhooks": { "get": { "summary": "List outbound webhooks" }, "post": { "summary": "Register webhook" } },
+    "/webhooks/{id}": { "delete": { "summary": "Delete webhook" }, "patch": { "summary": "Update webhook" } },
+    "/admin/queue": { "get": { "summary": "Queue inspection" } },
+    "/admin/queue/flush": { "post": { "summary": "Mark pending as error" } },
+    "/admin/messages": { "get": { "summary": "Recent messages" } },
+    "/admin/stats": { "get": { "summary": "Stats" } },
+    "/session/restart": { "post": { "summary": "Recreate WhatsApp client" } },
+    "/session/logout": { "post": { "summary": "Logout from WhatsApp session" } },
+    "/session/read": { "post": { "summary": "Mark chat as read" } }
+  }
+}

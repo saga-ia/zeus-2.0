@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Meta Ads Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0D1117;--card:#161B22;--border:#30363D;--bg2:#21262D;--gold:#D4A843;--green:#3FB950;--blue:#58A6FF;--red:#E06C75;--text:#E6EDF3;--muted:#8B949E}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#D4A843,#8B6914);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0D1117;flex-shrink:0}
+header h1{font-size:15px;font-weight:700;flex:1}
+.hdr-badge{background:#2B1D0A;color:var(--gold);border:1px solid #9E6A03;border-radius:6px;padding:2px 10px;font-size:11px;font-weight:700}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:5px 12px;font-size:12px;cursor:pointer}
+.logout-btn:hover{color:var(--text)}
+main{max-width:1100px;margin:0 auto;padding:24px 20px}
+.page-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title h2{font-size:18px;font-weight:700}
+.btn-primary{background:var(--gold);border:none;border-radius:8px;color:#0D1117;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.85}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+.btn-edit{background:var(--bg2);border:1px solid var(--border);color:var(--text)}
+.btn-del{background:#2D1B1B;border:1px solid var(--red);color:var(--red)}
+.btn-edit:hover{border-color:var(--gold);color:var(--gold)}
+.btn-del:hover{background:var(--red);color:#fff}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.client-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.client-card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.client-avatar{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#D4A843,#8B6914);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0D1117;flex-shrink:0;overflow:hidden}
+.client-avatar img{width:100%;height:100%;object-fit:cover}
+.client-name{font-size:14px;font-weight:700;flex:1}
+.client-id{font-size:10px;color:var(--muted);font-family:monospace}
+.client-meta{font-size:12px;color:var(--muted);margin-bottom:12px}
+.client-actions{display:flex;gap:8px}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty h3{margin-bottom:8px;font-size:16px;color:var(--text)}
+/* Modal */
+.overlay{position:fixed;inset:0;background:#000000cc;display:flex;align-items:center;justify-content:center;z-index:100;display:none}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:20px}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:.15s;font-weight:500}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;margin-top:14px}
+label:first-child{margin-top:0}
+input,textarea{width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:70px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
+.btn-cancel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 18px;font-size:13px;cursor:pointer}
+.error-msg{background:#2D1B1B;border:1px solid var(--red);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);margin-top:12px;display:none}
+.success-msg{background:#0D2117;border:1px solid var(--green);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--green);margin-top:12px;display:none}
+.section-badge{display:inline-block;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:6px;vertical-align:middle}
+/* Users sub-panel */
+.users-list{margin-top:10px}
+.user-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg2)}
+.user-row:last-child{border-bottom:none}
+.user-email{flex:1;font-size:13px}
+@media(max-width:768px){
+  header{padding:10px 14px}
+  header h1{font-size:13px}
+  main{padding:14px 12px}
+  .clients-grid{grid-template-columns:1fr}
+  .modal{padding:16px;border-radius:8px}
+  .form-row{grid-template-columns:1fr}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{white-space:nowrap;padding:8px 12px;font-size:12px}
+  .page-title{flex-wrap:wrap;gap:8px}
+  .page-title h2{font-size:15px}
+  .modal-footer{gap:8px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-icon">A</div>
+  <h1>Meta Ads Dashboard <span class="hdr-badge">ADMIN</span></h1>
+  <span id="adminName" style="font-size:12px;color:var(--muted)"></span>
+  <button class="logout-btn" onclick="logout()">Sair</button>
+</header>
+<main>
+  <div class="page-title">
+    <h2>Clientes Cadastrados</h2>
+    <button class="btn-primary" onclick="openModal()">+ Novo Cliente</button>
+  </div>
+  <div class="clients-grid" id="clientsGrid">
+    <div class="empty"><h3>Carregando...</h3></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <h3 id="modalTitle">Novo Cliente</h3>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('info',this)">Informações</button>
+      <button class="tab" onclick="switchTab('meta',this)">Meta Ads</button>
+      <button class="tab" onclick="switchTab('access',this)">Acesso do Cliente</button>
+      <button class="tab" onclick="switchTab('goals',this)">Metas</button>
+      <button class="tab" onclick="switchTab('users',this)">Usuários</button>
+    </div>
+    <div id="tab-info" class="tab-pane active">
+      <label>Nome do cliente *</label>
+      <input id="f-name" placeholder="Ex: PNDE — Melque Dourado">
+      <label>URL da logo (opcional)</label>
+      <input id="f-logo" placeholder="https://...">
+      <label>URL do Google Sheets (opcional)</label>
+      <input id="f-sheets" placeholder="https://docs.google.com/spreadsheets/d/...">
+    </div>
+    <div id="tab-meta" class="tab-pane">
+      <label>Ad Account ID *</label>
+      <input id="f-account" placeholder="act_123456789">
+      <label>Access Token *</label>
+      <textarea id="f-token" placeholder="EAABw..."></textarea>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">Gere em: developers.facebook.com/tools/explorer — permissões: ads_read, read_insights</p>
+    </div>
+    <div id="tab-access" class="tab-pane">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Defina o login do cliente neste painel. Deixe em branco para não criar acesso agora.</p>
+      <label>Email de acesso</label>
+      <input id="f-user-email" type="email" placeholder="cliente@email.com">
+      <label>Senha</label>
+      <input id="f-user-pass" type="password" placeholder="min. 6 caracteres">
+      <label>Nome de exibição</label>
+      <input id="f-user-name" placeholder="Nome do cliente">
+    </div>
+    <div id="tab-goals" class="tab-pane">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Metas aparecem nas barras de progresso do dashboard.</p>
+      <div class="form-row">
+        <div><label>CPL alvo (R$)</label><input id="f-cpl" type="number" step="0.01" placeholder="Ex: 30.00"></div>
+        <div><label>CPC alvo (R$)</label><input id="f-cpc" type="number" step="0.01" placeholder="Ex: 5.00"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Lead Rate alvo (%)</label><input id="f-lr" type="number" step="0.01" placeholder="Ex: 15.00"></div>
+        <div><label>CTR alvo (%)</label><input id="f-ctr" type="number" step="0.01" placeholder="Ex: 2.00"></div>
+      </div>
+    </div>
+    <div id="tab-users" class="tab-pane">
+      <div id="usersList" class="users-list"><p style="color:var(--muted);font-size:13px">Salve o cliente primeiro para gerenciar usuários.</p></div>
+      <div id="addUserForm" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <p style="font-size:12px;font-weight:600;margin-bottom:10px">Adicionar usuário</p>
+        <label>Email</label><input id="nu-email" type="email">
+        <label>Senha</label><input id="nu-pass" type="password">
+        <label>Nome</label><input id="nu-name">
+        <button class="btn-primary" style="margin-top:12px;font-size:12px;padding:7px 14px" onclick="addUser()">Adicionar</button>
+      </div>
+    </div>
+    <div class="error-msg" id="modalErr"></div>
+    <div class="success-msg" id="modalOk"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" id="saveBtn" onclick="saveClient()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = '';
+let editingId = null;
+
+function authHeader() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+async function api(method, path, body) {
+  const r = await fetch(API + path, { method, headers: authHeader(), body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Erro na requisição');
+  return d;
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'users' && editingId) loadUsers();
+}
+
+function showMsg(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function openModal(client) {
+  editingId = client?.id || null;
+  document.getElementById('modalTitle').textContent = client ? 'Editar Cliente' : 'Novo Cliente';
+  document.getElementById('f-name').value = client?.name || '';
+  document.getElementById('f-logo').value = client?.logo_url || '';
+  document.getElementById('f-sheets').value = client?.google_sheets_url || '';
+  document.getElementById('f-account').value = client?.meta_account_id || '';
+  document.getElementById('f-token').value = client ? '••••••' : '';
+  document.getElementById('f-user-email').value = '';
+  document.getElementById('f-user-pass').value = '';
+  document.getElementById('f-user-name').value = '';
+  document.getElementById('f-cpl').value = client?.goals?.cpl || '';
+  document.getElementById('f-cpc').value = client?.goals?.cpc || '';
+  document.getElementById('f-lr').value = client?.goals?.lead_rate || '';
+  document.getElementById('f-ctr').value = client?.goals?.ctr || '';
+  document.getElementById('usersList').innerHTML = '<p style="color:var(--muted);font-size:13px">Salve o cliente primeiro para gerenciar usuários.</p>';
+  document.getElementById('addUserForm').style.display = 'none';
+  if (editingId) {
+    document.getElementById('usersList').innerHTML = '<p style="color:var(--muted);font-size:13px">Carregando...</p>';
+    document.getElementById('addUserForm').style.display = 'block';
+    loadUsers();
+  }
+  switchTab('info', document.querySelector('.tab'));
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('overlay').style.display = 'none'; editingId = null; }
+function closeModalOutside(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+async function loadUsers() {
+  if (!editingId) return;
+  try {
+    const users = await api('GET', `/api/clients/${editingId}/users`);
+    const el = document.getElementById('usersList');
+    if (!users.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">Nenhum usuário cadastrado.</p>'; return; }
+    el.innerHTML = users.map(u => `
+      <div class="user-row">
+        <span class="user-email">${u.email} <span style="color:var(--muted)">(${u.name})</span></span>
+        <button class="btn-sm btn-del" onclick="delUser('${u.id}')">Remover</button>
+      </div>
+    `).join('');
+  } catch(e) { document.getElementById('usersList').innerHTML = `<p style="color:var(--red);font-size:12px">${e.message}</p>`; }
+}
+
+async function addUser() {
+  try {
+    await api('POST', `/api/clients/${editingId}/users`, {
+      email: document.getElementById('nu-email').value,
+      password: document.getElementById('nu-pass').value,
+      name: document.getElementById('nu-name').value
+    });
+    document.getElementById('nu-email').value = '';
+    document.getElementById('nu-pass').value = '';
+    document.getElementById('nu-name').value = '';
+    loadUsers();
+  } catch(e) { showMsg('modalErr', e.message); }
+}
+
+async function delUser(userId) {
+  if (!confirm('Remover usuário?')) return;
+  try { await api('DELETE', `/api/clients/${editingId}/users/${userId}`); loadUsers(); }
+  catch(e) { showMsg('modalErr', e.message); }
+}
+
+async function saveClient() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  try {
+    const body = {
+      name:              document.getElementById('f-name').value,
+      logo_url:          document.getElementById('f-logo').value || null,
+      google_sheets_url: document.getElementById('f-sheets').value || null,
+      meta_account_id:   document.getElementById('f-account').value,
+      meta_access_token: document.getElementById('f-token').value,
+      goals: {
+        cpl:       parseFloat(document.getElementById('f-cpl').value) || null,
+        cpc:       parseFloat(document.getElementById('f-cpc').value) || null,
+        lead_rate: parseFloat(document.getElementById('f-lr').value)  || null,
+        ctr:       parseFloat(document.getElementById('f-ctr').value) || null,
+      }
+    };
+    if (!editingId) {
+      body.user_email    = document.getElementById('f-user-email').value || undefined;
+      body.user_password = document.getElementById('f-user-pass').value  || undefined;
+      body.user_name     = document.getElementById('f-user-name').value  || undefined;
+    }
+    if (editingId) {
+      await api('PUT', `/api/clients/${editingId}`, body);
+    } else {
+      await api('POST', '/api/clients', body);
+    }
+    showMsg('modalOk', 'Salvo com sucesso!');
+    await loadClients();
+    if (!editingId) setTimeout(closeModal, 1000);
+  } catch(e) { showMsg('modalErr', e.message); }
+  finally { btn.disabled = false; }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Excluir cliente "${name}"? Esta ação não pode ser desfeita.`)) return;
+  try { await api('DELETE', `/api/clients/${id}`); loadClients(); }
+  catch(e) { alert(e.message); }
+}
+
+function initials(name) { return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+async function loadClients() {
+  try {
+    const clients = await api('GET', '/api/clients');
+    const grid = document.getElementById('clientsGrid');
+    if (!clients.length) {
+      grid.innerHTML = `<div class="empty"><h3>Nenhum cliente cadastrado</h3><p>Clique em "+ Novo Cliente" para começar.</p></div>`;
+      return;
+    }
+    grid.innerHTML = clients.map(c => `
+      <div class="client-card">
+        <div class="client-card-top">
+          <div class="client-avatar">${c.logo_url ? `<img src="${c.logo_url}" onerror="this.style.display='none'">` : ''}${!c.logo_url ? initials(c.name) : ''}</div>
+          <div>
+            <div class="client-name">${c.name}</div>
+            <div class="client-id">${c.meta_account_id}</div>
+          </div>
+        </div>
+        <div class="client-meta">
+          Token: ${c.meta_access_token ? '<span style="color:var(--green)">Configurado</span>' : '<span style="color:var(--red)">Não configurado</span>'}
+          &nbsp;|&nbsp; Sheets: ${c.google_sheets_url ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--muted)">Não</span>'}
+        </div>
+        <div class="client-actions">
+          <button class="btn-sm btn-edit" onclick='openModal(${JSON.stringify(c)})'>Editar</button>
+          <button class="btn-sm btn-del" onclick="deleteClient('${c.id}','${c.name.replace(/'/g,"\\'")}')">Excluir</button>
+          <button class="btn-sm btn-edit" style="margin-left:auto;border-color:var(--gold);color:var(--gold)" onclick="viewDash('${c.id}')">Ver Dashboard</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('clientsGrid').innerHTML = `<div class="empty"><h3 style="color:var(--red)">${e.message}</h3></div>`;
+  }
+}
+
+function viewDash(clientId) {
+  localStorage.setItem('meta_admin_preview_client', clientId);
+  window.open('/dashboard.html?admin_preview=1&client=' + clientId, '_blank');
+}
+
+// Init
+(function() {
+  token = localStorage.getItem('meta_token');
+  const role = localStorage.getItem('meta_role');
+  if (!token || role !== 'admin') { window.location.href = '/login.html'; return; }
+  document.getElementById('adminName').textContent = localStorage.getItem('meta_name') || '';
+  loadClients();
+})();
+</script>
+</body>
+</html>

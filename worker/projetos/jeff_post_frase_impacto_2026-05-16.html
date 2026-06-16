@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Instagram — Frase de Impacto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* POST SLIDE — 1080x1080 */
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: #05070B;
+  }
+
+  /* CAMADA DE FUNDO — textura de ruido */
+  .noise-layer {
+    position: absolute;
+    inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    opacity: 0.45;
+    z-index: 1;
+  }
+
+  /* GRADE DIAGONAL FINA — como linhas de blueprint executivo */
+  .grid-layer {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 123, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 123, 255, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 2;
+  }
+
+  /* GRADIENTE RADIAL — glow central */
+  .glow-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 123, 255, 0.09) 0%,
+      rgba(0, 74, 173, 0.06) 35%,
+      transparent 70%
+    );
+    z-index: 3;
+  }
+
+  /* LINHA HORIZONTAL GLOW — corte superior */
+  .line-top {
+    position: absolute;
+    top: 148px;
+    left: 72px;
+    right: 72px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 163, 255, 0.5) 30%,
+      rgba(0, 163, 255, 0.8) 50%,
+      rgba(0, 163, 255, 0.5) 70%,
+      transparent 100%
+    );
+    z-index: 10;
+  }
+
+  .line-top::after {
+    content: '';
+    position: absolute;
+    inset: -2px 0;
+    background: inherit;
+    filter: blur(6px);
+    opacity: 0.5;
+  }
+
+  /* LINHA HORIZONTAL GLOW — corte inferior */
+  .line-bottom {
+    position: absolute;
+    bottom: 148px;
+    left: 72px;
+    right: 72px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 163, 255, 0.5) 30%,
+      rgba(0, 163, 255, 0.8) 50%,
+      rgba(0, 163, 255, 0.5) 70%,
+      transparent 100%
+    );
+    z-index: 10;
+  }
+
+  .line-bottom::after {
+    content: '';
+    position: absolute;
+    inset: -2px 0;
+    background: inherit;
+    filter: blur(6px);
+    opacity: 0.5;
+  }
+
+  /* NUMERO TRANSLUCIDO DE FUNDO */
+  .bg-number {
+    position: absolute;
+    bottom: -60px;
+    right: -20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 520px;
+    line-height: 1;
+    color: rgba(0, 123, 255, 0.04);
+    letter-spacing: -20px;
+    z-index: 4;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* CONTEUDO PRINCIPAL */
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px;
+  }
+
+  /* CABECALHO */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(0, 163, 255, 0.75);
+  }
+
+  .header-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #007BFF;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.8), 0 0 20px rgba(0, 123, 255, 0.4);
+  }
+
+  /* BLOCO CENTRAL — frase */
+  .main-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 0;
+    gap: 0;
+  }
+
+  /* LINHA VERTICAL ESQUERDA — acento */
+  .accent-line {
+    width: 3px;
+    height: 64px;
+    background: linear-gradient(
+      180deg,
+      #007BFF 0%,
+      #00A3FF 50%,
+      transparent 100%
+    );
+    box-shadow: 0 0 12px rgba(0, 123, 255, 0.7);
+    margin-bottom: 32px;
+  }
+
+  /* PARTE 1 DA FRASE */
+  .phrase-part-1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 108px;
+    line-height: 0.92;
+    letter-spacing: 2px;
+    color: #F3F6FA;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .phrase-part-1 span.highlight {
+    color: #007BFF;
+    text-shadow:
+      0 0 30px rgba(0, 123, 255, 0.6),
+      0 0 60px rgba(0, 123, 255, 0.25);
+  }
+
+  /* DIVISOR CENTRAL */
+  .phrase-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .phrase-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 163, 255, 0.6),
+      rgba(0, 163, 255, 0.2)
+    );
+  }
+
+  .phrase-divider-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(0, 163, 255, 0.5);
+  }
+
+  /* PARTE 2 DA FRASE */
+  .phrase-part-2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 86px;
+    line-height: 0.94;
+    letter-spacing: 1px;
+    color: #B8C2CC;
+    text-transform: uppercase;
+  }
+
+  .phrase-part-2 span.dim {
+    color: #4B5563;
+  }
+
+  /* RODAPE */
+  .footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .footer-author {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footer-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: #F3F6FA;
+    text-transform: uppercase;
+  }
+
+  .footer-handle {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: rgba(0, 163, 255, 0.6);
+    text-transform: lowercase;
+  }
+
+  /* BADGE PREMIUM */
+  .footer-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .badge-box {
+    background: rgba(0, 123, 255, 0.08);
+    border: 1px solid rgba(0, 123, 255, 0.25);
+    border-radius: 4px;
+    padding: 8px 16px;
+    backdrop-filter: blur(8px);
+  }
+
+  .badge-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(0, 163, 255, 0.7);
+  }
+
+  /* CANTO DECORATIVO */
+  .corner-tl {
+    position: absolute;
+    top: 56px;
+    left: 56px;
+    width: 24px;
+    height: 24px;
+    border-top: 1.5px solid rgba(0, 123, 255, 0.45);
+    border-left: 1.5px solid rgba(0, 123, 255, 0.45);
+    z-index: 15;
+  }
+
+  .corner-br {
+    position: absolute;
+    bottom: 56px;
+    right: 56px;
+    width: 24px;
+    height: 24px;
+    border-bottom: 1.5px solid rgba(0, 123, 255, 0.45);
+    border-right: 1.5px solid rgba(0, 123, 255, 0.45);
+    z-index: 15;
+  }
+
+  /* PONTO DE LUZ — canto superior direito */
+  .light-flare {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(
+      ellipse at top right,
+      rgba(0, 123, 255, 0.07) 0%,
+      transparent 60%
+    );
+    z-index: 5;
+  }
+
+  /* PONTO DE LUZ — canto inferior esquerdo */
+  .light-flare-bl {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(
+      ellipse at bottom left,
+      rgba(0, 74, 173, 0.06) 0%,
+      transparent 60%
+    );
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 -->
+<div class="slide">
+
+  <!-- Camadas de fundo -->
+  <div class="noise-layer"></div>
+  <div class="grid-layer"></div>
+  <div class="glow-center"></div>
+  <div class="light-flare"></div>
+  <div class="light-flare-bl"></div>
+
+  <!-- Numero translucido de fundo -->
+  <div class="bg-number">1</div>
+
+  <!-- Linhas horizontais glow -->
+  <div class="line-top"></div>
+  <div class="line-bottom"></div>
+
+  <!-- Cantos decorativos -->
+  <div class="corner-tl"></div>
+  <div class="corner-br"></div>
+
+  <!-- Conteudo principal -->
+  <div class="content">
+
+    <!-- Cabecalho -->
+    <div class="header">
+      <div class="header-label">Mindset Executivo</div>
+      <div class="header-dot"></div>
+    </div>
+
+    <!-- Frase principal -->
+    <div class="main-block">
+      <div class="accent-line"></div>
+
+      <div class="phrase-part-1">
+        Ou você<br>
+        <span class="highlight">assume</span><br>
+        o controle<br>
+        da sua vida...
+      </div>
+
+      <div class="phrase-divider">
+        <div class="phrase-divider-line"></div>
+        <div class="phrase-divider-text">ou</div>
+        <div class="phrase-divider-line"></div>
+      </div>
+
+      <div class="phrase-part-2">
+        passa o resto dela<br>
+        <span class="dim">obedecendo</span><br>
+        desculpas.
+      </div>
+    </div>
+
+    <!-- Rodape -->
+    <div class="footer">
+      <div class="footer-author">
+        <div class="footer-name">Jefferson Henrike</div>
+        <div class="footer-handle">@jefersonhenrike</div>
+      </div>
+      <div class="footer-badge">
+        <div class="badge-box">
+          <div class="badge-text">Posicionamento Premium</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

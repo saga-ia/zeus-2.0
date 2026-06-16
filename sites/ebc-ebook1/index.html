@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EBC | Perspectiva de Mercado 2026 — Lendo o novo ciclo global</title>
+<meta name="description" content="E-book gratuito da EBC Financial Group: outlook completo de Forex, ouro e macro para 2026. USD enfraquecendo, ouro em $5.400–$6.300, carry trade voltando.">
+<link rel="icon" href="https://www.ebcfin.co.uk/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --red-deep:#1f0000;
+    --red:#3d0101;
+    --red-bright:#760006;
+    --gold:#c49a6c;
+    --gold-dark:#a97c50;
+    --bronze:#8b4513;
+    --ink:#1a1a1a;
+    --mute:#8b8b8b;
+    --line:#e6e2dc;
+    --bg:#fbfaf7;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  header{
+    background:var(--red-deep);
+    border-bottom:1px solid rgba(196,154,108,.25);
+    position:sticky;top:0;z-index:50;
+  }
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+  header img{height:32px;width:auto;filter:brightness(0) invert(1)}
+  header .brand-text{
+    color:var(--gold);
+    font-family:'Libre Baskerville',serif;
+    font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+  }
+  header .brand{display:flex;align-items:center;gap:14px}
+  header nav{display:flex;gap:28px}
+  header nav a{
+    color:#e8d8be;font-size:13px;text-decoration:none;
+    letter-spacing:.05em;font-weight:500;transition:color .2s;
+  }
+  header nav a:hover{color:var(--gold)}
+  @media(max-width:720px){header nav{display:none}}
+
+  .hero{
+    background:
+      linear-gradient(180deg,rgba(31,0,0,.92) 0%,rgba(31,0,0,.78) 60%,rgba(31,0,0,.95) 100%),
+      radial-gradient(circle at 75% 30%,rgba(196,154,108,.18),transparent 50%);
+    background-color:var(--red-deep);
+    color:#fff;padding:96px 0 80px;position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;right:-40px;bottom:-30px;
+    width:520px;height:520px;
+    background:url('img/lion.png') no-repeat center/contain;
+    opacity:.07;pointer-events:none;
+  }
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:64px;align-items:center;position:relative;z-index:1}
+  @media(max-width:880px){.hero .wrap{grid-template-columns:1fr;gap:48px}}
+  .hero .eyebrow{
+    display:inline-block;
+    color:var(--gold);
+    font-family:'Libre Baskerville',serif;
+    font-size:12px;letter-spacing:.32em;text-transform:uppercase;
+    padding-bottom:14px;border-bottom:1px solid rgba(196,154,108,.4);
+    margin-bottom:28px;
+  }
+  .hero h1{
+    font-family:'Noto Serif',serif;
+    font-size:clamp(34px,4.4vw,54px);
+    line-height:1.1;font-weight:700;letter-spacing:-.01em;
+    margin-bottom:24px;
+  }
+  .hero h1 span{color:var(--gold)}
+  .hero p.lead{
+    font-size:17px;color:#d6c9b3;max-width:540px;margin-bottom:36px;
+  }
+  .hero ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:8px}
+  .hero ul li{display:flex;gap:14px;font-size:15px;color:#e8dfce}
+  .hero ul li::before{
+    content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--gold);margin-top:9px;flex-shrink:0;
+  }
+
+  .form-card{
+    background:#fff;color:var(--ink);
+    border-radius:4px;padding:36px 32px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.5);
+    border-top:3px solid var(--gold);
+  }
+  .form-card h2{
+    font-family:'Noto Serif',serif;
+    font-size:22px;font-weight:700;
+    color:var(--red-deep);
+    margin-bottom:6px;
+  }
+  .form-card p.sub{color:var(--mute);font-size:13px;margin-bottom:24px}
+  .field{margin-bottom:18px}
+  .field label{
+    display:block;font-size:12px;font-weight:600;
+    color:var(--ink);letter-spacing:.04em;text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .field input,.field select{
+    width:100%;padding:13px 14px;
+    border:1px solid var(--line);border-radius:3px;
+    font:inherit;font-size:15px;color:var(--ink);
+    background:#fff;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .field input:focus,.field select:focus{
+    outline:none;border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(196,154,108,.15);
+  }
+  .submit{
+    width:100%;padding:15px;border:0;border-radius:3px;
+    background:var(--red-bright);color:#fff;
+    font:inherit;font-size:15px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;transition:background .2s,transform .1s;
+  }
+  .submit:hover{background:var(--red)}
+  .submit:active{transform:translateY(1px)}
+  .privacy{
+    text-align:center;font-size:11px;color:var(--mute);
+    margin-top:18px;line-height:1.6;
+  }
+  .privacy a{color:var(--bronze);text-decoration:underline}
+
+  .form-header{margin-bottom:22px}
+  .progress{height:4px;background:var(--line);border-radius:2px;margin-top:14px;overflow:hidden}
+  .progress-bar{height:100%;background:var(--gold);width:0;transition:width .35s ease}
+  .step{display:none}
+  .step.active{display:block;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .step .q{
+    font-family:'Noto Serif',serif;font-size:17px;font-weight:700;
+    color:var(--red-deep);margin-bottom:18px;line-height:1.35;
+  }
+  .step .contact-sub{color:var(--mute);font-size:13px;margin:-10px 0 18px}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{
+    width:100%;text-align:left;padding:14px 16px;
+    background:#fff;border:1px solid var(--line);border-radius:3px;
+    font:inherit;font-size:14px;color:var(--ink);cursor:pointer;
+    transition:border-color .15s,background .15s,transform .05s;
+  }
+  .opt:hover{border-color:var(--gold);background:#fcf9f4}
+  .opt:active{transform:translateY(1px)}
+  .opt.selected{border-color:var(--gold);background:rgba(196,154,108,.08);font-weight:600}
+  .form-nav{margin-top:18px;text-align:left}
+  .btn-back{
+    background:transparent;border:0;color:var(--mute);
+    font:inherit;font-size:12px;cursor:pointer;padding:6px 0;
+    text-decoration:underline;display:none;
+  }
+  .btn-back:hover{color:var(--red-deep)}
+  .btn-back.show{display:inline-block}
+  .thanks{text-align:center;padding:20px 0 10px}
+  .thanks-ico{
+    width:56px;height:56px;border-radius:50%;
+    background:var(--gold);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:28px;margin-bottom:18px;font-weight:700;
+  }
+  .thanks h3{
+    font-family:'Noto Serif',serif;font-size:20px;
+    color:var(--red-deep);margin-bottom:8px;
+  }
+  .thanks p{color:#555;font-size:14px}
+
+  .strip{background:#fff;border-bottom:1px solid var(--line);padding:32px 0}
+  .strip .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center}
+  @media(max-width:720px){.strip .wrap{grid-template-columns:repeat(2,1fr);gap:24px}}
+  .strip .item{padding:0 8px}
+  .strip .num{
+    font-family:'Libre Baskerville',serif;
+    color:var(--red-bright);
+    font-size:30px;font-weight:700;line-height:1;
+  }
+  .strip .lbl{
+    color:var(--mute);font-size:12px;
+    letter-spacing:.1em;text-transform:uppercase;margin-top:8px;
+  }
+
+  .why{padding:80px 0;background:var(--bg)}
+  .why h2{
+    font-family:'Noto Serif',serif;
+    text-align:center;font-size:32px;font-weight:700;
+    color:var(--red-deep);margin-bottom:8px;
+  }
+  .why .sub{
+    text-align:center;color:var(--mute);font-size:15px;
+    max-width:560px;margin:0 auto 56px;
+  }
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+  @media(max-width:880px){.why-grid{grid-template-columns:1fr}}
+  .why-card{
+    background:#fff;border:1px solid var(--line);
+    padding:36px 28px;border-radius:4px;position:relative;
+    transition:transform .2s,box-shadow .2s;
+  }
+  .why-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px -20px rgba(31,0,0,.2)}
+  .why-card .ico{
+    width:42px;height:42px;border-radius:50%;
+    background:var(--red-deep);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;
+    margin-bottom:20px;
+  }
+  .why-card h3{
+    font-family:'Noto Serif',serif;font-size:18px;
+    color:var(--red-deep);margin-bottom:10px;
+  }
+  .why-card p{color:#555;font-size:14px;line-height:1.65}
+
+  footer{
+    background:var(--red-deep);color:#a89880;
+    padding:48px 0 32px;font-size:12px;line-height:1.7;
+  }
+  footer .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:48px}
+  @media(max-width:720px){footer .wrap{grid-template-columns:1fr}}
+  footer img{height:24px;filter:brightness(0) invert(1);opacity:.85;margin-bottom:16px}
+  footer h4{
+    color:var(--gold);font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;margin-bottom:14px;font-weight:600;
+  }
+  footer a{color:#a89880;text-decoration:none}
+  footer a:hover{color:var(--gold)}
+  footer .legal{
+    border-top:1px solid rgba(196,154,108,.15);
+    margin-top:32px;padding-top:24px;
+    color:#7a6b54;font-size:11px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <img src="img/logo.png" alt="EBC Financial Group">
+      <span class="brand-text">EBC Financial Group</span>
+    </div>
+    <nav>
+      <a href="#porque">Por que a EBC</a>
+      <a href="#mercados">Mercados</a>
+      <a href="#abrir-conta">Abrir conta</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">E-book gratuito &middot; Outlook EBC 2026</span>
+      <h1>A dire&ccedil;&atilde;o do <span>novo ciclo global</span> em 2026.</h1>
+      <p class="lead">USD enfraquecendo, ouro projetado em $5.400&ndash;$6.300 e o carry trade voltando ao centro. Receba o outlook completo da EBC Financial Group para se posicionar antes do mercado.</p>
+      <ul>
+        <li>Vis&atilde;o macro 2026: EUA, Europa, &Aacute;sia e pol&iacute;tica monet&aacute;ria do G10</li>
+        <li>Forex: EUR/USD, USD/JPY, GBP/USD, AUD, NZD e CAD</li>
+        <li>Ouro: cen&aacute;rio de pre&ccedil;o e estrat&eacute;gia de entrada em corre&ccedil;&otilde;es</li>
+        <li>Riscos-chave e oportunidades trimestre a trimestre (Q1 a Q4)</li>
+      </ul>
+    </div>
+
+    <div class="form-card" id="abrir-conta">
+      <div class="form-header">
+        <h2 id="step-title">Receba o e-book Perspectiva 2026</h2>
+        <p class="sub" id="step-sub">4 perguntas r&aacute;pidas e enviamos o material no seu WhatsApp em at&eacute; 60 minutos.</p>
+        <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+
+      <!-- Q1 -->
+      <div class="step active" data-step="1">
+        <h3 class="q">Qual seu n&iacute;vel de experi&ecirc;ncia em trading?</h3>
+        <div class="opts" data-name="experience">
+          <button type="button" class="opt" data-value="Nunca operei">Nunca operei</button>
+          <button type="button" class="opt" data-value="Iniciante">Iniciante</button>
+          <button type="button" class="opt" data-value="Intermediário">Intermedi&aacute;rio</button>
+          <button type="button" class="opt" data-value="Avançado">Avan&ccedil;ado</button>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="step" data-step="2">
+        <h3 class="q">O que motivou voc&ecirc; a se cadastrar?</h3>
+        <div class="opts" data-name="motivation">
+          <button type="button" class="opt" data-value="Aprender do zero">Aprender trading do zero</button>
+          <button type="button" class="opt" data-value="Melhorar estratégia">Melhorar minha estrat&eacute;gia</button>
+          <button type="button" class="opt" data-value="Conhecer ferramentas">Conhecer novas ferramentas</button>
+          <button type="button" class="opt" data-value="Explorar broker">Explorar uma nova corretora</button>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="step" data-step="3">
+        <h3 class="q">Quando voc&ecirc; pretende come&ccedil;ar ou aprimorar suas opera&ccedil;&otilde;es?</h3>
+        <div class="opts" data-name="timing">
+          <button type="button" class="opt" data-value="esta-semana" data-label="Esta semana">Esta semana</button>
+          <button type="button" class="opt" data-value="este-mes" data-label="Este mês">Este m&ecirc;s</button>
+          <button type="button" class="opt" data-value="3-meses" data-label="Nos próximos 3 meses">Nos pr&oacute;ximos 3 meses</button>
+          <button type="button" class="opt" data-value="aprendendo" data-label="Só estou aprendendo">S&oacute; estou aprendendo</button>
+        </div>
+      </div>
+
+      <!-- Q4 hot -->
+      <div class="step" data-step="4-hot">
+        <h3 class="q">Gostaria que um especialista entre em contato com voc&ecirc;?</h3>
+        <div class="opts" data-name="wants_specialist">
+          <button type="button" class="opt" data-value="sim" data-label="Sim">Sim, quero falar com especialista</button>
+          <button type="button" class="opt" data-value="nao" data-label="Não">N&atilde;o, prefiro continuar pesquisando</button>
+        </div>
+      </div>
+
+      <!-- Q4 cold -->
+      <div class="step" data-step="4-cold">
+        <h3 class="q">Que tipo de conte&uacute;do voc&ecirc; prefere receber?</h3>
+        <div class="opts" data-name="content_pref">
+          <button type="button" class="opt" data-value="Estratégias de trading">Estrat&eacute;gias de trading</button>
+          <button type="button" class="opt" data-value="Gestão de risco">Gest&atilde;o de risco</button>
+          <button type="button" class="opt" data-value="Psicologia do trading">Psicologia do trading</button>
+          <button type="button" class="opt" data-value="Análise técnica">An&aacute;lise t&eacute;cnica</button>
+        </div>
+      </div>
+
+      <!-- Step 5: contato -->
+      <div class="step" data-step="5">
+        <h3 class="q" id="contact-title">Para finalizar, deixe seus dados</h3>
+        <p class="contact-sub" id="contact-sub">Vamos preparar a melhor experi&ecirc;ncia pra voc&ecirc;.</p>
+        <div class="field">
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
+        </div>
+        <div class="field">
+          <label for="telefone">Telefone (WhatsApp)</label>
+          <input type="tel" id="telefone" name="telefone" required autocomplete="tel" placeholder="(11) 90000-0000">
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="seu@email.com">
+        </div>
+        <button type="button" class="submit" id="submit-btn" onclick="submitLead()">Enviar</button>
+        <p class="privacy">
+          Ao enviar, voc&ecirc; concorda com nossa
+          <a href="https://storage.googleapis.com/ebc-files/ebcfin.co.uk/2024/EBC%20Financial%20Group%20(UK)%20Ltd%20Privacy%20Policy.pdf" target="_blank" rel="noopener">Pol&iacute;tica de Privacidade</a>.
+        </p>
+      </div>
+
+      <!-- Step thanks -->
+      <div class="step" data-step="thanks">
+        <div class="thanks">
+          <div class="thanks-ico">&#10003;</div>
+          <h3 id="thanks-title">Recebemos seus dados.</h3>
+          <p id="thanks-sub">Em breve voc&ecirc; ter&aacute; not&iacute;cias da nossa equipe.</p>
+        </div>
+      </div>
+
+      <div class="form-nav">
+        <button type="button" class="btn-back" id="btn-back" onclick="goBack()">Voltar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="strip">
+  <div class="wrap">
+    <div class="item"><div class="num">12+</div><div class="lbl">Anos de mercado</div></div>
+    <div class="item"><div class="num">FCA</div><div class="lbl">Regulada no UK</div></div>
+    <div class="item"><div class="num">100+</div><div class="lbl">Pa&iacute;ses atendidos</div></div>
+    <div class="item"><div class="num">24/5</div><div class="lbl">Suporte global</div></div>
+  </div>
+</section>
+
+<section class="why" id="porque">
+  <div class="wrap">
+    <h2>Por que clientes escolhem a EBC</h2>
+    <p class="sub">Estrutura de broker institucional dispon&iacute;vel ao trader privado, com a transpar&ecirc;ncia e a seguran&ccedil;a que o capital s&eacute;rio exige.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="ico">I</div>
+        <h3>Execu&ccedil;&atilde;o Institucional</h3>
+        <p>Conex&otilde;es diretas com liquidez de tier-1 e infraestrutura co-location em Londres, T&oacute;quio e Nova York para execu&ccedil;&atilde;o de milissegundos.</p>
+      </div>
+      <div class="why-card">
+        <div class="ico">II</div>
+        <h3>Seguran&ccedil;a Regulat&oacute;ria</h3>
+        <p>EBC Financial Group (UK) Ltd &eacute; autorizada e regulada pelo Financial Conduct Authority do Reino Unido (Reg. 927552), com fundos de clientes segregados.</p>
+      </div>
+      <div class="why-card">
+        <div class="ico">III</div>
+        <h3>Mercados Globais</h3>
+        <p>Forex, Commodities, &Iacute;ndices e CFDs de A&ccedil;&otilde;es em uma &uacute;nica conta. Mais de 100 instrumentos com spreads competitivos e alavancagem flex&iacute;vel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="img/logo.png" alt="EBC Financial Group">
+      <p>EBC Financial Group (UK) Ltd &eacute; uma empresa registrada na Inglaterra e Pa&iacute;s de Gales sob o n&ordm; 12503674 e autorizada e regulada pelo Financial Conduct Authority (Reg. 927552).</p>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <p><a href="https://storage.googleapis.com/ebc-files/ebcfin.co.uk/2024/EBC%20Financial%20Group%20(UK)%20Ltd%20Privacy%20Policy.pdf" target="_blank" rel="noopener">Pol&iacute;tica de Privacidade</a></p>
+      <p><a href="https://www.ebcfin.co.uk/" target="_blank" rel="noopener">Site oficial EBC</a></p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="legal">
+      Aviso de Risco: O trading de Forex e CFDs envolve risco significativo de perda e pode n&atilde;o ser adequado para todos os investidores. Voc&ecirc; pode perder mais que seu dep&oacute;sito inicial. Considere cuidadosamente seus objetivos, experi&ecirc;ncia e toler&acirc;ncia ao risco antes de operar.
+    </div>
+  </div>
+</footer>
+
+<script>
+const CRM_ENDPOINT = 'https://ebc-crm.propostaebcmkt2026.shop/api/public/lead';
+
+const state = {
+  experience: null,
+  motivation: null,
+  timing: null,
+  timing_label: null,
+  wants_specialist: null,
+  wants_specialist_label: null,
+  content_pref: null,
+};
+
+const FLOW = ['1', '2', '3', null, '5', 'thanks'];
+let stepIdx = 0;
+const history = [];
+
+const TOTAL_QUESTIONS = 4;
+
+function currentStep() {
+  let key = FLOW[stepIdx];
+  if (key === null) {
+    key = (state.timing === 'esta-semana' || state.timing === 'este-mes') ? '4-hot' : '4-cold';
+  }
+  return key;
+}
+
+function showStep(key) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.step[data-step="${key}"]`);
+  if (el) el.classList.add('active');
+  document.getElementById('btn-back').classList.toggle('show', history.length > 0 && key !== 'thanks');
+  let questionNum = 0;
+  if (key === '1') questionNum = 1;
+  else if (key === '2') questionNum = 2;
+  else if (key === '3') questionNum = 3;
+  else if (key === '4-hot' || key === '4-cold') questionNum = 4;
+  else if (key === '5') questionNum = TOTAL_QUESTIONS;
+  else if (key === 'thanks') questionNum = TOTAL_QUESTIONS + 1;
+  const pct = (questionNum / (TOTAL_QUESTIONS + 1)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  if (key === '5') {
+    const t = document.getElementById('contact-title');
+    const s = document.getElementById('contact-sub');
+    t.textContent = 'Para finalizar, deixe seus dados';
+    s.textContent = 'Enviamos o e-book Perspectiva 2026 no seu WhatsApp e e-mail em até 60 minutos.';
+  }
+
+  if (key === 'thanks') {
+    const tt = document.getElementById('thanks-title');
+    const ts = document.getElementById('thanks-sub');
+    tt.textContent = 'Recebido! O consultor envia o ebook.';
+    const d = new Date();
+    const h = d.getHours();
+    const day = d.getDay();
+    const isOutOfHours = day === 0 || day === 6 || h >= 18 || h < 9;
+    ts.textContent = isOutOfHours
+      ? 'No próximo horário comercial, um consultor da EBC entra em contato pelo WhatsApp e envia o e-book Perspectiva 2026 pra você.'
+      : 'Em até 60 minutos, um consultor da EBC entra em contato pelo WhatsApp e envia o e-book Perspectiva 2026 pra você.';
+  }
+}
+
+function advance() {
+  history.push(stepIdx);
+  stepIdx++;
+  showStep(currentStep());
+}
+
+function goBack() {
+  if (!history.length) return;
+  stepIdx = history.pop();
+  showStep(currentStep());
+}
+
+document.querySelectorAll('.opts').forEach(group => {
+  const name = group.getAttribute('data-name');
+  group.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state[name] = btn.getAttribute('data-value');
+      const lbl = btn.getAttribute('data-label');
+      if (lbl) state[name + '_label'] = lbl;
+      setTimeout(advance, 180);
+    });
+  });
+});
+
+function getUTM() {
+  const p = new URLSearchParams(location.search);
+  return {
+    utm_source: p.get('utm_source'),
+    utm_medium: p.get('utm_medium'),
+    utm_campaign: p.get('utm_campaign'),
+    utm_content: p.get('utm_content'),
+    utm_term: p.get('utm_term'),
+  };
+}
+
+function getDevice() {
+  const w = window.innerWidth;
+  if (w < 720) return 'mobile';
+  if (w < 1100) return 'tablet';
+  return 'desktop';
+}
+
+async function submitLead() {
+  const name = document.getElementById('nome').value.trim();
+  const phone = document.getElementById('telefone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!name || !phone) {
+    alert('Preencha nome e telefone.');
+    return;
+  }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const payload = {
+    name, phone, email,
+    experience: state.experience,
+    motivation: state.motivation,
+    timing: state.timing_label || state.timing,
+    wants_specialist: state.wants_specialist_label || state.wants_specialist,
+    content_pref: state.content_pref,
+    origem: 'landing-ebc-ebook1',
+    ebook: 'Perspectiva de Mercado 2026 — Lendo a direção do novo ciclo global',
+    device: getDevice(),
+    ...getUTM(),
+  };
+  // backend espera valor canônico em "timing" e "wants_specialist" pra classificar; mando ambos
+  payload.timing_value = state.timing;
+  payload.wants_specialist_value = state.wants_specialist;
+  // override pra classificar corretamente
+  payload.timing = state.timing;
+  payload.wants_specialist = state.wants_specialist;
+  // mas armazena label legível como string final
+  payload.timing_label = state.timing_label;
+
+  try {
+    const r = await fetch(CRM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error('Falha no envio');
+    advance();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Tentar novamente';
+    alert('Não foi possível enviar agora. Tente novamente.');
+  }
+}
+
+showStep('1');
+</script>
+
+</body>
+</html>

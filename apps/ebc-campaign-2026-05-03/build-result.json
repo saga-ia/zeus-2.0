@@ -1,0 +1,5 @@
+{
+  "created_at": "2026-05-03T12:55:41.247Z",
+  "account_id": "1289500712654032",
+  "lead_form_error": "{\"message\":\"(#10) User has insufficient privileges on the page.\",\"type\":\"OAuthException\",\"code\":10,\"fbtrace_id\":\"AfwD_M7VW2uXaAVBMKpfHcd\"}"
+}

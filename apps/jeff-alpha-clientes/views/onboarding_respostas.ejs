@@ -1,0 +1,51 @@
+<%- include('partials/header', { title: 'Respostas · ' + (client ? client.name : sess.id) }) %>
+<style>
+  .resp-wrap{max-width:900px;margin:0 auto}
+  .resp-head{margin-bottom:24px}
+  .resp-head h1{margin:0 0 4px;font-size:24px;letter-spacing:-.02em}
+  .resp-head p{margin:0;color:var(--fg-3);font-size:13px}
+  .resp-section{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+  .resp-section h2{margin:0 0 14px;font-size:16px;color:var(--accent);letter-spacing:.02em}
+  .resp-q{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .resp-q:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+  .resp-q-label{font-size:12px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .resp-q-value{white-space:pre-wrap;color:var(--fg);font-size:14px;line-height:1.55}
+  .resp-q-value.empty{color:var(--fg-3);font-style:italic}
+  .photo-resp img{max-width:240px;max-height:240px;border-radius:8px;border:1px solid var(--line)}
+</style>
+
+<div class="resp-wrap">
+  <div class="resp-head">
+    <h1>Respostas: <%= client ? client.name : (sess.slug || sess.id) %></h1>
+    <p>
+      <% if (client) { %><a href="/clientes/<%= client.id %>" style="color:var(--accent)">Ver ficha do cliente</a> · <% } %>
+      Iniciado em <%= sess.started_at %><% if (sess.completed_at) { %> · finalizado em <%= sess.completed_at %><% } else { %> · <strong style="color:var(--accent)">Em andamento</strong><% } %>
+      <% if (sess.slug) { %> · <a href="/onboarding/<%= sess.slug %>" target="_blank" style="color:var(--accent)">link público</a><% } %>
+    </p>
+  </div>
+
+  <% schema.forEach(sec => { %>
+    <div class="resp-section">
+      <h2><%= sec.title %></h2>
+      <% sec.questions.forEach(q => { %>
+        <div class="resp-q">
+          <div class="resp-q-label"><%= q.label %></div>
+          <% if (q.qtype === 'photo') { %>
+            <div class="photo-resp">
+              <% if (answers[q.qkey] || sess.photo_path) { %>
+                <img src="/api/form/photo/<%= sess.id %>" alt="foto"/>
+              <% } else { %>
+                <span class="resp-q-value empty">— sem foto —</span>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="resp-q-value <%= answers[q.qkey] ? '' : 'empty' %>">
+              <%= answers[q.qkey] || '— em branco —' %>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% }); %>
+</div>
+<%- include('partials/footer') %>

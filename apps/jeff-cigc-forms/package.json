@@ -1,0 +1,12 @@
+{
+  "name": "jeff-cigc-forms",
+  "version": "1.0.0",
+  "description": "Formulario de cadastro CIGC 2026 com rastreamento Meta",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

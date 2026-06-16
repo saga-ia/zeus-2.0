@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aba padrão · Preview</title>
+<link rel="stylesheet" href="/static/painel.css">
+<style>
+  /* botao Editar do canto superior direito do hero */
+  .edit-fab{position:absolute;top:16px;right:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(126,231,135,.12);border:1px solid var(--action);color:var(--action);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s;z-index:5}
+  .edit-fab:hover{background:rgba(126,231,135,.2);text-decoration:none;transform:translateY(-1px)}
+  .home-hero{position:relative}
+  .preview-banner{background:rgba(245,183,64,.1);border:1px solid var(--highlight);color:var(--highlight);padding:8px 14px;border-radius:8px;font-size:12px;margin:14px 18px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="brand">AP</div>
+      <div class="brand-meta">
+        <h1>Aba padrão</h1>
+        <p class="sub">Preview do template</p>
+      </div>
+    </div>
+
+    <div class="side-search">
+      <div class="search-box">
+        <input id="search-input" type="text" placeholder="Buscar..." autocomplete="off">
+        <button id="search-clear" class="search-clear" type="button" hidden>&times;</button>
+      </div>
+      <div id="search-results" class="search-results" hidden></div>
+    </div>
+
+    <nav id="tabs" class="side-tabs"></nav>
+
+    <div class="preview-banner">Você está em modo preview admin</div>
+
+    <div class="side-foot">
+      <div class="user-mini">
+        <span><a href="/dashboard" style="color:var(--fg-3)">← Voltar ao admin</a></span>
+      </div>
+      <div class="legend">
+        <span class="lg"><span class="d tab"></span>Aba</span>
+        <span class="lg"><span class="d highlight"></span>Destaque</span>
+        <span class="lg"><span class="d question"></span>Pergunta</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="content"></main>
+</div>
+
+<div id="popup" class="popup hidden"></div>
+
+<script>
+window.__INITIAL__ = {
+  blocks: <%- JSON.stringify(template.blocks || []) %>,
+  state: { answers: {}, actions: {} },
+  client_name: 'Aba padrão',
+  previewMode: true,
+  editLink: '/admin/aba-padrao/editar',
+};
+</script>
+<script src="/static/painel.js"></script>
+<script>
+  // injeta botão Editar no canto superior direito do hero (depois do render)
+  setTimeout(function(){
+    var hero = document.querySelector('.home-hero');
+    if (!hero) {
+      var main = document.getElementById('content');
+      if (main) {
+        var fab = document.createElement('a');
+        fab.href = '/admin/aba-padrao/editar';
+        fab.className = 'edit-fab';
+        fab.innerHTML = '✎ Editar';
+        fab.style.position = 'fixed';
+        fab.style.top = '24px';
+        fab.style.right = '24px';
+        document.body.appendChild(fab);
+      }
+      return;
+    }
+    var fab = document.createElement('a');
+    fab.href = '/admin/aba-padrao/editar';
+    fab.className = 'edit-fab';
+    fab.innerHTML = '✎ Editar';
+    hero.appendChild(fab);
+  }, 100);
+
+  // re-injetar quando trocar de tab (re-render)
+  var contentObs = new MutationObserver(function(){
+    if (document.querySelector('.edit-fab')) return;
+    var hero = document.querySelector('.home-hero');
+    if (hero) {
+      var fab = document.createElement('a');
+      fab.href = '/admin/aba-padrao/editar';
+      fab.className = 'edit-fab';
+      fab.innerHTML = '✎ Editar';
+      hero.appendChild(fab);
+    } else {
+      var fab2 = document.createElement('a');
+      fab2.href = '/admin/aba-padrao/editar';
+      fab2.className = 'edit-fab';
+      fab2.innerHTML = '✎ Editar';
+      fab2.style.position = 'fixed';
+      fab2.style.top = '24px';
+      fab2.style.right = '24px';
+      document.body.appendChild(fab2);
+    }
+  });
+  contentObs.observe(document.getElementById('content'), { childList: true, subtree: false });
+</script>
+</body>
+</html>

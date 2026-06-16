@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZapSign — Webhook events · Jeff</title>
+<style>
+  :root {
+    --bg: #0b0d10; --panel: #14181d; --panel-2: #1b2027; --line: #232932;
+    --txt: #e8edf2; --muted: #8a93a0; --accent: #4ade80; --warn: #fbbf24; --danger: #f87171; --info: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.5 -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  header { padding: 28px 32px 12px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  header .meta { color: var(--muted); font-size: 13px; }
+  main { padding: 24px 32px; max-width: 1280px; margin: 0 auto; }
+  .info-box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: var(--muted); }
+  .info-box strong { color: var(--txt); }
+  .info-box code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; color: var(--info); font-size: 12px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  section h2 { margin: 0; padding: 16px 20px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  section h2 button { background: var(--panel-2); border: 1px solid var(--line); color: var(--txt); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+  section h2 button:hover { border-color: var(--info); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--panel-2); }
+  tr:last-child td { border-bottom: none; }
+  td.mono { font-family: "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted); }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 4px; font-weight: 500; background: var(--panel-2); color: var(--txt); }
+  .badge.signed, .badge.completed { background: rgba(74,222,128,.15); color: var(--accent); }
+  .badge.pending { background: rgba(96,165,250,.15); color: var(--info); }
+  .badge.refused, .badge.expired { background: rgba(248,113,113,.15); color: var(--danger); }
+  details { font-size: 12px; }
+  details summary { cursor: pointer; color: var(--muted); }
+  details pre { background: var(--panel-2); padding: 8px 12px; border-radius: 4px; overflow: auto; max-height: 240px; font-size: 11px; color: var(--txt); margin: 4px 0 0 0; }
+  footer { padding: 20px 32px 32px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>ZapSign — Webhook events</h1>
+      <div class="meta">jefersonhenrike.com</div>
+    </div>
+    <div class="meta" id="updated">—</div>
+  </header>
+
+  <main>
+    <div class="info-box">
+      <strong>URL do webhook (cole no painel ZapSign):</strong>
+      <code>https://zapsign.jefersonhenrike.com/webhook</code>
+      <span style="margin-left:12px;">— marque todos os eventos. Cada evento recebido entra na tabela abaixo.</span>
+    </div>
+
+    <section>
+      <h2>
+        Últimos eventos <span id="count" style="color:var(--muted);font-weight:400;font-size:12px;text-transform:none;letter-spacing:0;"></span>
+        <button onclick="load()">Atualizar</button>
+      </h2>
+      <div id="body"><div class="empty">carregando…</div></div>
+    </section>
+  </main>
+
+  <footer>Webhook receiver — eventos persistidos em <code>worker.db / zapsign_events</code></footer>
+
+<script>
+const fmtDate = (s) => s ? new Date(s.replace(' ', 'T') + 'Z').toLocaleString('pt-BR') : '—';
+
+async function load() {
+  const body = document.getElementById('body');
+  body.innerHTML = '<div class="empty">carregando…</div>';
+  try {
+    const r = await fetch('/api/events?limit=100');
+    const d = await r.json();
+    document.getElementById('updated').textContent = 'atualizado ' + new Date().toLocaleString('pt-BR');
+    document.getElementById('count').textContent = d.total ? `(${d.total} no total)` : '';
+    if (!d.items.length) {
+      body.innerHTML = '<div class="empty">Nenhum evento recebido ainda.<br><br>Cole a URL do webhook no painel ZapSign pra começar a receber.</div>';
+      return;
+    }
+    const rows = d.items.map(ev => `
+      <tr>
+        <td class="mono">${fmtDate(ev.received_at)}</td>
+        <td><strong>${(ev.event || '—').replace(/</g,'&lt;')}</strong></td>
+        <td>${ev.signer_email || '—'}</td>
+        <td>${ev.status ? '<span class="badge ' + (ev.status||'').toLowerCase() + '">' + ev.status + '</span>' : '—'}</td>
+        <td class="mono">${(ev.doc_id || ev.doc_token || '—').toString().slice(0,12)}</td>
+        <td>${ev.crm_matched_lead_id ? '<span class="badge signed">lead #' + ev.crm_matched_lead_id + '</span>' : '<span style="color:var(--muted)">—</span>'}</td>
+        <td><details><summary>raw</summary><pre>${JSON.stringify(ev.raw, null, 2).replace(/</g,'&lt;')}</pre></details></td>
+      </tr>
+    `).join('');
+    body.innerHTML = `
+      <table>
+        <thead><tr><th>Quando</th><th>Evento</th><th>Signatário</th><th>Status</th><th>Doc</th><th>CRM</th><th>Payload</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    body.innerHTML = '<div class="empty">erro: ' + e.message + '</div>';
+  }
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

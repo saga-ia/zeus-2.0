@@ -1,0 +1,15 @@
+*/5 * * * * /opt/jeff-worker/scripts/ig-comment-poller.sh >> /opt/jeff-worker/logs/ig-comment-poller.log 2>&1
+0 12 * * * /opt/jeff-worker/scripts/daily-chase.sh
+0 9 * * * /opt/jeff-worker/scripts/asaas-dunning.sh >> /opt/jeff-worker/logs/asaas-dunning.log 2>&1
+0 3 * * * /opt/zeus-backup/backup.sh >> /var/log/zeus-backup.log 2>&1
+0 10 * * * /opt/jeff-worker/scripts/morning-brief.sh >> /opt/jeff-worker/logs/morning-brief.log 2>&1
+
+# Backup semanal zeus_backups -> Google Drive (Zeus/backups). Domingo 03h BRT = 08h CEST.
+0 8 * * 0 /opt/jeff-worker/scripts/backup-zeus-to-drive.sh
+*/5 * * * * /opt/jeff-worker/scripts/clickup-sync.py >> /opt/jeff-worker/logs/clickup-sync.log 2>&1
+0 11,14,17,21 * * * /opt/jeff-worker/scripts/clickup-cobranca.py >> /opt/jeff-worker/logs/clickup-cobranca.log 2>&1
+*/2 * * * * /opt/jeff-worker/scripts/clickup-asaas-bridge.py >> /opt/jeff-worker/logs/clickup-asaas-bridge.log 2>&1
+*/5 * * * * /opt/jeff-worker/scripts/cigc-crm-health.sh
+# Board Academy (Farias) — pausa 22h BRT / ativa 5h BRT
+0 1 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh pause >> /opt/jeff-worker/logs/board-schedule.log 2>&1
+0 8 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh activate >> /opt/jeff-worker/logs/board-schedule.log 2>&1

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro · <%= client.name %></title>
+<link rel="stylesheet" href="/static/painel.css">
+</head>
+<body class="auth-body">
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-dot"></span>
+      <span><%= client.name %></span>
+    </div>
+    <h1>Crie seu acesso</h1>
+    <p class="lead">Cadastre-se para entrar no seu painel personalizado.</p>
+    <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+    <form method="post" action="/signup">
+      <label>Nome completo</label>
+      <input name="name" type="text" required autocomplete="name" value="<%= prefill.name || '' %>">
+      <label>E-mail</label>
+      <input name="email" type="email" required autocomplete="email" value="<%= prefill.email || '' %>">
+      <label>Telefone com DDD</label>
+      <input name="phone" type="tel" required autocomplete="tel" value="<%= prefill.phone || '' %>">
+      <label>Senha (mín. 6 caracteres)</label>
+      <input name="password" type="password" required minlength="6" autocomplete="new-password">
+      <button class="btn primary" style="margin-top:18px;width:100%">Criar conta e entrar</button>
+    </form>
+    <p class="auth-foot">Já tem conta? <a href="/login">Entrar</a></p>
+  </div>
+</div>
+</body>
+</html>

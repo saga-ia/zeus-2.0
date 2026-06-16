@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diretor — Demonstração para Edson | Lucas Labastie</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#000;color:#fff;line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+.container{max-width:760px;margin:0 auto;padding:64px 24px}
+header{text-align:center;margin-bottom:80px;padding-bottom:48px;border-bottom:1px solid #1a1a1a}
+.brand{font-size:13px;color:#666;letter-spacing:.15em;text-transform:uppercase;margin-bottom:32px;font-weight:500}
+h1{font-size:clamp(32px,5vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:24px;background:linear-gradient(180deg,#fff 0%,#999 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:#a0a0a0;max-width:560px;margin:0 auto;line-height:1.5}
+section{margin-bottom:64px}
+h2{font-size:24px;font-weight:600;letter-spacing:-.01em;margin-bottom:24px;color:#fff;display:flex;align-items:center;gap:12px}
+h2::before{content:'';width:4px;height:24px;background:linear-gradient(180deg,#fbbf24 0%,#f59e0b 100%);border-radius:2px}
+p{color:#c0c0c0;margin-bottom:16px}
+strong{color:#fff;font-weight:600}
+ul{list-style:none;margin:24px 0}
+li{padding:14px 0;padding-left:36px;position:relative;color:#c0c0c0;border-bottom:1px solid #1a1a1a}
+li:last-child{border-bottom:none}
+li::before{content:'';position:absolute;left:0;top:22px;width:18px;height:18px;background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:50%;display:flex;align-items:center;justify-content:center}
+li::after{content:'✓';position:absolute;left:5px;top:18px;color:#fff;font-size:11px;font-weight:700}
+.stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:24px}
+.chip{background:#0a0a0a;border:1px solid #1a1a1a;padding:14px 18px;border-radius:8px;font-size:14px;color:#a0a0a0;text-align:center;transition:all .2s}
+.chip:hover{border-color:#fbbf24;color:#fff}
+.chip strong{display:block;color:#fff;font-size:15px;margin-bottom:4px}
+blockquote{background:linear-gradient(135deg,#0a0a0a 0%,#111 100%);border-left:3px solid #fbbf24;padding:24px 28px;margin:32px 0;border-radius:8px;font-style:italic;color:#d0d0d0;font-size:17px;line-height:1.6}
+blockquote cite{display:block;font-style:normal;font-size:13px;color:#666;margin-top:12px;letter-spacing:.05em;text-transform:uppercase}
+.metric{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:24px 0}
+.metric-card{background:linear-gradient(135deg,#0a0a0a 0%,#111 100%);border:1px solid #1a1a1a;padding:24px;border-radius:12px;text-align:center}
+.metric-card .num{font-size:36px;font-weight:700;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px;letter-spacing:-.02em}
+.metric-card .label{font-size:13px;color:#888;letter-spacing:.05em;text-transform:uppercase}
+footer{margin-top:96px;padding-top:48px;border-top:1px solid #1a1a1a;text-align:center;color:#555;font-size:13px;line-height:1.7}
+footer strong{color:#fff;display:block;font-size:15px;margin-bottom:8px;letter-spacing:.05em}
+@media(max-width:640px){.container{padding:48px 20px}.metric{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<div class="brand">Holding Lucas Labastie · 2026</div>
+<h1>Demonstração para Edson</h1>
+<p class="lead">O que um Diretor de IA construído sob medida resolve no dia a dia de uma operação real.</p>
+</header>
+
+<section>
+<h2>O que é</h2>
+<p>O <strong>Diretor</strong> é um agente de IA dedicado, conectado ao WhatsApp, à operação financeira (Asaas), à infraestrutura web (Cloudflare, nginx, TLS), à agenda do Google, ao Drive, ao Gmail, à API da Meta para anúncios e Instagram, ao SDR Mayara (segundo número WhatsApp dedicado), e ao CRM em construção. Tudo orquestrado em um único ponto de conversa: o WhatsApp do Lucas.</p>
+<p>Não é um chatbot. Não é um assistente genérico. É um <strong>quadro executivo</strong> rodando 24/7, treinado nos métodos do Lucas, autorizado a tomar ações concretas e com memória persistente do negócio.</p>
+</section>
+
+<section>
+<h2>O que ele opera hoje</h2>
+<ul>
+<li>Atendimento inbound de leads via Mayara (SDR automatizada da Imersão Paradigma) — fluxo de 7 mensagens, base de conhecimento do site, follow-up automático 5 min após envio do link de inscrição</li>
+<li>Análise em tempo real das campanhas Meta — diagnóstico de CPL, CTR, conversões, alerta de landing quebrada</li>
+<li>Gestão de agenda — agendamento, cancelamento, verificação de conflito, lembretes 30 min e 5 min antes de cada compromisso</li>
+<li>Cobrança financeira via Asaas — leitura de pendentes, inadimplentes, saldo em conta, cobranças automáticas</li>
+<li>Infraestrutura técnica — criação de subdomínio, certificado TLS, deploy de landing page, tudo provisionado por API</li>
+<li>Conhecimento dos métodos da casa — CASH, PQV, Sessão Zero, Modelagem, Fatiar o Elefante, 15 Perguntas para o Sim</li>
+<li>Coaching aplicado de equipe — Diretor de Vendas, Social Selling, sócios operacionais, todos com canal direto</li>
+</ul>
+</section>
+
+<section>
+<h2>O que mudou no dia a dia</h2>
+<div class="metric">
+<div class="metric-card"><div class="num">~3s</div><div class="label">Latência média de resposta</div></div>
+<div class="metric-card"><div class="num">24/7</div><div class="label">Operação sem pausa</div></div>
+<div class="metric-card"><div class="num">10+</div><div class="label">Sistemas integrados</div></div>
+<div class="metric-card"><div class="num">5</div><div class="label">Empresas da Holding sob orquestração</div></div>
+</div>
+</section>
+
+<section>
+<h2>Stack que sustenta</h2>
+<div class="stack">
+<div class="chip"><strong>WhatsApp Web</strong>Worker dedicado</div>
+<div class="chip"><strong>Anthropic</strong>Opus + Sonnet + Haiku</div>
+<div class="chip"><strong>Asaas</strong>Gateway financeiro</div>
+<div class="chip"><strong>Meta Graph</strong>Anúncios + Instagram</div>
+<div class="chip"><strong>Google Workspace</strong>Drive + Gmail + Calendar</div>
+<div class="chip"><strong>Cloudflare</strong>DNS + Edge</div>
+<div class="chip"><strong>Supabase</strong>CRM em construção</div>
+<div class="chip"><strong>ZapSign</strong>Contratos digitais</div>
+</div>
+</section>
+
+<section>
+<h2>O salto que ele permite</h2>
+<blockquote>
+"Empresário comum executa o que pensa. Empresário PRO decide o que NÃO fazer mais. Bilionário tem alguém — ou alguma coisa — executando enquanto ele decide."
+<cite>Lucas Labastie · Mentalidade aplicada</cite>
+</blockquote>
+<p>O Diretor é a peça que separa o Lucas operando de Lucas decidindo. Tudo que é repetível, mensurável, integrável e aceitável-com-erro-baixo passa a ele. O que sobra é estratégia, palco, relacionamento de alto nível e descanso.</p>
+</section>
+
+<section>
+<h2>Por que isso interessa pra você</h2>
+<p>Se o seu negócio tem operação que repete (atendimento, cobrança, agenda, marketing, vendas) e dependência de tempo seu pra continuar rodando, esse padrão de Diretor é replicável. Não é um produto pronto — é um modelo construído sob medida, que cresce conforme a empresa cresce.</p>
+<p>Conversa com o Lucas pra entender se faz sentido pro seu caso. Esta página é apenas a vitrine.</p>
+</section>
+
+<footer>
+<strong>Lucas Labastie · Holding</strong>
+Mentor de empresários · Movimento Storydoing · Imersão Paradigma<br>
+<a href="https://instagram.com/lucas.labastie" style="color:#888;text-decoration:none">@lucas.labastie</a> · <a href="https://www.imersaoparadigma.com.br" style="color:#888;text-decoration:none">imersaoparadigma.com.br</a>
+</footer>
+
+</div>
+</body>
+</html>

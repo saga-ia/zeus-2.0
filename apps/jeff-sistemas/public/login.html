@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Sistemas — Login</title>
+<link rel="stylesheet" href="/_styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot"></span> ALPHA SISTEMAS</div>
+    <div class="right"><a class="btn-link" href="/signup">criar conta</a></div>
+  </header>
+  <main class="center">
+    <div class="card-auth">
+      <h1>Entrar</h1>
+      <p class="lead">Acesso autorizado a Alpha Digital.</p>
+      <div class="error" id="err"></div>
+      <form id="f">
+        <div class="field"><label>Email</label><input type="email" name="email" required autocomplete="email"></div>
+        <div class="field"><label>Senha</label><input type="password" name="password" required autocomplete="current-password"></div>
+        <button class="btn-primary" type="submit">ENTRAR</button>
+      </form>
+      <div class="alt">novo aqui? <a href="/signup">cadastre-se</a></div>
+    </div>
+  </main>
+</div>
+<script>
+const f = document.getElementById('f'), err = document.getElementById('err');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  err.classList.remove('show');
+  const fd = new FormData(f);
+  const body = { email: fd.get('email'), password: fd.get('password') };
+  const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await r.json();
+  if (!r.ok) { err.textContent = data.error || 'erro'; err.classList.add('show'); return; }
+  if (data.status === 'approved') location.href = '/';
+  else location.href = '/pending';
+});
+</script>
+</body>
+</html>

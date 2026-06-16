@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instagram Webhook · Zeus</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#14181d; --panel-2:#1b2027; --line:#232932; --txt:#e8edf2; --muted:#8a93a0; --accent:#4ade80; --info:#60a5fa; --danger:#f87171; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.5 -apple-system, Inter, system-ui, sans-serif; }
+  header { padding: 28px 32px 12px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  header .meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  .info-box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; font-size: 13px; color: var(--muted); }
+  .info-box code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; color: var(--info); font-size: 12px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  section h2 { margin: 0; padding: 16px 20px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  section h2 button { background: var(--panel-2); border: 1px solid var(--line); color: var(--txt); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--panel-2); }
+  td.mono { font-family: monospace; font-size: 12px; color: var(--muted); }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 4px; font-weight: 500; background: var(--panel-2); }
+  .badge.message { background: rgba(96,165,250,.15); color: var(--info); }
+  .badge.comments, .badge.mentions { background: rgba(74,222,128,.15); color: var(--accent); }
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  details pre { background: var(--panel-2); padding: 8px 12px; border-radius: 4px; overflow: auto; max-height: 240px; font-size: 11px; margin: 4px 0 0; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Instagram — Webhook events</h1>
+    <div class="meta">instagram.jefersonhenrike.com</div>
+  </header>
+  <main>
+    <div class="info-box">
+      <strong>Webhook URL (cole no painel Meta):</strong>
+      <code>https://instagram.jefersonhenrike.com/webhook</code>
+      <br><strong>Verify token:</strong> em <code>app_settings.jeff_meta_ig_webhook_verify_token</code>
+    </div>
+    <section>
+      <h2>Últimos eventos <span id="count" style="font-weight:400;font-size:12px;text-transform:none;color:var(--muted)"></span><button onclick="load()">Atualizar</button></h2>
+      <div id="body"><div class="empty">carregando…</div></div>
+    </section>
+  </main>
+<script>
+const fmtDate = (s) => s ? new Date(s.replace(' ','T')+'Z').toLocaleString('pt-BR') : '—';
+async function load() {
+  const body = document.getElementById('body');
+  body.innerHTML = '<div class="empty">carregando…</div>';
+  try {
+    const r = await fetch('/api/events?limit=100');
+    const d = await r.json();
+    document.getElementById('count').textContent = d.total ? `(${d.total} no total)` : '';
+    if (!d.items.length) { body.innerHTML = '<div class="empty">Nenhum evento ainda.</div>'; return; }
+    body.innerHTML = `<table><thead><tr><th>Quando</th><th>Tipo</th><th>De</th><th>Texto</th><th>Mídia</th><th>Payload</th></tr></thead><tbody>${
+      d.items.map(e => `<tr>
+        <td class="mono">${fmtDate(e.received_at)}</td>
+        <td><span class="badge ${e.event_type}">${e.event_type||'?'}</span></td>
+        <td class="mono">${e.sender_id||'—'}</td>
+        <td>${(e.message_text||'').slice(0,80).replace(/</g,'&lt;')||'—'}</td>
+        <td class="mono">${(e.media_id||e.comment_id||'—').toString().slice(0,12)}</td>
+        <td><details><summary>raw</summary><pre>${JSON.stringify(e.raw,null,2).replace(/</g,'&lt;')}</pre></details></td>
+      </tr>`).join('')
+    }</tbody></table>`;
+  } catch (e) { body.innerHTML = '<div class="empty">erro: '+e.message+'</div>'; }
+}
+load(); setInterval(load, 30000);
+</script>
+</body>
+</html>

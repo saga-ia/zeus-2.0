@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zeus Platform</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #16161f;
+      --border: #1e1e2e;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --text: #e8e8f0;
+      --text-muted: #6b6b8a;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo .icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .sidebar-logo span { font-size: 16px; font-weight: 700; }
+
+    .nav { padding: 16px 12px; flex: 1; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: background .15s, color .15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(108,99,255,.15); color: var(--accent2); }
+    .nav-item .ico { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .sidebar-footer strong { color: var(--text); display: block; margin-bottom: 8px; }
+    #btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 7px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    #btn-logout:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: 220px;
+      flex: 1;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── HEADER ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-header h2 { font-size: 20px; font-weight: 700; }
+    .page-header p { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── BOTÃO PRIMARY ── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .88; }
+
+    /* ── TABELA ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+      padding: 0 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 14px 16px; font-size: 14px; }
+    .td-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .btn-sm:hover { opacity: .8; }
+    .btn-view  { background: rgba(108,99,255,.15); color: var(--accent2); }
+    .btn-edit  { background: rgba(234,179,8,.12);  color: #fbbf24; }
+    .btn-del   { background: rgba(239,68,68,.12);  color: var(--danger); }
+    .btn-copy  { background: rgba(34,197,94,.12);  color: var(--success); }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.7);
+    }
+    .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+    .form-field { margin-bottom: 16px; }
+    .form-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-field input, .form-field textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .form-field input:focus, .form-field textarea:focus { border-color: var(--accent); }
+    .form-field textarea { min-height: 80px; resize: vertical; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { color: var(--text); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-purple { background: rgba(108,99,255,.15); color: var(--accent2); }
+    .badge-green  { background: rgba(34,197,94,.12);  color: var(--success); }
+
+    /* password hidden field */
+    .pass-hidden { font-family: monospace; letter-spacing: 3px; color: var(--text-muted); }
+
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all .3s;
+      z-index: 200;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">⚡</div>
+    <span>Zeus Platform</span>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" data-page="passwords">
+      <span class="ico">🔑</span> Senhas
+    </div>
+    <div class="nav-item" data-page="apikeys">
+      <span class="ico">🗝️</span> Chaves API
+    </div>
+    <div class="nav-item" data-page="agents">
+      <span class="ico">🤖</span> Agentes
+    </div>
+    <div class="nav-item" data-page="chat" style="opacity:.4;pointer-events:none">
+      <span class="ico">💬</span> Chat <small style="font-size:10px;margin-left:4px">(em breve)</small>
+    </div>
+    <div class="nav-item" data-page="settings" style="margin-top:auto">
+      <span class="ico">⚙️</span> Configuracoes
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <strong id="user-label">Carregando...</strong>
+    <button id="btn-logout">Sair</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- COFRE DE SENHAS -->
+  <div class="page active" id="page-passwords">
+    <div class="page-header">
+      <div>
+        <h2>Cofre de Senhas</h2>
+        <p>Todas as senhas cifradas com AES-256-GCM</p>
+      </div>
+      <button class="btn-primary" onclick="openPassModal()">+ Adicionar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Serviço</th>
+            <th>Usuário</th>
+            <th>Atualizado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="pass-tbody">
+          <tr><td colspan="4" style="color:var(--text-muted);padding:24px 16px">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AGENTES -->
+  <div class="page" id="page-agents">
+    <div class="page-header">
+      <div>
+        <h2>Agentes</h2>
+        <p>Crie e gerencie agentes com instrucoes e modelos distintos</p>
+      </div>
+      <button class="btn-primary" onclick="openAgentModal()">+ Novo Agente</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Agente</th>
+            <th>Slug</th>
+            <th>Modelo</th>
+            <th>Status</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="agents-tbody">
+          <tr><td colspan="5" style="color:var(--text-muted);padding:24px 16px">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONFIGURACOES -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div>
+        <h2>Configuracoes</h2>
+        <p>Alterar senha de acesso</p>
+      </div>
+    </div>
+    <div style="max-width:400px">
+      <div class="form-field"><label>Senha atual</label><input type="password" id="cp-current" placeholder="••••••••"/></div>
+      <div class="form-field"><label>Nova senha</label><input type="password" id="cp-new" placeholder="minimo 8 caracteres"/></div>
+      <div class="form-field"><label>Confirmar nova senha</label><input type="password" id="cp-confirm" placeholder="••••••••"/></div>
+      <div id="cp-msg" style="margin-bottom:12px;font-size:13px;display:none"></div>
+      <button class="btn-primary" onclick="changePassword()">Salvar nova senha</button>
+    </div>
+  </div>
+
+  <!-- COFRE DE CHAVES API -->
+  <div class="page" id="page-apikeys">
+    <div class="page-header">
+      <div>
+        <h2>Chaves de API</h2>
+        <p>Chaves cifradas — agentes puxam daqui sem expor no código</p>
+      </div>
+      <button class="btn-primary" onclick="openApiModal()">+ Adicionar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Serviço</th>
+            <th>Descrição</th>
+            <th>Vencimento</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="api-tbody">
+          <tr><td colspan="4" style="color:var(--text-muted);padding:24px 16px">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL SENHA -->
+<div class="overlay" id="pass-modal">
+  <div class="modal">
+    <h3 id="pass-modal-title">Nova Senha</h3>
+    <input type="hidden" id="pass-id"/>
+    <div class="form-field"><label>Serviço / Label *</label><input type="text" id="pass-label" placeholder="ex: Instagram Jeff"/></div>
+    <div class="form-field"><label>Usuário</label><input type="text" id="pass-username" placeholder="@usuario ou email"/></div>
+    <div class="form-field"><label>Senha *</label><input type="password" id="pass-password" placeholder="••••••••"/></div>
+    <div class="form-field"><label>URL</label><input type="url" id="pass-url" placeholder="https://"/></div>
+    <div class="form-field"><label>Notas</label><textarea id="pass-notes" placeholder="Informações adicionais..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('pass-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="savePassword()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISUALIZAR SENHA -->
+<div class="overlay" id="view-pass-modal">
+  <div class="modal">
+    <h3 id="view-pass-label"></h3>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Usuário</div>
+      <div id="view-pass-username" style="font-size:15px"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Senha</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <code id="view-pass-password" style="font-size:15px;background:var(--bg);padding:6px 10px;border-radius:7px;flex:1"></code>
+        <button class="btn-sm btn-copy" onclick="copyText(document.getElementById('view-pass-password').textContent)">Copiar</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">URL</div>
+      <div id="view-pass-url" style="font-size:14px;color:var(--accent2)"></div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Notas</div>
+      <div id="view-pass-notes" style="font-size:14px;white-space:pre-wrap"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('view-pass-modal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHAVE API -->
+<div class="overlay" id="api-modal">
+  <div class="modal">
+    <h3 id="api-modal-title">Nova Chave API</h3>
+    <input type="hidden" id="api-id"/>
+    <div class="form-field"><label>Serviço *</label><input type="text" id="api-service" placeholder="ex: Anthropic, Meta, Asaas"/></div>
+    <div class="form-field"><label>Chave *</label><input type="password" id="api-key" placeholder="sk-..."/></div>
+    <div class="form-field"><label>Descrição</label><input type="text" id="api-description" placeholder="Uso desta chave"/></div>
+    <div class="form-field"><label>Vencimento (data opcional)</label><input type="date" id="api-expires"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('api-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveApiKey()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGENTE -->
+<div class="overlay" id="agent-modal">
+  <div class="modal" style="max-width:520px">
+    <h3 id="agent-modal-title">Novo Agente</h3>
+    <input type="hidden" id="agent-id"/>
+    <div class="form-field"><label>Nome *</label><input type="text" id="agent-name" placeholder="ex: Zeus, Sobral, Maicon"/></div>
+    <div class="form-field"><label>Slug * (letras, numeros, - _)</label><input type="text" id="agent-slug" placeholder="ex: zeus, sobral-trafego"/></div>
+    <div class="form-field">
+      <label>Modelo</label>
+      <select id="agent-model" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none">
+        <option value="claude-opus-4-7">Opus 4.7 (mais capaz)</option>
+        <option value="claude-sonnet-4-6">Sonnet 4.6 (balanceado)</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (rapido)</option>
+      </select>
+    </div>
+    <div class="form-field"><label>Icone (emoji)</label><input type="text" id="agent-icon" placeholder="🤖" maxlength="4"/></div>
+    <div class="form-field"><label>Instrucao do sistema *</label><textarea id="agent-prompt" style="min-height:140px" placeholder="Voce e um agente especialista em..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('agent-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveAgent()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ── AUTENTICAÇÃO ──
+async function checkAuth() {
+  const r = await fetch('/api/auth/me');
+  const d = await r.json();
+  if (!d.authenticated) { window.location.href = '/login/'; return; }
+  $('user-label').textContent = d.username;
+}
+checkAuth();
+
+// ── NAV ──
+document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    $(`page-${el.dataset.page}`).classList.add('active');
+    if (el.dataset.page === 'passwords') loadPasswords();
+    if (el.dataset.page === 'apikeys') loadApiKeys();
+    if (el.dataset.page === 'agents') loadAgents();
+  });
+});
+
+$('btn-logout').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/login/';
+});
+
+// ── SENHAS ──
+async function loadPasswords() {
+  const r = await fetch('/api/vault/passwords');
+  if (!r.ok) return;
+  const rows = await r.json();
+  const tbody = $('pass-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);padding:24px 16px">Nenhuma senha cadastrada</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${esc(r.label)}</strong></td>
+      <td><span style="color:var(--text-muted)">••••••</span></td>
+      <td style="color:var(--text-muted);font-size:13px">${fmtDate(r.updated_at)}</td>
+      <td class="td-actions">
+        <button class="btn-sm btn-view" onclick="viewPassword(${r.id})">Ver</button>
+        <button class="btn-sm btn-edit" onclick="editPassword(${r.id})">Editar</button>
+        <button class="btn-sm btn-del" onclick="deletePassword(${r.id})">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openPassModal(id = null) {
+  $('pass-id').value = id || '';
+  $('pass-label').value = '';
+  $('pass-username').value = '';
+  $('pass-password').value = '';
+  $('pass-url').value = '';
+  $('pass-notes').value = '';
+  $('pass-modal-title').textContent = id ? 'Editar Senha' : 'Nova Senha';
+  $('pass-modal').classList.add('show');
+}
+
+async function editPassword(id) {
+  const r = await fetch(`/api/vault/passwords/${id}`);
+  const d = await r.json();
+  $('pass-id').value = id;
+  $('pass-label').value = d.label;
+  $('pass-username').value = d.username || '';
+  $('pass-password').value = d.password;
+  $('pass-url').value = d.url || '';
+  $('pass-notes').value = d.notes || '';
+  $('pass-modal-title').textContent = 'Editar Senha';
+  $('pass-modal').classList.add('show');
+}
+
+async function viewPassword(id) {
+  const r = await fetch(`/api/vault/passwords/${id}`);
+  const d = await r.json();
+  $('view-pass-label').textContent = d.label;
+  $('view-pass-username').textContent = d.username || '-';
+  $('view-pass-password').textContent = d.password;
+  $('view-pass-url').textContent = d.url || '-';
+  $('view-pass-notes').textContent = d.notes || '-';
+  $('view-pass-modal').classList.add('show');
+}
+
+async function savePassword() {
+  const id = $('pass-id').value;
+  const body = {
+    label: $('pass-label').value,
+    username: $('pass-username').value,
+    password: $('pass-password').value,
+    url: $('pass-url').value,
+    notes: $('pass-notes').value
+  };
+  const url = id ? `/api/vault/passwords/${id}` : '/api/vault/passwords';
+  const method = id ? 'PUT' : 'POST';
+  const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
+    closeModal('pass-modal');
+    loadPasswords();
+    toast('Senha salva!');
+  } else {
+    const d = await r.json();
+    toast(d.error || 'Erro ao salvar', true);
+  }
+}
+
+async function deletePassword(id) {
+  if (!confirm('Excluir esta senha?')) return;
+  await fetch(`/api/vault/passwords/${id}`, { method: 'DELETE' });
+  loadPasswords();
+  toast('Removida.');
+}
+
+// ── CHAVES API ──
+async function loadApiKeys() {
+  const r = await fetch('/api/vault/apikeys');
+  if (!r.ok) return;
+  const rows = await r.json();
+  const tbody = $('api-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);padding:24px 16px">Nenhuma chave cadastrada</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${esc(r.service)}</strong></td>
+      <td style="color:var(--text-muted)">${esc(r.description || '-')}</td>
+      <td style="color:var(--text-muted);font-size:13px">${r.expires_at ? fmtDate(r.expires_at) : 'Sem vencimento'}</td>
+      <td class="td-actions">
+        <button class="btn-sm btn-copy" onclick="copyApiKey(${r.id})">Copiar chave</button>
+        <button class="btn-sm btn-del" onclick="deleteApiKey(${r.id})">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openApiModal() {
+  $('api-id').value = '';
+  $('api-service').value = '';
+  $('api-key').value = '';
+  $('api-description').value = '';
+  $('api-expires').value = '';
+  $('api-modal-title').textContent = 'Nova Chave API';
+  $('api-modal').classList.add('show');
+}
+
+async function saveApiKey() {
+  const body = {
+    service: $('api-service').value,
+    key: $('api-key').value,
+    description: $('api-description').value,
+    expires_at: $('api-expires').value ? new Date($('api-expires').value).getTime()/1000 : null
+  };
+  const r = await fetch('/api/vault/apikeys', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
+    closeModal('api-modal');
+    loadApiKeys();
+    toast('Chave salva!');
+  } else {
+    const d = await r.json();
+    toast(d.error || 'Erro ao salvar', true);
+  }
+}
+
+async function copyApiKey(id) {
+  const r = await fetch(`/api/vault/apikeys/${id}`);
+  const d = await r.json();
+  copyText(d.key);
+}
+
+async function deleteApiKey(id) {
+  if (!confirm('Excluir esta chave?')) return;
+  await fetch(`/api/vault/apikeys/${id}`, { method: 'DELETE' });
+  loadApiKeys();
+  toast('Removida.');
+}
+
+// ── HELPERS ──
+function closeModal(id) { $(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('Copiado!')).catch(() => toast('Erro ao copiar', true));
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+let toastTimer;
+function toast(msg, err = false) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? 'rgba(239,68,68,.4)' : 'var(--border)';
+  t.style.color = err ? 'var(--danger)' : 'var(--text)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── AGENTES ──
+async function loadAgents() {
+  const r = await fetch('/api/agents');
+  if (!r.ok) return;
+  const rows = await r.json();
+  const tbody = $('agents-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-muted);padding:24px 16px">Nenhum agente cadastrado</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(a => `
+    <tr>
+      <td><span style="font-size:18px;margin-right:8px">${esc(a.icon||'🤖')}</span><strong>${esc(a.name)}</strong></td>
+      <td><code style="background:var(--bg);padding:2px 7px;border-radius:5px;font-size:12px">${esc(a.slug)}</code></td>
+      <td style="color:var(--text-muted);font-size:13px">${esc(a.model.replace('claude-',''))}</td>
+      <td><span class="badge ${a.active ? 'badge-green' : ''}" style="${a.active?'':'background:rgba(100,100,100,.1);color:var(--text-muted)'}">${a.active?'Ativo':'Inativo'}</span></td>
+      <td class="td-actions">
+        <button class="btn-sm btn-edit" onclick="editAgent(${a.id})">Editar</button>
+        <button class="btn-sm btn-view" onclick="toggleAgent(${a.id})">${a.active?'Pausar':'Ativar'}</button>
+        <button class="btn-sm btn-del" onclick="deleteAgent(${a.id})">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAgentModal(id = null) {
+  $('agent-id').value = id || '';
+  $('agent-name').value = '';
+  $('agent-slug').value = '';
+  $('agent-model').value = 'claude-opus-4-7';
+  $('agent-icon').value = '🤖';
+  $('agent-prompt').value = '';
+  $('agent-modal-title').textContent = id ? 'Editar Agente' : 'Novo Agente';
+  $('agent-modal').classList.add('show');
+}
+
+async function editAgent(id) {
+  const r = await fetch(`/api/agents/${id}`);
+  const d = await r.json();
+  $('agent-id').value = id;
+  $('agent-name').value = d.name;
+  $('agent-slug').value = d.slug;
+  $('agent-model').value = d.model;
+  $('agent-icon').value = d.icon || '🤖';
+  $('agent-prompt').value = d.system_prompt;
+  $('agent-modal-title').textContent = 'Editar Agente';
+  $('agent-modal').classList.add('show');
+}
+
+async function saveAgent() {
+  const id = $('agent-id').value;
+  const body = {
+    name: $('agent-name').value.trim(),
+    slug: $('agent-slug').value.trim(),
+    model: $('agent-model').value,
+    icon: $('agent-icon').value.trim() || '🤖',
+    system_prompt: $('agent-prompt').value.trim()
+  };
+  const url = id ? `/api/agents/${id}` : '/api/agents';
+  const method = id ? 'PUT' : 'POST';
+  const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
+    closeModal('agent-modal');
+    loadAgents();
+    toast(id ? 'Agente atualizado!' : 'Agente criado!');
+  } else {
+    const d = await r.json();
+    toast(d.error || 'Erro ao salvar', true);
+  }
+}
+
+async function toggleAgent(id) {
+  const r = await fetch(`/api/agents/${id}/toggle`, { method: 'PATCH' });
+  if (r.ok) { loadAgents(); toast('Status atualizado!'); }
+  else toast('Erro ao atualizar', true);
+}
+
+async function deleteAgent(id) {
+  if (!confirm('Excluir este agente? A acao nao pode ser desfeita.')) return;
+  const r = await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+  if (r.ok) { loadAgents(); toast('Agente removido.'); }
+  else toast('Erro ao excluir', true);
+}
+
+// ── MUDAR SENHA ──
+async function changePassword() {
+  const current = $('cp-current').value;
+  const novo    = $('cp-new').value;
+  const confirm  = $('cp-confirm').value;
+  const msg = $('cp-msg');
+
+  if (novo.length < 8) { showCpMsg('Nova senha deve ter no minimo 8 caracteres', true); return; }
+  if (novo !== confirm) { showCpMsg('As senhas nao coincidem', true); return; }
+
+  const r = await fetch('/api/auth/change-password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ currentPassword: current, newPassword: novo })
+  });
+  const d = await r.json();
+  if (r.ok) {
+    showCpMsg('Senha alterada! Faca login novamente.', false);
+    setTimeout(() => window.location.href = '/login/', 1500);
+  } else {
+    showCpMsg(d.error || 'Erro ao alterar senha', true);
+  }
+}
+
+function showCpMsg(text, err) {
+  const el = $('cp-msg');
+  el.textContent = text;
+  el.style.color = err ? 'var(--danger)' : 'var(--success)';
+  el.style.display = 'block';
+}
+
+// ── CARGA INICIAL ──
+loadPasswords();
+</script>
+</body>
+</html>

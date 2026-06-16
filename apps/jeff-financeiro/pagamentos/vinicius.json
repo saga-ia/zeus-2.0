@@ -1,0 +1,68 @@
+{
+  "beneficiario": "Vinicius",
+  "phone": "5585991143501",
+  "referencia": "Sistema desenvolvido por Vinicius (contratos e pagamentos)",
+  "pagamentos": [
+    {
+      "id": 1,
+      "data": "2025-03",
+      "valor": 750.00,
+      "tipo": "pix",
+      "descricao": "Entrada - sistema desenvolvido por Vinicius",
+      "status": "pago"
+    },
+    {
+      "id": 2,
+      "data": "2025-03",
+      "valor": 750.00,
+      "tipo": "pix",
+      "descricao": "Segundo pagamento - sistema",
+      "status": "pago"
+    },
+    {
+      "id": 3,
+      "data": "2025-03",
+      "valor": 350.00,
+      "tipo": "pix",
+      "descricao": "Terceiro pagamento - sistema",
+      "status": "pago"
+    },
+    {
+      "id": 4,
+      "data": "2026-04-28",
+      "valor": 200.00,
+      "tipo": "pix",
+      "descricao": "Parcela - semana passada",
+      "status": "pago"
+    },
+    {
+      "id": 5,
+      "data": "2026-04-28",
+      "valor": 300.00,
+      "tipo": "pix",
+      "descricao": "Parcela - semana passada",
+      "status": "pago"
+    },
+    {
+      "id": 6,
+      "data": "2026-05-08",
+      "valor": 100.00,
+      "tipo": "pix",
+      "descricao": "Parcela - essa semana",
+      "status": "pago"
+    },
+    {
+      "id": 7,
+      "data": "2026-05-08",
+      "valor": 100.00,
+      "tipo": "pix",
+      "descricao": "Parcela - essa semana",
+      "status": "pago"
+    }
+  ],
+  "resumo": {
+    "total_pago": 2550.00,
+    "quantidade_pagamentos": 7,
+    "atualizado_em": "2026-05-08"
+  }
+}

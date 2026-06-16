@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadastro · CIGC 2026</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%236d28d9'/%3E%3Ctext x='16' y='22' font-family='Inter,sans-serif' font-size='13' font-weight='800' fill='white' text-anchor='middle'%3ECI%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .ident-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .ident-toggle button {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-300); padding: 10px; border-radius: 10px; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 500; transition: all 0.15s;
+  }
+  .ident-toggle button.active {
+    background: rgba(124, 77, 255, 0.18); border-color: rgba(124, 77, 255, 0.5); color: #fff;
+  }
+  .role-tag {
+    display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+    background: rgba(124, 77, 255, 0.18); color: #c4b5fd; margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+  const root = document.getElementById('app');
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+  const state = { identType: 'email', invite: null };
+
+  function escape(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function api(path, opts){
+    const r = await fetch(path, Object.assign({ headers:{'Content-Type':'application/json'}, credentials:'same-origin' }, opts || {}));
+    let body = null; try { body = await r.json(); } catch(_){}
+    if (!r.ok) { const err = new Error((body && body.error) || ('HTTP '+r.status)); err.status = r.status; throw err; }
+    return body;
+  }
+
+  function roleLabel(r){
+    return ({admin:'Administrador',marketing:'Marketing',comercial:'Comercial',organizador:'Organizador'})[r] || r;
+  }
+
+  function errMsg(code){
+    return ({
+      missing_fields: 'Preencha todos os campos.',
+      missing_credentials: 'Preencha todos os campos.',
+      password_too_short: 'A senha precisa ter ao menos 6 caracteres.',
+      invalid_email: 'Email inválido.',
+      invalid_phone: 'Telefone inválido. Use DDD + número.',
+      email_taken: 'Esse email já está cadastrado.',
+      phone_taken: 'Esse telefone já está cadastrado.',
+      invite_used: 'Esse convite já foi usado. Faça login na tela inicial.',
+      invite_not_found: 'Convite inválido. Confira o link recebido.'
+    })[code] || 'Não foi possível concluir o cadastro. Tente novamente.';
+  }
+
+  async function init(){
+    if (!token) return renderError('Link de cadastro sem token. Confira o link que você recebeu.');
+    try {
+      const r = await api('/api/cadastro/' + encodeURIComponent(token));
+      state.invite = r;
+      renderForm();
+    } catch (e) {
+      renderError(errMsg(e.message));
+    }
+  }
+
+  function renderError(msg){
+    root.innerHTML = `
+      <div class="login-wrap">
+        <div class="login-card">
+          <div class="login-brand">
+            <div class="login-brand-mark">CI</div>
+            <div class="login-brand-text">CIGC 2026<strong>Cadastro</strong></div>
+          </div>
+          <h1>Não foi possível abrir</h1>
+          <div class="alert">${escape(msg)}</div>
+          <a class="btn btn-ghost" href="/">Voltar ao login</a>
+        </div>
+      </div>`;
+  }
+
+  function renderSuccess(){
+    root.innerHTML = `
+      <div class="login-wrap">
+        <div class="login-card">
+          <div class="login-brand">
+            <div class="login-brand-mark">CI</div>
+            <div class="login-brand-text">CIGC 2026<strong>Cadastro</strong></div>
+          </div>
+          <h1>Tudo certo!</h1>
+          <div class="alert alert-ok">Conta criada. Já estamos te redirecionando para o sistema.</div>
+        </div>
+      </div>`;
+    setTimeout(() => { window.location.href = '/'; }, 1200);
+  }
+
+  function renderForm(errorMsg){
+    const inv = state.invite;
+    const isEmail = state.identType === 'email';
+    root.innerHTML = `
+      <div class="login-wrap">
+        <div class="login-card">
+          <div class="login-brand">
+            <div class="login-brand-mark">CI</div>
+            <div class="login-brand-text">CIGC 2026<strong>Cadastro</strong></div>
+          </div>
+          <span class="role-tag">${escape(roleLabel(inv.role))}</span>
+          <h1>Olá, ${escape(inv.name)}</h1>
+          <p>Crie seu acesso ao painel do CIGC 2026. Você escolhe entrar com email ou telefone.</p>
+          ${errorMsg ? `<div class="alert">${escape(errorMsg)}</div>` : ''}
+          <form id="cadastroForm">
+            <div class="field">
+              <label>Nome completo</label>
+              <input type="text" name="name" value="${escape(inv.name)}" required autocomplete="name">
+            </div>
+            <div class="ident-toggle">
+              <button type="button" data-type="email" class="${isEmail?'active':''}">Usar email</button>
+              <button type="button" data-type="phone" class="${!isEmail?'active':''}">Usar telefone</button>
+            </div>
+            ${isEmail
+              ? `<div class="field"><label>Email</label><input type="email" name="identifier" required autocomplete="email" placeholder="seu@email.com"></div>`
+              : `<div class="field"><label>Telefone (DDD + número)</label><input type="tel" name="identifier" required autocomplete="tel" placeholder="11999999999"></div>`
+            }
+            <div class="field"><label>Senha (mínimo 6 caracteres)</label><input type="password" name="password" required minlength="6" autocomplete="new-password"></div>
+            <button type="submit" class="btn" id="submitBtn">Criar acesso</button>
+          </form>
+        </div>
+      </div>`;
+
+    root.querySelectorAll('.ident-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.identType = btn.dataset.type;
+        renderForm();
+      });
+    });
+
+    root.querySelector('#cadastroForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target);
+      const submitBtn = root.querySelector('#submitBtn');
+      submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span>';
+      try {
+        await api('/api/cadastro', {
+          method: 'POST',
+          body: JSON.stringify({
+            token,
+            name: fd.get('name'),
+            identifier_type: state.identType,
+            identifier: fd.get('identifier'),
+            password: fd.get('password')
+          })
+        });
+        renderSuccess();
+      } catch (e) {
+        renderForm(errMsg(e.message));
+      }
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro · Alpha Clientes</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth">
+<% if (typeof flash !== 'undefined' && flash) { %><div class="flash flash-<%= flash.type %>" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:400px;width:calc(100% - 28px);z-index:5"><%= flash.message %></div><% } %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand"><span class="dot"></span> ALPHA · Clientes</div>
+    <h1>Criar conta</h1>
+    <p class="lead">Cadastre-se. Acessos novos passam por aprovação do Jeferson.</p>
+    <form method="post" action="/signup">
+      <label>Nome completo</label>
+      <input type="text" name="name" required autofocus>
+      <label>Email</label>
+      <input type="email" name="email" required autocomplete="username">
+      <label>Senha (min. 8 caracteres)</label>
+      <input type="password" name="password" required minlength="8" autocomplete="new-password">
+      <label>Repita a senha</label>
+      <input type="password" name="password2" required minlength="8" autocomplete="new-password">
+      <div style="margin-top:20px"><button type="submit" class="btn btn-primary" style="width:100%">Criar cadastro</button></div>
+    </form>
+    <div style="margin-top:18px;text-align:center;font-size:13px;opacity:.85">
+      Já tem conta? <a href="/login" style="color:#C4FF0E;text-decoration:none;font-weight:600">Entrar</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

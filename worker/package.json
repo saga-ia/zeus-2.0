@@ -1,0 +1,42 @@
+{
+  "name": "whatsapp-worker",
+  "version": "1.0.0",
+  "description": "HTTP Worker exposing WhatsApp operations via whatsapp-web.js (Express, SQLite, PM2).",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/scripts/migrate.js",
+    "hash-password": "node src/scripts/hash-password.js",
+    "session:reset": "node src/scripts/session-reset.js",
+    "queue:flush": "node src/scripts/queue-flush.js",
+    "export:chat": "node src/scripts/export-chat.js",
+    "vacuum": "node src/scripts/vacuum.js",
+    "backup": "bash scripts/backup.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.5.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "msedge-tts": "^2.0.5",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.26.0",
+    "zod": "^3.24.1"
+  }
+}

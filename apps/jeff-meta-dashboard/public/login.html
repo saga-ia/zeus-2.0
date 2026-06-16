@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meta Ads Dashboard — Login</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0D1117;--card:#161B22;--border:#30363D;--bg2:#21262D;--gold:#D4A843;--green:#3FB950;--blue:#58A6FF;--red:#E06C75;--text:#E6EDF3;--muted:#8B949E}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:40px 36px;width:100%;max-width:380px}
+.logo{text-align:center;margin-bottom:28px}
+.logo-icon{width:52px;height:52px;background:linear-gradient(135deg,#D4A843,#8B6914);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0D1117;margin-bottom:10px}
+.logo h1{font-size:18px;font-weight:700;margin-bottom:4px}
+.logo p{font-size:12px;color:var(--muted)}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:16px}
+input{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--gold)}
+.btn{width:100%;padding:12px;background:var(--gold);border:none;border-radius:8px;color:#0D1117;font-size:14px;font-weight:700;cursor:pointer;margin-top:22px;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.error{background:#2D1B1B;border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:14px;display:none}
+.spinner{display:none;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <h1>Meta Ads Dashboard</h1>
+    <p>Alpha Digital — Painel de Resultados</p>
+  </div>
+  <form id="loginForm" onsubmit="doLogin(event)">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="seu@email.com" required autocomplete="username">
+    <label>Senha</label>
+    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+    <button class="btn" id="btn" type="submit">Entrar</button>
+    <div class="error" id="err"></div>
+    <div class="spinner" id="spin">Verificando...</div>
+  </form>
+</div>
+<script>
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  const spin = document.getElementById('spin');
+  err.style.display = 'none';
+  btn.disabled = true;
+  spin.style.display = 'block';
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Erro ao fazer login');
+    localStorage.setItem('meta_token', data.token);
+    localStorage.setItem('meta_role', data.role);
+    localStorage.setItem('meta_client_id', data.client_id || '');
+    localStorage.setItem('meta_name', data.name || '');
+    if (data.role === 'admin') {
+      window.location.href = '/admin.html';
+    } else {
+      window.location.href = '/dashboard.html';
+    }
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    spin.style.display = 'none';
+  }
+}
+// Redirect if already logged in
+(function() {
+  const token = localStorage.getItem('meta_token');
+  const role = localStorage.getItem('meta_role');
+  if (token) {
+    window.location.href = role === 'admin' ? '/admin.html' : '/dashboard.html';
+  }
+})();
+</script>
+</body>
+</html>

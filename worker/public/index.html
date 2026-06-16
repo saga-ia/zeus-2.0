@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Saga — Painel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              slate: {
+                50:  '#FFFFFF',
+                100: '#FFFFFF',
+                200: '#EEF2F7',
+                300: '#C9D2E0',
+                400: '#717680',
+                500: '#6A7282',
+                600: '#3A3A3A',
+                700: '#313131',
+                800: '#1A1A1A',
+                900: '#161616',
+                950: '#0A0A0A',
+              },
+              emerald: {
+                200: '#C4FF0E',
+                300: '#C4FF0E',
+                400: '#C4FF0E',
+                500: '#C4FF0E',
+                600: '#A3FF33',
+                700: '#A3FF33',
+                800: '#1F3A0D',
+                900: '#1F3A0D',
+                950: '#0A1804',
+              },
+              sky: {
+                200: '#62DE18',
+                500: '#62DE18',
+                600: '#A3FF33',
+                700: '#A3FF33',
+                800: '#1F3A0D',
+                900: '#1F3A0D',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+      body { background: #0F0F0F; }
+      .tab-active { background-color: #1A1A1A; border-color: #C4FF0E; color: #C4FF0E; }
+      .saga-glow { box-shadow: 0 0 16px rgba(196, 255, 14, 0.35); }
+      #stateBadge, .saga-accent { color: #C4FF0E; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.52 3.449A11.892 11.892 0 0 0 12.05 0C5.495 0 .159 5.335.156 11.892a11.87 11.87 0 0 0 1.594 5.945L0 24l6.3-1.652a11.88 11.88 0 0 0 5.746 1.463h.005c6.554 0 11.89-5.335 11.893-11.892a11.82 11.82 0 0 0-3.424-8.47z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-semibold leading-tight">Sistema Saga</div>
+            <div class="text-xs text-slate-400">sagazeus.jefersonhenrike.com</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="stateBadge" class="text-xs uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700">—</span>
+          <button id="logoutBtn" class="text-sm text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-1.5">Sair</button>
+        </div>
+      </div>
+      <nav class="max-w-6xl mx-auto px-4 flex gap-2 text-sm">
+        <button data-tab="overview" class="tab-btn tab-active border-b-2 px-3 py-2 border-transparent">Visão geral</button>
+        <button data-tab="messages" class="tab-btn border-b-2 px-3 py-2 border-transparent text-slate-400 hover:text-white">Mensagens</button>
+        <button data-tab="queue" class="tab-btn border-b-2 px-3 py-2 border-transparent text-slate-400 hover:text-white">Fila</button>
+        <button data-tab="webhooks" class="tab-btn border-b-2 px-3 py-2 border-transparent text-slate-400 hover:text-white">Webhooks</button>
+        <button data-tab="session" class="tab-btn border-b-2 px-3 py-2 border-transparent text-slate-400 hover:text-white">Sessão</button>
+      </nav>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <!-- OVERVIEW -->
+      <section data-tabpane="overview" class="tabpane">
+        <!-- STATUS ALERTS -->
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+          <div id="waStatusCard" class="bg-slate-900 border-2 border-slate-800 rounded-2xl p-5">
+            <div class="text-sm text-slate-400 mb-3">Status WhatsApp</div>
+            <div class="flex items-center gap-3">
+              <div id="waStatusDot" class="w-4 h-4 rounded-full bg-slate-600"></div>
+              <div>
+                <div id="waStatusLabel" class="font-semibold text-slate-200">—</div>
+                <div id="waStatusTime" class="text-xs text-slate-500"></div>
+              </div>
+            </div>
+          </div>
+          <div id="sysStatusCard" class="bg-slate-900 border-2 border-slate-800 rounded-2xl p-5">
+            <div class="text-sm text-slate-400 mb-3">Status Sistema</div>
+            <div class="flex items-center gap-3">
+              <div id="sysStatusDot" class="w-4 h-4 rounded-full bg-slate-600"></div>
+              <div>
+                <div id="sysStatusLabel" class="font-semibold text-slate-200">—</div>
+                <div id="sysStatusTime" class="text-xs text-slate-500"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="text-sm text-slate-400">Estado</div>
+            <div id="stateBig" class="text-2xl font-semibold mt-1">—</div>
+            <div id="stateSince" class="text-xs text-slate-500 mt-1"></div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="text-sm text-slate-400">Número conectado</div>
+            <div id="meNumber" class="text-2xl font-semibold mt-1">—</div>
+            <div id="meName" class="text-xs text-slate-500 mt-1"></div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="text-sm text-slate-400">Fila pendente</div>
+            <div id="queuePending" class="text-2xl font-semibold mt-1">—</div>
+            <div id="uptime" class="text-xs text-slate-500 mt-1"></div>
+          </div>
+        </div>
+
+        <!-- Connection management quick-actions -->
+        <div class="mt-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+          <span class="text-sm text-slate-400 flex-1">Conexão WhatsApp</span>
+          <button id="newQrBtn" class="bg-sky-700 hover:bg-sky-600 text-white text-sm font-medium rounded-lg px-4 py-2">Gerar novo QR</button>
+          <button id="overviewRestartBtn" class="bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg px-4 py-2">Reiniciar cliente</button>
+          <span id="overviewMsg" class="text-xs text-slate-400"></span>
+        </div>
+
+        <div id="qrCard" class="hidden mt-6 bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 flex flex-col items-center text-center">
+          <div class="text-sm text-emerald-300 mb-1">Aguardando pareamento</div>
+          <h2 class="text-xl font-semibold mb-4">Escaneie o QR Code no WhatsApp</h2>
+          <img id="qrImg" src="/qr?format=png" alt="QR Code" class="w-72 h-72 rounded-xl border border-slate-800 bg-white p-2" />
+          <p class="text-xs text-slate-400 mt-3">WhatsApp &gt; Configurações &gt; Aparelhos conectados &gt; Conectar um aparelho</p>
+          <p id="qrUpdated" class="text-[11px] text-slate-500 mt-1"></p>
+        </div>
+
+        <div id="errorCard" class="hidden mt-6 bg-red-950/40 border border-red-800 rounded-2xl p-4 text-sm text-red-200"></div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section data-tabpane="messages" class="tabpane hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Últimas mensagens</h2>
+          <button id="refreshMessages" class="text-sm text-slate-300 hover:text-white border border-slate-700 rounded-lg px-3 py-1.5">Atualizar</button>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-800/60 text-slate-300 text-xs uppercase tracking-wider">
+              <tr>
+                <th class="text-left px-4 py-2">Quando</th>
+                <th class="text-left px-4 py-2">Chat</th>
+                <th class="text-left px-4 py-2">Dir.</th>
+                <th class="text-left px-4 py-2">Autor</th>
+                <th class="text-left px-4 py-2">Corpo</th>
+              </tr>
+            </thead>
+            <tbody id="messagesBody" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- QUEUE -->
+      <section data-tabpane="queue" class="tabpane hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Fila de envio</h2>
+          <div class="flex gap-2">
+            <button id="refreshQueue" class="text-sm text-slate-300 hover:text-white border border-slate-700 rounded-lg px-3 py-1.5">Atualizar</button>
+            <button id="flushQueue" class="text-sm text-red-300 hover:text-white border border-red-700 hover:bg-red-900/40 rounded-lg px-3 py-1.5">Flush pendentes</button>
+          </div>
+        </div>
+        <div id="queueCounts" class="grid grid-cols-4 gap-3 mb-4"></div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-800/60 text-slate-300 text-xs uppercase tracking-wider">
+              <tr>
+                <th class="text-left px-4 py-2">#</th>
+                <th class="text-left px-4 py-2">Chat</th>
+                <th class="text-left px-4 py-2">Tipo</th>
+                <th class="text-left px-4 py-2">Status</th>
+                <th class="text-left px-4 py-2">Retries</th>
+                <th class="text-left px-4 py-2">Erro</th>
+                <th class="text-left px-4 py-2">Criada</th>
+              </tr>
+            </thead>
+            <tbody id="queueBody" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- WEBHOOKS -->
+      <section data-tabpane="webhooks" class="tabpane hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Webhooks outbound</h2>
+        </div>
+        <form id="webhookForm" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 grid md:grid-cols-4 gap-3 mb-4">
+          <input name="url" placeholder="https://..." required class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-emerald-500" />
+          <input name="events" placeholder="events (ex: *, message.received,message.ack)" value="*" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-emerald-500" />
+          <div class="flex gap-2">
+            <input name="token" placeholder="token opcional" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-emerald-500" />
+            <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-lg px-3 py-2">+</button>
+          </div>
+        </form>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-800/60 text-slate-300 text-xs uppercase tracking-wider">
+              <tr>
+                <th class="text-left px-4 py-2">#</th>
+                <th class="text-left px-4 py-2">URL</th>
+                <th class="text-left px-4 py-2">Eventos</th>
+                <th class="text-left px-4 py-2">Ativo</th>
+                <th class="text-left px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="webhooksBody" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SESSION -->
+      <section data-tabpane="session" class="tabpane hidden">
+        <h2 class="text-lg font-semibold mb-3">Controle de sessão</h2>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <p class="text-sm text-slate-400">Ações abaixo afetam o cliente WhatsApp em execução.</p>
+          <div class="flex gap-3 flex-wrap">
+            <button id="restartBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 py-2 text-sm">Reiniciar cliente</button>
+            <button id="logoutSessionBtn" class="bg-red-900/40 hover:bg-red-800/40 border border-red-800 text-red-200 rounded-lg px-4 py-2 text-sm">Logout da sessão WhatsApp</button>
+          </div>
+          <div id="sessionMsg" class="text-xs text-slate-400"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="max-w-6xl mx-auto px-4 pb-8 text-center text-xs text-slate-500">
+      <span id="footerUptime"></span>
+    </footer>
+
+    <script src="/public/js/dashboard.js"></script>
+  </body>
+</html>

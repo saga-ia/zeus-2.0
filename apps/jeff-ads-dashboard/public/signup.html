@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha Digital — Criar conta</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c4ff0e;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .sub {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 28px;
+  }
+  .field { margin-bottom: 18px; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  input[type=text], input[type=password] {
+    width: 100%;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 15px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, input[type=password]:focus { border-color: #c4ff0e; }
+  .alert {
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 9px 12px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert.error { background: #2a1010; border: 1px solid #4a1a1a; color: #ff6b6b; }
+  .alert.success { background: #0f2a10; border: 1px solid #1a4a1a; color: #6bff8e; }
+  button {
+    width: 100%;
+    background: #c4ff0e;
+    border: none;
+    border-radius: 8px;
+    color: #0a0a0a;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .88; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .login-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #555;
+  }
+  .login-link a { color: #c4ff0e; text-decoration: none; }
+  .login-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Alpha Digital</div>
+  <h1>Criar conta</h1>
+  <p class="sub">Preencha os dados para acessar o dashboard.</p>
+
+  <div class="alert error" id="err"></div>
+  <div class="alert success" id="ok"></div>
+
+  <form id="form">
+    <div class="field">
+      <label for="name">Nome</label>
+      <input type="text" id="name" name="name" autocomplete="name" placeholder="Seu nome" required>
+    </div>
+    <div class="field">
+      <label for="username">Usuário</label>
+      <input type="text" id="username" name="username" autocomplete="username" placeholder="nome.sobrenome" required>
+    </div>
+    <div class="field">
+      <label for="pwd">Senha</label>
+      <input type="password" id="pwd" name="password" autocomplete="new-password" required>
+    </div>
+    <div class="field">
+      <label for="pwd2">Confirmar senha</label>
+      <input type="password" id="pwd2" name="confirm" autocomplete="new-password" required>
+    </div>
+    <button type="submit" id="btn">Criar conta</button>
+  </form>
+
+  <div class="login-link">Ja tem conta? <a href="/login">Entrar</a></div>
+</div>
+<script>
+  const form = document.getElementById('form');
+  const errEl = document.getElementById('err');
+  const okEl = document.getElementById('ok');
+  const btn = document.getElementById('btn');
+
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+    okEl.classList.remove('show');
+  }
+  function showOk(msg) {
+    okEl.textContent = msg;
+    okEl.classList.add('show');
+    errEl.classList.remove('show');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl.classList.remove('show');
+    okEl.classList.remove('show');
+
+    const name = document.getElementById('name').value.trim();
+    const username = document.getElementById('username').value.trim().toLowerCase();
+    const password = document.getElementById('pwd').value;
+    const confirm = document.getElementById('pwd2').value;
+
+    if (!name || !username || !password) return showErr('Preencha todos os campos.');
+    if (password !== confirm) return showErr('As senhas nao conferem.');
+    if (password.length < 6) return showErr('Senha muito curta (minimo 6 caracteres).');
+    if (!/^[a-z0-9._-]+$/.test(username)) return showErr('Usuario so pode ter letras, numeros, ponto, underscore e hifen.');
+
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showErr(data.error || 'Erro ao criar conta.');
+        btn.disabled = false;
+        btn.textContent = 'Criar conta';
+        return;
+      }
+      showOk('Conta criada! Aguarde aprovacao do administrador para acessar.');
+      form.reset();
+      setTimeout(() => { window.location.href = '/login'; }, 2500);
+    } catch (err) {
+      showErr('Erro de conexao. Tente novamente.');
+      btn.disabled = false;
+      btn.textContent = 'Criar conta';
+    }
+  });
+</script>
+</body>
+</html>

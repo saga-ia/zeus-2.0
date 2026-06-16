@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carrossel</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    background: #000;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .carousel-wrapper {
+    position: relative;
+    width: 430px;
+    height: calc(430px * 16 / 9);
+    background: #000;
+    overflow: hidden;
+    border-radius: 12px;
+    user-select: none;
+    cursor: pointer;
+  }
+
+  /* ── SLIDES ── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.05);
+    transition: opacity 0.4s ease, transform 0.6s ease-out;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: scale(1.00);
+    pointer-events: auto;
+  }
+
+  .slide.exit {
+    opacity: 0;
+    transform: scale(1.00);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    z-index: 100;
+  }
+
+  .progress-segment {
+    flex: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.30);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-segment .fill {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+    border-radius: 2px;
+    transition: none;
+  }
+
+  .progress-segment.done .fill {
+    width: 100%;
+  }
+
+  .progress-segment.active .fill {
+    width: 0%;
+  }
+
+  /* ── COUNTER ── */
+  .counter {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    z-index: 100;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 4px 8px;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /* ── CLICK ZONES (invisible) ── */
+  .zone-left,
+  .zone-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    z-index: 90;
+  }
+
+  .zone-left  { left: 0; }
+  .zone-right { right: 0; }
+</style>
+</head>
+<body>
+
+<div class="carousel-wrapper" id="carousel">
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-segment" id="seg0"><div class="fill" id="fill0"></div></div>
+    <div class="progress-segment" id="seg1"><div class="fill" id="fill1"></div></div>
+    <div class="progress-segment" id="seg2"><div class="fill" id="fill2"></div></div>
+    <div class="progress-segment" id="seg3"><div class="fill" id="fill3"></div></div>
+    <div class="progress-segment" id="seg4"><div class="fill" id="fill4"></div></div>
+    <div class="progress-segment" id="seg5"><div class="fill" id="fill5"></div></div>
+  </div>
+
+  <!-- SLIDE 1 -->
+  <div class="slide" id="slide0">
+    <img src="img1.png" alt="Eco nao Egosistema" draggable="false">
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide" id="slide1">
+    <img src="img2.png" alt="Segredo da Board Academy" draggable="false">
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide" id="slide2">
+    <img src="img3.png" alt="Momento jamais visto" draggable="false">
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide" id="slide3">
+    <img src="img4.png" alt="Nao e a crise que quebra" draggable="false">
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide" id="slide4">
+    <img src="img5.png" alt="Que se exploda o mundo" draggable="false">
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide" id="slide5">
+    <img src="img6.png" alt="Sorte e o cacete" draggable="false">
+  </div>
+
+  <!-- Slide counter -->
+  <div class="counter" id="counter">1 / 6</div>
+
+  <!-- Click zones -->
+  <div class="zone-left"  id="zoneLeft"></div>
+  <div class="zone-right" id="zoneRight"></div>
+
+</div>
+
+<script>
+(function () {
+  const TOTAL       = 6;
+  const VISIBLE_MS  = 4000;   // tempo visível por slide
+  const ANIM_IN_MS  = 600;    // zoom+fade entrada
+  const ANIM_OUT_MS = 400;    // fade saída
+
+  let current       = 0;
+  let fillRaf       = null;
+  let autoTimer     = null;
+  let fillStart     = null;
+  let fillRemaining = VISIBLE_MS;
+  let paused        = false;
+
+  const slides   = Array.from({ length: TOTAL }, (_, i) => document.getElementById('slide' + i));
+  const segs     = Array.from({ length: TOTAL }, (_, i) => document.getElementById('seg' + i));
+  const fills    = Array.from({ length: TOTAL }, (_, i) => document.getElementById('fill' + i));
+  const counter  = document.getElementById('counter');
+  const zoneLeft  = document.getElementById('zoneLeft');
+  const zoneRight = document.getElementById('zoneRight');
+
+  /* ── helpers ── */
+
+  function updateCounter() {
+    counter.textContent = (current + 1) + ' / ' + TOTAL;
+  }
+
+  function resetSegments() {
+    segs.forEach((s, i) => {
+      s.classList.remove('done', 'active');
+      fills[i].style.width = '0%';
+      fills[i].style.transition = 'none';
+    });
+  }
+
+  function setDone(idx) {
+    segs[idx].classList.add('done');
+    fills[idx].style.width = '100%';
+  }
+
+  /* ── fill animation (rAF-based, respects remaining) ── */
+
+  function startFill(remaining) {
+    cancelAnimationFrame(fillRaf);
+    fillStart = null;
+
+    const seg  = segs[current];
+    const fill = fills[current];
+    const startPct = 100 - (remaining / VISIBLE_MS * 100);
+
+    seg.classList.add('active');
+    fill.style.transition = 'none';
+    fill.style.width = startPct + '%';
+
+    function tick(ts) {
+      if (!fillStart) fillStart = ts;
+      const elapsed = ts - fillStart;
+      const pct = startPct + (elapsed / remaining) * (100 - startPct);
+      fill.style.width = Math.min(pct, 100) + '%';
+      if (elapsed < remaining) {
+        fillRaf = requestAnimationFrame(tick);
+      }
+    }
+    fillRaf = requestAnimationFrame(tick);
+  }
+
+  function stopFill() {
+    cancelAnimationFrame(fillRaf);
+    fillRaf = null;
+  }
+
+  /* ── slide transition ── */
+
+  function goTo(idx, direction) {
+    if (idx === current && slides[current].classList.contains('active')) return;
+
+    stopFill();
+    clearTimeout(autoTimer);
+
+    const prev = current;
+    current = ((idx % TOTAL) + TOTAL) % TOTAL;
+
+    // mark exit on previous
+    if (slides[prev].classList.contains('active')) {
+      slides[prev].classList.add('exit');
+      slides[prev].classList.remove('active');
+      setTimeout(() => slides[prev].classList.remove('exit'), ANIM_OUT_MS);
+    }
+
+    // update progress segments
+    resetSegments();
+    for (let i = 0; i < current; i++) setDone(i);
+
+    // bring in new slide
+    slides[current].classList.remove('exit');
+    // force reflow so scale animation triggers
+    void slides[current].offsetWidth;
+    slides[current].classList.add('active');
+
+    updateCounter();
+    fillRemaining = VISIBLE_MS;
+
+    // start fill after paint
+    requestAnimationFrame(() => {
+      startFill(fillRemaining);
+    });
+
+    // schedule next
+    autoTimer = setTimeout(advance, VISIBLE_MS);
+  }
+
+  function advance() {
+    goTo(current + 1);
+  }
+
+  /* ── click handlers ── */
+
+  zoneLeft.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goTo(current - 1);
+  });
+
+  zoneRight.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goTo(current + 1);
+  });
+
+  /* ── touch swipe ── */
+  let touchStartX = 0;
+
+  document.getElementById('carousel').addEventListener('touchstart', function (e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  document.getElementById('carousel').addEventListener('touchend', function (e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) {
+      dx < 0 ? goTo(current + 1) : goTo(current - 1);
+    }
+  }, { passive: true });
+
+  /* ── init ── */
+  goTo(0);
+
+})();
+</script>
+
+</body>
+</html>

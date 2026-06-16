@@ -1,0 +1,9 @@
+{
+  "name": "jeff-ads-dashboard",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "express": "^5.2.1"
+  }
+}

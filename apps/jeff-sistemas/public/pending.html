@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Sistemas — Aguardando aprovação</title>
+<link rel="stylesheet" href="/_styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot"></span> ALPHA SISTEMAS</div>
+    <div class="right"><button class="btn-link" id="logout">sair</button></div>
+  </header>
+  <main class="center">
+    <div class="card-auth" style="text-align:center">
+      <div class="pulse" style="font-size:42px;margin-bottom:14px">⏳</div>
+      <h1>Aguardando aprovação</h1>
+      <p class="lead">Jeferson recebeu seu cadastro e vai liberar o acesso em breve. Você pode fechar esta página — quando aprovar, é só fazer login.</p>
+      <button class="btn-secondary" onclick="location.reload()" style="margin-top:8px">verificar agora</button>
+    </div>
+  </main>
+</div>
+<script>
+document.getElementById('logout').onclick = async () => {
+  await fetch('/api/logout', { method:'POST' });
+  location.href = '/login';
+};
+(async () => {
+  const r = await fetch('/api/me');
+  const d = await r.json();
+  if (d.user && d.user.status === 'approved') location.href = '/';
+})();
+setInterval(async () => {
+  const r = await fetch('/api/me');
+  const d = await r.json();
+  if (d.user && d.user.status === 'approved') location.href = '/';
+}, 15000);
+</script>
+</body>
+</html>

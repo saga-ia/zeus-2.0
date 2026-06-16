@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imersão Paradigma — Inscrição | Lucas Labastie</title>
+  <meta name="description" content="Inscrição oficial da Imersão Paradigma. 3 dias de inteligência emocional de alto impacto pra empresários.">
+  <!-- Meta Pixel -->
+  <script>
+    var PIXEL_ID = "__PIXEL_ID__";
+    if (PIXEL_ID && PIXEL_ID.indexOf('__') !== 0) {
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', PIXEL_ID);
+      fbq('track', 'PageView');
+    }
+  </script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;padding:40px 20px;display:flex;align-items:center;justify-content:center}
+    .wrap{max-width:560px;width:100%;margin:0 auto}
+    .header{text-align:center;margin-bottom:32px}
+    .logo{font-size:14px;letter-spacing:3px;color:#d4af37;margin-bottom:12px;text-transform:uppercase;font-weight:600}
+    h1{font-size:32px;font-weight:300;line-height:1.2;margin-bottom:14px}
+    h1 strong{font-weight:700;color:#d4af37}
+    .sub{color:#aaa;font-size:15px;line-height:1.6}
+    .progress{margin:24px 0 18px}
+    .pbar-wrap{height:6px;background:#222;border-radius:3px;overflow:hidden;position:relative}
+    .pbar{height:100%;background:linear-gradient(90deg,#d4af37,#f4cf57);width:16.66%;transition:width .35s ease-out;border-radius:3px}
+    .ptext{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#666;letter-spacing:1px}
+    .card{background:#141414;border:1px solid #222;border-radius:14px;padding:36px 28px;min-height:260px}
+    .step{display:none;animation:slideIn .35s ease-out}
+    .step.active{display:block}
+    @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .qcount{font-size:12px;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+    .question{font-size:22px;font-weight:500;line-height:1.35;margin-bottom:24px;color:#fff}
+    input,select{width:100%;background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:18px 16px;color:#fff;font-size:17px;font-family:inherit;transition:border-color .15s}
+    input:focus,select:focus{outline:none;border-color:#d4af37}
+    .actions{display:flex;gap:10px;margin-top:18px}
+    .btn{flex:1;background:#d4af37;color:#0a0a0a;border:none;border-radius:8px;padding:16px;font-size:15px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;cursor:pointer;transition:filter .1s}
+    .btn:hover{filter:brightness(1.1)}
+    .btn:active{transform:scale(.98)}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .btn-back{background:transparent;color:#888;border:1px solid #333;flex:0 0 90px}
+    .btn-back:hover{color:#fff;border-color:#555;filter:none}
+    .footer{text-align:center;margin-top:30px;color:#555;font-size:12px}
+    .ok,.err{padding:18px;border-radius:10px;margin-top:18px;font-size:14px;line-height:1.5}
+    .ok{background:#0d2b1a;border:1px solid #1a4a2e;color:#5fde9d}
+    .err{background:#2b0d0d;border:1px solid #4a1a1a;color:#de5f5f}
+    .err.hidden,.ok.hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo">Lucas Labastie</div>
+      <h1>Imersão <strong>PARADIGMA</strong></h1>
+      <p class="sub">3 dias presenciais em Alphaville — 1 a 3 de Maio</p>
+    </div>
+
+    <div class="progress">
+      <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
+      <div class="ptext"><span id="pcurrent">PERGUNTA 1 DE 6</span><span id="ppct">17%</span></div>
+    </div>
+
+    <div class="card">
+      <form id="form">
+        <div class="step active" data-name="nome">
+          <div class="qcount">Pergunta 1 de 6</div>
+          <div class="question">Qual é o seu nome completo?</div>
+          <input type="text" name="nome" required maxlength="120" autocomplete="name" placeholder="Ex: João da Silva">
+          <div class="actions">
+            <button type="button" class="btn btn-next">Continuar →</button>
+          </div>
+        </div>
+
+        <div class="step" data-name="telefone">
+          <div class="qcount">Pergunta 2 de 6</div>
+          <div class="question">Qual seu WhatsApp?</div>
+          <input type="tel" name="telefone" required placeholder="11999999999" maxlength="20" autocomplete="tel" inputmode="numeric">
+          <div class="actions">
+            <button type="button" class="btn btn-back">Voltar</button>
+            <button type="button" class="btn btn-next">Continuar →</button>
+          </div>
+        </div>
+
+        <div class="step" data-name="email">
+          <div class="qcount">Pergunta 3 de 6</div>
+          <div class="question">Qual seu melhor e-mail?</div>
+          <input type="email" name="email" required maxlength="120" autocomplete="email" placeholder="seu@email.com">
+          <div class="actions">
+            <button type="button" class="btn btn-back">Voltar</button>
+            <button type="button" class="btn btn-next">Continuar →</button>
+          </div>
+        </div>
+
+        <div class="step" data-name="cidade">
+          <div class="qcount">Pergunta 4 de 6</div>
+          <div class="question">De qual cidade você é?</div>
+          <input type="text" name="cidade" required maxlength="80" autocomplete="address-level2" placeholder="Ex: São Paulo">
+          <div class="actions">
+            <button type="button" class="btn btn-back">Voltar</button>
+            <button type="button" class="btn btn-next">Continuar →</button>
+          </div>
+        </div>
+
+        <div class="step" data-name="genero">
+          <div class="qcount">Pergunta 5 de 6</div>
+          <div class="question">Qual seu gênero?</div>
+          <select name="genero" required>
+            <option value="">Selecione</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+            <option value="outro">Outro</option>
+            <option value="nao_informar">Prefiro não informar</option>
+          </select>
+          <div class="actions">
+            <button type="button" class="btn btn-back">Voltar</button>
+            <button type="button" class="btn btn-next">Continuar →</button>
+          </div>
+        </div>
+
+        <div class="step" data-name="renda_faixa">
+          <div class="qcount">Pergunta 6 de 6</div>
+          <div class="question">Qual sua faixa de renda mensal?</div>
+          <select name="renda_faixa" required>
+            <option value="">Selecione</option>
+            <option value="ate_10k">Até R$ 10 mil</option>
+            <option value="10k_30k">R$ 10 mil a R$ 30 mil</option>
+            <option value="30k_60k">R$ 30 mil a R$ 60 mil</option>
+            <option value="60k_100k">R$ 60 mil a R$ 100 mil</option>
+            <option value="100k_300k">R$ 100 mil a R$ 300 mil</option>
+            <option value="acima_300k">Acima de R$ 300 mil</option>
+          </select>
+          <div class="actions">
+            <button type="button" class="btn btn-back">Voltar</button>
+            <button type="submit" class="btn" id="submit">Confirmar inscrição ✓</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="ok hidden" id="ok">✅ Inscrição recebida! Em até 30 minutos nossa equipe vai te chamar no WhatsApp.</div>
+      <div class="err hidden" id="err"></div>
+    </div>
+
+    <div class="footer">© 2026 SILCoaching · CNPJ 12.533.484/0001-13</div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const ok = document.getElementById('ok');
+    const err = document.getElementById('err');
+    const pbar = document.getElementById('pbar');
+    const pcurrent = document.getElementById('pcurrent');
+    const ppct = document.getElementById('ppct');
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const total = steps.length;
+    let current = 0;
+
+    function paintProgress() {
+      const pct = Math.round(((current + 1) / total) * 100);
+      pbar.style.width = pct + '%';
+      pcurrent.textContent = `PERGUNTA ${current + 1} DE ${total}`;
+      ppct.textContent = pct + '%';
+    }
+    paintProgress();
+
+    function show(i) {
+      steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
+      current = i;
+      paintProgress();
+      // Auto-focus the input
+      const input = steps[i].querySelector('input,select');
+      if (input) setTimeout(() => input.focus(), 50);
+    }
+
+    function validateCurrent() {
+      const input = steps[current].querySelector('input,select');
+      if (!input) return true;
+      if (!input.checkValidity()) {
+        input.reportValidity();
+        return false;
+      }
+      const v = (input.value || '').trim();
+      if (input.name === 'telefone' && v.replace(/\D/g, '').length < 10) {
+        input.setCustomValidity('Informe DDD + número (ex: 11999999999)');
+        input.reportValidity();
+        input.setCustomValidity('');
+        return false;
+      }
+      return true;
+    }
+
+    document.querySelectorAll('.btn-next').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (!validateCurrent()) return;
+        if (current < total - 1) show(current + 1);
+      });
+    });
+    document.querySelectorAll('.btn-back').forEach((b) => {
+      b.addEventListener('click', () => { if (current > 0) show(current - 1); });
+    });
+    // Enter avança
+    form.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && current < total - 1) {
+        e.preventDefault();
+        if (!validateCurrent()) return;
+        show(current + 1);
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validateCurrent()) return;
+      ok.classList.add('hidden');
+      err.classList.add('hidden');
+      const submitBtn = document.getElementById('submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+      const data = Object.fromEntries(new FormData(form));
+      try {
+        const res = await fetch('/inscricao/submit', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || 'Erro ao enviar.');
+        // Redirect to thank-you page
+        window.location.href = '/inscricao/obrigado';
+      } catch (ex) {
+        err.textContent = '❌ ' + (ex.message || 'Erro ao enviar. Tente novamente.');
+        err.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar inscrição ✓';
+      }
+    });
+  </script>
+</body>
+</html>

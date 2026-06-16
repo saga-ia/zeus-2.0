@@ -1,0 +1,59 @@
+[
+  {
+    "id": "dd5b3935-caeb-48cf-9952-eadda27c72ed",
+    "slug": "bluefocus",
+    "name": "Bluefocus",
+    "logo_url": null,
+    "meta_account_id": "act_1289500712654032",
+    "meta_access_token": "EAAkIWskCNOUBRUiNu4dsBIpBMA3TLIExjuPRNBS2YaMbr17E1MA2gTxZCNfuhtZCH2lr9du7l2ETB77qZBN1sg4pXZCqBjeYQgGWqzD6s18ki7wsBGUhEvHVVVaaZALNtow5amBumZCZAoRtXzU9DwBgL1BEZB3aAt80xDkFTyjHZBmfZCCqlOcYZAu0RufLT1u8Rqu",
+    "google_sheets_url": null,
+    "sheets_data": null,
+    "sheets_updated_at": null,
+    "goals": {
+      "cpl": null,
+      "cpc": null,
+      "lead_rate": null,
+      "ctr": null
+    },
+    "created_at": "2026-05-11T17:33:13.695Z",
+    "magic_token": "0d303e44-cbde-4a75-8f88-6b605b31f818"
+  },
+  {
+    "id": "2f9d121d-b273-4a66-833c-8700ff2b2f89",
+    "slug": "cigc",
+    "name": "CIGC",
+    "logo_url": null,
+    "meta_account_id": "act_591739264281958",
+    "meta_access_token": "EAAkIWskCNOUBRUiNu4dsBIpBMA3TLIExjuPRNBS2YaMbr17E1MA2gTxZCNfuhtZCH2lr9du7l2ETB77qZBN1sg4pXZCqBjeYQgGWqzD6s18ki7wsBGUhEvHVVVaaZALNtow5amBumZCZAoRtXzU9DwBgL1BEZB3aAt80xDkFTyjHZBmfZCCqlOcYZAu0RufLT1u8Rqu",
+    "google_sheets_url": null,
+    "sheets_data": null,
+    "sheets_updated_at": null,
+    "goals": {
+      "cpl": null,
+      "cpc": null,
+      "lead_rate": null,
+      "ctr": null
+    },
+    "created_at": "2026-05-12T15:28:56.826Z",
+    "magic_token": "b3b82ad8-2e88-45ec-9065-d262e26b5304"
+  },
+  {
+    "id": "74e6a11e-2084-4303-aa7a-c44cc6141fdd",
+    "slug": "board-academy",
+    "name": "Board Academy",
+    "logo_url": null,
+    "meta_account_id": "act_1180414197299732",
+    "meta_access_token": "EAAkIWskCNOUBRUiNu4dsBIpBMA3TLIExjuPRNBS2YaMbr17E1MA2gTxZCNfuhtZCH2lr9du7l2ETB77qZBN1sg4pXZCqBjeYQgGWqzD6s18ki7wsBGUhEvHVVVaaZALNtow5amBumZCZAoRtXzU9DwBgL1BEZB3aAt80xDkFTyjHZBmfZCCqlOcYZAu0RufLT1u8Rqu",
+    "google_sheets_url": null,
+    "sheets_data": null,
+    "sheets_updated_at": null,
+    "goals": {
+      "cpl": null,
+      "cpc": null,
+      "lead_rate": null,
+      "ctr": null
+    },
+    "created_at": "2026-05-12T15:28:56.962Z",
+    "magic_token": "1945533c-68b5-4ad7-88f0-3bc0bd76879d"
+  }
+]

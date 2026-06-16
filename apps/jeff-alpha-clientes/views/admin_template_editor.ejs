@@ -1,0 +1,179 @@
+<%- include('partials/header', { title: 'Aba padrão · Alpha' }) %>
+<style>
+  .tpl-editor{max-width:920px;margin:0 auto}
+  .tpl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+  .tpl-head h1{margin:0;font-size:24px;letter-spacing:-.02em}
+  .tpl-head p{margin:4px 0 0;color:var(--fg-3);font-size:13px;max-width:680px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;font-size:12px}
+  .legend span{display:flex;align-items:center;gap:6px;color:var(--fg-3)}
+  .legend .dot{width:10px;height:10px;border-radius:50%}
+  .legend .dot.tab{background:#3aa8ff}
+  .legend .dot.text{background:var(--fg-3)}
+  .legend .dot.highlight{background:#f5b740}
+  .legend .dot.question{background:#ff5566}
+  .legend .dot.action{background:#7ee787}
+  .add-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .add-btn{padding:10px 14px;border:1px dashed var(--line);border-radius:var(--radius-sm);background:var(--bg-2);color:var(--fg-2);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+  .add-btn:hover{border-color:var(--accent);color:var(--accent);border-style:solid}
+  .add-btn .dot{width:10px;height:10px;border-radius:50%}
+  .blocks{display:flex;flex-direction:column;gap:8px}
+  .block{background:var(--bg-1);border:1px solid var(--line);border-left:4px solid var(--line-2);border-radius:var(--radius-sm);padding:12px 14px}
+  .block.tab{border-left-color:#3aa8ff;background:linear-gradient(90deg,rgba(58,168,255,.06),var(--bg-1) 60%)}
+  .block.highlight{border-left-color:#f5b740;background:linear-gradient(90deg,rgba(245,183,64,.06),var(--bg-1) 60%)}
+  .block.question{border-left-color:#ff5566;background:linear-gradient(90deg,rgba(255,85,102,.06),var(--bg-1) 60%)}
+  .block.action{border-left-color:#7ee787;background:linear-gradient(90deg,rgba(126,231,135,.06),var(--bg-1) 60%)}
+  .block-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .block-head .badge{font-size:10px;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#000}
+  .block-head .badge.tab{background:#3aa8ff}
+  .block-head .badge.text{background:var(--fg-3);color:#000}
+  .block-head .badge.highlight{background:#f5b740}
+  .block-head .badge.question{background:#ff5566}
+  .block-head .badge.action{background:#7ee787}
+  .block-head .grow{flex:1}
+  .block-actions{display:flex;gap:4px}
+  .icon-btn{background:transparent;border:1px solid var(--line);color:var(--fg-2);cursor:pointer;padding:4px 8px;border-radius:var(--radius-sm);font-size:12px}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .block input,.block textarea{margin:0;background:var(--bg-2)}
+  .block textarea{min-height:60px}
+  .block .row{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+  @media(max-width:760px){.block .row{grid-template-columns:1fr}}
+  #saveBar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:14px 0;margin-top:24px;display:flex;gap:12px;align-items:center;justify-content:flex-end;z-index:5}
+  #saveStatus{font-size:13px;color:var(--fg-3)}
+  #saveStatus.ok{color:var(--ok)}
+  #saveStatus.err{color:var(--danger)}
+  .empty-tpl{padding:60px 20px;text-align:center;color:var(--fg-3);background:var(--bg-1);border:1px dashed var(--line);border-radius:var(--radius)}
+</style>
+
+<div class="tpl-editor">
+  <div class="tpl-head">
+    <div>
+      <h1>Aba padrão</h1>
+      <p>Esse template é replicado em <b>todos os clientes</b>. As respostas e ações ficam por cliente. Quando você atualizar aqui, todos os painéis (em <code style="color:var(--accent)">&lt;slug&gt;.jefersonhenrike.com</code>) recebem a nova estrutura.</p>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot tab"></span>Aba (separa seção)</span>
+    <span><span class="dot text"></span>Texto</span>
+    <span><span class="dot highlight"></span>Destaque (popup hover)</span>
+    <span><span class="dot question"></span>Pergunta (cliente responde)</span>
+    <span><span class="dot action"></span>Ação (admin executa)</span>
+  </div>
+
+  <div class="add-row">
+    <button class="add-btn" data-add="tab"><span class="dot" style="background:#3aa8ff"></span>+ Aba</button>
+    <button class="add-btn" data-add="text"><span class="dot" style="background:var(--fg-3)"></span>+ Texto</button>
+    <button class="add-btn" data-add="highlight"><span class="dot" style="background:#f5b740"></span>+ Destaque</button>
+    <button class="add-btn" data-add="question"><span class="dot" style="background:#ff5566"></span>+ Pergunta</button>
+    <button class="add-btn" data-add="action"><span class="dot" style="background:#7ee787"></span>+ Ação</button>
+  </div>
+
+  <div id="blocksRoot" class="blocks"></div>
+  <div id="emptyState" class="empty-tpl" style="display:none">Nenhum bloco ainda. Comece adicionando uma <b>Aba</b> com o nome da seção.</div>
+
+  <div id="saveBar">
+    <span id="saveStatus"></span>
+    <button class="btn" type="button" onclick="window.location.reload()">Descartar</button>
+    <button class="btn btn-primary" type="button" id="saveBtn">Atualizar template</button>
+  </div>
+</div>
+
+<script>
+let state = <%- JSON.stringify(template.blocks || []) %>;
+
+function uid(){ return 'b' + Math.random().toString(36).slice(2, 10); }
+function escapeHtml(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const KIND_LABEL = { tab:'Aba', text:'Texto', highlight:'Destaque', question:'Pergunta', action:'Ação' };
+
+function render(){
+  const root = document.getElementById('blocksRoot');
+  const empty = document.getElementById('emptyState');
+  if (!state.length) { root.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  root.innerHTML = '';
+  state.forEach((b, i) => {
+    const el = document.createElement('div');
+    el.className = 'block ' + b.kind;
+    let body = '';
+    if (b.kind === 'tab') {
+      body = `<input data-bind="title" placeholder="Nome da aba (ex: Diagnóstico Inicial)" value="${escapeHtml(b.title || '')}">`;
+    } else if (b.kind === 'text') {
+      body = `<textarea data-bind="text" placeholder="Texto que aparece no painel">${escapeHtml(b.text || '')}</textarea>`;
+    } else if (b.kind === 'highlight') {
+      body = `<div class="row">
+        <input data-bind="term" placeholder="Termo (ex: Movimento candidato)" value="${escapeHtml(b.term || '')}">
+        <input data-bind="popup" placeholder="Texto do popup ao passar o mouse" value="${escapeHtml(b.popup || '')}">
+      </div>`;
+    } else if (b.kind === 'question') {
+      body = `<textarea data-bind="text" placeholder="Pergunta que o cliente vai responder no painel dele">${escapeHtml(b.text || '')}</textarea>`;
+    } else if (b.kind === 'action') {
+      body = `<input data-bind="text" placeholder="Ação que sua equipe precisa executar (ex: Criar landing page)" value="${escapeHtml(b.text || '')}">`;
+    }
+    el.innerHTML = `
+      <div class="block-head">
+        <span class="badge ${b.kind}">${KIND_LABEL[b.kind]}</span>
+        <span style="color:var(--fg-3);font-size:11px;font-family:ui-monospace,monospace">${i+1}</span>
+        <div class="grow"></div>
+        <div class="block-actions">
+          <button class="icon-btn" data-act="up">↑</button>
+          <button class="icon-btn" data-act="down">↓</button>
+          <button class="icon-btn danger" data-act="del">×</button>
+        </div>
+      </div>
+      ${body}`;
+    el.addEventListener('input', (ev) => {
+      const t = ev.target;
+      const k = t.getAttribute('data-bind');
+      if (k) b[k] = t.value;
+    });
+    el.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button[data-act]');
+      if (!btn) return;
+      const a = btn.getAttribute('data-act');
+      if (a === 'up' && i > 0) { state.splice(i-1,0,state.splice(i,1)[0]); render(); }
+      else if (a === 'down' && i < state.length - 1) { state.splice(i+1,0,state.splice(i,1)[0]); render(); }
+      else if (a === 'del') { if (confirm('Remover este bloco?')) { state.splice(i,1); render(); } }
+    });
+    root.appendChild(el);
+  });
+}
+
+document.querySelectorAll('[data-add]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const kind = btn.getAttribute('data-add');
+    const novo = { id: uid(), kind };
+    if (kind === 'tab') novo.title = '';
+    else if (kind === 'text' || kind === 'question' || kind === 'action') novo.text = '';
+    else if (kind === 'highlight') { novo.term = ''; novo.popup = ''; }
+    state.push(novo);
+    render();
+    setTimeout(() => {
+      const last = document.getElementById('blocksRoot').lastElementChild;
+      const inp = last && last.querySelector('input,textarea');
+      if (inp) inp.focus();
+    }, 50);
+  });
+});
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const status = document.getElementById('saveStatus');
+  const btn = document.getElementById('saveBtn');
+  status.className = ''; status.textContent = 'Salvando...'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/admin/template/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blocks: state })
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'erro');
+    status.className = 'ok'; status.textContent = 'Template atualizado em todos os painéis. ' + j.blocks_count + ' blocos.';
+  } catch(e) {
+    status.className = 'err'; status.textContent = 'Erro: ' + e.message;
+  } finally { btn.disabled = false; }
+});
+
+render();
+</script>
+<%- include('partials/footer') %>

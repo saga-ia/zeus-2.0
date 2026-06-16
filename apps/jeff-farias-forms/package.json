@@ -1,0 +1,12 @@
+{
+  "name": "jeff-farias-forms",
+  "version": "1.0.0",
+  "description": "Formulário de aplicação Mentoria O Próximo Ciclo - Farias Souza",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

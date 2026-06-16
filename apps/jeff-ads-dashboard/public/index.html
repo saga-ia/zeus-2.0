@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Digital — Dashboard Meta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">A</div>
+    <div>
+      <div class="brand-title">Alpha Digital</div>
+      <div class="brand-sub">Dashboard Meta · campanhas e criativos</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <span id="status-pill" class="pill">conectando…</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="overview">Visão geral</button>
+  <button class="tab" data-tab="metadash">Meta Dash</button>
+  <button class="tab" data-tab="creatives">Criativos</button>
+  <button class="tab" data-tab="ai">Análise por IA</button>
+</nav>
+
+<main class="container">
+  <section class="filters">
+    <div class="filter">
+      <label>BM</label>
+      <select id="bm-select"><option value="">Todas as BMs</option></select>
+    </div>
+    <div class="filter">
+      <label>Conta de anúncios</label>
+      <select id="account-select"><option value="">Selecione uma conta</option></select>
+    </div>
+    <div class="filter">
+      <label>Período</label>
+      <select id="preset-select">
+        <option value="today">Hoje</option>
+        <option value="yesterday">Ontem</option>
+        <option value="last_7d" selected>Últimos 7 dias</option>
+        <option value="last_14d">Últimos 14 dias</option>
+        <option value="last_30d">Últimos 30 dias</option>
+        <option value="this_month">Este mês</option>
+        <option value="last_month">Mês passado</option>
+        <option value="maximum">Máximo</option>
+      </select>
+    </div>
+    <div class="filter">
+      <label>Status</label>
+      <label class="toggle">
+        <input type="checkbox" id="show-inactive">
+        <span>Incluir inativas</span>
+      </label>
+    </div>
+    <button class="btn-primary" id="apply-btn">Aplicar</button>
+  </section>
+
+  <!-- TAB: Overview -->
+  <section id="tab-overview" class="tab-content active">
+    <div id="kpis" class="kpis-row"></div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Campanhas</h2>
+        <span id="camps-count" class="badge">0</span>
+      </div>
+      <div id="campaigns-list" class="campaigns-list">
+        <div class="empty">Selecione uma conta e clique em Aplicar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: Meta Dash -->
+  <section id="tab-metadash" class="tab-content">
+    <!-- Score + Recomendações -->
+    <div class="md-top-row">
+      <div class="card md-health-card">
+        <div class="md-score-ring" id="md-score-ring">
+          <svg viewBox="0 0 120 120" width="120" height="120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+            <circle id="md-score-arc" cx="60" cy="60" r="52" fill="none" stroke="var(--green)" stroke-width="10"
+              stroke-dasharray="326.73" stroke-dashoffset="0" stroke-linecap="round"
+              transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="md-score-inner">
+            <div id="md-score-num" class="md-score-num">—</div>
+            <div id="md-score-label" class="md-score-label">—</div>
+          </div>
+        </div>
+        <div id="md-score-reasons" class="md-score-reasons"></div>
+      </div>
+      <div class="card md-recs-card">
+        <div class="card-header"><h2>Recomendações</h2></div>
+        <div id="md-recs" class="md-recs"></div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div id="md-kpis" class="kpis-row"></div>
+
+    <!-- Linha: Funil + Gastos + Investimento x Leads + Melhores Anúncios -->
+    <div class="md-row4">
+      <div class="card">
+        <div class="card-header"><h2>Funil de Tráfego</h2></div>
+        <div class="md-funnel-tabs">
+          <button class="md-ftab active" data-obj="">Geral</button>
+          <button class="md-ftab" data-obj="OUTCOME_LEADS">Leads</button>
+          <button class="md-ftab" data-obj="REACH">Alcance</button>
+          <button class="md-ftab" data-obj="TRAFFIC">Tráfego</button>
+          <button class="md-ftab" data-obj="OUTCOME_ENGAGEMENT">Engajamento</button>
+          <button class="md-ftab" data-obj="OUTCOME_SALES">Vendas</button>
+        </div>
+        <div id="md-funnel" class="md-funnel"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Gastos</h2></div>
+        <div id="md-spend-cards" class="md-spend-cards"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Investimento × Leads</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-timeline"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Top Anúncios (gasto)</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-topad"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Linha: Lead Rate + Leads+CPL + Gênero + Faixa Etária -->
+    <div class="md-row4">
+      <div class="card">
+        <div class="card-header"><h2>Lead Rate</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-leadrate"></canvas></div>
+        <div id="md-leadrate-val" class="md-gauge-label"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Leads + CPL</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-cpl"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Gênero</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-gender"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Faixa Etária</h2></div>
+        <div class="md-chart-wrap"><canvas id="md-chart-age"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Top Criativos + Top Regiões -->
+    <div class="md-row2">
+      <div class="card">
+        <div class="card-header"><h2>Top Criativos</h2><span id="md-topads-count" class="badge">0</span></div>
+        <div id="md-top-creatives" class="creatives-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Top Regiões</h2></div>
+        <div id="md-regions" class="md-regions"></div>
+      </div>
+    </div>
+
+    <!-- Campanhas com checkbox -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Campanhas</h2>
+        <div class="md-camp-actions">
+          <label class="toggle-label"><input type="checkbox" id="md-active-only"> Somente ativas</label>
+          <button class="btn-primary" id="md-camp-filter-btn" style="padding:6px 14px;height:auto;font-size:13px">Aplicar Filtro</button>
+          <button class="btn-sec" id="md-camp-clear-btn">Limpar</button>
+          <button class="btn-sec" id="md-refresh-btn" title="Buscar dados atualizados">Atualizar</button>
+        </div>
+      </div>
+      <div id="md-campaigns-table" class="md-table-wrap"></div>
+    </div>
+
+    <!-- Anúncios em destaque -->
+    <div class="card">
+      <div class="card-header"><h2>Anúncios em destaque</h2><span id="md-ads-count" class="badge">0</span></div>
+      <div id="md-ads-table" class="md-table-wrap"></div>
+    </div>
+
+    <div id="md-empty" class="empty hidden">Selecione uma conta e clique em Aplicar.</div>
+  </section>
+
+  <!-- TAB: Creatives -->
+  <section id="tab-creatives" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Criativos por performance</h2>
+        <span id="creatives-count" class="badge">0</span>
+      </div>
+      <div id="creatives-grid" class="creatives-grid">
+        <div class="empty">Selecione uma conta e clique em Aplicar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: AI -->
+  <section id="tab-ai" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Pergunte para a IA</h2>
+      </div>
+      <div class="ai-input-row">
+        <textarea id="ai-query" rows="3" placeholder="Ex: analise os criativos e me diga qual está performando melhor e por quê. Ou clique no microfone para gravar."></textarea>
+        <div class="ai-actions">
+          <button class="btn-mic" id="ai-mic" title="Gravar áudio">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10v2a7 7 0 0 0 14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            <span class="mic-label">Gravar</span>
+          </button>
+          <button class="btn-primary" id="ai-go">Analisar</button>
+        </div>
+      </div>
+      <div id="ai-mic-status" class="ai-mic-status hidden"></div>
+      <div class="ai-suggestions">
+        <span class="chip" data-q="Analise os criativos e diga qual está performando melhor e por quê">Top criativos</span>
+        <span class="chip" data-q="Quais campanhas estão queimando dinheiro sem retorno?">Campanhas problemáticas</span>
+        <span class="chip" data-q="Compare o CPA das campanhas ativas e recomende onde escalar budget">Onde escalar</span>
+        <span class="chip" data-q="Resuma os ângulos vencedores dos criativos top 5 e por que estão funcionando">Ângulos vencedores</span>
+      </div>
+    </div>
+    <div id="ai-result" class="ai-result"></div>
+  </section>
+
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <div id="loading-text">Carregando…</div>
+  </div>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

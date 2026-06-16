@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel Onboarding · Alpha Digital</title>
+<style>
+  :root {
+    --bg: #0b0c10;
+    --panel: #131419;
+    --panel-2: #1a1c23;
+    --border: #232631;
+    --text: #e6e7ea;
+    --muted: #8a8f9a;
+    --accent: #d4af37;
+    --accent-soft: rgba(212,175,55,.12);
+    --ok: #4ade80;
+    --pending: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  header {
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+  }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: .2px; margin: 0; }
+  header h1 span { color: var(--accent); }
+  .stats { display: flex; gap: 22px; font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px; }
+  .login {
+    max-width: 380px; margin: 80px auto; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 14px; padding: 28px;
+  }
+  .login h2 { margin: 0 0 6px; font-size: 18px; }
+  .login p { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  input[type="password"], input[type="text"] {
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    font-size: 14px; outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  button {
+    width: 100%; margin-top: 12px; padding: 11px 13px; border-radius: 10px;
+    background: var(--accent); border: 0; color: #1a1300; font-weight: 600;
+    cursor: pointer; font-size: 14px;
+  }
+  button:hover { filter: brightness(1.05); }
+  .session {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .session-head {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; gap: 16px;
+  }
+  .session-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+  .session-meta { display: flex; gap: 18px; font-size: 13px; color: var(--muted); align-items: center; }
+  .badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .3px; }
+  .badge.ok { background: rgba(74,222,128,.12); color: var(--ok); }
+  .badge.pending { background: rgba(245,158,11,.14); color: var(--pending); }
+  .photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+  .session-body { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .session.open .session-body { display: block; }
+  .qa { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+  .qa:last-child { border-bottom: 0; }
+  .q { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+  .v { font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .v.corrected { color: var(--text); }
+  .v.original { color: var(--muted); text-decoration: line-through; font-size: 12px; margin-top: 3px; }
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 14px; }
+  .actions { display: flex; gap: 8px; }
+  .btn-ghost {
+    width: auto; background: transparent; color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 12px; font-size: 12px; font-weight: 500; margin: 0;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $app = document.getElementById('app');
+const TOKEN_KEY = 'onb_admin_token';
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderLogin(err){
+  $app.innerHTML = `
+    <main>
+      <div class="login">
+        <h2>Painel Onboarding</h2>
+        <p>Acesso restrito. Insira o token de admin.</p>
+        <input type="password" id="tok" placeholder="token" autocomplete="off" />
+        <button id="enter">Entrar</button>
+        ${err ? `<p style="color:#f87171;margin-top:10px;font-size:12px">${err}</p>` : ''}
+      </div>
+    </main>`;
+  document.getElementById('enter').onclick = tryLogin;
+  document.getElementById('tok').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+}
+
+async function tryLogin(){
+  const t = document.getElementById('tok').value.trim();
+  if (!t) return;
+  const ok = await fetchData(t);
+  if (ok) { localStorage.setItem(TOKEN_KEY, t); }
+  else renderLogin('Token inválido.');
+}
+
+async function fetchData(token){
+  try {
+    const r = await fetch('/api/admin/responses?token=' + encodeURIComponent(token));
+    if (r.status === 401) return false;
+    const data = await r.json();
+    renderDashboard(data, token);
+    return true;
+  } catch (e) {
+    renderLogin('Erro de conexão.');
+    return false;
+  }
+}
+
+function fmtDate(s){
+  if (!s) return '—';
+  const d = new Date(s.replace(' ', 'T') + 'Z');
+  return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function groupResponses(rows){
+  const byKey = new Map();
+  for (const r of rows) {
+    if (!byKey.has(r.question_key)) byKey.set(r.question_key, []);
+    byKey.get(r.question_key).push(r);
+  }
+  return Array.from(byKey.entries()).map(([key, vers]) => {
+    vers.sort((a, b) => a.version - b.version);
+    return {
+      key,
+      label: vers[vers.length - 1].question_label || key,
+      latest: vers[vers.length - 1],
+      original: vers[0],
+      hasCorrection: vers.length > 1,
+      section: vers[0].section,
+    };
+  }).sort((a, b) => a.section - b.section);
+}
+
+function renderDashboard(sessions, token){
+  const completed = sessions.filter(s => s.completed_at).length;
+  const inProgress = sessions.length - completed;
+  const photoUrl = id => `/api/admin/photo/${id}?token=${encodeURIComponent(token)}`;
+
+  $app.innerHTML = `
+    <header>
+      <h1>Painel <span>Onboarding</span> · Alpha Digital</h1>
+      <div class="stats">
+        <span><b>${sessions.length}</b> sessões</span>
+        <span><b style="color:var(--ok)">${completed}</b> concluídas</span>
+        <span><b style="color:var(--pending)">${inProgress}</b> em andamento</span>
+        <button class="btn-ghost" id="logout">Sair</button>
+      </div>
+    </header>
+    <main>
+      ${sessions.length === 0 ? `<div class="empty">Nenhuma sessão registrada ainda.</div>` : ''}
+      ${sessions.map(s => {
+        const grouped = groupResponses(s.responses || []);
+        const nameQA = grouped.find(g => /nome|name/i.test(g.key));
+        const displayName = nameQA ? (nameQA.latest.value || '(sem nome)') : '(sem nome)';
+        return `
+          <div class="session" data-id="${s.id}">
+            <div class="session-head">
+              <div style="display:flex;gap:14px;align-items:center;min-width:0">
+                ${s.photo_path ? `<img class="photo" src="${photoUrl(s.id)}" alt="" />` : `<div class="photo" style="background:var(--panel-2)"></div>`}
+                <div style="min-width:0">
+                  <div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(displayName)}</div>
+                  <div class="session-id">${s.id}</div>
+                </div>
+              </div>
+              <div class="session-meta">
+                <span>seção ${s.last_section || 0}</span>
+                <span>${fmtDate(s.started_at)}</span>
+                <span class="badge ${s.completed_at ? 'ok' : 'pending'}">${s.completed_at ? 'concluído' : 'em andamento'}</span>
+              </div>
+            </div>
+            <div class="session-body">
+              ${grouped.length === 0 ? `<div style="color:var(--muted);font-size:13px">Sem respostas registradas.</div>` : grouped.map(g => `
+                <div class="qa">
+                  <div class="q">${escapeHtml(g.label)}</div>
+                  <div class="v corrected">${escapeHtml(g.latest.value || '—')}</div>
+                  ${g.hasCorrection ? `<div class="v original">resposta original: ${escapeHtml(g.original.value || '—')}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      }).join('')}
+    </main>`;
+
+  document.querySelectorAll('.session-head').forEach(el => {
+    el.addEventListener('click', () => el.parentElement.classList.toggle('open'));
+  });
+  document.getElementById('logout').onclick = () => { localStorage.removeItem(TOKEN_KEY); renderLogin(); };
+}
+
+(async function init(){
+  const saved = localStorage.getItem(TOKEN_KEY);
+  if (saved) {
+    const ok = await fetchData(saved);
+    if (!ok) renderLogin();
+  } else {
+    renderLogin();
+  }
+})();
+</script>
+</body>
+</html>

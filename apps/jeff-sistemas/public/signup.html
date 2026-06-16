@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Sistemas — Cadastro</title>
+<link rel="stylesheet" href="/_styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot"></span> ALPHA SISTEMAS</div>
+    <div class="right"><a class="btn-link" href="/login">já tenho conta</a></div>
+  </header>
+  <main class="center">
+    <div class="card-auth">
+      <h1>Criar conta</h1>
+      <div class="error" id="err"></div>
+      <form id="f">
+        <div class="field"><label>Nome completo</label><input type="text" name="name" required></div>
+        <div class="field"><label>Email</label><input type="email" name="email" required autocomplete="email"></div>
+        <div class="field"><label>Senha (mín. 6)</label><input type="password" name="password" required minlength="6" autocomplete="new-password"></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" name="password2" required minlength="6" autocomplete="new-password"></div>
+        <button class="btn-primary" type="submit">CADASTRAR</button>
+      </form>
+      <div class="alt">já tem conta? <a href="/login">entrar</a></div>
+    </div>
+  </main>
+</div>
+<script>
+const f = document.getElementById('f'), err = document.getElementById('err');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  err.classList.remove('show');
+  const fd = new FormData(f);
+  const pwd = fd.get('password'), pwd2 = fd.get('password2');
+  if (pwd !== pwd2) { err.textContent = 'as senhas não coincidem'; err.classList.add('show'); return; }
+  const body = { name: fd.get('name'), email: fd.get('email'), password: pwd };
+  const r = await fetch('/api/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await r.json();
+  if (!r.ok) { err.textContent = data.error || 'erro'; err.classList.add('show'); return; }
+  if (data.status === 'approved') location.href = '/';
+  else location.href = '/pending';
+});
+</script>
+</body>
+</html>

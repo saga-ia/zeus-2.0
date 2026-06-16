@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deise Schmitz Giehl | Criadora de Conteúdo Digital</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d5016;
+            --accent: #d4a574;
+            --light: #f5f3f0;
+            --dark: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--dark);
+            background: var(--light);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #3d6b1f 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            margin-bottom: 8px;
+        }
+
+        header .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        section h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .bio {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .bio p {
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            color: #333;
+        }
+
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .highlight-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .highlight-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .highlight-card strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--primary) 0%, #3d6b1f 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .cta {
+            background: var(--primary);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .cta:hover {
+            background: #1f3d0f;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .content-item {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .content-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .content-item p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 60px;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            section h2 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Deise Schmitz Giehl</h1>
+        <p class="subtitle">Especialista em Dicas para Mães | Infoprodutos e Afiliações</p>
+        <span class="badge">Ajudando Mães a Melhorar o Dia a Dia em Família</span>
+    </header>
+
+    <div class="container">
+        <section>
+            <h2>Sobre</h2>
+            <div class="bio">
+                <p>
+                    Deise Schmitz Giehl é mãe, esposa e especialista em dicas práticas para melhorar o dia a dia em família. Com duas filhas, ela vive a realidade de mães que buscam qualidade de vida, organização e bem-estar emocional para a família.
+                </p>
+                <p>
+                    Através de seus infoprodutos e parcerias estratégicas como afiliada, Deise compartilha soluções comprovadas que ajudam mães a transformar rotinas caóticas em momentos vívidos de qualidade com a família. Seu público crescente de 7.092 seguidores encontra aqui conteúdo prático, autêntico e transformador.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Destaques</h2>
+            <div class="highlights">
+                <div class="highlight-card">
+                    <strong>💡 Dicas Diárias Comprovadas</strong>
+                    Estratégias práticas para melhorar a qualidade de vida em família
+                </div>
+                <div class="highlight-card">
+                    <strong>📦 Infoprodutos Premium</strong>
+                    Soluções de alto valor que transformam rotinas e relacionamentos
+                </div>
+                <div class="highlight-card">
+                    <strong>🤝 Parcerias Estratégicas</strong>
+                    Afiliações selecionadas que agregam valor real à comunidade
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Métricas Recentes</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">7.092</div>
+                    <div class="stat-label">Seguidores<br>(comunidade)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">86</div>
+                    <div class="stat-label">Posts<br>(conteúdo)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">993</div>
+                    <div class="stat-label">Amigos<br>(rede cercada)</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Como Deise Ajuda Mães</h2>
+            <div class="content-grid">
+                <div class="content-item">
+                    <h3>🏡 Organização do Lar</h3>
+                    <p>Sistemas práticos para organizar casa, rotina e tempo com mais eficiência e paz mental.</p>
+                </div>
+                <div class="content-item">
+                    <h3>💪 Bem-estar Emocional</h3>
+                    <p>Estratégias para lidar com estresse, autocuidado e equilíbrio entre ser mãe e ser pessoa.</p>
+                </div>
+                <div class="content-item">
+                    <h3>👨‍👩‍👧 Qualidade Familiar</h3>
+                    <p>Dicas para criar momentos significativos com filhos e parceiro, fortalecendo vínculos.</p>
+                </div>
+            </div>
+        </section>
+
+        <section style="text-align: center;">
+            <h2>Quer Melhorar sua Vida em Família?</h2>
+            <p style="font-size: 1.1rem; color: #666; margin-bottom: 25px;">
+                Deise tem soluções comprovadas para mães que desejam transformar sua rotina e criar momentos significativos com a família.
+            </p>
+            <a href="https://wa.me/5511910075450?text=Ótimo%20dia!%20Quero%20saber%20mais%20sobre%20como%20Deise%20pode%20me%20ajudar" class="cta">
+                Conversar via WhatsApp
+            </a>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Deise Schmitz Giehl. Apresentação Premium.</p>
+        <p><a href="https://instagram.com/deise.schmitz_g" target="_blank">Visite o Instagram</a></p>
+    </footer>
+</body>
+</html>

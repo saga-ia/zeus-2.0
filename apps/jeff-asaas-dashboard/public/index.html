@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asaas — Dashboard · Jeff</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14181d;
+    --panel-2: #1b2027;
+    --line: #232932;
+    --txt: #e8edf2;
+    --muted: #8a93a0;
+    --accent: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --info: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.5 -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  header { padding: 28px 32px 12px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  header .meta { color: var(--muted); font-size: 13px; }
+  main { padding: 24px 32px; max-width: 1280px; margin: 0 auto; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 32px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .card .value { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  .card .sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .card.accent .value { color: var(--accent); }
+  .card.warn .value { color: var(--warn); }
+  .card.danger .value { color: var(--danger); }
+  .card.info .value { color: var(--info); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0; overflow: hidden; margin-bottom: 24px; }
+  section h2 { margin: 0; padding: 16px 20px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  section h2 .controls { display: flex; gap: 8px; }
+  section h2 button { background: var(--panel-2); border: 1px solid var(--line); color: var(--txt); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+  section h2 button:hover { border-color: var(--info); }
+  section h2 button.active { border-color: var(--accent); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--panel-2); }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  th.num { text-align: right; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+  .err { padding: 16px 20px; color: var(--danger); }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 4px; font-weight: 500; }
+  .badge.PENDING { background: rgba(96,165,250,.15); color: var(--info); }
+  .badge.OVERDUE { background: rgba(248,113,113,.15); color: var(--danger); }
+  .badge.RECEIVED, .badge.CONFIRMED { background: rgba(74,222,128,.15); color: var(--accent); }
+  footer { padding: 20px 32px 32px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Asaas — Painel financeiro</h1>
+      <div class="meta">jefersonhenrike.com</div>
+    </div>
+    <div class="meta" id="updated">—</div>
+  </header>
+
+  <main>
+    <div class="grid" id="kpis">
+      <div class="card"><div class="label">A receber (PENDING)</div><div class="value" id="kpi-pending-sum">—</div><div class="sub" id="kpi-pending-count">— cobranças</div></div>
+      <div class="card warn"><div class="label">Vencendo em 30d</div><div class="value" id="kpi-due30-sum">—</div><div class="sub" id="kpi-due30-count">— cobranças</div></div>
+      <div class="card danger"><div class="label">Inadimplência (OVERDUE)</div><div class="value" id="kpi-overdue-sum">—</div><div class="sub" id="kpi-overdue-count">— cobranças</div></div>
+      <div class="card accent"><div class="label">Recebidos (histórico)</div><div class="value" id="kpi-received">—</div><div class="sub">+ confirmados: <span id="kpi-confirmed">—</span></div></div>
+      <div class="card info"><div class="label">Clientes</div><div class="value" id="kpi-customers">—</div><div class="sub">cadastrados</div></div>
+    </div>
+
+    <section>
+      <h2>
+        Cobranças
+        <span class="controls">
+          <button data-status="PENDING" class="active">Pendentes</button>
+          <button data-status="OVERDUE">Inadimplentes</button>
+          <button data-status="RECEIVED">Recebidos</button>
+          <button data-status="CONFIRMED">Confirmados</button>
+        </span>
+      </h2>
+      <div id="payments-body"></div>
+    </section>
+  </main>
+
+  <footer>
+    Dados em tempo real da API Asaas. Atualiza a cada visita.
+  </footer>
+
+<script>
+const fmtBRL = (n) => (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+
+async function loadSnapshot() {
+  try {
+    const r = await fetch('/api/snapshot');
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'erro');
+    document.getElementById('updated').textContent = 'atualizado ' + new Date(d.generatedAt).toLocaleString('pt-BR');
+    document.getElementById('kpi-pending-sum').textContent = fmtBRL(d.pending.sumValue);
+    document.getElementById('kpi-pending-count').textContent = `${d.pending.count} cobrança(s)`;
+    document.getElementById('kpi-due30-sum').textContent = fmtBRL(d.pending.dueIn30.sumValue);
+    document.getElementById('kpi-due30-count').textContent = `${d.pending.dueIn30.count} cobrança(s)`;
+    document.getElementById('kpi-overdue-sum').textContent = fmtBRL(d.overdue.sumValue);
+    document.getElementById('kpi-overdue-count').textContent = `${d.overdue.count} cobrança(s)`;
+    document.getElementById('kpi-received').textContent = d.receivedTotalCount;
+    document.getElementById('kpi-confirmed').textContent = d.confirmedTotalCount;
+    document.getElementById('kpi-customers').textContent = d.customersTotalCount;
+  } catch (e) {
+    document.getElementById('updated').textContent = 'erro: ' + e.message;
+  }
+}
+
+async function loadPayments(status) {
+  const body = document.getElementById('payments-body');
+  body.innerHTML = '<div class="empty">carregando…</div>';
+  try {
+    const r = await fetch('/api/payments?status=' + encodeURIComponent(status) + '&limit=100');
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    const items = d.data || [];
+    if (!items.length) {
+      body.innerHTML = '<div class="empty">Nenhuma cobrança ' + status.toLowerCase() + '.</div>';
+      return;
+    }
+    const rows = items.map(p => `
+      <tr>
+        <td>${fmtDate(p.dueDate)}</td>
+        <td>${p.customerName || p.customer || '—'}</td>
+        <td>${(p.description || '—').replace(/</g,'&lt;')}</td>
+        <td><span class="badge ${p.status}">${p.status}</span></td>
+        <td>${p.billingType || '—'}</td>
+        <td class="num">${fmtBRL(p.value)}</td>
+      </tr>
+    `).join('');
+    body.innerHTML = `
+      <table>
+        <thead><tr><th>Vencimento</th><th>Cliente</th><th>Descrição</th><th>Status</th><th>Tipo</th><th class="num">Valor</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    body.innerHTML = '<div class="err">erro: ' + e.message + '</div>';
+  }
+}
+
+document.querySelectorAll('section h2 button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('section h2 button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadPayments(btn.dataset.status);
+  });
+});
+
+loadSnapshot();
+loadPayments('PENDING');
+</script>
+</body>
+</html>

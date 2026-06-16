@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zeus Platform — Acesso</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #e8e8f0;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 16px;
+      padding: 48px 40px 40px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+    .logo h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: #f0f0ff;
+    }
+    .logo p {
+      font-size: 13px;
+      color: #6b6b8a;
+      margin-top: 4px;
+    }
+
+    /* Toggle tabs */
+    .tabs {
+      display: flex;
+      background: #0d0d16;
+      border: 1px solid #1e1e2e;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 0;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 7px;
+      cursor: pointer;
+      color: #5a5a7a;
+      transition: all .2s;
+      border: none;
+      background: transparent;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: #fff;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8080a0;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      background: #0d0d16;
+      border: 1px solid #1e1e2e;
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 15px;
+      color: #e8e8f0;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus { border-color: #6c63ff; }
+    .field input::placeholder { color: #3a3a52; }
+
+    /* Indicador força da senha */
+    .strength-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: #1e1e2e;
+      margin-top: 8px;
+      overflow: hidden;
+      display: none;
+    }
+    .strength-bar.show { display: block; }
+    .strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0%;
+      transition: width .3s, background .3s;
+    }
+    .strength-label {
+      font-size: 11px;
+      color: #5a5a7a;
+      margin-top: 4px;
+      display: none;
+    }
+    .strength-label.show { display: block; }
+
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .2s;
+    }
+    .btn:hover { opacity: .88; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .alert {
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert.error {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      color: #f87171;
+    }
+    .alert.success {
+      background: rgba(52,211,153,.1);
+      border: 1px solid rgba(52,211,153,.3);
+      color: #6ee7b7;
+    }
+
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">&#9889;</div>
+      <h1>Zeus Platform</h1>
+      <p>Acesso restrito</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+      <button class="tab" id="tab-register" onclick="switchTab('register')">Cadastrar</button>
+    </div>
+
+    <div class="alert error" id="err"></div>
+    <div class="alert success" id="suc"></div>
+
+    <!-- FORMULÁRIO LOGIN -->
+    <div class="form-section active" id="sec-login">
+      <form id="form-login">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="login-username" autocomplete="username" placeholder="seu usuário" autofocus/>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn" type="submit" id="btn-login">Entrar</button>
+      </form>
+    </div>
+
+    <!-- FORMULÁRIO CADASTRO -->
+    <div class="form-section" id="sec-register">
+      <form id="form-register">
+        <div class="field">
+          <label>Nome de usuário</label>
+          <input type="text" id="reg-username" autocomplete="username" placeholder="ex: jeff"/>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="reg-password" autocomplete="new-password" placeholder="mínimo 8 caracteres" oninput="checkStrength(this.value)"/>
+          <div class="strength-bar" id="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+          <div class="strength-label" id="strength-label"></div>
+        </div>
+        <div class="field">
+          <label>Confirmar senha</label>
+          <input type="password" id="reg-confirm" autocomplete="new-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn" type="submit" id="btn-register">Criar conta</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const errEl = document.getElementById('err');
+    const sucEl = document.getElementById('suc');
+
+    function showError(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add('show');
+      sucEl.classList.remove('show');
+    }
+    function showSuccess(msg) {
+      sucEl.textContent = msg;
+      sucEl.classList.add('show');
+      errEl.classList.remove('show');
+    }
+    function clearAlerts() {
+      errEl.classList.remove('show');
+      sucEl.classList.remove('show');
+    }
+
+    function switchTab(tab) {
+      clearAlerts();
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('sec-login').classList.toggle('active', tab === 'login');
+      document.getElementById('sec-register').classList.toggle('active', tab === 'register');
+      if (tab === 'login') document.getElementById('login-username').focus();
+      else document.getElementById('reg-username').focus();
+    }
+
+    function checkStrength(val) {
+      const bar = document.getElementById('strength-bar');
+      const fill = document.getElementById('strength-fill');
+      const label = document.getElementById('strength-label');
+      bar.classList.add('show');
+      label.classList.add('show');
+
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { pct: '20%', color: '#ef4444', text: 'Muito fraca' },
+        { pct: '40%', color: '#f97316', text: 'Fraca' },
+        { pct: '60%', color: '#eab308', text: 'Razoável' },
+        { pct: '80%', color: '#22c55e', text: 'Forte' },
+        { pct: '100%', color: '#10b981', text: 'Muito forte' },
+      ];
+      const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+      fill.style.width = lvl.pct;
+      fill.style.background = lvl.color;
+      label.textContent = lvl.text;
+      label.style.color = lvl.color;
+    }
+
+    // LOGIN
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlerts();
+      const btn = document.getElementById('btn-login');
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('login-username').value.trim(),
+            password: document.getElementById('login-password').value
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          window.location.href = '/';
+        } else {
+          showError(data.error || 'Erro ao entrar');
+        }
+      } catch {
+        showError('Erro de conexão');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      }
+    });
+
+    // CADASTRO
+    document.getElementById('form-register').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlerts();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm  = document.getElementById('reg-confirm').value;
+
+      if (!username) return showError('Informe um nome de usuário');
+      if (password.length < 8) return showError('Senha deve ter no mínimo 8 caracteres');
+      if (password !== confirm) return showError('As senhas não coincidem');
+
+      const btn = document.getElementById('btn-register');
+      btn.disabled = true;
+      btn.textContent = 'Criando conta...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showSuccess('Conta criada! Redirecionando...');
+          setTimeout(() => window.location.href = '/', 1200);
+        } else {
+          showError(data.error || 'Erro ao criar conta');
+        }
+      } catch {
+        showError('Erro de conexão');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Criar conta';
+      }
+    });
+
+    // Redireciona se já autenticado
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.authenticated) window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
