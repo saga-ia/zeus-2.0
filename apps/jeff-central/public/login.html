@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZEUS — Central</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:#F6F6F7;color:#17171A;font-family:'DM Sans',system-ui,sans-serif;font-size:14px}
+  *{box-sizing:border-box}
+  a{color:#A8620A;text-decoration:none}
+  a:hover{color:#C2760A}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font:inherit;color:#17171A;background:transparent;border:0;outline:none;width:100%}
+  input::placeholder{color:#8A8A93}
+  @keyframes zeusDrift{0%{transform:translate3d(0,0,0);opacity:.32}50%{transform:translate3d(-12px,-14px,0);opacity:.5}100%{transform:translate3d(10px,12px,0);opacity:.36}}
+  @keyframes zeusPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.9;transform:scale(1.04)}}
+  [data-hover]:hover{background:#F1F1F3}
+  [data-hover-border]:hover{border-color:#B4B4BC;background:#F1F1F3}
+  [data-hover-dark]:hover{background:#8F5208}
+  .cta:hover{background:#8F5208}
+  @media (max-width: 900px){
+    .layout{flex-direction:column}
+    .left-pane{min-height:auto;padding:32px !important}
+    .left-pane h1{font-size:28px !important}
+    .right-pane{border-left:0 !important;border-top:1px solid #E6E6EA}
+  }
+</style>
+</head>
+<body>
+
+<div class="layout" style="display:flex;min-height:100vh;background:#F6F6F7">
+
+  <div class="left-pane" style="position:relative;flex:1 1 54%;min-width:0;overflow:hidden;padding:56px 56px 44px;display:flex;flex-direction:column">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:flex-start;justify-content:flex-start;pointer-events:none;overflow:hidden">
+      <div id="ascii" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:13px;letter-spacing:2.5px;white-space:pre;color:#A8A8B2;animation:zeusDrift 16s ease-in-out infinite alternate"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:radial-gradient(760px 520px at 22% 34%, rgba(168,98,10,0.14), transparent 70%), linear-gradient(120deg, rgba(246,246,247,0.45) 20%, rgba(246,246,247,0.88) 78%);pointer-events:none"></div>
+
+    <div style="position:relative;display:flex;align-items:center;gap:11px">
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#A8620A,#8F5208);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+      </div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;letter-spacing:0.16em">ZEUS</div>
+    </div>
+
+    <div style="position:relative;margin-top:auto;max-width:520px">
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(168,98,10,0.3);border-radius:20px;background:rgba(168,98,10,0.08);font-size:11.5px;font-weight:700;letter-spacing:0.1em;color:#A8620A;margin-bottom:24px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#A8620A;animation:zeusPulse 2.4s ease-in-out infinite"></span>SISTEMA OPERACIONAL DE IA
+      </div>
+      <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.08;font-weight:600;letter-spacing:-0.02em;margin:0 0 18px">A operação inteira em um só lugar.</h1>
+      <p style="margin:0 0 34px;font-size:15px;line-height:1.7;color:#66666F;max-width:440px">Motores, agentes e dados da empresa conversando entre si. O ZEUS lê o contexto da sua operação e devolve a próxima ação.</p>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:rgba(168,98,10,0.14);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A8620A" stroke-width="2.6"><path d="M5 12l5 5 9-11"/></svg></span>
+          <span style="font-size:13.5px;color:#3C3C44">Motores de Vendas, Growth e Operações prontos para usar</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:rgba(168,98,10,0.14);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A8620A" stroke-width="2.6"><path d="M5 12l5 5 9-11"/></svg></span>
+          <span style="font-size:13.5px;color:#3C3C44">Agentes que executam no seu CRM e no seu calendário</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:rgba(168,98,10,0.14);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A8620A" stroke-width="2.6"><path d="M5 12l5 5 9-11"/></svg></span>
+          <span style="font-size:13.5px;color:#3C3C44">Conhecimento da empresa indexado e citado nas respostas</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative;margin-top:auto;padding-top:40px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-size:12px;color:#66666F">
+      <span>17 times operando no ZEUS</span>
+      <span>·</span>
+      <span>SOC 2 · LGPD</span>
+    </div>
+  </div>
+
+  <div class="right-pane" style="flex:1 1 46%;min-width:0;background:#FFFFFF;border-left:1px solid #E6E6EA;display:flex;align-items:center;justify-content:center;padding:48px 40px">
+    <div style="width:100%;max-width:400px">
+
+      <div style="display:flex;gap:4px;padding:4px;border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;margin-bottom:30px">
+        <span id="tab-login" style="flex:1;text-align:center;padding:9px 0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#E6E6EA;color:#17171A;border:1px solid #DADADF">Entrar</span>
+        <span id="tab-signup" style="flex:1;text-align:center;padding:9px 0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#66666F;border:1px solid transparent">Criar conta</span>
+      </div>
+
+      <h2 id="title" style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;margin:0 0 8px">Entrar no ZEUS</h2>
+      <p id="subtitle" style="margin:0 0 26px;font-size:13.5px;color:#66666F;line-height:1.6">Use o e-mail da empresa para acessar seu workspace e seus agentes.</p>
+
+      <div id="err-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(192,52,28,0.3);border-radius:11px;background:rgba(192,52,28,0.07);font-size:12.5px;color:#C0341C"></div>
+      <div id="invite-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(168,98,10,0.28);border-radius:11px;background:rgba(168,98,10,0.06);font-size:12.5px;color:#8F5208">Já existe um admin nesta central. Cadastros novos precisam de token de convite. Fale com o admin.</div>
+      <div id="first-admin-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(15,122,104,0.28);border-radius:11px;background:rgba(15,122,104,0.07);font-size:12.5px;color:#0F7A68">Você é o primeiro cadastro nesta central. Sua conta será criada como <strong>Admin</strong>.</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px">
+        <div data-hover-border style="display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border:1px solid #DADADF;border-radius:11px;font-size:13px;font-weight:500;cursor:pointer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+          Continuar com Google
+        </div>
+        <div data-hover-border style="display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border:1px solid #DADADF;border-radius:11px;font-size:13px;font-weight:500;cursor:pointer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 8l9 6 9-6"/></svg>
+          Continuar com e-mail corporativo
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
+        <span style="flex:1;height:1px;background:#E6E6EA"></span>
+        <span style="font-size:11px;letter-spacing:0.1em;color:#66666F">OU</span>
+        <span style="flex:1;height:1px;background:#E6E6EA"></span>
+      </div>
+
+      <form id="auth-form" method="POST" action="/api/login" style="display:flex;flex-direction:column;gap:16px">
+
+        <div id="signup-fields" style="display:none">
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:#66666F;margin-bottom:7px">Nome</div>
+              <div style="padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF"><input type="text" name="_name" placeholder="Jefferson" style="font-size:13.5px"></div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:#66666F;margin-bottom:7px">Empresa</div>
+              <div style="padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF"><input type="text" name="_company" placeholder="Alpha Digital" style="font-size:13.5px"></div>
+            </div>
+          </div>
+          <div id="invite-field" style="display:none">
+            <div style="font-size:12px;color:#66666F;margin-bottom:7px">Token de convite</div>
+            <div style="padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF"><input type="text" name="invite" placeholder="cole aqui o token recebido" style="font-size:13.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;color:#66666F;margin-bottom:7px">E-mail</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#66666F" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 8l9 6 9-6"/></svg>
+            <input type="email" name="_email" placeholder="voce@empresa.com" autocomplete="username" style="font-size:13.5px">
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+            <span style="font-size:12px;color:#66666F">Senha</span>
+            <a id="forgot" href="#recuperar" style="margin-left:auto;font-size:12px">Esqueci a senha</a>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#66666F" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <input id="pwd" type="password" name="password" placeholder="••••••••" autocomplete="current-password" autofocus required style="font-size:13.5px;letter-spacing:0.14em">
+            <svg id="toggle-pwd" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#66666F" stroke-width="1.7" style="cursor:pointer"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          </div>
+          <div id="pwd-strength" style="display:none;align-items:center;gap:8px;margin-top:10px">
+            <span style="flex:1;height:4px;border-radius:4px;background:#A8620A"></span>
+            <span style="flex:1;height:4px;border-radius:4px;background:#A8620A"></span>
+            <span style="flex:1;height:4px;border-radius:4px;background:#DADADF"></span>
+            <span style="font-size:11.5px;color:#66666F">Média</span>
+          </div>
+        </div>
+
+        <div id="signup-terms" style="display:none;align-items:flex-start;gap:11px">
+          <span style="width:16px;height:16px;flex:0 0 16px;margin-top:2px;border:1.5px solid #A8620A;border-radius:5px;background:rgba(168,98,10,0.16);display:flex;align-items:center;justify-content:center">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#A8620A" stroke-width="3"><path d="M5 12l5 5 9-11"/></svg>
+          </span>
+          <span style="font-size:12px;color:#66666F;line-height:1.55">Concordo com os <a href="#termos">Termos de uso</a> e a <a href="#privacidade">Política de privacidade</a>.</span>
+        </div>
+
+        <div id="login-remember" style="display:flex;align-items:center;gap:11px">
+          <span style="width:34px;height:19px;border-radius:20px;background:#A8620A;display:flex;align-items:center;padding:2px;justify-content:flex-end;cursor:pointer"><span style="width:15px;height:15px;border-radius:50%;background:#FFFFFF"></span></span>
+          <span style="font-size:12.5px;color:#66666F">Manter conectado neste dispositivo</span>
+        </div>
+
+        <button id="submit-btn" type="submit" class="cta" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:13px;border-radius:11px;background:#A8620A;color:#FFFFFF;font-size:13.5px;font-weight:700;cursor:pointer;border:0;transition:background .2s">
+          <span id="cta-text">Entrar</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+        </button>
+
+        <div style="text-align:center;font-size:12.5px;color:#66666F">
+          <span id="switch-text">Ainda não tem conta?</span>
+          <a id="switch-cta" href="#trocar" style="font-weight:600">Criar conta</a>
+        </div>
+      </form>
+
+      <div style="margin-top:30px;padding-top:22px;border-top:1px solid #E6E6EA;display:flex;align-items:center;gap:10px;font-size:11.5px;color:#66666F">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        Acesso protegido com verificação em duas etapas.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var mode = "login";
+
+  function asciiArt(){
+    var chars=[" "," ",".",".","+","+","=","=","#","%","@","@"];
+    var rows=[];
+    for(var y=0;y<78;y++){
+      var line="";
+      for(var x=0;x<180;x++){
+        var dx=(x-34)/32, dy=(y-34)/18;
+        var blob=1-Math.sqrt(dx*dx+dy*dy);
+        var wave=0.2*Math.sin(x/7+y/4)+0.16*Math.sin(x/21-y/6)+0.1*Math.sin(x/41+y/11);
+        var v=blob*0.9+wave+0.1;
+        var noise=((x*7+y*13)%11)/40;
+        var idx=Math.max(0,Math.min(chars.length-1,Math.round((v+noise)*(chars.length-1))));
+        line += v<-0.18 ? (noise>0.1?".":" ") : chars[idx];
+      }
+      rows.push(line);
+    }
+    return rows.join("\n");
+  }
+  document.getElementById("ascii").textContent = asciiArt();
+
+  var tabLogin = document.getElementById("tab-login");
+  var tabSignup = document.getElementById("tab-signup");
+  var title = document.getElementById("title");
+  var subtitle = document.getElementById("subtitle");
+  var ctaText = document.getElementById("cta-text");
+  var switchText = document.getElementById("switch-text");
+  var switchCta = document.getElementById("switch-cta");
+  var signupFields = document.getElementById("signup-fields");
+  var signupTerms = document.getElementById("signup-terms");
+  var loginRemember = document.getElementById("login-remember");
+  var pwdStrength = document.getElementById("pwd-strength");
+  var forgot = document.getElementById("forgot");
+  var errBox = document.getElementById("err-box");
+  var inviteBox = document.getElementById("invite-box");
+  var firstAdminBox = document.getElementById("first-admin-box");
+  var inviteField = document.getElementById("invite-field");
+  var form = document.getElementById("auth-form");
+
+  var hasAdmin = false;
+
+  function apply(){
+    var signup = mode === "signup";
+    tabLogin.style.background = signup ? "transparent" : "#E6E6EA";
+    tabLogin.style.color = signup ? "#66666F" : "#17171A";
+    tabLogin.style.borderColor = signup ? "transparent" : "#DADADF";
+    tabSignup.style.background = signup ? "#E6E6EA" : "transparent";
+    tabSignup.style.color = signup ? "#17171A" : "#66666F";
+    tabSignup.style.borderColor = signup ? "#DADADF" : "transparent";
+    title.textContent = signup ? "Criar sua conta" : "Entrar no ZEUS";
+    subtitle.textContent = signup
+      ? "Leva menos de um minuto. Depois o ZEUS lê o contexto da sua operação e monta o workspace."
+      : "Use o e-mail da empresa para acessar seu workspace e seus agentes.";
+    ctaText.textContent = signup ? "Criar conta" : "Entrar";
+    switchText.textContent = signup ? "Já tem conta?" : "Ainda não tem conta?";
+    switchCta.textContent = signup ? "Entrar" : "Criar conta";
+    signupFields.style.display = signup ? "block" : "none";
+    signupTerms.style.display = signup ? "flex" : "none";
+    loginRemember.style.display = signup ? "none" : "flex";
+    pwdStrength.style.display = signup ? "flex" : "none";
+    forgot.style.display = signup ? "none" : "inline";
+    firstAdminBox.style.display = (signup && !hasAdmin) ? "block" : "none";
+    inviteBox.style.display = (signup && hasAdmin) ? "block" : "none";
+    inviteField.style.display = (signup && hasAdmin) ? "block" : "none";
+    form.action = signup ? "/api/signup" : "/api/login";
+  }
+  function setMode(m){ mode = m; apply(); }
+
+  tabLogin.addEventListener("click", function(){ setMode("login"); });
+  tabSignup.addEventListener("click", function(){ setMode("signup"); });
+  switchCta.addEventListener("click", function(ev){ ev.preventDefault(); setMode(mode === "signup" ? "login" : "signup"); });
+
+  document.getElementById("toggle-pwd").addEventListener("click", function(){
+    var input = document.getElementById("pwd");
+    input.type = input.type === "password" ? "text" : "password";
+  });
+
+  var ERRORS = {
+    "1": "Credenciais inválidas. Tenta de novo.",
+    "missing": "Preenche e-mail e senha para continuar.",
+    "email": "E-mail com formato inválido.",
+    "weak": "Senha muito curta. Mínimo 8 caracteres.",
+    "invite": "Cadastro exige token de convite. Fale com o admin.",
+    "exists": "Já existe uma conta com esse e-mail. Use Entrar.",
+    "server": "Erro ao criar conta. Tente novamente em instantes."
+  };
+  var qs = new URLSearchParams(location.search);
+  var errCode = qs.get("error");
+  if(errCode){
+    errBox.textContent = ERRORS[errCode] || "Não foi possível continuar. Tenta de novo.";
+    errBox.style.display = "block";
+  }
+  if(qs.get("mode") === "signup") setMode("signup");
+
+  fetch("/api/signup/status").then(function(r){ return r.json(); }).then(function(d){
+    hasAdmin = !!d.hasAdmin;
+    apply();
+  }).catch(function(){});
+
+  apply();
+})();
+</script>
+</body>
+</html>
