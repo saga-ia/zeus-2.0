@@ -524,6 +524,14 @@ app.use('/api/agents', apiAuth, agents.router);
 const teams = require('./teams');
 app.use('/api/teams', apiAuth, teams.router);
 
+// PDI: planos de desenvolvimento individual, metas 70-20-10, check-ins e templates
+const pdi = require('./pdi');
+app.use('/api/pdi', apiAuth, pdi.router);
+
+// Configurações: dados da empresa, marca, preferências, pessoas, estrutura, liderança, permissões e consumo
+const config = require('./config');
+app.use('/api/config', apiAuth, config.router);
+
 app.listen(PORT, () => {
   console.log(`[jeff-central] up on :${PORT} (public: ${PUBLIC_HOST}, server ip: ${SERVER_IP || '?'})`);
 });

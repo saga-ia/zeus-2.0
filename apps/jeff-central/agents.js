@@ -136,6 +136,21 @@ async function extractText(filePath, originalname, mime) {
   return null; // imagem e outros: o agente abre o original com Read
 }
 
+// Governança definida em Configurações > Agentes (categorias próprias e avisos de assunto sensível)
+function agentesCfg() {
+  try {
+    const r = db.prepare(`SELECT data FROM config_kv WHERE section = 'agentes'`).get();
+    const j = r ? JSON.parse(r.data) : {};
+    return { categorias: Array.isArray(j.categorias) ? j.categorias : [], avisos: Array.isArray(j.avisos) ? j.avisos : [] };
+  } catch (_) { return { categorias: [], avisos: [] }; }
+}
+const ACAO_AVISO = {
+  avisar: 'responda normalmente, mas avise o usuário sobre o cuidado necessário com esse assunto',
+  recusar: 'não trate o assunto; explique com educação que ele não pode ser tratado aqui e oriente o próximo passo',
+  humano: 'não resolva sozinho; diga que o assunto precisa de uma pessoa responsável e peça para o usuário acionar o time',
+  registrar: 'responda normalmente e sinalize no fim da resposta: [assunto sensível registrado]',
+};
+
 // ─── Contexto do agente pro Claude ────────────────────────────────────────────
 // Gera o system prompt (anexado ao do Claude Code) com persona, habilidades e base de conhecimento.
 function buildAgentSystemPrompt(agentId) {
@@ -152,6 +167,12 @@ function buildAgentSystemPrompt(agentId) {
     GENERAL_RULES.forEach(l => out.push('- ' + l));
   }
   if (a.warn) { out.push(''); out.push('Aviso obrigatório quando o tema for sensível: ' + a.warn); }
+  const avisos = agentesCfg().avisos;
+  if (avisos.length) {
+    out.push('');
+    out.push('## Assuntos sensíveis (regra da empresa, vale para todos os agentes)');
+    avisos.forEach(v => out.push(`- Quando a conversa envolver "${v.assunto}": ${ACAO_AVISO[v.acao] || ACAO_AVISO.avisar}.${v.descricao ? ' Contexto: ' + v.descricao : ''}`));
+  }
 
   const skills = SKILLS.filter(s => a.skills.includes(s.id));
   if (skills.length) {
@@ -242,7 +263,8 @@ router.get('/', (_req, res) => {
   res.json({
     agents: stmt.list.all().map(shape),
     skills: SKILLS.map(({ id, name, group }) => ({ id, name, group })),
-    categories: ['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].map(c => ({ id: c, label: CATEGORY_LABEL[c] || c })),
+    categories: ['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].map(c => ({ id: c, label: CATEGORY_LABEL[c] || c }))
+      .concat(agentesCfg().categorias.filter(c => !['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].includes(c.name)).map(c => ({ id: c.name, label: c.name, custom: true }))),
   });
 });
 
@@ -250,6 +272,100 @@ router.get('/:id', (req, res) => {
   const a = getAgent(req.params.id);
   if (!a) return res.status(404).json({ error: 'agente não encontrado' });
   res.json({ agent: a });
+});
+
+// ─── Criar com ZEUS: conversa que monta o agente, e "Enriquecer" do prompt ────
+const CLAUDE_BIN = process.env.CLAUDE_BIN || '/root/.nvm/versions/node/v20.20.2/bin/claude';
+const ASSIST_DIR = path.join(DATA_DIR, 'assist-workdir');
+const ASSIST_NO_TOOLS = 'Bash Edit Write NotebookEdit WebFetch WebSearch Task Agent Read Glob Grep';
+if (!fs.existsSync(ASSIST_DIR)) fs.mkdirSync(ASSIST_DIR, { recursive: true });
+
+function claudeTexto(prompt, model) {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const p = spawn(CLAUDE_BIN, ['-p', '--output-format', 'text', '--model', model || 'sonnet', '--disallowedTools', ASSIST_NO_TOOLS],
+      { cwd: ASSIST_DIR, stdio: ['pipe', 'pipe', 'pipe'] });
+    let out = '', err = '';
+    const t = setTimeout(() => { try { p.kill('SIGTERM'); } catch (_) {} }, 150000);
+    p.stdout.on('data', d => { out += d; });
+    p.stderr.on('data', d => { err += d; });
+    p.on('close', code => { clearTimeout(t); if (!out.trim()) return reject(new Error(err.slice(-300) || 'claude saiu com código ' + code)); resolve(out); });
+    p.on('error', e => { clearTimeout(t); reject(e); });
+    p.stdin.on('error', () => {});
+    p.stdin.end(prompt);
+  });
+}
+function jsonDe(txt) {
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  if (a < 0 || b <= a) return null;
+  try { return JSON.parse(txt.slice(a, b + 1)); } catch { return null; }
+}
+
+router.post('/assist', async (req, res) => {
+  const b = req.body || {};
+  const draft = b.draft && typeof b.draft === 'object' ? b.draft : {};
+  const cats = ['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'];
+  try {
+    if (b.mode === 'enrich') {
+      const atual = String(draft.prompt || '').slice(0, 20000);
+      if (!atual.trim() && !String(draft.description || '').trim()) return res.status(400).json({ error: 'escreva um prompt ou um descritivo antes de enriquecer' });
+      const prompt = [
+        'Você melhora prompts de agentes de IA da plataforma ZEUS. Responda em PT-BR.',
+        `Agente: ${draft.name || '(sem nome)'} | Categoria: ${draft.category || 'Geral'} | Descritivo: ${draft.description || '-'}`,
+        '', '=== Prompt atual ===', atual || '(vazio: crie a partir do nome e do descritivo)', '=== Fim ===', '',
+        'Reescreva o prompt mantendo a intenção original e deixando-o completo e acionável. Estrutura, em segunda pessoa ("Você é..."):',
+        '1. Papel e objetivo  2. Público e contexto  3. Como trabalhar (passo a passo)  4. Formato das respostas  5. Regras e o que nunca fazer.',
+        'Não invente dados da empresa: onde faltar informação, deixe um marcador [preencher: ...]. Entre 250 e 800 palavras.',
+        'Não use ferramentas. Responda APENAS com JSON válido: {"prompt":"..."}',
+      ].join('\n');
+      const j = jsonDe(await claudeTexto(prompt, 'sonnet'));
+      if (!j || !j.prompt) throw new Error('resposta da IA fora do formato');
+      return res.json({ prompt: String(j.prompt).slice(0, 40000) });
+    }
+
+    // mode build: conversa → rascunho completo do agente
+    const msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-20)
+      .map(m => ({ role: m.role === 'zeus' ? 'zeus' : 'user', content: String(m.content || '').slice(0, 6000) }))
+      .filter(m => m.content.trim());
+    if (!msgs.some(m => m.role === 'user')) return res.status(400).json({ error: 'descreva o agente que você quer criar' });
+    const prompt = [
+      'Você é o ZEUS e ajuda o usuário a criar um agente de IA na plataforma ZEUS. Sempre em PT-BR, direto e amigável.',
+      '', 'Categorias válidas: ' + cats.join(', '),
+      'Habilidades disponíveis (use só estes ids):',
+      ...SKILLS.map(s => `- ${s.id}: ${s.name}`),
+      '', 'Rascunho atual do agente (JSON): ' + JSON.stringify({
+        name: draft.name || '', category: draft.category || 'Geral', description: draft.description || '',
+        prompt: String(draft.prompt || '').slice(0, 12000), icebreakers: draft.icebreakers || [], skills: draft.skills || [],
+      }),
+      '', '=== Conversa ===',
+      ...msgs.map(m => (m.role === 'user' ? 'USUÁRIO: ' : 'ZEUS: ') + m.content),
+      '=== Fim da conversa ===', '',
+      'Tarefa: crie ou atualize o agente com base na conversa (se o rascunho já existe, aplique só o que o usuário pediu e preserve o resto).',
+      '- name: curto e claro (até 60 caracteres).',
+      '- description: uma frase de até 140 caracteres, que aparece no card.',
+      '- prompt: completo, em segunda pessoa ("Você é..."), com papel, público, objetivo, como trabalhar passo a passo, formato das respostas e regras/limites. Entre 250 e 800 palavras. Não invente dados da empresa: use [preencher: ...] onde faltar.',
+      '- icebreakers: 4 perguntas curtas que um usuário faria a esse agente.',
+      '- skills: de 1 a 4 ids da lista acima que façam sentido.',
+      '- resposta: 1 a 3 frases ao usuário dizendo o que você montou. Se faltar algo importante, faça no máximo 2 perguntas objetivas no fim.',
+      'Não use ferramentas. Responda APENAS com JSON válido:',
+      '{"resposta":"...","agente":{"name":"...","category":"...","description":"...","prompt":"...","icebreakers":["..."],"skills":["..."]}}',
+    ].join('\n');
+    const j = jsonDe(await claudeTexto(prompt, 'sonnet'));
+    if (!j || !j.agente) throw new Error('resposta da IA fora do formato');
+    const a = j.agente;
+    const out = {
+      name: String(a.name || '').trim().slice(0, 120),
+      category: cats.includes(a.category) ? a.category : (draft.category || 'Geral'),
+      description: String(a.description || '').trim().slice(0, 500),
+      prompt: String(a.prompt || '').slice(0, 40000),
+      icebreakers: (Array.isArray(a.icebreakers) ? a.icebreakers : []).map(x => String(x).trim()).filter(Boolean).slice(0, 8),
+      skills: (Array.isArray(a.skills) ? a.skills : []).filter(id => SKILLS.some(s => s.id === id)),
+    };
+    res.json({ reply: String(j.resposta || 'Pronto, montei o agente. Revise na prévia ao lado.'), draft: out });
+  } catch (e) {
+    console.error('[agents] assist', e.message);
+    res.status(500).json({ error: 'não consegui gerar agora: ' + e.message });
+  }
 });
 
 router.post('/', (req, res) => {
