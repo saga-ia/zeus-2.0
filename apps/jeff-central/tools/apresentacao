@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// CLI do Criador de Apresentações: gera PDF/PPTX no Presenton (jeff-presenton, local) e devolve o link de download do chat.
+// CLI do Criador de Apresentações: gera PDF/PPTX no gerador local (jeff-presenton) e devolve o link de download do chat
+// e, quando o editor público está configurado (arquivo .public_url em jeff-presenton), o link pra editar a apresentação.
 // Uso: apresentacao gerar --arquivo slides.md [--formato pdf|pptx] [--template general] [--instrucoes "..."]
 const fs = require('fs');
 const path = require('path');
@@ -12,6 +13,8 @@ const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, '..', 'dat
 const UPLOADS_ROOT = path.join(DATA_DIR, 'uploads');
 const WORKDIR_ROOT = path.join(DATA_DIR, 'zeus-workdir');
 const PUBLIC_URL = (process.env.CENTRAL_PUBLIC_URL || 'https://central.jefersonhenrike.com').replace(/\/+$/, '');
+// Editor visual: endereço público do gerador (só existe depois que o subdomínio estiver no ar)
+function editorUrl() { try { return fs.readFileSync(path.join(PRESENTON_DIR, '.public_url'), 'utf8').trim().replace(/\/+$/, '') || null; } catch (_) { return null; } }
 const ESPERA_MS = 9 * 60 * 1000; // o Bash do agente corta em 10 min
 const LIMITE_MS = 40 * 60 * 1000;
 
@@ -22,13 +25,15 @@ for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--'
 const AJUDA = `Comandos:
   gerar --arquivo slides.md      gera a apresentação a partir do seu roteiro (recomendado). No arquivo, cada slide é um
                                  bloco em markdown e os slides são separados por uma linha contendo só ---
-  gerar --tema "..." --slides 8  deixa o Presenton criar o roteiro sozinho a partir de um tema
+  gerar --tema "..." --slides 8  deixa o gerador criar o roteiro sozinho a partir de um tema
     opções: --formato pdf|pptx (padrão pdf)   --template general (padrão)   --idioma "Portuguese (Brazil)"
             --instrucoes "orientações de layout, ex: use gráfico de barras no slide 3"
   aguardar ID                    continua esperando uma geração que ainda não terminou
   ajuda                          esta tela
 A geração leva de 3 a 10 minutos (cerca de 40s por slide). Avise o usuário antes de rodar.
-Ao terminar, o comando imprime LINK: copie esse link exatamente como veio, em formato markdown [Baixar apresentação](LINK).`;
+Ao terminar, o comando imprime LINK (download) e, se houver, EDITAR (editor visual, onde o usuário ajusta textos, cores e imagens).
+Entregue os dois em markdown, exatamente como vieram: [Baixar apresentação (PDF)](LINK) · [Editar apresentação](EDITAR).
+Nunca cite o nome do software gerador: pra quem usa, é "o gerador de apresentações do ZEUS".`;
 
 function sessao() {
   const cwd = process.cwd();
@@ -48,13 +53,46 @@ function post(body) {
       res.on('end', () => {
         let j = null; try { j = JSON.parse(buf); } catch (_) {}
         if (res.statusCode >= 200 && res.statusCode < 300 && j && j.path) return resolve(j);
-        reject(new Error(`Presenton respondeu ${res.statusCode}: ${buf.slice(0, 400)}`));
+        reject(new Error(`O gerador respondeu ${res.statusCode}: ${buf.slice(0, 400)}`));
       });
     });
     req.on('timeout', () => req.destroy(new Error('tempo limite de geração estourado')));
     req.on('error', reject);
     req.end(data);
   });
+}
+
+// Busca o título real da apresentação gerada (vai pro nome do arquivo e pros metadados do PDF)
+function tituloDa(id) {
+  return new Promise((resolve) => {
+    try {
+      const key = fs.readFileSync(path.join(PRESENTON_DIR, '.api_key'), 'utf8').trim();
+      const u = new URL(PRESENTON + '/api/v1/ppt/presentation/' + encodeURIComponent(id));
+      const req = http.request({ hostname: u.hostname, port: u.port || 80, path: u.pathname, method: 'GET', timeout: 15000, headers: { Authorization: 'Bearer ' + key } }, (res) => {
+        let buf = ''; res.on('data', d => { buf += d; });
+        res.on('end', () => { try { const j = JSON.parse(buf); resolve(String((j && (j.title || (j.presentation && j.presentation.title))) || '').replace(/\s+/g, ' ').trim()); } catch (_) { resolve(''); } });
+      });
+      req.on('error', () => resolve('')); req.on('timeout', () => { req.destroy(); resolve(''); }); req.end();
+    } catch (_) { resolve(''); }
+  });
+}
+// O PDF sai com o título do software no metadado /Title (é o que o navegador mostra na aba). Troca pelo título da
+// apresentação mantendo o mesmo tamanho em bytes, pra não mexer nos offsets do arquivo.
+function fixarTituloPdf(arquivo, titulo) {
+  try {
+    const buf = fs.readFileSync(arquivo);
+    const ini = buf.indexOf('/Title (');
+    if (ini < 0) return false;
+    const fim = buf.indexOf(')', ini + 8);
+    if (fim < 0) return false;
+    const tam = fim - (ini + 8);
+    let t = String(titulo || 'Apresentacao').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7E]/g, ' ').replace(/[()\\]/g, ' ').trim();
+    if (!t) return false;
+    t = t.length > tam ? t.slice(0, tam) : t.padEnd(tam, ' ');
+    buf.write(t, ini + 8, tam, 'latin1');
+    fs.writeFileSync(arquivo, buf);
+    return true;
+  } catch (_) { return false; }
 }
 
 // Roda destacado do agente: a geração pode passar do tempo máximo de um comando Bash
@@ -66,7 +104,8 @@ async function worker(id) {
     const origem = path.join(PRESENTON_DIR, r.path.replace(/^\/+/, '')); // /app_data/... é volume em jeff-presenton/app_data
     if (!fs.existsSync(origem)) throw new Error('arquivo gerado não encontrado em ' + origem);
     const ext = path.extname(origem) || '.' + job.body.export_as;
-    const base = (path.basename(origem, ext).replace(/_[0-9a-f-]{36}$/i, '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const titulo = await tituloDa(r.presentation_id);
+    const base = ((titulo || path.basename(origem, ext).replace(/_[0-9a-f-]{36}$/i, '')).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'apresentacao');
     const nome = `${base}-${id}${ext}`;
     let link, destino;
@@ -75,7 +114,10 @@ async function worker(id) {
       destino = path.join(dir, nome); link = `${PUBLIC_URL}/api/chat/file/${encodeURIComponent(job.sid)}/${encodeURIComponent(nome)}`;
     } else { destino = path.join(job.cwd, nome); link = destino; }
     fs.copyFileSync(origem, destino);
-    salvar({ status: 'ok', link, arquivo: destino, fim: Date.now() });
+    if (ext === '.pdf') fixarTituloPdf(destino, titulo || base.replace(/-/g, ' '));
+    const editor = editorUrl();
+    const editar = editor && r.edit_path ? editor + (r.edit_path.startsWith('/') ? '' : '/') + r.edit_path : null;
+    salvar({ status: 'ok', link, editar, titulo, presentation_id: r.presentation_id, arquivo: destino, fim: Date.now() });
   } catch (e) {
     salvar({ status: 'erro', erro: String(e.message || e).slice(0, 600), fim: Date.now() });
   }
@@ -88,8 +130,10 @@ async function aguardar(id) {
     if (!j) throw new Error(`geração ${id} não encontrada nesta conversa`);
     if (j.status === 'ok') {
       console.log(`Apresentação pronta em ${Math.round((j.fim - j.inicio) / 1000)}s.`);
+      if (j.titulo) console.log('TÍTULO: ' + j.titulo);
       console.log('LINK: ' + j.link);
-      console.log(`Entregue ao usuário assim: [Baixar apresentação (${String(j.body.export_as).toUpperCase()})](${j.link})`);
+      if (j.editar) console.log('EDITAR: ' + j.editar);
+      console.log(`Entregue ao usuário assim: [Baixar apresentação (${String(j.body.export_as).toUpperCase()})](${j.link})${j.editar ? ' · [Editar apresentação](' + j.editar + ')' : ''}`);
       return;
     }
     if (j.status === 'erro') throw new Error('a geração falhou: ' + j.erro);

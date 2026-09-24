@@ -106,16 +106,16 @@
     return `<div style="display:flex;align-items:center;gap:20px;padding:0 26px;border-bottom:1px solid #E6E6EA;background:#FFFFFF;flex-wrap:wrap;position:sticky;top:0;z-index:5">
       <span data-go="motores" style="display:flex;align-items:center;padding:16px 0;cursor:pointer">${icon(ICONS.arrowLeft, 17, CINZA)}</span>
       ${tab("Copiloto de Growth", ICONS.briefcase, true)}
-      ${tab("Estrategista de Growth IA", ICONS.agentes, false, 'data-gw-estrategista class="mv-tab"', `<span style="font-size:10.5px;font-weight:600;color:${VERDE};border:1px solid rgba(15,122,104,0.3);background:rgba(15,122,104,0.08);padding:2px 7px;border-radius:20px">Ativo</span>`)}
-      ${tab("Motor de Design", ICONS.bolt, false)}
     </div>`;
   }
   function barraPlataforma(g){
+    const vista = (k, ic, rot) => { const on = (g.view || "dash") === k; return `<span ${on ? "" : `data-gw-view="${k}" data-hover`} style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;cursor:pointer;${on ? `font-weight:600;background:rgba(103,61,230,0.12);color:${AMBAR}` : "color:#3C3C44"}">${icon(ic, 14, on ? AMBAR : "currentColor")}${rot}</span>`; };
     const p = (k, rot) => `<span data-gw-plat="${k}" style="padding:7px 16px;border-radius:7px;font-size:13px;cursor:pointer;${g.plat === k ? "font-weight:600;background:#FFFFFF;border:1px solid #E6E6EA" : `color:${CINZA};border:1px solid transparent`}">${rot}</span>`;
     return `<div style="display:flex;align-items:center;gap:16px;padding:14px 26px;border-bottom:1px solid #E6E6EA;flex-wrap:wrap">
       <div style="display:flex;gap:3px;background:rgba(103,61,230,0.06);border:1px solid rgba(103,61,230,0.14);border-radius:10px;padding:3px">${p("meta", "Meta")}${p("google", "Google")}${p("ambos", "Ambos")}</div>
       <div style="width:1px;height:26px;background:#E6E6EA"></div>
-      <span style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(103,61,230,0.12);color:${AMBAR}">${icon(ICONS.grid, 14)}Dashboard</span>
+      ${vista("dash", ICONS.grid, "Dashboard")}
+      ${vista("ia", ICONS.bolt, "Análise dos Anúncios IA")}
       <span data-gw-estrategista data-hover style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;color:#3C3C44;cursor:pointer">${icon(ICONS.agentes, 14)}Perguntar ao Estrategista</span>
     </div>`;
   }
@@ -229,7 +229,107 @@
       <div style="font-size:11.5px;color:#9A9AA3;margin-top:22px">Dados da Meta Marketing API, em cache por 10 minutos. Atualizado às ${new Date(d.gerado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}. Lead usa o total agregado da Meta, sem somar tipos que se sobrepõem.</div>`;
   }
 
-  function gwRenderDash(){
+  // ─── Análise dos Anúncios IA ───────────────────────────────────────────────
+  const IA_PERIODOS = [["7d","Últimos 7 dias"],["14d","Últimos 14 dias"],["30d","Últimos 30 dias"],["mes","Este mês"],["mes_passado","Mês passado"]];
+  const IA_ATALHOS = [["Top criativos", "Quais criativos estão performando melhor e por quê? O que devo escalar?"], ["Campanhas problemáticas", "Quais campanhas e anúncios estão queimando verba sem resultado? O que pausar?"], ["Onde escalar", "Onde vale colocar mais orçamento agora, com base no custo por resultado?"], ["Ângulos vencedores", "Quais ângulos e mensagens dos anúncios estão convertendo melhor? O que testar a seguir?"]];
+  const TIPO_ACAO = { pausar: ["Pausar", VERM], ativar: ["Ativar", VERDE], orcamento: ["Orçamento", AMBAR], manual: ["Manual", CINZA] };
+  const NIVEL = { campaign: "campanha", adset: "conjunto", ad: "anúncio" };
+  function ia(){ return gw().ia || {}; }
+  function iaSet(patch){ gwSet({ ia: Object.assign({}, ia(), patch) }); }
+  let _iaPoll = null;
+  async function iaAnalisar(){
+    const g = gw(), s = ia(); if(!g.contaId || s.rodando) return;
+    const q = (document.getElementById("gia-q") || {}).value; if(q != null) s.q = q;
+    iaSet({ rodando: true, fase: "coletando", erro: null, resultado: null, aplicadas: {} });
+    try {
+      const r = await fetch("/api/growth/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ account_id: g.contaId, preset: s.periodo || "7d", include_inactive: !!s.inativas, query: s.q || "" }) });
+      const j = await r.json(); if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
+      clearTimeout(_iaPoll);
+      const consultar = async () => {
+        try {
+          const rj = await fetch("/api/growth/analyze/" + encodeURIComponent(j.job)); const d = await rj.json();
+          if(!rj.ok) throw new Error(d.error || "HTTP " + rj.status);
+          if(d.status === "pronto") return iaSet({ rodando: false, resultado: d.resultado });
+          if(d.status === "erro") return iaSet({ rodando: false, erro: d.erro });
+          if(d.status !== ia().fase) iaSet({ fase: d.status });
+          _iaPoll = setTimeout(consultar, 3000);
+        } catch(err){ iaSet({ rodando: false, erro: err.message }); }
+      };
+      _iaPoll = setTimeout(consultar, 2500);
+    } catch(err){ iaSet({ rodando: false, erro: err.message }); }
+  }
+  async function iaAplicar(key, el){
+    const s = ia(), res = s.resultado; if(!res) return;
+    const a = res.acoes.find(x => x.key === key); if(!a || (s.aplicadas || {})[key]) return;
+    const oque = a.tipo === "orcamento" ? `Mudar o orçamento diário do ${NIVEL[a.nivel]} "${a.nome}" de ${fM(a.orcamento_atual)} para ${fM(a.novo_orcamento_diario)}?` : `${a.tipo === "pausar" ? "Pausar" : "Ativar"} o ${NIVEL[a.nivel]} "${a.nome}"?`;
+    if(!await zConfirm(oque + " Isso altera a conta " + res.conta.name + " na Meta agora.", { title: "Aplicar na conta de anúncios", ok: "Aplicar", danger: a.tipo === "pausar" })) return;
+    if(el){ el.style.opacity = ".6"; el.textContent = "Aplicando..."; }
+    try {
+      const r = await fetch("/api/growth/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ account_id: res.conta.id, action: a }) });
+      const j = await r.json(); if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
+      iaSet({ aplicadas: Object.assign({}, ia().aplicadas, { [key]: { ok: true, em: Date.now() } }) });
+    } catch(err){ iaSet({ aplicadas: Object.assign({}, ia().aplicadas, { [key]: { ok: false, erro: err.message } }) }); }
+  }
+  function iaVista(g){
+    const s = ia(), res = s.resultado;
+    const grupos = {}; (g.contas || []).forEach(a => { (grupos[a.group] = grupos[a.group] || []).push(a); });
+    const LBL = `display:block;font-size:10.5px;letter-spacing:0.12em;font-weight:700;color:${CINZA};margin-bottom:7px`;
+    const filtros = `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;padding:18px 20px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:end">
+        <label><span style="${LBL}">CONTA DE ANÚNCIOS</span><select data-gw-conta class="cat-select" style="width:100%">${Object.keys(grupos).map(k => `<optgroup label="${e(k)}">${grupos[k].map(a => `<option value="${e(a.id)}" ${a.id === g.contaId ? "selected" : ""}>${e(a.name)}${a.active ? "" : " (inativa)"}</option>`).join("")}</optgroup>`).join("")}</select></label>
+        <label><span style="${LBL}">PERÍODO</span><select data-gia-periodo class="cat-select" style="width:100%">${IA_PERIODOS.map(p => `<option value="${p[0]}" ${p[0] === (s.periodo || "7d") ? "selected" : ""}>${p[1]}</option>`).join("")}</select></label>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 0;font-size:13px;color:#3C3C44;cursor:pointer"><input data-gia-inativas type="checkbox" ${s.inativas ? "checked" : ""} style="accent-color:${AMBAR};width:16px;height:16px">Incluir campanhas e anúncios inativos</label>
+      </div></div>`;
+    const pergunta = `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;padding:18px 20px;margin-bottom:22px">
+      <div style="${HEAD};font-size:16px;font-weight:600;margin-bottom:4px">Pergunte para a IA</div>
+      <p style="margin:0 0 12px;font-size:12.5px;color:${CINZA}">Escreva ou grave o que quer saber. Sem pergunta, a IA faz o diagnóstico geral da conta e sugere ações.</p>
+      <textarea id="gia-q" data-gia-q rows="3" placeholder="Ex.: analise os criativos e me diga qual está performando melhor e por quê. Ou clique em Gravar." style="width:100%;padding:12px 14px;border:1px solid #DADADF;border-radius:11px;font:inherit;font-size:13.5px;resize:vertical;outline:none">${e(s.q || "")}</textarea>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px">
+        ${IA_ATALHOS.map(x => `<span data-gia-atalho="${e(x[1])}" data-hover-border style="padding:7px 12px;border:1px solid #DADADF;border-radius:20px;font-size:12px;color:#3C3C44;cursor:pointer;background:#FFFFFF">${e(x[0])}</span>`).join("")}
+        <span style="flex:1"></span>
+        <span data-gia-mic data-hover-border title="Gravar áudio e transcrever" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #DADADF;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:#FFFFFF">${icon(ICONS.mic || ICONS.chatBubble, 14, "currentColor")}Gravar</span>
+        <span data-gia-run ${s.rodando ? "" : "data-hover-dark"} style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:${AMBAR};color:#FFFFFF;font-size:13px;font-weight:700;cursor:${s.rodando ? "default" : "pointer"};opacity:${s.rodando ? 0.6 : 1}">${icon(ICONS.bolt, 14, "none", "#FFFFFF")}${s.rodando ? "Analisando..." : "Analisar"}</span>
+      </div></div>`;
+    let corpo = "";
+    if(s.rodando) corpo = `<div style="border:1px solid rgba(103,61,230,0.25);border-radius:14px;background:rgba(103,61,230,0.04);padding:34px;text-align:center"><span class="tm-pulse" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${AMBAR};margin-bottom:12px"></span><div style="font-size:14px;font-weight:600;margin-bottom:4px">${s.fase === "analisando" ? "A IA está analisando campanhas, conjuntos e anúncios..." : "Lendo campanhas, conjuntos e anúncios na Meta..."}</div><div style="font-size:12.5px;color:${CINZA}">Leva de 30 segundos a 2 minutos.</div></div>`;
+    else if(s.erro) corpo = `<div style="border:1px solid rgba(192,52,28,0.3);background:rgba(192,52,28,0.06);color:#96280F;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.55">${e(s.erro)}</div>`;
+    else if(res){
+      const trend = t => t === "up" ? `<span style="color:${VERDE}">▲</span>` : t === "down" ? `<span style="color:${VERM}">▼</span>` : "";
+      const lista = (itens, cor) => itens.length ? itens.map(v => `<div style="padding:10px 0;border-bottom:1px solid #F1F1F3"><div style="display:flex;gap:10px;align-items:baseline"><strong style="flex:1;min-width:0;font-size:13px;font-weight:600">${e(v.nome)}</strong>${v.metrica ? `<span style="font-size:11.5px;font-weight:600;color:${cor};white-space:nowrap">${e(v.metrica)}</span>` : ""}</div><div style="font-size:12.5px;color:#4A4A52;line-height:1.5;margin-top:3px">${e(v.por_que)}</div></div>`).join("") : `<div style="font-size:12.5px;color:${CINZA}">Nada a destacar.</div>`;
+      const prio = { alta: [VERM, "Alta"], media: [AMBAR, "Média"], baixa: [CINZA, "Baixa"] };
+      const acoes = res.acoes.map(a => {
+        const t = TIPO_ACAO[a.tipo] || TIPO_ACAO.manual, p = prio[a.prioridade] || prio.media, ap = (s.aplicadas || {})[a.key];
+        const alvo = a.nivel ? `${NIVEL[a.nivel]} <strong>${e(a.nome)}</strong>` : (a.nome ? `<strong>${e(a.nome)}</strong>` : "");
+        const detalhe = a.tipo === "orcamento" ? ` · ${fM(a.orcamento_atual)} → <strong>${fM(a.novo_orcamento_diario)}</strong>/dia` : "";
+        const botao = a.tipo === "manual" ? `<span style="font-size:11.5px;color:${CINZA};white-space:nowrap">Fazer no Gerenciador</span>`
+          : ap && ap.ok ? `<span style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:${VERDE};white-space:nowrap">${icon(ICONS.check, 13, VERDE)}Aplicado</span>`
+          : `<span data-gia-apply="${e(a.key)}" data-hover-dark style="padding:9px 16px;border-radius:9px;background:${AMBAR};color:#FFFFFF;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">Aplicar</span>`;
+        return `<div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid ${ap && ap.ok ? "rgba(15,122,104,0.35)" : "#E6E6EA"};border-radius:12px;background:${ap && ap.ok ? "rgba(15,122,104,0.04)" : "#FFFFFF"}">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10.5px;font-weight:700;color:${t[1]};background:${t[1]}14;border:1px solid ${t[1]}40;padding:2px 8px;border-radius:20px">${t[0]}</span><span style="font-size:10.5px;font-weight:700;color:${p[0]}">${p[1]}</span><span style="font-size:13px;color:#17171A">${alvo}${detalhe}</span></div>
+            <div style="font-size:12.5px;color:#4A4A52;line-height:1.55">${e(a.motivo)}</div>
+            ${a.impacto ? `<div style="font-size:12px;color:${CINZA};margin-top:4px">Impacto esperado: ${e(a.impacto)}</div>` : ""}
+            ${ap && !ap.ok ? `<div style="font-size:12px;color:${VERM};margin-top:6px">Não aplicou: ${e(ap.erro)}</div>` : ""}
+          </div>${botao}</div>`;
+      }).join("") || `<div style="font-size:13px;color:${CINZA}">A IA não sugeriu ações para este período.</div>`;
+      corpo = `<div style="border:1px solid rgba(103,61,230,0.3);border-radius:14px;background:rgba(103,61,230,0.05);padding:18px 20px;margin-bottom:16px">
+          <div style="font-size:10.5px;letter-spacing:0.14em;font-weight:700;color:${AMBAR};margin-bottom:6px">${e(res.conta.name)} · ${e(res.periodo.label)}</div>
+          <div style="${HEAD};font-size:19px;font-weight:600;line-height:1.35;margin-bottom:8px">${e(res.headline)}</div>
+          <div style="font-size:13.5px;color:#3C3C44;line-height:1.65">${e(res.resumo)}</div></div>
+        ${res.kpis.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">${res.kpis.map(k => `<div style="border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;padding:14px 16px"><div style="font-size:12px;color:${CINZA};margin-bottom:6px">${e(k.label)}</div><div style="${HEAD};font-size:20px;font-weight:600">${e(k.value)} ${trend(k.trend)}</div></div>`).join("")}</div>` : ""}
+        ${secao("Ações recomendadas", "Aplique direto na conta. Cada ação pede confirmação antes de mudar a Meta.")}
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:26px">${acoes}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+          ${card("O que está funcionando", lista(res.vencedores, VERDE))}
+          ${card("O que não está funcionando", lista(res.perdedores, VERM))}
+        </div>`;
+    }
+    return `<div style="padding:26px 30px 60px;max-width:1240px">
+      <div style="margin-bottom:18px"><h1 style="${HEAD};font-size:22px;font-weight:600;margin:0 0 5px">Análise dos Anúncios IA</h1><p style="margin:0;color:${CINZA};font-size:13px">Escolha a conta e o período. A IA lê campanhas, conjuntos e anúncios, dá o diagnóstico e sugere ações para aplicar na conta.</p></div>
+      ${filtros}${pergunta}${corpo}</div>`;
+  }
+
+  function gwRenderDash(embed){
     const g = gw();
     if(!g.contas && !_carregando) setTimeout(carregarContas, 0);
     const carregandoTxt = msg => `<div style="padding:60px 0;text-align:center;color:${CINZA};font-size:13px">${e(msg)}</div>`;
@@ -241,8 +341,11 @@
     else if(!g.data) corpo = carregandoTxt("Buscando os números na Meta...");
     else corpo = (g.plat === "ambos" ? googleVazio(g, true) : "") + (g.erro ? `<div style="border:1px solid rgba(192,52,28,0.3);background:rgba(192,52,28,0.06);color:#96280F;border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:20px">${e(g.erro)}</div>` : "") + `<div style="opacity:${g.carregando ? 0.45 : 1};transition:opacity .2s">${corpoMeta(g)}</div>`;
 
-    return `<div>${barraTopo()}${barraPlataforma(g)}
-      <div style="padding:26px 30px 60px;max-width:1240px">
+    const barras = embed ? "" : barraTopo() + barraPlataforma(g);
+    const seletorPlat = "";
+    if(g.view === "ia") return `<div id="${embed ? "gw-embed" : ""}">${barras}${g.contas && g.contas.length ? iaVista(g) : `<div style="padding:26px 30px">${corpo}</div>`}</div>`;
+    return `<div id="${embed ? "gw-embed" : ""}">${barras}${seletorPlat}
+      <div style="padding:${seletorPlat ? "18px" : "26px"} 30px 60px;max-width:1240px">
         <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid #E6E6EA;margin-bottom:22px">
           <div style="flex:1;min-width:240px"><h1 style="${HEAD};font-size:22px;font-weight:600;margin:0 0 5px">Visão de performance</h1><p style="margin:0;color:${CINZA};font-size:13px">Entrega, leads e vendas das contas de anúncio conectadas.</p></div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${g.contas && g.contas.length && g.plat !== "google" ? seletores(g) : ""}</div>
@@ -254,21 +357,53 @@
 
   // ─── ligações ──────────────────────────────────────────────────────────────
   function gwAttach(){
-    if(state.screen !== "growthDash" && state.screen !== "growthAgente") return;
+    if(state.screen !== "growthDash" && state.screen !== "growthAgente" && !document.getElementById("gw-embed")) return;
     const root = document;
     root.querySelectorAll("[data-gw-conta]").forEach(el => bindOnce(el, "change", () => { lsSet("gw_conta", el.value); state.growth = Object.assign({}, gw(), { contaId: el.value }); carregarDash(false); }));
     root.querySelectorAll("[data-gw-periodo]").forEach(el => bindOnce(el, "change", () => { lsSet("gw_periodo", el.value); state.growth = Object.assign({}, gw(), { periodo: el.value }); carregarDash(false); }));
     root.querySelectorAll("[data-gw-sync]").forEach(el => bindOnce(el, "click", () => { if(!gw().carregando) carregarDash(true); }));
     root.querySelectorAll("[data-gw-plat]").forEach(el => bindOnce(el, "click", () => gwSet({ plat: el.dataset.gwPlat })));
     root.querySelectorAll("[data-gw-obj]").forEach(el => bindOnce(el, "click", () => gwSet({ objetivo: el.dataset.gwObj })));
-    root.querySelectorAll("[data-gw-estrategista]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); setState({ screen: "agente", agentId: "estrategista-growth", editAgentId: null }); }));
+    root.querySelectorAll("[data-gw-view]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); gwSet({ view: el.dataset.gwView }); }));
+    root.querySelectorAll("[data-gia-periodo]").forEach(el => bindOnce(el, "change", () => { state.growth = Object.assign({}, gw(), { ia: Object.assign({}, ia(), { periodo: el.value }) }); }));
+    root.querySelectorAll("[data-gia-inativas]").forEach(el => bindOnce(el, "change", () => { state.growth = Object.assign({}, gw(), { ia: Object.assign({}, ia(), { inativas: el.checked }) }); }));
+    root.querySelectorAll("[data-gia-q]").forEach(el => bindOnce(el, "input", () => { ia().q = el.value; }));
+    root.querySelectorAll("[data-gia-atalho]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const t = document.getElementById("gia-q"); if(t){ t.value = el.dataset.giaAtalho; ia().q = t.value; t.focus(); } }));
+    root.querySelectorAll("[data-gia-mic]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); if(typeof micGravar === "function") micGravar(el, "gia-q"); }));
+    root.querySelectorAll("[data-gia-run]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); iaAnalisar(); }));
+    root.querySelectorAll("[data-gia-apply]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); iaAplicar(el.dataset.giaApply, el); }));
+    root.querySelectorAll("[data-gw-estrategista]").forEach(el => bindOnce(el, "click", ev => {
+      ev.stopPropagation();
+      const a = state.agentDetail;
+      if(state.screen === "agente" && a && a.id === "estrategista-growth" && typeof agPanelApply === "function"){ _agPanelTab[a.id] = "chat"; agPanelApply(a); return; }
+      abrirEstrategista("chat"); render();
+    }));
   }
   const _attachBase = attach;
   attach = function(){ _attachBase.apply(this, arguments); gwAttach(); };
 
-  RENDERERS.growthDash = gwRenderDash;
+  // Uma tela só: o Motor de Growth abre o Estrategista, com as telas do Copiloto nas abas dele
+  function abrirEstrategista(aba){
+    setTimeout(() => { try { _agPanelTab["estrategista-growth"] = aba; } catch(err){} setState({ screen: "agente", agentId: "estrategista-growth", editAgentId: null }); }, 0);
+    return `<div style="padding:40px;color:${CINZA}">Abrindo o Estrategista de Growth IA...</div>`;
+  }
+  RENDERERS.growthDash = () => abrirEstrategista(gw().view === "ia" ? "ia" : "dash");
+  // Abas do Estrategista de Growth (página do agente): mesma tela, sem as barras do Motor, com a visão da aba
+  // Seletor Meta | Google | Ambos na barra do Estrategista (só com o Dashboard aberto)
+  window.agNativeTabsExtra = function(tab){
+    if(tab.screen !== "growth" || tab.view === "ia") return "";
+    const g = gw();
+    return `<span style="display:inline-flex;gap:3px;padding:3px;background:#F3F4F6;border:1px solid #E3E5E9;border-radius:12px">${[["meta", "Meta"], ["google", "Google"], ["ambos", "Ambos"]].map(([k, rot]) => { const on = (g.plat || "meta") === k; return `<span ${on ? "" : `data-gw-plat="${k}"`} style="padding:6px 18px;border-radius:9px;font-size:13px;font-weight:600;white-space:nowrap;cursor:${on ? "default" : "pointer"};${on ? "background:#FFFFFF;color:#14807F;box-shadow:0 1px 3px rgba(23,23,26,0.12)" : "color:#4A4A52"}">${rot}</span>`; }).join("")}</span>`;
+  };
+  window.agNativePanel = function(tab){
+    if(tab.screen !== "growth") return "";
+    if(!state.growth) state.growth = {};
+    state.growth.view = tab.view || "dash";
+    if(tab.plat) state.growth.plat = tab.plat;
+    return gwRenderDash(true);
+  };
   // a antiga tela "Agente" do Copiloto era uma conversa de maquete: agora leva ao Estrategista de verdade
-  RENDERERS.growthAgente = function(){ setTimeout(() => setState({ screen: "agente", agentId: "estrategista-growth", editAgentId: null }), 0); return `<div style="padding:40px;color:${CINZA}">Abrindo o Estrategista de Growth IA...</div>`; };
+  RENDERERS.growthAgente = () => abrirEstrategista("chat");
   // o render() do SPA só repinta quando o estado muda: trocar a referência de state.growth força a tela nova
   if(state.screen === "growthDash" || state.screen === "growthAgente"){ state.growth = {}; render(); }
 })();

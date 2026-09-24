@@ -85,10 +85,50 @@ const parseJSON = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { retu
 const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'agente';
 
+// ─── Compartilhamento: com quem cada agente aparece ───────────────────────────
+// modo 'todos' (padrão): todo mundo da conta vê na lista. 'link': não aparece na lista, abre pelo link.
+// 'pessoas': só as pessoas escolhidas (org_members, casadas pelo e-mail de login). Administradores veem tudo.
+db.exec(`CREATE TABLE IF NOT EXISTS agent_shares (agent_id TEXT PRIMARY KEY, mode TEXT NOT NULL DEFAULT 'todos', users TEXT NOT NULL DEFAULT '[]', updated_at INTEGER NOT NULL)`);
+const shareStmt = {
+  get: db.prepare('SELECT * FROM agent_shares WHERE agent_id = ?'),
+  all: db.prepare('SELECT * FROM agent_shares'),
+  up: db.prepare(`INSERT INTO agent_shares (agent_id, mode, users, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(agent_id) DO UPDATE SET mode = excluded.mode, users = excluded.users, updated_at = excluded.updated_at`),
+  pessoas: db.prepare(`SELECT id, name, email, role, status FROM org_members WHERE status != 'inativo' ORDER BY name`),
+};
+const SHARE_MODES = ['todos', 'link', 'pessoas'];
+function shareGet(agentId) {
+  const r = shareStmt.get.get(agentId);
+  return { mode: r && SHARE_MODES.includes(r.mode) ? r.mode : 'todos', users: r ? parseJSON(r.users, []) : [] };
+}
+function sharePessoas() { try { return shareStmt.pessoas.all(); } catch (_) { return []; } }
+function shareSet(agentId, mode, users) {
+  mode = SHARE_MODES.includes(mode) ? mode : 'todos';
+  const validos = new Set(sharePessoas().map(p => p.id));
+  const lista = Array.isArray(users) ? users.map(String).filter(u => validos.has(u)) : [];
+  shareStmt.up.run(agentId, mode, JSON.stringify(lista), Date.now());
+  return shareGet(agentId);
+}
+// user vem de req.user ({ email, role, admin }). Sem usuário (chamada interna) = acesso liberado.
+function canAccess(agentId, user) {
+  if (!user || user.admin) return true;
+  const sh = shareGet(agentId);
+  if (sh.mode !== 'pessoas') return true;
+  if (!user.email) return false;
+  const emails = new Set(sharePessoas().filter(p => sh.users.includes(p.id)).map(p => String(p.email || '').toLowerCase()));
+  return emails.has(String(user.email).toLowerCase());
+}
+function visibleInList(agentId, user) {
+  if (!user || user.admin) return true;
+  const sh = shareGet(agentId);
+  if (sh.mode === 'link') return false;
+  return canAccess(agentId, user);
+}
+
 function shape(a) {
   if (!a) return null;
   return {
     id: a.id,
+    share: shareGet(a.id).mode,
     name: a.name,
     category: a.category || 'Geral',
     categoryLabel: CATEGORY_LABEL[a.category] || a.category || 'Geral',
@@ -268,9 +308,9 @@ function cleanInput(b, forCreate) {
   return o;
 }
 
-router.get('/', (_req, res) => {
+router.get('/', (req, res) => {
   res.json({
-    agents: stmt.list.all().map(shape),
+    agents: stmt.list.all().map(shape).filter(a => visibleInList(a.id, req.user)),
     skills: skillsMod.all().map(({ id, name, group, kind, desc, slug, origem }) => ({ id, name, group, kind: kind || 'regra', desc: desc || '', slug: slug || '', origem: origem || '' })),
     categories: ['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].map(c => ({ id: c, label: CATEGORY_LABEL[c] || c }))
       .concat(agentesCfg().categorias.filter(c => !['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].includes(c.name)).map(c => ({ id: c.name, label: c.name, custom: true }))),
@@ -280,7 +320,18 @@ router.get('/', (_req, res) => {
 router.get('/:id', (req, res) => {
   const a = getAgent(req.params.id);
   if (!a) return res.status(404).json({ error: 'agente não encontrado' });
+  if (!canAccess(a.id, req.user)) return res.status(403).json({ error: 'Este agente foi compartilhado só com pessoas específicas. Peça acesso a quem criou.' });
   res.json({ agent: a });
+});
+router.get('/:id/share', (req, res) => {
+  if (!getAgent(req.params.id)) return res.status(404).json({ error: 'agente não encontrado' });
+  res.json(Object.assign(shareGet(req.params.id), { pessoas: sharePessoas() }));
+});
+router.put('/:id/share', express.json(), (req, res) => {
+  if (!getAgent(req.params.id)) return res.status(404).json({ error: 'agente não encontrado' });
+  const b = req.body || {};
+  if (b.mode === 'pessoas' && !(Array.isArray(b.users) && b.users.length)) return res.status(400).json({ error: 'escolha pelo menos uma pessoa' });
+  res.json(Object.assign(shareSet(req.params.id, b.mode, b.users), { pessoas: sharePessoas() }));
 });
 
 // ─── Criar com ZEUS: conversa que monta o agente, e "Enriquecer" do prompt ────
@@ -450,4 +501,4 @@ router.delete('/:id/files/:fid', (req, res) => {
   res.json({ ok: true, agent: getAgent(req.params.id) });
 });
 
-module.exports = { router, getAgent, buildAgentSystemPrompt, extractText };
+module.exports = { router, getAgent, buildAgentSystemPrompt, extractText, canAccess, shareGet };

@@ -110,6 +110,7 @@
       </div>
 
       <form id="auth-form" method="POST" action="/api/login" style="display:flex;flex-direction:column;gap:16px">
+        <input type="hidden" name="next" id="next-input" value="">
 
         <div id="signup-fields" style="display:none">
           <div style="display:flex;gap:12px;margin-bottom:16px">
@@ -187,6 +188,8 @@
 </div>
 
 <script>
+  // Volta pra tela de onde a pessoa caiu (ex.: /rotinas) depois de entrar
+  try { const nx = new URLSearchParams(location.search).get("next"); if(nx && /^\/(?!\/)/.test(nx)) document.getElementById("next-input").value = nx; } catch(e){}
 (function(){
   var mode = "login";
 

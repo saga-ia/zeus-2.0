@@ -1,4 +1,4 @@
-// Motor de Growth: camada de dados de mídia paga (só leitura).
+// Motor de Growth: camada de dados de mídia paga (leitura; a escrita das ações fica em growth-ia.js).
 // Une as duas fontes que já existiam em sites separados:
 //   - tokens do worker (app_settings.jeff_meta_user_token / system_token) → contas do ads.propostaebcmkt2026.shop
 //   - clientes do metadash (data/clients.json, cada um com token próprio)  → contas do metadash.jefersonhenrike.com
@@ -181,4 +181,4 @@ function googleStatus() {
   return { conectado: !falta.length, falta };
 }
 
-module.exports = { listAccounts, metaDashboard, googleStatus, resolveRange };
+module.exports = { listAccounts, metaDashboard, googleStatus, resolveRange, tokenFor, graph, graphAll, metrics, actId, GRAPH };

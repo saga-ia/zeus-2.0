@@ -421,6 +421,7 @@ router.post('/sessions', express.json(), (req, res) => {
   const title = (req.body && req.body.title) || 'Nova conversa';
   const agentId = (req.body && req.body.agent_id) ? String(req.body.agent_id) : null;
   if (agentId && !agents.getAgent(agentId)) return res.status(404).json({ error: 'agente não encontrado' });
+  if (agentId && !agents.canAccess(agentId, req.user)) return res.status(403).json({ error: 'sem acesso a este agente' });
   const context = (req.body && req.body.context === 'assistente') ? 'assistente' : null;
   stmt.sessIns.run(id, title, now, now, agentId, context);
   pruneSessions(agentId);

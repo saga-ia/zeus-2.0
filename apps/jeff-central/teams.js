@@ -116,6 +116,8 @@ const stmt = {
 db.prepare(`UPDATE team_steps SET status = 'error', content = COALESCE(content, '') || '\n\n[interrompido: o servidor reiniciou durante a execução]', finished_at = ?
   WHERE status IN ('running', 'pending')`).run(Date.now());
 db.prepare(`UPDATE team_runs SET status = 'idle' WHERE status = 'running'`).run();
+// Passos que ficaram no meio quando o app reiniciou: marca como cancelados pra tela não ficar girando
+db.prepare(`UPDATE team_steps SET status = 'canceled' WHERE status IN ('running', 'pending')`).run();
 
 const newId = () => crypto.randomBytes(9).toString('base64url');
 const parseJSON = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
@@ -195,7 +197,7 @@ function validate(o) {
 // ─── Seed: uma equipe de exemplo com Agentes ZEUS de marketing ───────────────
 (function seed() {
   if (db.prepare(`SELECT COUNT(*) AS n FROM teams`).get().n) return;
-  const ids = ['estrategista-campanhas', 'copywriter-briefings', 'copywriter-crm', 'conteudo-social', 'analista-trafego']
+  const ids = ['copywriter-briefings', 'copywriter-crm', 'conteudo-social', 'analista-trafego']
     .filter(id => agents.getAgent(id));
   if (ids.length < MIN_AGENTS) return;
   stmt.ins.run({
@@ -223,13 +225,132 @@ function emit(rid, ev, data) {
   for (const r of b) { try { r.write(payload); } catch (_) {} }
 }
 function stepOut(s) {
-  return { id: s.id, turn: s.turn, seq: s.seq, kind: s.kind, agentId: s.agent_id, agentName: s.agent_name,
+  const o = { id: s.id, turn: s.turn, seq: s.seq, kind: s.kind, agentId: s.agent_id, agentName: s.agent_name,
     stage: s.stage, task: s.task, content: s.content || '', status: s.status, createdAt: s.created_at, finishedAt: s.finished_at };
+  if (s.kind === 'final' && !s.task) {
+    o.reviews = reviewStmt.list.all(s.id).map(r => ({ idx: r.idx, title: r.title, status: r.status, note: r.note || '' }));
+    const pl = reviewStmt.planGet.get(s.id);
+    if (pl) o.plan = { okrId: pl.okr_id, okrTitle: pl.okr_title, tasks: pl.tasks, createdAt: pl.created_at };
+  }
+  return o;
+}
+
+// ─── Aprovação por partes da entrega consolidada ─────────────────────────────
+db.exec(`
+CREATE TABLE IF NOT EXISTS team_reviews (step_id TEXT NOT NULL, idx INTEGER NOT NULL, title TEXT, status TEXT NOT NULL DEFAULT 'pendente', note TEXT, updated_at INTEGER NOT NULL, PRIMARY KEY (step_id, idx));
+CREATE TABLE IF NOT EXISTS team_plans (step_id TEXT PRIMARY KEY, okr_id TEXT, okr_title TEXT, tasks INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);
+`);
+const reviewStmt = {
+  list: db.prepare(`SELECT * FROM team_reviews WHERE step_id = ? ORDER BY idx`),
+  up: db.prepare(`INSERT INTO team_reviews (step_id, idx, title, status, note, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(step_id, idx) DO UPDATE SET title = excluded.title, status = excluded.status, note = excluded.note, updated_at = excluded.updated_at`),
+  planGet: db.prepare(`SELECT * FROM team_plans WHERE step_id = ?`),
+  planUp: db.prepare(`INSERT INTO team_plans (step_id, okr_id, okr_title, tasks, created_at) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(step_id) DO UPDATE SET okr_id = excluded.okr_id, okr_title = excluded.okr_title, tasks = excluded.tasks, created_at = excluded.created_at`),
+};
+const REVIEW_STATUS = ['pendente', 'aprovado', 'descartado'];
+// Divide a entrega nas seções "## " (ignora o que estiver dentro de bloco de código). A mesma regra roda na tela.
+function splitParts(md) {
+  const lines = String(md || '').split('\n');
+  const pre = [], parts = [];
+  let fence = false, cur = null;
+  lines.forEach(l => {
+    if (/^\s*```/.test(l)) fence = !fence;
+    const m = !fence && /^## +(.+?)\s*$/.exec(l);
+    if (m) { cur = { title: m[1].replace(/[*_`]/g, '').trim(), lines: [l] }; parts.push(cur); }
+    else (cur ? cur.lines : pre).push(l);
+  });
+  return { pre: pre.join('\n'), parts: parts.map(p => ({ title: p.title, body: p.lines.join('\n') })) };
+}
+function joinParts(sp) {
+  return [sp.pre].concat(sp.parts.map(p => p.body)).filter(x => x !== '').join('\n');
+}
+function finalStepOf(runId, stepId) {
+  const s = stmt.stepGet.get(stepId);
+  return s && s.run_id === runId && s.kind === 'final' && !s.task && s.status === 'done' ? s : null;
+}
+
+// Refaz só uma parte da entrega, com o pedido de ajuste do usuário
+async function revisePart(runId, stepId, idx, note) {
+  const run = stmt.runGet.get(runId);
+  const team = getTeam(run.team_id);
+  const ctl = { procs: new Set(), canceled: false };
+  active.set(runId, ctl);
+  const turn = stmt.maxTurn.get(runId).t + 1;
+  const setRun = (st) => { stmt.runStatus.run(st, Date.now(), runId); emit(runId, 'run', { id: runId, status: st }); };
+  let seq = 0;
+  try {
+    setRun('running');
+    const orig = stmt.stepGet.get(stepId);
+    const sp = splitParts(orig.content);
+    const parte = sp.parts[idx];
+    addStep(runId, turn, seq++, 'user', { content: `Ajustar a parte "${parte.title}": ${note}`, status: 'done' });
+    const replyId = addStep(runId, turn, seq++, 'final', { agent_name: 'Orquestrador', status: 'running', task: 'responder' });
+    const prompt = [
+      '=== Entrega atual da equipe ===', cut(orig.content, 60000), '=== Fim da entrega ===', '',
+      `O usuário pediu ajuste SOMENTE na parte "## ${parte.title}".`,
+      'Pedido de ajuste: ' + note, '',
+      `Reescreva apenas essa parte aplicando o pedido, mantendo coerência com o resto da entrega. Responda só com a seção revisada, começando exatamente com a linha "## ${parte.title}". Não inclua outras seções, comentários nem ferramentas.`,
+    ].join('\n');
+    const pump = tokenPump(runId, replyId);
+    const r = await runClaude(runId, prompt, { system: orchestratorSystem(team), model: team.model || '', noTools: true }, t => pump.push(t));
+    pump.end();
+    if (r.canceled) { finishStep(runId, replyId, r.text || '', 'canceled'); return; }
+    if (r.error && !r.text) { finishStep(runId, replyId, '[o ajuste falhou: ' + r.error + ']', 'error'); return; }
+    let novo = String(r.text || '').trim();
+    const i = novo.search(/^## /m);
+    novo = i >= 0 ? novo.slice(i) : `## ${parte.title}\n\n${novo}`;
+    // Garante uma seção só (se o modelo mandar mais de uma, fica com a primeira)
+    const so = splitParts(novo).parts[0];
+    sp.parts[idx] = { title: so ? so.title : parte.title, body: so ? so.body.trim() + '\n' : novo };
+    finishStep(runId, stepId, joinParts(sp), 'done');
+    reviewStmt.up.run(stepId, idx, sp.parts[idx].title, 'pendente', note.slice(0, 2000), Date.now());
+    emitStep(runId, stepId);
+    finishStep(runId, replyId, `Parte **${sp.parts[idx].title}** refeita com o seu ajuste. A entrega acima já está atualizada; revise e aprove.`, 'done');
+  } catch (e) {
+    addStep(runId, turn, seq++, 'error', { agent_name: 'Orquestrador', content: e.message, status: 'error' });
+  } finally {
+    setRun('idle');
+    active.delete(runId);
+    emit(runId, 'end', { id: runId });
+  }
+}
+
+const PLAN_OWNER = process.env.PDI_ME || 'Vinícius Nunes';
+const PLAN_UNITS = ['%', 'R$', 'número', 'pp', 'dias', 'pontos', 'un'];
+function planPrompt(request, aprovadas) {
+  return [
+    '=== Pedido original ===', request || '', '',
+    '=== Partes da entrega aprovadas pelo usuário ===',
+    ...aprovadas.map(p => cut(p.body, 12000)), '=== Fim ===', '',
+    'Transforme as partes aprovadas num plano de execução para a plataforma. Responda SOMENTE com um JSON válido, sem texto antes ou depois, neste formato:',
+    '{"objetivo":{"titulo":"objetivo qualitativo e inspirador, até 90 caracteres","descricao":"1 a 2 frases do porquê","krs":[{"titulo":"resultado-chave mensurável","de":0,"para":500,"unidade":"número"}]},"atividades":[{"titulo":"verbo no infinitivo + entrega concreta","descricao":"o que fazer e critério de pronto, em 1 a 3 frases","prazo_dias":3}]}',
+    'Regras: 2 a 4 KRs com números tirados da entrega (metas, volumes, taxas); unidade é uma de: ' + PLAN_UNITS.join(', ') + '. 3 a 10 atividades, na ordem de execução, só do que foi aprovado; prazo_dias é quantos dias a partir de hoje.',
+  ].join('\n');
+}
+function parsePlanJson(text) {
+  const t = String(text || ''), a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) return null;
+  try {
+    const j = JSON.parse(t.slice(a, b + 1));
+    const o = j.objetivo || {};
+    const krs = (Array.isArray(o.krs) ? o.krs : []).slice(0, 6).map(k => ({
+      title: String(k.titulo || '').slice(0, 200), from: Number(k.de) || 0, to: Number(k.para) || 100,
+      unit: PLAN_UNITS.includes(k.unidade) ? k.unidade : '%',
+    })).filter(k => k.title);
+    const atividades = (Array.isArray(j.atividades) ? j.atividades : []).slice(0, 15).map(x => ({
+      name: String(x.titulo || '').slice(0, 300), description: String(x.descricao || '').slice(0, 3000),
+      dueDays: Math.max(1, Math.min(365, parseInt(x.prazo_dias, 10) || 7)),
+    })).filter(x => x.name);
+    if (!o.titulo) return null;
+    return { objective: { title: String(o.titulo).slice(0, 200), description: String(o.descricao || '').slice(0, 2000), owner: PLAN_OWNER, krs }, activities: atividades };
+  } catch (_) { return null; }
 }
 function emitStep(rid, stepId) { const s = stmt.stepGet.get(stepId); if (s) emit(rid, 'step', stepOut(s)); }
 
 // ─── Claude ──────────────────────────────────────────────────────────────────
 const active = new Map(); // runId -> { procs:Set, canceled:boolean }
+const LIMIT_RE = /hit your .*limit|usage limit reached|rate limit/i;
 
 // Roda o claude com o prompt via stdin (entregas longas estouram o limite de argumento) e devolve o texto final.
 function runClaude(runId, prompt, opts, onToken) {
@@ -280,6 +401,8 @@ function runClaude(runId, prompt, opts, onToken) {
       const canceled = !!(ctl && ctl.canceled);
       if (timedOut) return resolve({ text, error: `tempo esgotado (${Math.round(STEP_TIMEOUT_MS / 60000)} min)` });
       if (canceled) return resolve({ text, canceled: true });
+      // Limite da conta Claude vem como texto de resposta ("You've hit your weekly limit..."): trata como erro
+      if (text.length < 300 && LIMIT_RE.test(text)) return resolve({ text: '', error: 'limite de uso da conta Claude atingido (' + text.trim() + '). Tente de novo depois do horário indicado.' });
       if (code !== 0 && !text) return resolve({ text: '', error: (err.slice(-400) || 'exit ' + code) });
       resolve({ text });
     };
@@ -391,11 +514,12 @@ function consolidatePrompt(request, history, plan, results) {
   });
   out.push('', '=== Fim das entregas ===', '');
   out.push('Consolide tudo numa entrega final única, organizada e pronta para o usuário usar:');
-  out.push('- Comece com um resumo executivo curto (3 a 5 linhas).');
-  out.push('- Depois a entrega integrada, por seções. Elimine repetições e resolva contradições entre os agentes (quando decidir entre versões, diga qual escolheu e por quê em uma linha).');
+  out.push('- Comece com um resumo executivo curto (3 a 5 linhas), antes de qualquer título.');
+  out.push('- Depois a entrega integrada, uma seção por parte entregável (ex.: Estratégia, Criativos, Régua de WhatsApp, Mídia). Cada parte começa com um título de nível 2 no formato "## Nome da parte"; use ### ou menos dentro das partes. O usuário aprova ou pede ajuste em cada seção ## separadamente, então cada uma precisa se sustentar sozinha.');
+  out.push('- Nas seções, elimine repetições e resolva contradições entre os agentes (quando decidir entre versões, diga qual escolheu e por quê em uma linha).');
   out.push('- Preserve o conteúdo pronto (copies, roteiros, tabelas) dos agentes, não resuma o que é entregável.');
   out.push('- Se algum agente falhou, diga o que ficou faltando.');
-  out.push('- Feche com "Próximos passos" práticos.');
+  out.push('- Feche com a seção "## Próximos passos" com ações práticas.');
   out.push('Não use ferramentas. Responda direto com o texto final em markdown.');
   return out.join('\n');
 }
@@ -523,11 +647,51 @@ function deleteRun(rid) {
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
 }
 
+// ─── Compartilhamento (mesmas regras dos agentes: todos, só link, pessoas) ──────
+db.exec(`CREATE TABLE IF NOT EXISTS team_shares (team_id TEXT PRIMARY KEY, mode TEXT NOT NULL DEFAULT 'todos', users TEXT NOT NULL DEFAULT '[]', updated_at INTEGER NOT NULL)`);
+const SHARE_MODES = ['todos', 'link', 'pessoas'];
+const shareStmt = {
+  get: db.prepare('SELECT * FROM team_shares WHERE team_id = ?'),
+  up: db.prepare(`INSERT INTO team_shares (team_id, mode, users, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(team_id) DO UPDATE SET mode = excluded.mode, users = excluded.users, updated_at = excluded.updated_at`),
+  del: db.prepare('DELETE FROM team_shares WHERE team_id = ?'),
+};
+let _pessoasStmt = null;
+function sharePessoas() {
+  try { if (!_pessoasStmt) _pessoasStmt = db.prepare(`SELECT id, name, email, role, status FROM org_members WHERE status != 'inativo' ORDER BY name`); return _pessoasStmt.all(); }
+  catch (_) { return []; }
+}
+function shareGet(teamId) {
+  const r = shareStmt.get.get(teamId);
+  let users = []; try { users = r ? JSON.parse(r.users) : []; } catch (_) {}
+  return { mode: r && SHARE_MODES.includes(r.mode) ? r.mode : 'todos', users };
+}
+function shareSet(teamId, mode, users) {
+  mode = SHARE_MODES.includes(mode) ? mode : 'todos';
+  const validos = new Set(sharePessoas().map(p => p.id));
+  const lista = Array.isArray(users) ? users.map(String).filter(u => validos.has(u)) : [];
+  shareStmt.up.run(teamId, mode, JSON.stringify(lista), Date.now());
+  return shareGet(teamId);
+}
+// user vem de req.user ({ email, admin }). Sem usuário (chamada interna) = acesso liberado.
+function canAccess(teamId, user) {
+  if (!user || user.admin) return true;
+  const sh = shareGet(teamId);
+  if (sh.mode !== 'pessoas') return true;
+  if (!user.email) return false;
+  const emails = new Set(sharePessoas().filter(p => sh.users.includes(p.id)).map(p => String(p.email || '').toLowerCase()));
+  return emails.has(String(user.email).toLowerCase());
+}
+function visibleInList(teamId, user) {
+  if (!user || user.admin) return true;
+  if (shareGet(teamId).mode === 'link') return false;
+  return canAccess(teamId, user);
+}
+
 // ─── Router ──────────────────────────────────────────────────────────────────
 const router = express.Router();
 
 router.get('/', (_req, res) => {
-  res.json({ teams: stmt.list.all().map(shape), limits: { min: MIN_AGENTS, max: MAX_AGENTS } });
+  res.json({ teams: stmt.list.all().map(shape).filter(t => visibleInList(t.id, _req.user)).map(t => Object.assign(t, { share: shareGet(t.id).mode })), limits: { min: MIN_AGENTS, max: MAX_AGENTS } });
 });
 
 // Execuções (antes de /:id pra "runs" não virar id de equipe)
@@ -557,6 +721,55 @@ router.post('/runs/:rid/send', (req, res) => {
   res.json({ ok: true });
 });
 
+router.post('/runs/:rid/steps/:sid/review', (req, res) => {
+  const s = finalStepOf(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'entrega não encontrada' });
+  const b = req.body || {};
+  const idx = parseInt(b.idx, 10);
+  const parte = splitParts(s.content).parts[idx];
+  if (!parte) return res.status(400).json({ error: 'parte inválida' });
+  if (!REVIEW_STATUS.includes(b.status)) return res.status(400).json({ error: 'status inválido' });
+  const atual = reviewStmt.list.all(s.id).find(r => r.idx === idx);
+  reviewStmt.up.run(s.id, idx, parte.title, b.status, atual ? atual.note : null, Date.now());
+  emitStep(req.params.rid, s.id);
+  res.json({ ok: true, step: stepOut(stmt.stepGet.get(s.id)) });
+});
+
+router.post('/runs/:rid/steps/:sid/adjust', (req, res) => {
+  const s = finalStepOf(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'entrega não encontrada' });
+  if (active.has(req.params.rid)) return res.status(409).json({ error: 'a equipe ainda está trabalhando no pedido anterior' });
+  const idx = parseInt((req.body || {}).idx, 10);
+  const note = String((req.body || {}).note || '').trim().slice(0, 4000);
+  if (!splitParts(s.content).parts[idx]) return res.status(400).json({ error: 'parte inválida' });
+  if (!note) return res.status(400).json({ error: 'diga o que quer mudar nesta parte' });
+  revisePart(req.params.rid, s.id, idx, note);
+  res.json({ ok: true });
+});
+
+router.post('/runs/:rid/steps/:sid/plan-draft', async (req, res) => {
+  const s = finalStepOf(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'entrega não encontrada' });
+  const sp = splitParts(s.content);
+  const ok = new Set(reviewStmt.list.all(s.id).filter(r => r.status === 'aprovado').map(r => r.idx));
+  const aprovadas = sp.parts.filter((p, i) => ok.has(i));
+  if (!aprovadas.length) return res.status(400).json({ error: 'aprove pelo menos uma parte antes de transformar em plano' });
+  const ped = stmt.steps.all(s.run_id).find(x => x.kind === 'user' && x.turn === s.turn);
+  const r = await runClaude('_plano', planPrompt(ped && ped.content, aprovadas), { model: 'sonnet', noTools: true });
+  const plan = parsePlanJson(r.text);
+  if (!plan) return res.status(502).json({ error: 'não consegui montar o plano agora' + (r.error ? ' (' + r.error + ')' : '') + '. Tente de novo.' });
+  res.json(plan);
+});
+
+router.post('/runs/:rid/steps/:sid/plan-link', (req, res) => {
+  const s = finalStepOf(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'entrega não encontrada' });
+  const b = req.body || {};
+  reviewStmt.planUp.run(s.id, b.okrId ? String(b.okrId).slice(0, 60) : null, String(b.okrTitle || '').slice(0, 200), Math.max(0, parseInt(b.tasks, 10) || 0), Date.now());
+  emitStep(req.params.rid, s.id);
+  res.json({ ok: true, step: stepOut(stmt.stepGet.get(s.id)) });
+});
+
 router.post('/runs/:rid/cancel', (req, res) => {
   const ctl = active.get(req.params.rid);
   if (!ctl) return res.json({ ok: true, idle: true });
@@ -574,7 +787,19 @@ router.delete('/runs/:rid', (req, res) => {
 router.get('/:id', (req, res) => {
   const t = getTeam(req.params.id);
   if (!t) return res.status(404).json({ error: 'equipe não encontrada' });
-  res.json({ team: t });
+  if (!canAccess(t.id, req.user)) return res.status(403).json({ error: 'Esta equipe foi compartilhada só com pessoas específicas. Peça acesso a quem criou.' });
+  res.json({ team: Object.assign(t, { share: shareGet(t.id).mode }) });
+});
+
+router.get('/:id/share', (req, res) => {
+  if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'equipe não encontrada' });
+  res.json(Object.assign(shareGet(req.params.id), { pessoas: sharePessoas() }));
+});
+router.put('/:id/share', (req, res) => {
+  if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'equipe não encontrada' });
+  const b = req.body || {};
+  if (b.mode === 'pessoas' && !(Array.isArray(b.users) && b.users.length)) return res.status(400).json({ error: 'escolha pelo menos uma pessoa' });
+  res.json(Object.assign(shareSet(req.params.id, b.mode, b.users), { pessoas: sharePessoas() }));
 });
 
 router.post('/', (req, res) => {

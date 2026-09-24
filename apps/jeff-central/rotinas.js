@@ -344,6 +344,11 @@ function publica(r, resumo) {
 const router = express.Router();
 router.use(express.json({ limit: '1mb' }));
 
+// Diagnóstico temporário (24/09): o navegador manda o que fez antes de um recarregamento; vai pra logs/diag.log
+router.post('/diag', express.text({ type: '*/*', limit: '64kb' }), (req, res) => {
+  try { require('fs').appendFileSync(path.join(__dirname, 'logs', 'diag.log'), new Date().toISOString() + ' ' + String(req.body || '').replace(/\s+/g, ' ').slice(0, 6000) + '\n'); } catch (_) {}
+  res.status(204).end();
+});
 router.get('/', (_req, res) => {
   const resumo = {};
   stmt.runsResumo.all().forEach(x => { resumo[x.rotina_id] = x; });

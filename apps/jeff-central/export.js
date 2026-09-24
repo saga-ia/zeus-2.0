@@ -76,7 +76,59 @@ function gerar(arquivoHtml, arquivoPdf) {
   });
 }
 
+// ─── Infográfico (bloco zeus-infografico do chat) → PNG ───────────────────────
+// Mantém <style> e fontes do Google (o visual depende disso); tira scripts, iframes, eventos e URLs javascript:.
+const INFO_MAX = 4096;
+function limparInfografico(html) {
+  let s = String(html || '').slice(0, LIMITE_HTML);
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
+  s = s.replace(/<\/?(iframe|object|embed|meta|base|form|input|button|html|head|body)\b[^>]*>/gi, '');
+  s = s.replace(/<!doctype[^>]*>/gi, '');
+  s = s.replace(/<link\b(?![^>]*href=["']https:\/\/fonts\.googleapis\.com\/)[^>]*>/gi, '');
+  s = s.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  s = s.replace(/javascript:/gi, '');
+  return s;
+}
+function paginaInfografico(conteudo, w, h) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#FFFFFF}#zi-wrap{width:${w}px;height:${h}px;overflow:hidden;position:relative}</style></head><body><div id="zi-wrap">${conteudo}</div></body></html>`;
+}
+function gerarPng(arquivoHtml, arquivoPng, w, h) {
+  return new Promise((ok, erro) => {
+    execFile(CHROMIUM, [
+      '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--hide-scrollbars',
+      '--force-device-scale-factor=2', '--window-size=' + w + ',' + h, '--virtual-time-budget=6000',
+      '--screenshot=' + arquivoPng, 'file://' + arquivoHtml,
+    ], { timeout: TIMEOUT_MS + 15000 }, (e) => (e ? erro(e) : ok()));
+  });
+}
+async function infograficoPng(html, w, h) {
+  w = Math.max(320, Math.min(INFO_MAX, parseInt(w, 10) || 1080));
+  h = Math.max(320, Math.min(INFO_MAX, parseInt(h, 10) || 1350));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'zeus-info-'));
+  try {
+    const entrada = path.join(dir, 'info.html'), saida = path.join(dir, 'info.png');
+    await fs.writeFile(entrada, paginaInfografico(limparInfografico(html), w, h), 'utf8');
+    await gerarPng(entrada, saida, w, h);
+    return await fs.readFile(saida);
+  } finally { fs.rm(dir, { recursive: true, force: true }).catch(() => {}); }
+}
+
 const router = express.Router();
+
+router.post('/png', async (req, res) => {
+  const b = req.body || {};
+  if (!String(b.html || '').trim()) return res.status(400).json({ error: 'Nada para exportar.' });
+  try {
+    const buf = await infograficoPng(b.html, b.width, b.height);
+    res.set('Content-Type', 'image/png');
+    res.set('Content-Length', String(buf.length));
+    res.set('Content-Disposition', `attachment; filename="${nomeArquivo(b.title || 'infografico')}.png"`);
+    res.send(buf);
+  } catch (err) {
+    console.error('[export] png:', err.message);
+    res.status(500).json({ error: 'Não consegui gerar a imagem agora.' });
+  }
+});
 
 router.post('/pdf', async (req, res) => {
   const b = req.body || {};
@@ -104,4 +156,4 @@ router.post('/pdf', async (req, res) => {
   }
 });
 
-module.exports = { router };
+module.exports = { router, infograficoPng, limparInfografico };

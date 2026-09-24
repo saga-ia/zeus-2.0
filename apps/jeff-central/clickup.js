@@ -88,6 +88,8 @@ function normTask(t, spacesById) {
     parent: t.parent || null,
     url: t.url,
     description: t.description || '',
+    points: t.points != null ? num(t.points) : null,   // sprint points (ClickApp); usado como complexidade no Painel de entregas
+    time_spent: num(t.time_spent),                     // tempo registrado (ms)
   };
 }
 

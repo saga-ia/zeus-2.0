@@ -28,7 +28,7 @@
     const mudouView = patch.view !== undefined;
     const mudouFiltro = CHAVES_FILTRO.some(k => patch[k] !== undefined);
     Object.assign(ac(), patch);
-    if(mudouView){ paintSide(); paintHead(); }
+    if(mudouView){ paintSide(); paintHead(); paintFiltros(); }
     if(mudouView || mudouFiltro) paintLista();
     if(!mudouView && !mudouFiltro) paint();
   }
@@ -196,6 +196,7 @@
   }
   function tituloView(){
     const a = ac(), d = a.data, v = a.view;
+    if(v.type === "painel") return ["Painel de entregas", "Qualidade e produtividade das entregas da equipe."];
     if(v.type === "all") return ["Todas as ações", "Todas as ações da equipe, agrupadas por " + (a.groupBy === "list" ? "lista" : "status") + "."];
     if(v.type === "assignee"){ const u = d && d.members.find(m => String(m.id) === String(v.id)); return ["Ações de " + (u ? firstName(u) : "?"), "Ações abertas atribuídas a " + (u ? u.username : "?") + "."]; }
     if(v.type === "unassigned") return ["Sem responsável", "Ações abertas que ainda não têm ninguém atribuído."];
@@ -207,6 +208,118 @@
     if(v.type === "folder"){ let f = null, sp = null; d && d.spaces.forEach(s => s.folders.forEach(x => { if(x.id === v.id){ f = x; sp = s; } })); return [f ? f.name : "Pasta", sp ? sp.name + " › " + f.name : ""]; }
     if(v.type === "list"){ const l = listas().find(x => x.id === v.id); return [l ? l.name : "Lista", l ? [l.space_name, l.folder_name, l.name].filter(Boolean).join(" › ") : ""]; }
     return ["Ações", ""];
+  }
+
+  // ─── Painel de entregas: qualidade e produtividade das entregas da equipe ──────
+  const PER = [["hoje", "Hoje"], ["semana", "Semana"], ["mes", "Mês"]];
+  const PTABS = [["geral", "Visão geral", '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'],
+    ["pessoa", "Por pessoa", '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.2.2 3.8 1.8 4.5 4.5"/>'],
+    ["ciclos", "Ciclos", '<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/>'],
+    ["carga", "Carga semanal", '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>']];
+  const VALIDACAO = /valid|aprova|revis|review|homolog|confer|qa\b/;
+  const fechouEm = t => t.date_done || t.date_closed || 0;
+  function iniPeriodo(p){
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if(p === "semana") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    if(p === "mes") d.setDate(1);
+    return d.getTime();
+  }
+  // prazo "no dia" (sem hora) vale até o fim do dia
+  const limitePrazo = t => t.due_date ? (t.due_date_time ? t.due_date : (() => { const d = new Date(t.due_date); d.setHours(23, 59, 59, 999); return d.getTime(); })()) : 0;
+  function fmtDur(ms){ const m = Math.round((ms || 0) / 60000); if(!m) return "0m"; const h = Math.floor(m / 60); return h ? h + "h" + (m % 60 ? " " + (m % 60) + "m" : "") : m + "m"; }
+  function fmtDias(ms){ const d = ms / DIA; return d < 1 ? Math.max(1, Math.round(ms / 3600000)) + "h" : d.toFixed(d < 10 ? 1 : 0).replace(".", ",") + " d"; }
+  function stats(ts, ini){
+    const criadas = ts.filter(t => t.date_created >= ini);
+    const concl = ts.filter(t => !isOpen(t) && fechouEm(t) >= ini);
+    const comPrazo = concl.filter(t => t.due_date);
+    const noPrazo = comPrazo.filter(t => fechouEm(t) <= limitePrazo(t));
+    const temPontos = ts.some(t => t.points != null);
+    return { criadas, concl, comPrazo, noPrazo, temPontos,
+      pontos: concl.reduce((s, t) => s + (t.points || 0), 0),
+      validacao: ts.filter(t => isOpen(t) && VALIDACAO.test(norm(t.status))),
+      tempo: concl.reduce((s, t) => s + (t.time_spent || 0), 0) };
+  }
+  const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "—";
+  const kpi = (rot, val, sub, cor) => `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;padding:16px 18px;min-width:0"><div style="font-size:12.5px;color:${CINZA};margin-bottom:8px">${rot}</div><div style="${HEAD};font-size:26px;font-weight:600;color:${cor || "#17171A"}">${val}</div>${sub ? `<div style="font-size:11.5px;color:#9A9AA3;margin-top:5px">${sub}</div>` : ""}</div>`;
+  const cardP = (tit, corpo, dir) => `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;overflow:hidden;margin-top:16px"><div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #F1F1F3"><strong style="font-size:13.5px;font-weight:600;flex:1">${tit}</strong>${dir || ""}</div><div style="padding:16px 18px">${corpo}</div></div>`;
+  function graficoDias(ts, ini, per){
+    const dias = []; const d0 = new Date(ini); const hoje = hoje0();
+    const inicio = per === "hoje" ? hoje - 6 * DIA : ini; // "Hoje" mostra a última semana para dar contexto
+    for(let t = new Date(inicio).setHours(0, 0, 0, 0); t <= hoje; t += DIA) dias.push(t);
+    const cri = dias.map(t => ts.filter(x => x.date_created >= t && x.date_created < t + DIA).length);
+    const con = dias.map(t => ts.filter(x => !isOpen(x) && fechouEm(x) >= t && fechouEm(x) < t + DIA).length);
+    const max = Math.max(1, ...cri, ...con), W = 720, H = 190, x0 = 30, y1 = 160, passo = (W - x0 - 10) / dias.length, bw = Math.max(3, Math.min(16, passo * 0.34));
+    const Y = v => y1 - v / max * 140;
+    const bars = dias.map((t, i) => { const cx = x0 + passo * (i + 0.5); const dt = new Date(t); const rot = String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0");
+      return `<rect x="${(cx - bw - 1).toFixed(1)}" y="${Y(cri[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y1 - Y(cri[i])).toFixed(1)}" rx="2" fill="${AMBAR}" opacity="0.35"><title>${rot}: ${cri[i]} criada(s)</title></rect><rect x="${(cx + 1).toFixed(1)}" y="${Y(con[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y1 - Y(con[i])).toFixed(1)}" rx="2" fill="${VERDE}"><title>${rot}: ${con[i]} concluída(s)</title></rect>${dias.length <= 14 || i % Math.ceil(dias.length / 10) === 0 ? `<text x="${cx.toFixed(1)}" y="178" text-anchor="middle" fill="${CINZA}">${rot}</text>` : ""}`; }).join("");
+    const grade = [0, 0.5, 1].map(f => `<line x1="${x0}" x2="${W - 10}" y1="${Y(max * f)}" y2="${Y(max * f)}" stroke="#F1F1F3"/><text x="${x0 - 6}" y="${Y(max * f) + 3}" text-anchor="end" fill="${CINZA}">${Math.round(max * f)}</text>`).join("");
+    return `<div style="display:flex;gap:14px;font-size:12px;color:${CINZA};margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><i style="width:9px;height:9px;border-radius:3px;background:${AMBAR};opacity:.35;display:block"></i>Criadas</span><span style="display:flex;align-items:center;gap:6px"><i style="width:9px;height:9px;border-radius:3px;background:${VERDE};display:block"></i>Concluídas</span></div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-size:10px;font-family:'DM Sans'">${grade}${bars}</svg>`;
+  }
+  function painelGeral(ts, ini, per){
+    const s = stats(ts, ini);
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+        ${kpi("Criadas no período", s.criadas.length)}
+        ${kpi("Concluídas no período", s.concl.length)}
+        ${kpi("No prazo", pct(s.noPrazo.length, s.comPrazo.length), "das concluídas com prazo" + (s.comPrazo.length ? " (" + s.noPrazo.length + " de " + s.comPrazo.length + ")" : ""), s.comPrazo.length && s.noPrazo.length / s.comPrazo.length < 0.6 ? VERM : null)}
+        ${kpi("Complexidade entregue", s.temPontos ? s.pontos : "—", s.temPontos ? "pts das concluídas" : "ative Sprint Points no ClickUp para medir")}
+        ${kpi("Reabertura", "—", "o ClickUp não informa reaberturas pela API")}
+        ${kpi("Aguardando validação", s.validacao.length, "agora")}
+        ${kpi("Tempo registrado", fmtDur(s.tempo), "lançado nas concluídas do período")}
+      </div>
+      ${cardP("Criadas vs concluídas", graficoDias(ts, ini, per), `<span style="font-size:12px;color:${CINZA}">${per === "hoje" ? "últimos 7 dias" : per === "semana" ? "esta semana" : "este mês"}</span>`)}`;
+  }
+  function painelPessoa(ts, ini){
+    const d = ac().data, agora = Date.now();
+    const linhas = d.members.map(u => {
+      const meu = ts.filter(t => t.assignees.some(x => String(x.id) === String(u.id)));
+      const s = stats(meu, ini);
+      return { u, s, abertas: meu.filter(isOpen).length, atrasadas: meu.filter(t => isOpen(t) && t.due_date && limitePrazo(t) < agora).length };
+    }).filter(l => l.abertas || l.s.concl.length || l.s.criadas.length).sort((a, b) => b.s.concl.length - a.s.concl.length);
+    const th = ["Pessoa", "Concluídas", "No prazo", "Criadas", "Abertas", "Atrasadas", "Tempo"].map((h, i) => `<th style="text-align:${i ? "right" : "left"};font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:${CINZA};font-weight:700;padding:10px 12px;border-bottom:1px solid #E6E6EA;white-space:nowrap">${h}</th>`).join("");
+    const td = (v, cor) => `<td style="padding:11px 12px;border-bottom:1px solid #F1F1F3;text-align:right;font-variant-numeric:tabular-nums;${cor ? "color:" + cor + ";font-weight:600" : ""}">${v}</td>`;
+    return cardP("Entregas por pessoa", linhas.length ? `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px"><thead><tr>${th}</tr></thead><tbody>${linhas.map(l => `<tr><td style="padding:10px 12px;border-bottom:1px solid #F1F1F3"><span style="display:flex;align-items:center;gap:9px">${avatar(l.u, 24)}${e(l.u.username || "?")}</span></td>${td(l.s.concl.length)}${td(pct(l.s.noPrazo.length, l.s.comPrazo.length))}${td(l.s.criadas.length)}${td(l.abertas)}${td(l.atrasadas, l.atrasadas ? VERM : null)}${td(fmtDur(l.s.tempo))}</tr>`).join("")}</tbody></table></div>` : `<div style="font-size:13px;color:${CINZA}">Ninguém com entregas no período.</div>`);
+  }
+  function painelCiclos(ts, ini){
+    const concl = ts.filter(t => !isOpen(t) && fechouEm(t) >= ini && t.date_created);
+    const ciclo = t => Math.max(0, fechouEm(t) - t.date_created);
+    const media = concl.length ? concl.reduce((s, t) => s + ciclo(t), 0) / concl.length : 0;
+    const ord = concl.map(ciclo).sort((a, b) => a - b), mediana = ord.length ? ord[Math.floor(ord.length / 2)] : 0;
+    const faixas = [["Até 1 dia", 0, DIA], ["1 a 3 dias", DIA, 3 * DIA], ["3 a 7 dias", 3 * DIA, 7 * DIA], ["Mais de 7 dias", 7 * DIA, Infinity]].map(f => ({ rot: f[0], n: concl.filter(t => ciclo(t) >= f[1] && ciclo(t) < f[2]).length }));
+    const maxF = Math.max(1, ...faixas.map(f => f.n));
+    const porLista = Object.values(concl.reduce((o, t) => { const k = t.list ? t.list.name : "Sem lista"; (o[k] = o[k] || { nome: k, n: 0, soma: 0 }); o[k].n++; o[k].soma += ciclo(t); return o; }, {})).sort((a, b) => b.soma / b.n - a.soma / a.n).slice(0, 8);
+    const barra = (rot, v, max, txt, cor) => `<div style="margin-bottom:12px"><div style="display:flex;gap:10px;font-size:13px;margin-bottom:5px"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(rot)}</span><strong>${txt}</strong></div><div style="height:7px;border-radius:6px;background:rgba(103,61,230,0.10)"><i style="display:block;height:100%;width:${Math.max(2, v / max * 100).toFixed(1)}%;background:${cor || AMBAR};border-radius:6px"></i></div></div>`;
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+        ${kpi("Ciclo médio", concl.length ? fmtDias(media) : "—", "da criação à conclusão")}
+        ${kpi("Ciclo mediano", concl.length ? fmtDias(mediana) : "—", "metade das entregas sai antes disso")}
+        ${kpi("Entregas medidas", concl.length, "concluídas no período")}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:0 16px">
+        ${cardP("Tempo até concluir", faixas.map(f => barra(f.rot, f.n, maxF, f.n + " entrega" + (f.n === 1 ? "" : "s"))).join(""))}
+        ${cardP("Ciclo médio por lista", porLista.length ? porLista.map(l => barra(l.nome, l.soma / l.n, porLista[0].soma / porLista[0].n, fmtDias(l.soma / l.n) + " · " + l.n, "#C25FD6")).join("") : `<div style="font-size:13px;color:${CINZA}">Sem entregas no período.</div>`)}
+      </div>`;
+  }
+  function painelCarga(ts){
+    const d = ac().data, agora = Date.now(), fs = fimSemana();
+    const linhas = d.members.map(u => {
+      const ab = ts.filter(t => isOpen(t) && t.assignees.some(x => String(x.id) === String(u.id)));
+      return { u, atrasadas: ab.filter(t => t.due_date && limitePrazo(t) < agora).length, semana: ab.filter(t => t.due_date && limitePrazo(t) >= agora && t.due_date < fs).length, depois: ab.filter(t => t.due_date && t.due_date >= fs).length, semPrazo: ab.filter(t => !t.due_date).length };
+    }).map(l => Object.assign(l, { total: l.atrasadas + l.semana + l.depois + l.semPrazo })).filter(l => l.total).sort((a, b) => (b.atrasadas + b.semana) - (a.atrasadas + a.semana));
+    const max = Math.max(1, ...linhas.map(l => l.total));
+    const seg = (n, cor, rot) => n ? `<i title="${n} ${rot}" style="display:block;height:100%;width:${(n / max * 100).toFixed(2)}%;background:${cor}"></i>` : "";
+    return cardP("Carga por pessoa", (linhas.length ? `<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:${CINZA};margin-bottom:14px">${[["Atrasadas", VERM], ["Vencem esta semana", AMBAR], ["Depois", "#A78BFA"], ["Sem prazo", "#D0D0D6"]].map(x => `<span style="display:flex;align-items:center;gap:6px"><i style="width:9px;height:9px;border-radius:3px;background:${x[1]};display:block"></i>${x[0]}</span>`).join("")}</div>` + linhas.map(l => `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span style="width:150px;flex:0 0 150px;display:flex;align-items:center;gap:8px;font-size:13px;min-width:0">${avatar(l.u, 22)}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(firstName(l.u))}</span></span><div style="flex:1;height:16px;border-radius:6px;background:#F4F4F6;display:flex;overflow:hidden">${seg(l.atrasadas, VERM, "atrasadas")}${seg(l.semana, AMBAR, "esta semana")}${seg(l.depois, "#A78BFA", "depois")}${seg(l.semPrazo, "#D0D0D6", "sem prazo")}</div><span style="width:120px;text-align:right;font-size:12px;color:#3C3C44;white-space:nowrap">${l.atrasadas + l.semana} p/ semana · ${l.total} ab.</span></div>`).join("") : `<div style="font-size:13px;color:${CINZA}">Nenhuma ação aberta com responsável.</div>`), `<span style="font-size:12px;color:${CINZA}">ações abertas</span>`);
+  }
+  function painel(){
+    const a = ac(), d = a.data;
+    const per = a.pPer || "semana", tab = a.pTab || "geral", ini = iniPeriodo(per);
+    const ts = d.tasks;
+    const tabs = `<div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;margin-bottom:16px">${PTABS.map(x => { const on = tab === x[0]; return `<span data-ac-ptab="${x[0]}" ${on ? "" : "data-hover"} style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;cursor:pointer;${on ? "font-weight:600;background:rgba(103,61,230,0.12);color:" + AMBAR : "color:#3C3C44"}">${icon(x[2], 14, "currentColor")}${x[1]}</span>`; }).join("")}</div>`;
+    const corpo = tab === "pessoa" ? painelPessoa(ts, ini) : tab === "ciclos" ? painelCiclos(ts, ini) : tab === "carga" ? painelCarga(ts) : painelGeral(ts, ini, per);
+    return tabs + corpo;
+  }
+  function seletorPeriodo(){
+    const per = ac().pPer || "semana";
+    return `<div style="display:inline-flex;gap:2px;padding:3px;border:1px solid #E6E6EA;border-radius:10px;background:#FFFFFF">${PER.map(x => { const on = per === x[0]; return `<span data-ac-per="${x[0]}" style="padding:6px 12px;border-radius:7px;font-size:12.5px;cursor:pointer;${on ? "font-weight:600;background:rgba(103,61,230,0.12);color:" + AMBAR : "color:#3C3C44"}">${x[1]}</span>`; }).join("")}</div>`;
   }
 
   // ─── render ─────────────────────────────────────────────────────────────────
@@ -225,7 +338,7 @@
     const nHoje = abertas.filter(t => t.due_date && t.due_date < h0 + DIA).length;
     const nSem = abertas.filter(t => t.due_date && t.due_date < fs).length;
     const nFech = d ? d.tasks.length - abertas.length : 0;
-    const ativo = (type, id) => v.type === type && (id === undefined || String(v.id) === String(id));
+    const ativo = (type, id) => v.type === type && (id == null || String(v.id) === String(id));
     const item = (type, id, label, count, opts) => {
       opts = opts || {};
       const on = ativo(type, id);
@@ -256,6 +369,8 @@
         <span id="acoes-sync" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(syncTexto())}</span>
         <span data-ac-refresh data-hover title="Atualizar agora" style="width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer">${icon(ICONS.refresh, 13, CINZA)}</span>
       </div>
+      ${item("painel", null, "Painel de entregas", null, { ico: icon(PTABS[0][2], 14, v.type === "painel" ? AMBAR : "#3C3C44") })}
+      <div style="height:8px"></div>
       ${item("all", null, "Todas as ações", abertas.length)}
       ${item("closed", null, "Concluídas", nFech)}
       ${secao("RESPONSÁVEL")}
@@ -274,11 +389,13 @@
     return `<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:6px">
         <div style="flex:1;min-width:0"><h1 style="${HEAD};font-size:23px;font-weight:600;margin:0 0 6px">${e(tit)}</h1>
         <p style="margin:0 0 18px;color:${CINZA};font-size:13.5px">${e(sub)}</p></div>
+        ${ac().view.type === "painel" ? seletorPeriodo() : ""}
               </div>`;
   }
 
   function filtros(){
     const a = ac(), d = a.data;
+    if(a.view.type === "painel") return "";
     const statusOpts = Object.values(ordemStatus()).sort((x, y) => x.ord - y.ord);
     const selS = (name, val, opts, largura) => `<select data-ac-filter="${name}" style="padding:9px 30px 9px 12px;border:1px solid #DADADF;border-radius:9px;font:inherit;font-size:12.5px;color:${val ? "#17171A" : "#3C3C44"};background:#FFFFFF;cursor:pointer;appearance:auto;${largura ? "min-width:" + largura + "px" : ""}">${opts.map(o => `<option value="${e(o[0])}" ${String(val) === String(o[0]) ? "selected" : ""}>${e(o[1])}</option>`).join("")}</select>`;
     return `<div style="display:flex;align-items:center;gap:9px;flex:1;min-width:220px;padding:0 13px;border:1px solid #DADADF;border-radius:9px;background:#FFFFFF">${icon(ICONS.search, 13, CINZA)}<input id="acoes-q" value="${e(a.q)}" placeholder="Buscar por título, tag ou lista ( / )" style="flex:1;border:0;outline:0;padding:9px 0;font:inherit;font-size:12.5px;background:transparent;color:#17171A"></div>
@@ -299,6 +416,7 @@
     const a = ac(), d = a.data;
     if(a.error && !d) return `<div style="border:1px solid rgba(192,52,28,0.35);background:rgba(192,52,28,0.06);border-radius:14px;padding:22px;font-size:13.5px;color:${VERM}"><strong>Não foi possível carregar as ações.</strong><div style="margin-top:6px;color:#3C3C44">${/HTTP 404/.test(a.error) ? "A rota /api/clickup ainda não está ativa no servidor (falta reiniciar o jeff-central)." : e(a.error)}</div><div data-ac-refresh style="display:inline-block;margin-top:12px;${BTN_SEC}">Tentar de novo</div></div>`;
     if(!d) return `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;padding:40px;text-align:center;color:${CINZA};font-size:13.5px">Carregando ações…</div>`;
+    if(a.view.type === "painel") return painel();
     const ts = ordenar(filtrar());
     const grupos = agrupar(ts);
     const head = `<div style="display:grid;${GRID};gap:12px;min-width:920px;padding:13px 20px;border-bottom:1px solid #E6E6EA;font-size:10.5px;letter-spacing:0.1em;font-weight:700;color:${CINZA}"><span></span><span>TÍTULO</span><span>LISTA</span><span>RESPONSÁVEL</span><span>PRIORIDADE</span><span>PRAZO</span><span></span></div>`;
@@ -370,6 +488,8 @@
       if(q("[data-ac-refresh]")) return load(true);
       if(q("[data-ac-clear]")){ Object.assign(ac(), { q: "", fAssignee: "", fPrio: "", fStatus: "" }); paintFiltros(); paintLista(); return; }
       if((el = q("[data-ac-view]"))){ const type = el.getAttribute("data-ac-view"), id = el.getAttribute("data-ac-id"); return acSet({ view: id ? { type, id } : { type } }); }
+      if((el = q("[data-ac-ptab]"))){ ac().pTab = el.getAttribute("data-ac-ptab"); return paintLista(); }
+      if((el = q("[data-ac-per]"))){ ac().pPer = el.getAttribute("data-ac-per"); paintHead(); return paintLista(); }
       if((el = q("[data-ac-toggle]"))) return alternarStatus(el.getAttribute("data-ac-toggle"));
       if((el = q("[data-ac-open]"))) return abrirDetalhe(el.getAttribute("data-ac-open"));
       if((el = q("[data-ac-collapse]"))){ const k = el.getAttribute("data-ac-collapse"), a = ac(); a.collapsed[k] = !a.collapsed[k]; return paintLista(); }

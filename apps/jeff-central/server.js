@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -18,6 +19,22 @@ const AUTH_SALT = 'jeff-central-2026';
 const AUTH_HASH = 'ed5abdcfb6390b649b9dabba706936f093d3370f70fa0b7fbca2079da1657b2cbe209bc307b0a4184aa0bb86a7d30951ca09c3443cdf63213cf02ac2308b7a7c';
 const sessions = new Map();
 const SESSION_TTL = 30 * 24 * 60 * 60 * 1000;
+// Sessões persistem em disco: reiniciar o PM2 não desloga ninguém (antes, todo restart mandava todo mundo pro /login)
+const SESS_FILE = path.join(process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data'), 'sessions.json');
+function sessionsLoad() {
+  try {
+    const j = JSON.parse(fs.readFileSync(SESS_FILE, 'utf8')); const now = Date.now();
+    Object.entries(j).forEach(([k, v]) => {
+      const o = typeof v === 'number' ? { exp: v } : (v && typeof v === 'object' ? v : null); // formato antigo: só a validade
+      if (o && o.exp > now) sessions.set(k, o);
+    });
+  } catch (_) {}
+}
+function sessionsSave() {
+  try { fs.mkdirSync(path.dirname(SESS_FILE), { recursive: true }); fs.writeFileSync(SESS_FILE, JSON.stringify(Object.fromEntries(sessions)), { mode: 0o600 }); }
+  catch (e) { console.error('[central] não salvou sessões:', e.message); }
+}
+sessionsLoad();
 
 function verifyPwd(pwd) {
   try {
@@ -25,9 +42,14 @@ function verifyPwd(pwd) {
     return crypto.timingSafeEqual(Buffer.from(test, 'hex'), Buffer.from(AUTH_HASH, 'hex'));
   } catch { return false; }
 }
-function newSession() {
+// Só caminho interno da própria Central (sem host, sem //), senão volta pra home
+function nextSeguro(v) { v = String(v || ''); return /^\/(?!\/)[\w\-\/?=&%.]*$/.test(v) ? v : '/'; }
+// A sessão guarda quem entrou (e-mail e papel): é o que permite compartilhar agentes com pessoas específicas.
+// Login pela senha mestra (sem e-mail) vale como administrador.
+function newSession(user) {
   const tok = crypto.randomBytes(32).toString('hex');
-  sessions.set(tok, Date.now() + SESSION_TTL);
+  sessions.set(tok, { exp: Date.now() + SESSION_TTL, email: (user && user.email) || null, role: (user && user.role) || 'admin' });
+  sessionsSave();
   return tok;
 }
 function parseCookies(req) {
@@ -39,15 +61,20 @@ function parseCookies(req) {
   return list;
 }
 function getSession(req) {
-  const exp = sessions.get(parseCookies(req).sid);
-  return exp && exp > Date.now();
+  const s = sessions.get(parseCookies(req).sid);
+  return s && s.exp > Date.now() ? s : null;
 }
+function usuarioDaSessao(s) { return { email: s.email || null, role: s.role || 'admin', admin: !s.email || s.role === 'admin' || s.role === 'owner' }; }
 function requireAuth(req, res, next) {
-  if (!getSession(req)) return res.redirect('/login');
+  const s = getSession(req);
+  if (!s) return res.redirect('/login');
+  req.user = usuarioDaSessao(s);
   next();
 }
 function apiAuth(req, res, next) {
-  if (!getSession(req)) return res.status(401).json({ error: 'unauthorized' });
+  const s = getSession(req);
+  if (!s) return res.status(401).json({ error: 'unauthorized' });
+  req.user = usuarioDaSessao(s);
   next();
 }
 
@@ -246,7 +273,7 @@ require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
     if (!db) return false;
     const salt = crypto.randomBytes(16).toString('hex');
     const r = db.prepare('UPDATE central_users SET password_hash = ?, salt = ? WHERE email = ?').run(hashPassword(newPass, salt), salt, normEmail(email));
-    if (r.changes > 0) sessions.clear();
+    if (r.changes > 0) { sessions.clear(); sessionsSave(); }
     return r.changes > 0;
   }
 });
@@ -260,16 +287,17 @@ app.get('/api/signup/status', (_req, res) => {
 app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {
   const email = req.body._email || req.body.email || '';
   const password = req.body.password || '';
-  let ok = false;
+  let ok = false, quem = null;
   if (email) {
-    ok = !!verifyUserPassword(email, password);
+    quem = verifyUserPassword(email, password);
+    ok = !!quem;
   } else {
     ok = verifyPwd(password);
   }
   if (!ok) return res.redirect('/login?error=1');
-  const tok = newSession();
+  const tok = newSession(quem ? { email: quem.email, role: quem.role } : null);
   res.set('Set-Cookie', `sid=${tok}; HttpOnly; Path=/; Max-Age=${30 * 24 * 3600}; SameSite=Lax`);
-  res.redirect('/');
+  res.redirect(nextSeguro(req.body && req.body.next));
 });
 
 app.post('/api/signup', express.urlencoded({ extended: false }), (req, res) => {
@@ -300,13 +328,13 @@ app.post('/api/signup', express.urlencoded({ extended: false }), (req, res) => {
     return res.redirect('/login?error=server&mode=signup');
   }
 
-  const tok = newSession();
+  const tok = newSession({ email, role: 'admin' });
   res.set('Set-Cookie', `sid=${tok}; HttpOnly; Path=/; Max-Age=${30 * 24 * 3600}; SameSite=Lax`);
-  res.redirect('/');
+  res.redirect(nextSeguro(req.body && req.body.next));
 });
 app.get('/api/logout', (req, res) => {
   const c = parseCookies(req);
-  if (c.sid) sessions.delete(c.sid);
+  if (c.sid) { sessions.delete(c.sid); sessionsSave(); }
   res.set('Set-Cookie', 'sid=; HttpOnly; Path=/; Max-Age=0');
   res.redirect('/login');
 });
@@ -422,7 +450,7 @@ app.delete('/api/wa/instances/:name', apiAuth, async (req, res) => {
 });
 
 // API
-app.get('/api/me', apiAuth, (_req, res) => res.json({ ok: true, host: PUBLIC_HOST, ip: SERVER_IP }));
+app.get('/api/me', apiAuth, (req, res) => res.json({ ok: true, host: PUBLIC_HOST, ip: SERVER_IP, user: req.user }));
 
 app.get('/api/apps', apiAuth, async (_req, res) => {
   const apps = await computeAppsState();
