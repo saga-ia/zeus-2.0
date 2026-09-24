@@ -103,11 +103,13 @@ Referência completa: `docs/wapi-reference.md`.
 
 ## Roteamento de modelos
 
-- **hard** = Opus 4.7 (eu, decisões complexas)
-- **black** = Sonnet 4.6 (workers Mayara/Fase 2)
-- **intermediário** = Haiku 4.5 (tarefas mecânicas)
+- **top** = Opus 4.8 (`claude-opus-4-8`) — criar/alterar sistemas, código, deploy, refactor, debug
+- **mid** = Sonnet 4.6 (`claude-sonnet-4-6`) — pesquisa, análise, explicação, conversa rica, api-reply (clientes)
+- **low** = Haiku 4.5 (`claude-haiku-4-5-20251001`) — ack curto, saudação, ≤15 palavras sem palavra forte
 
-Use o cérebro mais barato que dá conta.
+Roteamento automático no `agent-runner.sh` por regex (build/research). Use sempre a versão mais nova de cada tier — quando sair novo Opus/Sonnet/Haiku, atualizar aqui e no agent-runner.
+
+Use o cérebro mais barato que dá conta, mas sem economizar em coisa principal (criar sistema = Opus sempre).
 
 ---
 

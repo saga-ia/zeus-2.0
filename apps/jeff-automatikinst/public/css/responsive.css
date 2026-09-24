@@ -1,0 +1,135 @@
+/* ==========================================================================
+   Responsividade do Zeus Post
+   O projeto nasceu só para desktop: sidebar fixa de 240px, grids de 4 e 6
+   colunas e modais com largura fixa. Em celular isso gerava rolagem lateral e
+   conteúdo cortado. Esta folha adapta sem tocar no visual do desktop.
+   Testado em 320, 375, 390, 768, 1024 e 1440 px.
+   ========================================================================== */
+
+/* Nunca deixar a página rolar de lado */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video { max-width: 100%; }
+
+/* Botão do menu (só aparece no celular) */
+.menu-toggle {
+  display: none;
+  position: fixed; top: 12px; left: 12px; z-index: 120;
+  width: 44px; height: 44px;           /* alvo de toque confortável */
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+  font-size: 20px; cursor: pointer;
+  align-items: center; justify-content: center;
+}
+.sidebar-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.6); z-index: 99;
+}
+.sidebar-backdrop.open { display: block; }
+
+/* ===================== TABLET (≤ 1024px) ===================== */
+@media (max-width: 1024px) {
+  .main { padding: 28px 24px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .content-grid { grid-template-columns: 1fr !important; }
+  .format-tabs { flex-wrap: wrap; }
+  .ftab { flex: 1 1 45%; }
+}
+
+/* ===================== CELULAR (≤ 768px) ===================== */
+@media (max-width: 768px) {
+  /* menu vira gaveta */
+  .menu-toggle { display: flex; }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 100; width: 260px;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main {
+    margin-left: 0 !important;
+    padding: 68px 16px 32px;   /* espaço para o botão do menu */
+    max-width: 100%;
+  }
+
+  /* cabeçalhos empilham */
+  .page-header { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+  .page-header h1 { font-size: 23px; }
+
+  /* cartões e grids viram coluna única */
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 24px !important; }
+  .content-grid, .row { grid-template-columns: 1fr !important; }
+  .card { padding: 18px; }
+
+  /* filtros um embaixo do outro */
+  .dash-filters, .cal-filters { grid-template-columns: 1fr !important; }
+
+  /* modais ocupam a tela inteira, com rolagem interna */
+  .modal-overlay { padding: 0 !important; align-items: stretch !important; }
+  .modal {
+    max-width: 100% !important; width: 100% !important;
+    border-radius: 0 !important; min-height: 100vh;
+    padding: 60px 16px 24px !important; margin: 0 !important;
+  }
+  .modal-close { top: 12px; right: 12px; width: 40px; height: 40px; font-size: 26px; }
+  .modal-footer { flex-direction: column; }
+  .modal-footer .btn { width: 100%; }
+
+  /* calendário: células menores e rolagem horizontal controlada */
+  .calendar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cal-grid, .cal-header { min-width: 460px; }
+  .cal-cell { min-height: 74px !important; padding: 4px !important; }
+  .post-dot { font-size: 9px !important; padding: 1px 3px !important; }
+
+  /* listas viram cartões empilhados */
+  .post-card { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+  .post-actions { width: 100%; display: flex; gap: 8px; }
+  .post-actions .btn-sm { flex: 1; padding: 10px !important; }
+
+  /* campanhas */
+  .campaign-header { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+  .campaign-header > div:last-child { width: 100%; justify-content: flex-start !important; }
+
+  /* alvos de toque com no mínimo 40px */
+  .btn, .btn-primary, .btn-secondary, .cal-btn, .btn-connect { min-height: 42px; }
+  input, select, textarea { font-size: 16px !important; } /* evita zoom automático no iOS */
+
+  /* galerias e miniaturas */
+  .platforms-grid { grid-template-columns: 1fr !important; }
+  .time-list { flex-wrap: wrap; }
+
+  /* tabela de permissões/contas */
+  .account-item { flex-wrap: wrap; }
+  .account-item .btn-disconnect { width: 100%; margin-top: 6px; }
+}
+
+/* ===================== CELULAR ESTREITO (≤ 400px) ===================== */
+@media (max-width: 400px) {
+  .main { padding: 64px 12px 24px; }
+  .stats-grid { grid-template-columns: 1fr !important; }
+  .page-header h1 { font-size: 20px; }
+  .card, .stat-card { padding: 14px; }
+  .cal-grid, .cal-header { min-width: 380px; }
+}
+
+/* ===================== TELA BAIXA / PAISAGEM ===================== */
+@media (max-height: 480px) and (orientation: landscape) {
+  .modal { min-height: auto; padding-top: 52px !important; }
+  .sidebar { overflow-y: auto; }
+}
+
+/* Área segura em aparelhos com notch */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .main { padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+  }
+}
+
+/* Foco visível para navegação por teclado */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}

@@ -108,6 +108,22 @@ const SYSTEM_TOKEN = setting('jeff_meta_system_token');
 const ANTHROPIC_KEY = getEnv('ANTHROPIC_API_KEY');
 const GROQ_KEY = getEnv('GROQ_API_KEY');
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function dateParams(src, fallback) {
+  const since = String(src?.since || '').trim();
+  const until = String(src?.until || '').trim();
+  if (ISO_DATE_RE.test(since) && ISO_DATE_RE.test(until)) {
+    return { time_range: JSON.stringify({ since, until }) };
+  }
+  return { date_preset: src?.date_preset || fallback };
+}
+function dateLabel(dp, fallback) {
+  if (dp.time_range) {
+    try { const t = JSON.parse(dp.time_range); return `${t.since} a ${t.until}`; } catch { return fallback; }
+  }
+  return dp.date_preset || fallback;
+}
+
 async function graph(path, params = {}, useFallback = false) {
   const token = useFallback ? SYSTEM_TOKEN : USER_TOKEN;
   if (!token) throw new Error('no_token');
@@ -151,8 +167,22 @@ const app = express();
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: false }));
 
+
+// Esqueci minha senha (código via WhatsApp do dono) — módulo compartilhado jeff-shared
+require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
+  appName: 'Meta Ads Dashboard',
+  needsIdentifier: true,
+  identifierLabel: 'Usuário',
+  userExists: (username) => !!authDb.prepare('SELECT 1 FROM users WHERE username = ?').get(username),
+  setPassword: (newPass, username) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const r = authDb.prepare('UPDATE users SET password_hash = ?, salt = ? WHERE username = ?').run(hashPwd(newPass, salt), salt, username);
+    return r.changes > 0;
+  }
+});
+
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
-app.get('/signup', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
+app.get('/signup', (_req, res) => res.status(403).send('Cadastro fechado. Acesso somente por convite.'));
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
@@ -168,6 +198,8 @@ app.post('/api/login', (req, res) => {
 });
 
 app.post('/api/signup', (req, res) => {
+  return res.status(403).json({ error: 'Cadastro fechado. Acesso somente por convite.' });
+  // eslint-disable-next-line no-unreachable
   const { name, username, password } = req.body || {};
   if (!name || !username || !password) return res.status(400).json({ error: 'Preencha todos os campos.' });
   if (password.length < 6) return res.status(400).json({ error: 'Senha muito curta (minimo 6 caracteres).' });
@@ -307,7 +339,7 @@ app.get('/api/campaigns', apiAuth, async (req, res) => {
   try {
     const accountId = req.query.account_id;
     const showInactive = req.query.show_inactive === '1';
-    const preset = req.query.date_preset || 'last_7d';
+    const dp = dateParams(req.query, 'last_7d');
     if (!accountId) return res.status(400).json({ error: 'account_id required' });
 
     const camps = await graphPaged(`act_${accountId}/campaigns`, {
@@ -324,7 +356,7 @@ app.get('/api/campaigns', apiAuth, async (req, res) => {
       try {
         const insights = await graphPaged(`act_${accountId}/insights`, {
           fields: 'campaign_id,campaign_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions,cost_per_action_type',
-          date_preset: preset,
+          ...dp,
           level: 'campaign',
           limit: 200
         });
@@ -353,7 +385,7 @@ app.get('/api/campaigns', apiAuth, async (req, res) => {
       return sb - sa;
     });
 
-    res.json({ campaigns: result, total: result.length, date_preset: preset });
+    res.json({ campaigns: result, total: result.length, ...dp });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -362,14 +394,14 @@ app.get('/api/campaigns', apiAuth, async (req, res) => {
 app.get('/api/account-summary', apiAuth, async (req, res) => {
   try {
     const accountId = req.query.account_id;
-    const preset = req.query.date_preset || 'last_7d';
+    const dp = dateParams(req.query, 'last_7d');
     if (!accountId) return res.status(400).json({ error: 'account_id required' });
     const data = await graph(`act_${accountId}/insights`, {
       fields: 'spend,impressions,clicks,reach,cpm,cpc,ctr,actions,cost_per_action_type',
-      date_preset: preset,
+      ...dp,
       level: 'account'
     });
-    res.json({ summary: data.data?.[0] || null, date_preset: preset });
+    res.json({ summary: data.data?.[0] || null, ...dp });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -378,7 +410,7 @@ app.get('/api/account-summary', apiAuth, async (req, res) => {
 app.get('/api/creatives', apiAuth, async (req, res) => {
   try {
     const accountId = req.query.account_id;
-    const preset = req.query.date_preset || 'last_14d';
+    const dp = dateParams(req.query, 'last_14d');
     if (!accountId) return res.status(400).json({ error: 'account_id required' });
 
     const ads = await graphPaged(`act_${accountId}/ads`, {
@@ -388,7 +420,7 @@ app.get('/api/creatives', apiAuth, async (req, res) => {
 
     const insights = await graphPaged(`act_${accountId}/insights`, {
       fields: 'ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions,cost_per_action_type',
-      date_preset: preset,
+      ...dp,
       level: 'ad',
       limit: 200
     });
@@ -409,7 +441,7 @@ app.get('/api/creatives', apiAuth, async (req, res) => {
 
     out.sort((a, b) => Number(b.insights.spend || 0) - Number(a.insights.spend || 0));
 
-    res.json({ creatives: out, date_preset: preset, total: out.length });
+    res.json({ creatives: out, ...dp, total: out.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -418,25 +450,26 @@ app.get('/api/creatives', apiAuth, async (req, res) => {
 app.post('/api/analyze', apiAuth, async (req, res) => {
   try {
     if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'anthropic_key_missing' });
-    const { account_id, query, date_preset = 'last_14d' } = req.body || {};
+    const { account_id, query } = req.body || {};
+    const dp = dateParams(req.body || {}, 'last_14d');
     if (!account_id || !query) return res.status(400).json({ error: 'account_id and query required' });
 
     const [campRes, creatRes, sumRes] = await Promise.all([
       graphPaged(`act_${account_id}/insights`, {
         fields: 'campaign_id,campaign_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions,cost_per_action_type',
-        date_preset,
+        ...dp,
         level: 'campaign',
         limit: 100
       }).catch(() => []),
       graphPaged(`act_${account_id}/insights`, {
         fields: 'ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions,cost_per_action_type',
-        date_preset,
+        ...dp,
         level: 'ad',
         limit: 200
       }).catch(() => []),
       graph(`act_${account_id}/insights`, {
         fields: 'spend,impressions,clicks,reach,cpm,cpc,ctr,actions',
-        date_preset,
+        ...dp,
         level: 'account'
       }).catch(() => null)
     ]);
@@ -462,7 +495,7 @@ app.post('/api/analyze', apiAuth, async (req, res) => {
 
 PEDIDO DO JEFF: "${query}"
 
-PERÍODO: ${date_preset}
+PERÍODO: ${dateLabel(dp, 'last_14d')}
 
 RESUMO DA CONTA:
 ${JSON.stringify(summary, null, 2)}
@@ -518,7 +551,7 @@ Retorne SOMENTE um JSON válido (sem markdown, sem explicação fora do JSON) no
     } catch (e) {
       return res.json({ raw: text, parse_error: true });
     }
-    res.json({ analysis: parsed, query, date_preset, account_id });
+    res.json({ analysis: parsed, query, ...dp, account_id });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -537,20 +570,20 @@ const getLeads = (actions) => {
 app.get('/api/meta-dashboard', apiAuth, async (req, res) => {
   try {
     const accountId = req.query.account_id;
-    const preset = req.query.date_preset || 'last_30d';
+    const dp = dateParams(req.query, 'last_30d');
     if (!accountId) return res.status(400).json({ error: 'account_id required' });
 
     const FIELDS_ACCOUNT = 'spend,impressions,clicks,reach,cpm,cpc,ctr,frequency,actions,cost_per_action_type';
     const FIELDS_BASIC = 'spend,impressions,clicks,reach,actions';
 
     const [summaryRes, timeRes, ageRes, genderRes, regionRes, campRes, adRes] = await Promise.allSettled([
-      graph(`act_${accountId}/insights`, { fields: FIELDS_ACCOUNT, date_preset: preset, level: 'account' }),
-      graph(`act_${accountId}/insights`, { fields: `${FIELDS_BASIC},date_start`, date_preset: preset, level: 'account', time_increment: 1, limit: 90 }),
-      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, date_preset: preset, level: 'account', breakdowns: 'age', limit: 20 }),
-      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, date_preset: preset, level: 'account', breakdowns: 'gender', limit: 10 }),
-      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, date_preset: preset, level: 'account', breakdowns: 'region', limit: 50 }),
-      graphPaged(`act_${accountId}/insights`, { fields: `campaign_id,campaign_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions`, date_preset: preset, level: 'campaign', limit: 100 }),
-      graphPaged(`act_${accountId}/insights`, { fields: `ad_id,ad_name,adset_name,campaign_name,spend,impressions,clicks,reach,ctr,actions`, date_preset: preset, level: 'ad', limit: 100 })
+      graph(`act_${accountId}/insights`, { fields: FIELDS_ACCOUNT, ...dp, level: 'account' }),
+      graph(`act_${accountId}/insights`, { fields: `${FIELDS_BASIC},date_start`, ...dp, level: 'account', time_increment: 1, limit: 90 }),
+      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, ...dp, level: 'account', breakdowns: 'age', limit: 20 }),
+      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, ...dp, level: 'account', breakdowns: 'gender', limit: 10 }),
+      graph(`act_${accountId}/insights`, { fields: FIELDS_BASIC, ...dp, level: 'account', breakdowns: 'region', limit: 50 }),
+      graphPaged(`act_${accountId}/insights`, { fields: `campaign_id,campaign_name,spend,impressions,clicks,reach,cpm,cpc,ctr,actions`, ...dp, level: 'campaign', limit: 100 }),
+      graphPaged(`act_${accountId}/insights`, { fields: `ad_id,ad_name,adset_name,campaign_name,spend,impressions,clicks,reach,ctr,actions`, ...dp, level: 'ad', limit: 100 })
     ]);
 
     const campsData0 = campRes.status === 'fulfilled' ? campRes.value : [];

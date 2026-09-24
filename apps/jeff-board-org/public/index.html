@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organograma — Board Academy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="logo-icon">&#9679;</span>
+      <span class="logo-text" id="companyName">Board Academy</span>
+    </div>
+    <button class="btn-close-sidebar" onclick="closeSidebar()">&#10005;</button>
+  </div>
+
+  <!-- MENU DE NAVEGAÇÃO DO SIDEBAR -->
+  <div class="sidebar-section" id="sidebarNav">
+    <h3 class="section-title">O QUE DESEJA FAZER?</h3>
+    <button class="btn btn-primary btn-full" style="margin-bottom:10px" onclick="showSidebarView('person')">&#128101; Cadastrar Pessoas</button>
+  </div>
+
+  <!-- FORMULÁRIO DE PESSOA -->
+  <div class="sidebar-section" id="personFormSection" style="display:none">
+    <div style="margin-bottom:8px">
+      <button type="button" onclick="showSidebarView('nav')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:0;display:flex;align-items:center;gap:4px">&#8592; Voltar</button>
+    </div>
+    <h3 class="section-title">ADICIONAR PESSOA</h3>
+    <form id="nodeForm" onsubmit="submitNode(event)">
+      <input type="hidden" id="editId">
+
+      <div class="form-group">
+        <label>Nome *</label>
+        <input type="text" id="fName" placeholder="Nome completo" required>
+      </div>
+
+      <div class="form-group">
+        <label>Cargo / Função</label>
+        <input type="text" id="fRole" placeholder="Ex: Diretor Executivo">
+      </div>
+
+      <div class="form-group">
+        <label>Nível</label>
+        <select id="fLevel" onchange="onLevelChange()">
+          <!-- populado por populateLevelSelect() -->
+        </select>
+      </div>
+
+      <div class="form-group" id="teamGroupField" style="display:none">
+        <label>Grupo de Equipe</label>
+        <select id="fTeamGroup" onchange="onTeamGroupChange()">
+          <option value="">— Sem grupo específico —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Reporta para</label>
+        <select id="fParent">
+          <option value="">— Raiz (sem superior) —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="fWhatsapp" placeholder="5511999999999">
+      </div>
+
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="text" id="fPhone" placeholder="(11) 9999-9999">
+      </div>
+
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="fEmail" placeholder="email@empresa.com">
+      </div>
+
+      <div class="form-group">
+        <label>Cor do card</label>
+        <div class="color-picker-row">
+          <input type="color" id="fColor" value="#4361ee" oninput="onColorPick()">
+          <button type="button" class="btn-clear-color" onclick="resetColor()">Auto</button>
+          <input type="checkbox" id="fColorCustom" style="display:none">
+          <span id="colorAutoLabel" style="font-size:11px;color:#94a3b8">Cor padrão do nível</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="photoGroup" style="display:none">
+        <label>Foto</label>
+        <input type="file" id="fPhoto" accept="image/*">
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="clearForm()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmit">Adicionar</button>
+      </div>
+    </form>
+  </div>
+
+
+  <div class="sidebar-section" style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)">
+    <button class="btn btn-ghost btn-full" onclick="exportData()">&#8645; Exportar JSON</button>
+    <label class="btn btn-ghost btn-full" style="cursor:pointer;text-align:center;margin-top:8px">
+      &#8645; Importar JSON
+      <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+    </label>
+  </div>
+</aside>
+
+<!-- MODAL PERFIL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="btn-close-modal" onclick="closeModal()">&#10005;</button>
+    <div class="modal-photo-wrap">
+      <div class="modal-avatar" id="modalAvatar"></div>
+    </div>
+    <div class="modal-info">
+      <h2 id="modalName"></h2>
+      <p class="modal-role" id="modalRole"></p>
+      <span class="modal-badge" id="modalBadge"></span>
+    </div>
+    <div class="modal-contacts" id="modalContacts"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="editNode()">Editar</button>
+      <button class="btn btn-secondary" onclick="openConnectModal()">Conectar</button>
+      <button class="btn btn-danger" onclick="deleteNode()">Remover</button>
+    </div>
+    <div class="modal-children" id="modalChildren"></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="btn-menu" onclick="toggleSidebar()">&#9776;</button>
+  <div class="topbar-brand">
+    <span id="topCompany">Board Academy</span>
+    <span class="topbar-sub">Organograma</span>
+  </div>
+  <div class="topbar-actions">
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-btn" id="btnViewTree" onclick="setViewMode('tree')" title="Visão Árvore">&#128197;</button>
+      <button class="view-btn active" id="btnViewBlocks" onclick="setViewMode('blocks')" title="Visão Blocos">&#9646;</button>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddPanel(null)">+ Adicionar</button>
+  </div>
+</header>
+
+<!-- BARRA DE FILTRO -->
+<div class="filter-bar" id="filterBar">
+  <button class="filter-chip active" id="filterAll" onclick="setFilter(null)">Todos</button>
+  <span class="filter-sep">|</span>
+  <div class="filter-chips" id="filterChips"></div>
+</div>
+
+<!-- MODAL CONEXÃO HIERÁRQUICA -->
+<div class="modal-overlay" id="connectOverlay" onclick="closeConnectModal()">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="btn-close-modal" onclick="closeConnectModal()">&#10005;</button>
+    <h2 style="margin-top: 0">Conectar a uma equipe</h2>
+    <div id="connectStep" style="display:none">
+      <p style="margin-bottom: 16px">Escolha o tipo de vínculo:</p>
+      <div style="display:flex;gap:12px;margin-bottom:24px">
+        <button class="btn btn-primary" onclick="selectConnectType('diretoria')">Diretoria</button>
+        <button class="btn btn-primary" onclick="selectConnectType('equipe')">Equipe</button>
+      </div>
+    </div>
+    <div id="selectParentStep" style="display:none">
+      <p style="margin-bottom: 16px" id="selectParentLabel"></p>
+      <div id="parentList" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:24px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="backToTypeSelect()">Voltar</button>
+        <button class="btn btn-primary" id="btnContinue" style="display:none">Continuar</button>
+      </div>
+    </div>
+    <div id="confirmStep" style="display:none">
+      <p style="margin-bottom:16px"><strong id="confirmText"></strong></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="backToParentSelect()">Voltar</button>
+        <button class="btn btn-primary" onclick="confirmConnection()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CANVAS DO ORGANOGRAMA -->
+<main class="org-canvas" id="orgCanvas">
+  <div id="filterLabel" class="filter-label" style="display:none"></div>
+  <div class="org-tree" id="orgTree"></div>
+</main>
+
+
+<script src="app.js"></script>
+</body>
+</html>

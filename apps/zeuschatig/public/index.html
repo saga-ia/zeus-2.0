@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>myIG — Agentes IA do Instagram</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3.4.38/dist/vue.global.prod.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html,body,#app{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:#f7f7fb;color:#1e2939}
+  [v-cloak]{display:none}
+  .scrollbar-thin::-webkit-scrollbar{width:6px;height:6px}
+  .scrollbar-thin::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:8px}
+  .scrollbar-thin::-webkit-scrollbar-track{background:transparent}
+  .bubble-in{background:#fff;border:1px solid #e6e8ee;border-radius:16px 16px 16px 4px}
+  .bubble-out{background:#7c3aed;color:#fff;border-radius:16px 16px 4px 16px}
+  .bubble-op{background:#0ea5e9;color:#fff;border-radius:16px 16px 4px 16px}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.6s infinite;display:inline-block}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+</style>
+</head>
+<body>
+<div id="app" v-cloak></div>
+
+<script>
+const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
+
+const api = async (path, opts = {}) => {
+  const res = await fetch(path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || res.statusText);
+  return json;
+};
+const fmtTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso.includes('Z') || iso.includes('+') ? iso : iso + 'Z');
+  const diff = (new Date() - d) / 1000;
+  if (diff < 60) return 'agora';
+  if (diff < 3600) return Math.floor(diff/60) + 'min';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+};
+const fmtDateTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso.includes('Z') || iso.includes('+') ? iso : iso + 'Z');
+  return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+};
+
+const App = {
+  setup() {
+    const route = ref(location.hash.replace('#', '') || '/dashboard');
+    const user = ref(null);
+    const tenant = ref(null);
+    const loginForm = reactive({ email: '', password: '', error: '' });
+    const bootstrapped = ref(false);
+
+    const dash = ref(null);
+    const agents = ref([]);
+    const editingAgent = ref(null);
+    const threads = ref([]);
+    const activeThreadId = ref(null);
+    const activeThread = ref(null);
+    const activeMessages = ref([]);
+    const activeRuns = ref([]);
+    const operatorText = ref('');
+    const liveRun = ref(null);
+    let eventSource = null;
+
+    async function loadMe() {
+      try { const r = await api('/api/auth/me'); user.value = r.user; return true; }
+      catch { return false; }
+    }
+    async function doLogin() {
+      loginForm.error = '';
+      try {
+        await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: loginForm.email, password: loginForm.password }) });
+        await loadMe(); goto('/dashboard'); startStream();
+      } catch (e) { loginForm.error = 'Login invalido.'; }
+    }
+    async function doLogout() {
+      await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+      user.value = null; goto('/login');
+    }
+    function goto(r) { location.hash = r; route.value = r; }
+    window.addEventListener('hashchange', () => { route.value = location.hash.replace('#','') || '/dashboard'; });
+
+    async function loadDashboard() { const r = await api('/api/dashboard'); dash.value = r; tenant.value = r.tenant; }
+    async function loadAgents() { const r = await api('/api/agents'); agents.value = r.agents; if (r.tenant) tenant.value = { ...(tenant.value||{}), ...r.tenant }; }
+    async function loadThreads() { const r = await api('/api/threads'); threads.value = r.threads; }
+    async function openThread(id) {
+      activeThreadId.value = id;
+      const r = await api('/api/threads/' + id);
+      activeThread.value = r.thread;
+      activeMessages.value = r.messages;
+      activeRuns.value = r.runs;
+      await nextTick(); scrollMessagesToEnd();
+    }
+    function scrollMessagesToEnd() { const el = document.getElementById('msgs-scroll'); if (el) el.scrollTop = el.scrollHeight; }
+
+    async function sendOperator() {
+      if (!operatorText.value.trim() || !activeThread.value) return;
+      const txt = operatorText.value; operatorText.value = '';
+      try {
+        await api('/api/threads/' + activeThread.value.id + '/send', { method: 'POST', body: JSON.stringify({ text: txt }) });
+        await openThread(activeThread.value.id);
+      } catch (e) { alert('Falha ao enviar: ' + e.message); }
+    }
+    async function togglePause() {
+      if (!activeThread.value) return;
+      const path = activeThread.value.paused ? 'resume' : 'pause';
+      await api('/api/threads/' + activeThread.value.id + '/' + path, { method: 'POST' });
+      await openThread(activeThread.value.id);
+    }
+
+    function startStream() {
+      if (eventSource) return;
+      eventSource = new EventSource('/api/stream');
+      eventSource.addEventListener('run', (e) => {
+        const run = JSON.parse(e.data);
+        if (run.status === 'running') liveRun.value = run;
+        else liveRun.value = null;
+        if (activeThread.value && run.thread_id === activeThread.value.id) {
+          activeRuns.value = [run, ...activeRuns.value.filter(r=>r.id!==run.id)].slice(0, 20);
+        }
+      });
+      eventSource.addEventListener('message', async (e) => {
+        const m = JSON.parse(e.data);
+        if (activeThread.value && m.contact_id === activeThread.value.contact_id) {
+          activeMessages.value.push(m); await nextTick(); scrollMessagesToEnd();
+        }
+        loadThreads().catch(()=>{});
+      });
+      eventSource.onerror = () => { try{eventSource?.close();}catch{} eventSource = null; setTimeout(startStream, 3000); };
+    }
+
+    function newAgent() {
+      editingAgent.value = { id: null, name: '', system_prompt: '', model: 'claude-opus-4-7',
+        avatar_emoji: 'robot', color: '#7c3aed', max_turns: 1, timeout_seconds: 120, active: 1,
+        rules: [], newRule: { rule_type: 'default', rule_value: '', priority: 0 } };
+    }
+    async function editAgent(id) {
+      const r = await api('/api/agents/' + id);
+      editingAgent.value = { ...r.agent, rules: r.rules, newRule: { rule_type: 'default', rule_value: '', priority: 0 } };
+    }
+    async function saveAgent() {
+      const a = editingAgent.value;
+      const payload = {
+        name: a.name, system_prompt: a.system_prompt, model: a.model,
+        avatar_emoji: a.avatar_emoji, color: a.color,
+        max_turns: parseInt(a.max_turns)||1, timeout_seconds: parseInt(a.timeout_seconds)||120,
+        active: a.active ? true : false,
+      };
+      if (a.id) await api('/api/agents/' + a.id, { method: 'PUT', body: JSON.stringify(payload) });
+      else { const r = await api('/api/agents', { method: 'POST', body: JSON.stringify(payload) }); a.id = r.agent.id; }
+      await loadAgents(); editingAgent.value = null; goto('/agents');
+    }
+    async function delAgent(id) {
+      if (!confirm('Apagar esse agente?')) return;
+      await api('/api/agents/' + id, { method: 'DELETE' }); await loadAgents();
+    }
+    async function toggleAgent(a) {
+      const next = a.active ? false : true;
+      await api('/api/agents/' + a.id, { method: 'PUT', body: JSON.stringify({ active: next }) });
+      a.active = next ? 1 : 0;
+    }
+    async function addRule() {
+      const a = editingAgent.value;
+      const r = await api('/api/agents/' + a.id + '/rules', { method: 'POST', body: JSON.stringify(a.newRule) });
+      a.rules.push(r.rule); a.newRule = { rule_type: 'default', rule_value: '', priority: 0 };
+    }
+    async function delRule(id) {
+      await api('/api/rules/' + id, { method: 'DELETE' });
+      editingAgent.value.rules = editingAgent.value.rules.filter(r => r.id !== id);
+    }
+
+    async function routeChange(r) {
+      if (!user.value) return;
+      if (r === '/dashboard') await loadDashboard();
+      else if (r === '/agents') await loadAgents();
+      else if (r === '/agents/new') newAgent();
+      else if (r.startsWith('/agents/')) await editAgent(r.split('/')[2]);
+      else if (r === '/chats') await loadThreads();
+      else if (r.startsWith('/chats/')) { await loadThreads(); await openThread(parseInt(r.split('/')[2])); }
+    }
+    watch(route, routeChange);
+
+    onMounted(async () => {
+      const ok = await loadMe();
+      if (!ok) { goto('/login'); bootstrapped.value = true; return; }
+      await routeChange(route.value);
+      startStream();
+      bootstrapped.value = true;
+    });
+
+    return {
+      route, user, tenant, dash, loginForm, doLogin, doLogout, goto, bootstrapped,
+      agents, editingAgent, newAgent, editAgent, saveAgent, delAgent, toggleAgent, addRule, delRule,
+      threads, activeThread, activeMessages, activeRuns, activeThreadId,
+      operatorText, sendOperator, togglePause, openThread, liveRun,
+      fmtTime, fmtDateTime,
+    };
+  },
+  template: `
+  <div v-if="!bootstrapped" class="h-full flex items-center justify-center text-slate-400">Carregando…</div>
+
+  <div v-else-if="!user" class="h-full flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-700 to-fuchsia-700 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 mx-auto flex items-center justify-center text-white font-bold text-2xl">µ</div>
+        <h1 class="mt-4 font-extrabold text-2xl">myIG</h1>
+        <p class="text-sm text-slate-500">Agentes de IA pro seu Instagram</p>
+      </div>
+      <form @submit.prevent="doLogin" class="space-y-3">
+        <input v-model="loginForm.email" type="email" placeholder="e-mail" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none">
+        <input v-model="loginForm.password" type="password" placeholder="senha" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none">
+        <div v-if="loginForm.error" class="text-red-500 text-sm">{{ loginForm.error }}</div>
+        <button class="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold transition">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div v-else class="h-full flex">
+    <aside class="w-64 shrink-0 bg-slate-900 text-slate-200 flex flex-col">
+      <div class="px-5 py-5 border-b border-slate-800 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold">µ</div>
+        <div>
+          <div class="font-bold">myIG</div>
+          <div class="text-xs text-slate-400">@{{ tenant?.ig_username || '—' }}</div>
+        </div>
+      </div>
+      <nav class="flex-1 p-3 space-y-1">
+        <a href="#/dashboard" :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium', route==='/dashboard'?'bg-violet-600 text-white':'hover:bg-slate-800']">
+          <span class="text-lg">▤</span> Dashboard
+        </a>
+        <a href="#/agents" :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium', route.startsWith('/agents')?'bg-violet-600 text-white':'hover:bg-slate-800']">
+          <span class="text-lg">◈</span> Agentes IA
+        </a>
+        <a href="#/chats" :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium', route.startsWith('/chats')?'bg-violet-600 text-white':'hover:bg-slate-800']">
+          <span class="text-lg">◉</span> Conversas
+          <span v-if="threads.some(t=>t.unread_count>0)" class="ml-auto bg-red-500 text-white text-xs px-2 rounded-full">{{ threads.reduce((s,t)=>s+(t.unread_count||0),0) }}</span>
+        </a>
+      </nav>
+      <div class="p-3 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+        <span class="truncate">{{ user.email }}</span>
+        <button @click="doLogout" class="text-slate-300 hover:text-white ml-2">sair</button>
+      </div>
+    </aside>
+
+    <main class="flex-1 overflow-hidden">
+      <div v-if="route==='/dashboard'" class="h-full overflow-auto scrollbar-thin p-8">
+        <h1 class="text-2xl font-extrabold mb-1">Ótima tarde, Jeff.</h1>
+        <p class="text-slate-500 mb-6" v-if="dash?.tenant">Conta @{{ dash.tenant.ig_username }} • status <span class="font-medium">{{ dash.tenant.status }}</span></p>
+        <p v-else class="text-slate-500 mb-6">Nenhuma conta conectada.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Agentes ativos</div>
+            <div class="text-3xl font-extrabold mt-2">{{ dash?.stats?.agents ?? 0 }}</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Conversas</div>
+            <div class="text-3xl font-extrabold mt-2">{{ dash?.stats?.threads ?? 0 }}</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Msgs 24h (in/out)</div>
+            <div class="text-3xl font-extrabold mt-2">{{ dash?.stats?.messagesIn ?? 0 }} <span class="text-slate-300">/</span> {{ dash?.stats?.messagesOut ?? 0 }}</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Runs 24h</div>
+            <div class="text-3xl font-extrabold mt-2">{{ dash?.stats?.runsToday ?? 0 }}
+              <span v-if="dash?.stats?.runsErrors" class="text-red-500 text-lg">({{ dash.stats.runsErrors }} erro)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-bold">Últimas execuções</h2>
+            <div v-if="liveRun" class="flex items-center gap-2 text-sm text-green-600"><span class="pulse-dot"></span> IA respondendo agora</div>
+          </div>
+          <table class="w-full text-sm">
+            <thead class="text-slate-400 text-xs uppercase">
+              <tr><th class="text-left py-2">Agente</th><th class="text-left">Usuário</th><th class="text-left">Modelo</th><th class="text-left">Duração</th><th class="text-left">Quando</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in dash?.recentRuns || []" :key="r.id" class="border-t border-slate-100">
+                <td class="py-2 font-medium">{{ r.agent_name || '—' }}</td>
+                <td>@{{ r.ig_username || '—' }}</td>
+                <td class="text-slate-500">{{ r.model }}</td>
+                <td class="text-slate-500">{{ r.duration_ms ? (r.duration_ms/1000).toFixed(1)+'s' : '—' }}</td>
+                <td class="text-slate-500">{{ fmtDateTime(r.started_at) }}</td>
+                <td>
+                  <span :class="['text-xs px-2 py-1 rounded-full font-medium',
+                    r.status==='done'?'bg-green-100 text-green-700':
+                    r.status==='error'||r.status==='timeout'?'bg-red-100 text-red-700':
+                    'bg-yellow-100 text-yellow-700']">{{ r.status }}</span>
+                </td>
+              </tr>
+              <tr v-if="!dash?.recentRuns?.length"><td colspan="6" class="text-center text-slate-400 py-6">Nenhuma execução ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div v-else-if="route==='/agents'" class="h-full overflow-auto scrollbar-thin p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-extrabold">Agentes de IA</h1>
+          <a href="#/agents/new" class="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold transition">+ Novo agente</a>
+        </div>
+        <div v-if="!agents.length" class="bg-white rounded-2xl p-12 border border-dashed border-slate-200 text-center text-slate-500">
+          <div class="text-5xl mb-3">◇</div>
+          <p class="font-semibold text-slate-700 mb-1">Nenhum agente criado ainda</p>
+          <p class="text-sm">Crie seu primeiro agente pra começar a responder DMs automaticamente.</p>
+        </div>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="a in agents" :key="a.id" class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition cursor-pointer" @click="goto('/agents/'+a.id)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" :style="{background:a.color}">{{ a.name?.[0] || 'A' }}</div>
+              <label @click.stop class="relative inline-flex items-center cursor-pointer" :title="a.active?'clique pra desativar':'clique pra ativar'">
+                <input type="checkbox" :checked="!!a.active" @change="toggleAgent(a)" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-checked:bg-green-500 rounded-full transition"></div>
+                <div :class="['absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition', a.active?'translate-x-5':'']"></div>
+              </label>
+            </div>
+            <div class="flex items-center gap-2 mb-1">
+              <div class="font-bold text-lg">{{ a.name }}</div>
+              <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', a.active?'bg-green-100 text-green-700':'bg-slate-100 text-slate-500']">{{ a.active?'ativo':'desativado' }}</span>
+            </div>
+            <div class="text-xs text-slate-400 mb-3">{{ a.model }}</div>
+            <p class="text-sm text-slate-600 line-clamp-3">{{ a.system_prompt?.slice(0,140) || 'Sem prompt definido.' }}</p>
+            <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+              <span>timeout {{ a.timeout_seconds }}s</span>
+              <button @click.stop="delAgent(a.id)" class="text-red-500 hover:text-red-700">apagar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="route.startsWith('/agents/') && editingAgent" class="h-full overflow-auto scrollbar-thin p-8">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-center gap-3 mb-6">
+            <a href="#/agents" class="text-slate-400 hover:text-slate-700">← voltar</a>
+          </div>
+          <h1 class="text-2xl font-extrabold mb-6">{{ editingAgent.id ? 'Editar agente' : 'Novo agente' }}</h1>
+
+          <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-semibold text-slate-700">Nome do agente</label>
+                <input v-model="editingAgent.name" placeholder="Ex: SDR Congresso" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+              </div>
+              <div>
+                <label class="text-sm font-semibold text-slate-700">Modelo</label>
+                <select v-model="editingAgent.model" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+                  <option value="claude-opus-4-7">Opus 4.7 (mais inteligente)</option>
+                  <option value="claude-sonnet-4-6">Sonnet 4.6 (balanceado)</option>
+                  <option value="claude-haiku-4-5">Haiku 4.5 (rápido/barato)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-slate-700">Instruções / Personalidade (system prompt)</label>
+              <textarea v-model="editingAgent.system_prompt" rows="12" placeholder="Você é um SDR do Jefferson Henrike, especialista em… Sua missão é… Regras de atendimento…" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-none font-mono text-sm"></textarea>
+              <p class="text-xs text-slate-400 mt-1">Esse texto vira o cérebro do agente. Descreva quem ele é, o que faz, tom de voz, regras e limites.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label class="text-sm font-semibold text-slate-700">Cor</label>
+                <input v-model="editingAgent.color" type="color" class="mt-1 w-full h-10 rounded-xl border border-slate-200 cursor-pointer">
+              </div>
+              <div>
+                <label class="text-sm font-semibold text-slate-700">Timeout (s)</label>
+                <input v-model.number="editingAgent.timeout_seconds" type="number" min="30" max="600" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+              </div>
+              <div>
+                <label class="text-sm font-semibold text-slate-700">Max turnos</label>
+                <input v-model.number="editingAgent.max_turns" type="number" min="1" max="10" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+              </div>
+              <div class="flex items-end">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" :checked="!!editingAgent.active" @change="editingAgent.active = $event.target.checked?1:0" class="w-4 h-4">
+                  <span class="text-sm font-semibold text-slate-700">Ativo</span>
+                </label>
+              </div>
+            </div>
+            <div class="flex gap-3 pt-4 border-t border-slate-100">
+              <button @click="saveAgent" class="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">Salvar</button>
+              <a href="#/agents" class="px-6 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">Cancelar</a>
+            </div>
+          </div>
+
+          <div v-if="editingAgent.id" class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mt-6">
+            <h2 class="font-bold mb-1">Regras de roteamento</h2>
+            <p class="text-sm text-slate-500 mb-4">Quando esse agente deve entrar em ação? Sem regra = agente não é ativado automaticamente.</p>
+            <div class="space-y-2 mb-4">
+              <div v-for="r in editingAgent.rules" :key="r.id" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-xs px-2 py-1 rounded-full bg-violet-100 text-violet-700 font-semibold">{{ r.rule_type }}</span>
+                <span class="text-sm flex-1">{{ r.rule_value || 'sempre' }}</span>
+                <span class="text-xs text-slate-400">prioridade {{ r.priority }}</span>
+                <button @click="delRule(r.id)" class="text-red-500 text-sm">×</button>
+              </div>
+              <div v-if="!editingAgent.rules.length" class="text-sm text-slate-400 py-3 text-center">Nenhuma regra ainda.</div>
+            </div>
+            <div class="flex gap-2 items-end pt-4 border-t border-slate-100">
+              <div class="flex-1">
+                <label class="text-xs font-semibold text-slate-500">Tipo</label>
+                <select v-model="editingAgent.newRule.rule_type" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                  <option value="default">Padrão (todas mensagens sem match)</option>
+                  <option value="keyword">Palavra-chave</option>
+                  <option value="first_message">Primeira mensagem</option>
+                  <option value="comment_dm">DM vinda de comentário</option>
+                  <option value="sender_username">Username específico</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label class="text-xs font-semibold text-slate-500">Valor</label>
+                <input v-model="editingAgent.newRule.rule_value" placeholder="preço, valor, quanto" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
+              </div>
+              <div class="w-24">
+                <label class="text-xs font-semibold text-slate-500">Prioridade</label>
+                <input v-model.number="editingAgent.newRule.priority" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
+              </div>
+              <button @click="addRule" class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold">+ Adicionar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="route.startsWith('/chats')" class="h-full flex">
+        <div class="w-80 shrink-0 border-r border-slate-200 bg-white flex flex-col">
+          <div class="p-4 border-b border-slate-100">
+            <h2 class="font-bold">Conversas</h2>
+            <p class="text-xs text-slate-400">{{ threads.length }} threads</p>
+          </div>
+          <div class="flex-1 overflow-auto scrollbar-thin">
+            <div v-for="th in threads" :key="th.id"
+                 :class="['px-4 py-3 border-b border-slate-50 cursor-pointer hover:bg-slate-50', activeThreadId===th.id ? 'bg-violet-50':'']"
+                 @click="goto('/chats/'+th.id)">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm">
+                  {{ (th.ig_username||'?')[0]?.toUpperCase() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <div class="font-semibold text-sm truncate">@{{ th.ig_username || th.ig_sender_id?.slice(0,8) }}</div>
+                    <div class="text-xs text-slate-400">{{ fmtTime(th.last_message_at) }}</div>
+                  </div>
+                  <div class="text-xs text-slate-500 truncate flex items-center gap-1">
+                    <span v-if="th.last_direction==='out'" class="text-violet-500">↩</span>
+                    {{ th.last_text || '—' }}
+                  </div>
+                  <div class="mt-1 flex items-center gap-2">
+                    <span v-if="th.agent_name" class="text-xs px-2 py-0.5 rounded-full text-white font-medium" :style="{background:th.agent_color||'#7c3aed'}">{{ th.agent_name }}</span>
+                    <span v-if="th.unread_count>0" class="ml-auto bg-red-500 text-white text-xs px-2 rounded-full">{{ th.unread_count }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="!threads.length" class="text-center text-slate-400 text-sm p-8">Nenhuma conversa ainda.</div>
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col bg-slate-50" v-if="activeThread">
+          <div class="p-4 bg-white border-b border-slate-200 flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center text-white font-bold">
+              {{ (activeThread.ig_username||'?')[0]?.toUpperCase() }}
+            </div>
+            <div class="flex-1">
+              <div class="font-bold">@{{ activeThread.ig_username || activeThread.ig_sender_id }}</div>
+              <div class="text-xs text-slate-500">
+                <span v-if="activeThread.paused" class="text-red-500 font-semibold">IA pausada • você assumiu</span>
+                <span v-else class="text-green-600 font-semibold">IA ativa</span>
+              </div>
+            </div>
+            <button @click="togglePause" :class="['px-4 py-2 rounded-lg text-sm font-semibold', activeThread.paused?'bg-violet-600 text-white':'bg-slate-100 text-slate-700']">
+              {{ activeThread.paused ? 'Retomar IA' : 'Pausar IA' }}
+            </button>
+          </div>
+
+          <div id="msgs-scroll" class="flex-1 overflow-auto scrollbar-thin p-6 space-y-3">
+            <div v-for="m in activeMessages" :key="m.id" :class="['flex', m.direction==='in'?'justify-start':'justify-end']">
+              <div :class="['max-w-lg px-4 py-2.5 shadow-sm', m.direction==='in'?'bubble-in': m.sent_by?.startsWith('operator')?'bubble-op':'bubble-out']">
+                <div class="text-sm whitespace-pre-wrap">{{ m.text }}</div>
+                <div :class="['text-xs mt-1', m.direction==='in'?'text-slate-400':'text-white/70']">
+                  {{ fmtDateTime(m.created_at) }}
+                  <span v-if="m.sent_by?.startsWith('agent')" class="ml-1">• IA</span>
+                  <span v-else-if="m.sent_by?.startsWith('operator')" class="ml-1">• operador</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="liveRun && liveRun.thread_id===activeThread.id" class="flex justify-end">
+              <div class="bubble-out px-4 py-2.5 shadow-sm text-sm italic flex items-center gap-2">
+                <span class="pulse-dot"></span> IA pensando…
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-white border-t border-slate-200">
+            <div v-if="activeRuns[0]" class="mb-3 text-xs text-slate-500">
+              <span>Último run: <span :class="activeRuns[0].status==='done'?'text-green-600':'text-red-500'">{{ activeRuns[0].status }}</span></span>
+              <span class="ml-2">{{ activeRuns[0].model }}</span>
+              <span class="ml-2" v-if="activeRuns[0].duration_ms">{{ (activeRuns[0].duration_ms/1000).toFixed(1) }}s</span>
+            </div>
+            <form @submit.prevent="sendOperator" class="flex gap-2">
+              <input v-model="operatorText" placeholder="Enviar mensagem como operador (pausa a IA)" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+              <button class="px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">Enviar</button>
+            </form>
+          </div>
+        </div>
+        <div v-else class="flex-1 flex items-center justify-center text-slate-400">
+          Selecione uma conversa
+        </div>
+      </div>
+    </main>
+  </div>
+  `,
+};
+
+createApp(App).mount('#app');
+</script>
+</body>
+</html>

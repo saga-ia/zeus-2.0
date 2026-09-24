@@ -1,0 +1,1413 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a1a2f">
+<title>Board Summit 2026 — Dashboard 90 dias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-950: #050f1e;
+    --navy-900: #0a1a2f;
+    --navy-800: #10243f;
+    --navy-700: #163055;
+    --navy-600: #1e3d6b;
+    --gold-100: #fff3d6;
+    --gold-200: #ffe6a3;
+    --gold-300: #f6cf7a;
+    --gold-400: #e6b45c;
+    --gold-500: #c8933c;
+    --gold-600: #a5762a;
+    --line: rgba(214,175,110,0.14);
+    --text: #e9eef7;
+    --muted: #8fa2bd;
+    --danger: #ff6b6b;
+    --success: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--navy-950); color: var(--text); font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(230,180,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at 85% 5%, rgba(30,61,107,0.55), transparent 70%),
+      linear-gradient(180deg, var(--navy-950) 0%, #030916 100%);
+    min-height: 100vh;
+  }
+  a { color: inherit; }
+
+  /* Sidebar lateral fixa */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 240px; z-index: 30;
+    background: linear-gradient(180deg, rgba(5,15,30,0.96), rgba(3,9,22,0.98));
+    border-right: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex; flex-direction: column;
+    padding: 22px 0 18px;
+  }
+  .sidebar .brand { display: flex; align-items: center; gap: 12px; padding: 0 22px 22px; border-bottom: 1px solid var(--line); }
+  .brand-mark {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold-300), var(--gold-500) 55%, var(--gold-600));
+    display: grid; place-items: center;
+    box-shadow: 0 8px 24px rgba(200,147,60,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+    font-family: 'Playfair Display', serif; font-weight: 800; color: #1a0f00; font-size: 20px;
+  }
+  .brand-text .eyebrow { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300); opacity: 0.9; }
+  .brand-text .name { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.02em; }
+
+  .tabs-inner {
+    display: flex; flex-direction: column;
+    padding: 16px 12px;
+    flex: 1;
+    overflow-y: auto; scrollbar-width: none;
+    gap: 2px;
+  }
+  .tabs-inner::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    background: transparent; border: 0;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px;
+    letter-spacing: 0.03em;
+    padding: 12px 14px;
+    cursor: pointer;
+    position: relative;
+    text-align: left;
+    display: flex; align-items: center; gap: 10px;
+    border-radius: 10px;
+    transition: color .18s ease, background .18s ease;
+  }
+  .tab-btn:hover { color: var(--gold-200); background: rgba(230,180,92,0.05); }
+  .tab-btn.active {
+    color: var(--gold-300);
+    background: linear-gradient(90deg, rgba(230,180,92,0.10), rgba(230,180,92,0.02));
+  }
+  .tab-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+    background: linear-gradient(180deg, var(--gold-400), var(--gold-200));
+    border-radius: 0 3px 3px 0;
+  }
+  .tab-btn .num {
+    color: var(--gold-500); font-size: 10px; letter-spacing: 0.18em; font-weight: 700; min-width: 22px;
+  }
+
+  .sidebar-footer {
+    padding: 14px 18px 4px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px; color: var(--muted);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sidebar-footer .sync { display: flex; align-items: center; gap: 8px; }
+  .sidebar-footer .sync .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 12px var(--success); animation: pulse 2s infinite; flex-shrink: 0; }
+  .sidebar-footer .sync-ts { color: var(--gold-200); font-weight: 500; }
+  .sidebar-footer .meta-info { color: var(--muted); font-size: 11px; letter-spacing: 0.02em; line-height: 1.4; }
+  .sidebar-footer .meta-info strong { color: var(--gold-300); font-weight: 600; }
+
+  /* Main content à direita da sidebar */
+  main.content { margin-left: 240px; }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* Hero */
+  .hero { max-width: 1400px; margin: 0 auto; padding: 48px 32px 12px; }
+  .hero .kicker { color: var(--gold-300); letter-spacing: 0.28em; font-size: 12px; text-transform: uppercase; margin-bottom: 14px; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif; font-weight: 700;
+    font-size: clamp(30px, 4.4vw, 54px); line-height: 1.05; margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 .accent {
+    background: linear-gradient(120deg, var(--gold-200), var(--gold-400) 60%, var(--gold-600));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { max-width: 760px; color: var(--muted); font-size: 16px; line-height: 1.6; margin: 0; }
+
+  /* KPI grid */
+  .kpi-grid {
+    max-width: 1400px; margin: 32px auto 0; padding: 0 32px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+  }
+  .kpi {
+    position: relative;
+    background: linear-gradient(160deg, rgba(22,48,85,0.55), rgba(10,26,47,0.65));
+    border: 1px solid var(--line); border-radius: 18px;
+    padding: 24px 22px;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-400), transparent);
+    opacity: 0.55;
+  }
+  .kpi .label { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300); margin-bottom: 12px; }
+  .kpi .value { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+  .kpi .value small { font-size: 15px; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 400; margin-left: 4px; }
+  .kpi .sub { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+  /* Sections */
+  .section { max-width: 1400px; margin: 40px auto 0; padding: 0 32px; }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .section-head h2 {
+    font-family: 'Playfair Display', serif; font-weight: 700;
+    font-size: 26px; margin: 0; letter-spacing: -0.005em;
+  }
+  .section-head h2 .num {
+    color: var(--gold-400); font-size: 13px; letter-spacing: 0.28em;
+    text-transform: uppercase; display: block; margin-bottom: 6px;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+  }
+  .section-head .hint { color: var(--muted); font-size: 13px; }
+
+  .card {
+    background: linear-gradient(160deg, rgba(22,48,85,0.42), rgba(10,26,47,0.6));
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 26px;
+  }
+  .cards-2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; }
+  .cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  /* Cenários */
+  .scenarios { display: grid; gap: 10px; }
+  .scen-row {
+    display: grid; grid-template-columns: 1.3fr 90px 1fr 130px 130px;
+    align-items: center; gap: 16px;
+    padding: 14px 16px;
+    background: rgba(5,15,30,0.35);
+    border: 1px solid rgba(214,175,110,0.08);
+    border-radius: 12px;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .scen-row:hover { transform: translateY(-1px); border-color: rgba(214,175,110,0.28); }
+  .scen-row .name { font-weight: 600; font-size: 14px; }
+  .scen-row .pct { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold-300); font-weight: 700; }
+  .bar-track { position: relative; height: 8px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
+  .bar-fill { position: absolute; inset: 0; border-radius: 999px; }
+  .scen-row .rev { text-align: right; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .scen-row .res { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .res.neg { color: var(--danger); }
+  .res.pos { color: var(--success); }
+  .scen-legend { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+  /* Mix donut */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; }
+  .donut {
+    --size: 210px;
+    width: var(--size); height: var(--size); flex-shrink: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--gold-400) 0 60%,
+      var(--gold-600) 60% 90%,
+      #4b6a95 90% 100%
+    );
+    position: relative;
+    display: grid; place-items: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .donut::after {
+    content: ''; position: absolute; inset: 22px; border-radius: 50%;
+    background: linear-gradient(160deg, #0e2340, #061224);
+    border: 1px solid var(--line);
+  }
+  .donut .center { position: relative; z-index: 2; text-align: center; }
+  .donut .center .big { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; line-height: 1; }
+  .donut .center .small { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300); margin-top: 6px; }
+  .donut-legend { display: grid; gap: 14px; flex: 1; }
+  .leg-item { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed rgba(214,175,110,0.12); }
+  .leg-item:last-child { border-bottom: 0; }
+  .leg-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .leg-name { font-size: 14px; }
+  .leg-name small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; letter-spacing: 0.02em; }
+  .leg-val { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+
+  /* Cascata months */
+  .months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 4px; }
+  .month {
+    background: rgba(5,15,30,0.35);
+    border: 1px solid rgba(214,175,110,0.08);
+    border-radius: 14px; padding: 20px;
+  }
+  .month .m-label { color: var(--gold-300); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .month .m-tickets { font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 700; margin-top: 6px; line-height: 1; }
+  .month .m-rev { color: var(--muted); margin-top: 6px; font-size: 14px; }
+  .month .m-divider { height: 1px; background: var(--line); margin: 16px 0; }
+  .month .m-line { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  .month .m-line strong { color: var(--text); font-weight: 500; }
+
+  /* Funil */
+  .funil-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .funil-block h3 {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300);
+    margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  }
+  .funil-item { display: grid; grid-template-columns: 1fr 60px; align-items: center; gap: 10px; padding: 10px 0; }
+  .funil-item .fn-name { font-size: 13.5px; }
+  .funil-item .fn-name small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .funil-item .fn-bar { grid-column: 1 / -1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+  .funil-item .fn-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-500), var(--gold-300)); border-radius: 999px; }
+  .funil-item .fn-val { text-align: right; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--gold-200); }
+
+  /* Backend cards */
+  .back-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .back-card {
+    background: linear-gradient(160deg, rgba(22,48,85,0.5), rgba(10,26,47,0.7));
+    border: 1px solid var(--line);
+    border-radius: 18px; padding: 26px; position: relative; overflow: hidden;
+  }
+  .back-card.alvo { border-color: rgba(230,180,92,0.4); box-shadow: 0 20px 50px rgba(200,147,60,0.12); }
+  .back-card.alvo::before {
+    content: 'ALVO'; position: absolute; top: 14px; right: 14px;
+    font-size: 10px; letter-spacing: 0.2em; color: #1a0f00;
+    background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
+    padding: 4px 10px; border-radius: 999px; font-weight: 700;
+  }
+  .back-card .bc-label { color: var(--gold-300); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .back-card .bc-combos { font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 700; line-height: 1; margin: 10px 0 4px; }
+  .back-card .bc-combos small { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .back-card .bc-rev { color: var(--gold-200); font-size: 18px; font-weight: 600; }
+  .back-card .bc-list { list-style: none; padding: 0; margin: 18px 0 0; border-top: 1px solid var(--line); padding-top: 16px; }
+  .back-card .bc-list li { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--muted); }
+  .back-card .bc-list li strong { color: var(--text); font-weight: 500; }
+
+  /* Ingressos table */
+  .ing-table { width: 100%; border-collapse: collapse; }
+  .ing-table th, .ing-table td {
+    text-align: right; padding: 14px 12px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums;
+    font-size: 14px;
+  }
+  .ing-table th { color: var(--gold-300); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+  .ing-table th:first-child, .ing-table td:first-child { text-align: left; }
+  .ing-table td:first-child { font-weight: 600; }
+  .ing-table tr.total td { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--gold-200); border-bottom: 0; padding-top: 18px; }
+
+  /* Marcos */
+  .marcos {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    position: relative;
+  }
+  .marco {
+    padding: 24px; text-align: center;
+    border-left: 1px solid var(--line);
+  }
+  .marco:first-child { border-left: 0; }
+  .marco .m-dia { font-family: 'Playfair Display', serif; color: var(--gold-300); font-size: 15px; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .marco .m-nome { font-size: 16px; font-weight: 600; }
+  .marco .m-desc { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+
+  /* Premissas grid */
+  .prem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .prem-item {
+    background: rgba(5,15,30,0.35);
+    border: 1px solid rgba(214,175,110,0.08);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .prem-item .p-label { color: var(--gold-300); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .prem-item .p-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-top: 8px; line-height: 1.1; }
+  .prem-item .p-val small { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--muted); font-weight: 400; }
+  .prem-item .p-hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  .prem-title {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300);
+    margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .prem-title:first-child { margin-top: 0; }
+
+  /* Acompanhamento */
+  .acomp-progress {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 20px;
+  }
+  .progress-card {
+    background: linear-gradient(160deg, rgba(22,48,85,0.45), rgba(10,26,47,0.65));
+    border: 1px solid var(--line); border-radius: 18px; padding: 26px;
+  }
+  .progress-card .pc-label { color: var(--gold-300); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .progress-card .pc-big { font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 700; line-height: 1; margin: 10px 0 6px; }
+  .progress-card .pc-big small { font-size: 15px; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 400; margin-left: 6px; }
+  .progress-card .pc-sub { color: var(--muted); font-size: 13px; }
+  .progress-bar { height: 12px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; margin-top: 16px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-500), var(--gold-300)); border-radius: 999px; }
+
+  .acomp-table { width: 100%; border-collapse: collapse; }
+  .acomp-table th, .acomp-table td {
+    text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--line);
+    font-size: 13.5px; font-variant-numeric: tabular-nums;
+  }
+  .acomp-table th { color: var(--gold-300); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
+  .acomp-table th:first-child, .acomp-table td:first-child { text-align: left; font-weight: 600; }
+  .acomp-table tr.pend td { color: var(--muted); }
+  .acomp-table tr.total td { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--gold-200); border-bottom: 0; padding-top: 18px; }
+  .acomp-table td .chip {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .chip.ok { background: rgba(74,222,128,0.14); color: var(--success); }
+  .chip.pend { background: rgba(143,162,189,0.14); color: var(--muted); }
+  .chip.cen-horr { background: rgba(199,51,73,0.20); color: #ff6b6b; }
+  .chip.cen-pior { background: rgba(217,122,58,0.20); color: #f09a3a; }
+  .chip.cen-ruim { background: rgba(230,180,92,0.20); color: #e6b45c; }
+  .chip.cen-bom  { background: rgba(74,222,128,0.14); color: #86efac; }
+  .chip.cen-meta { background: rgba(74,222,128,0.22); color: #4ade80; }
+  .chip.cen-ever { background: rgba(74,222,128,0.32); color: #22c55e; font-weight:700; }
+
+  /* Notas */
+  .note {
+    background: linear-gradient(160deg, rgba(230,180,92,0.05), rgba(230,180,92,0.02));
+    border: 1px solid rgba(230,180,92,0.18);
+    border-radius: 14px; padding: 18px 22px;
+    margin-top: 20px;
+    color: var(--gold-200); font-size: 13.5px; line-height: 1.6;
+  }
+  .note strong { color: var(--gold-300); }
+
+  /* Footer */
+  .footer {
+    max-width: 1400px; margin: 60px auto 0; padding: 32px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    color: var(--muted); font-size: 12.5px;
+  }
+  .footer .refresh { display: flex; align-items: center; gap: 8px; }
+  .refresh .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 12px var(--success); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+
+  /* Realizado Agora KPIs (dashboard live) - donut de progresso estilo pizza */
+  .live-grid {
+    max-width: 1400px; margin: 0 auto 20px; padding: 0 32px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+  }
+  .live-kpi {
+    position: relative;
+    background: linear-gradient(160deg, rgba(22,48,85,0.55), rgba(10,26,47,0.85));
+    border: 1px solid rgba(230,180,92,0.28);
+    border-radius: 18px;
+    padding: 22px 22px;
+    overflow: hidden;
+    display: flex; align-items: center; gap: 18px;
+    min-height: 130px;
+  }
+  .live-kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold-300), var(--gold-500));
+  }
+  .live-kpi .pz {
+    --pct: 0;
+    --pz-color-a: var(--gold-300);
+    --pz-color-b: var(--gold-500);
+    width: 96px; height: 96px; flex-shrink: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--pz-color-a) 0 calc(var(--pct) * 1%), rgba(255,255,255,0.06) calc(var(--pct) * 1%) 100%);
+    position: relative;
+    display: grid; place-items: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    transition: --pct .6s ease;
+  }
+  .live-kpi .pz::after {
+    content: ''; position: absolute; inset: 9px; border-radius: 50%;
+    background: linear-gradient(160deg, #0e2340, #061224);
+    border: 1px solid var(--line);
+  }
+  .live-kpi .pz .pz-num {
+    position: relative; z-index: 2;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 22px; line-height: 1;
+    color: var(--gold-200);
+    text-align: center;
+  }
+  .live-kpi .pz .pz-num small { display:block; font-family:'Inter',sans-serif; font-weight:500; font-size: 9px; letter-spacing:0.18em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .live-kpi .info { flex: 1; min-width: 0; }
+  .live-kpi .info .label { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-300); margin-bottom: 6px; }
+  .live-kpi .info .value { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; }
+  .live-kpi .info .value small { font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 400; margin-left: 4px; }
+  .live-kpi .info .sub { margin-top: 6px; color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+  .live-title {
+    max-width: 1400px; margin: 32px auto 12px; padding: 0 32px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .live-title .dot-live { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 12px var(--success); animation: pulse 2s infinite; }
+  .live-title span { color: var(--gold-300); font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; font-weight: 600; }
+
+  @media (max-width: 960px) {
+    .sidebar {
+      position: sticky; top: 0; left: auto; right: auto; bottom: auto;
+      width: 100%; height: auto;
+      flex-direction: column;
+      padding: 10px 0 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .sidebar .brand { padding: 4px 16px 10px; border-bottom: 1px solid var(--line); }
+    .tabs-inner {
+      flex-direction: row; overflow-x: auto; overflow-y: hidden;
+      padding: 8px 12px; gap: 4px;
+    }
+    .tab-btn {
+      padding: 10px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-btn.active::before { display: none; }
+    .tab-btn.active::after {
+      content: ''; position: absolute; left: 10px; right: 10px; bottom: 2px; height: 2px;
+      background: linear-gradient(90deg, var(--gold-400), var(--gold-200));
+      border-radius: 2px 2px 0 0;
+    }
+    .sidebar-footer { display: none; }
+    main.content { margin-left: 0; }
+    .live-grid { grid-template-columns: 1fr; }
+    .live-kpi { padding: 18px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .cards-2, .funil-cols, .acomp-progress { grid-template-columns: 1fr; }
+    .cards-3, .back-cards, .months, .marcos, .prem-grid { grid-template-columns: 1fr; }
+    .marco { border-left: 0; border-top: 1px solid var(--line); }
+    .marco:first-child { border-top: 0; }
+    .scen-row { grid-template-columns: 1fr 60px; grid-auto-rows: auto; row-gap: 8px; }
+    .scen-row .bar-track { grid-column: 1 / -1; }
+    .scen-row .rev, .scen-row .res { grid-column: 1 / -1; text-align: left; }
+    .donut-wrap { flex-direction: column; }
+    .hero { padding: 28px 20px 8px; }
+    .kpi-grid, .section, .live-grid, .live-title { padding-left: 20px; padding-right: 20px; }
+  }
+
+  /* Edit mode */
+  .edit-bar { display: flex; gap: 8px; align-items: center; margin: 12px 0 16px; }
+  .btn-edit, .btn-save, .btn-cancel {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 9px 16px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--gold-500);
+    background: transparent; color: var(--gold-300);
+    transition: all .18s ease;
+  }
+  .btn-edit:hover { background: rgba(230,180,92,0.08); color: var(--gold-200); }
+  .btn-save {
+    background: linear-gradient(135deg, var(--gold-400), var(--gold-600));
+    color: #1a0f00; border-color: var(--gold-500);
+  }
+  .btn-save:hover { filter: brightness(1.08); }
+  .btn-cancel { border-color: rgba(255,107,107,0.5); color: #ff9a9a; }
+  .btn-cancel:hover { background: rgba(255,107,107,0.08); }
+  .btn-edit:disabled, .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .edit-status { font-size: 12px; color: var(--muted); margin-left: 6px; }
+  .edit-status.ok { color: var(--success); }
+  .edit-status.err { color: var(--danger); }
+
+  input.cell-input {
+    width: 100%; max-width: 82px;
+    background: rgba(230,180,92,0.06);
+    border: 1px solid rgba(230,180,92,0.35);
+    color: var(--gold-100);
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 6px 8px; border-radius: 6px; text-align: right;
+    outline: none;
+  }
+  input.cell-input:focus { border-color: var(--gold-400); background: rgba(230,180,92,0.12); }
+  input.cell-input.dirty { border-color: var(--success); background: rgba(74,222,128,0.08); }
+
+  /* Tabela expandida no modo edição */
+  .acomp-table.editing th.only-view, .acomp-table.editing td.only-view { display: none; }
+  .acomp-table th.only-edit, .acomp-table td.only-edit { display: none; }
+  .acomp-table.editing th.only-edit, .acomp-table.editing td.only-edit { display: table-cell; }
+  .acomp-table.editing { font-size: 12px; }
+  .acomp-table.editing th { font-size: 10px; padding: 8px 6px; }
+  .acomp-table.editing td { padding: 8px 6px; }
+
+  .ing-table.editing td.only-view, .ing-table.editing th.only-view { display: none; }
+  .ing-table th.only-edit, .ing-table td.only-edit { display: none; }
+  .ing-table.editing th.only-edit, .ing-table.editing td.only-edit { display: table-cell; }
+</style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div class="brand-text">
+      <div class="eyebrow">Board Summit</div>
+      <div class="name">2026</div>
+    </div>
+  </div>
+
+  <nav class="tabs-inner" role="tablist">
+    <button class="tab-btn active" data-tab="premissas" role="tab"><span class="num">01</span>Premissas</button>
+    <button class="tab-btn" data-tab="funil" role="tab"><span class="num">02</span>Funil de Aquisição</button>
+    <button class="tab-btn" data-tab="ingressos" role="tab"><span class="num">03</span>Metas por Ingresso</button>
+    <button class="tab-btn" data-tab="cascata" role="tab"><span class="num">04</span>Cascata 90 Dias</button>
+    <button class="tab-btn" data-tab="cenarios" role="tab"><span class="num">05</span>Cenários</button>
+    <button class="tab-btn" data-tab="acompanhamento" role="tab"><span class="num">06</span>Acompanhamento</button>
+    <button class="tab-btn" data-tab="backend" role="tab"><span class="num">07</span>Backend do Evento</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sync"><span class="dot"></span><span>Sincronizado <span class="sync-ts" id="ts">—</span></span></div>
+    <div class="meta-info">Meta <strong>550</strong> · <strong>90 dias</strong> · <strong>R$ 100k</strong></div>
+  </div>
+</aside>
+
+<main class="content">
+
+<!-- ============ PREMISSAS ============ -->
+<div class="panel active" data-panel="premissas">
+  <section class="hero">
+    <div class="kicker">Premissas · Base de todo o modelo</div>
+    <h1>Sala cheia, <span class="accent">receita blindada</span><br>e backend milionário.</h1>
+    <p>Painel oficial do Board Summit 2026. Todas as abas partem destas premissas: mudou aqui, muda tudo. Segue o mesmo espelho da planilha operacional <em>Metas_90_Dias_Board_Summit_2026</em>.</p>
+  </section>
+
+  <div class="live-title"><span class="dot-live"></span><span>Realizado agora · dados da planilha</span></div>
+  <section class="live-grid">
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_ingressos" style="--pct:0">
+        <div class="pz-num"><span data-key="pz_ingressos_num">—</span><small>meta</small></div>
+      </div>
+      <div class="info">
+        <div class="label">Ingressos vendidos</div>
+        <div class="value" data-key="live_ingressos">—<small> / 550</small></div>
+        <div class="sub" data-key="live_ingressos_sub">carregando…</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_meta" style="--pct:0">
+        <div class="pz-num" data-key="pz_meta_num">—</div>
+      </div>
+      <div class="info">
+        <div class="label">% da meta</div>
+        <div class="value" data-key="live_pct">—</div>
+        <div class="sub">Sobre 550 ingressos</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_receita" style="--pct:0;--pz-color-a:var(--success);--pz-color-b:#22c55e">
+        <div class="pz-num"><span data-key="pz_receita_num">—</span><small>meta</small></div>
+      </div>
+      <div class="info">
+        <div class="label">Receita total</div>
+        <div class="value" data-key="live_receita">R$ —</div>
+        <div class="sub" data-key="live_receita_sub">Bilheteria realizada</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_dias" style="--pct:0;--pz-color-a:#4b6a95;--pz-color-b:#6b8bb8">
+        <div class="pz-num"><span data-key="pz_dias_num">—</span><small>decorrido</small></div>
+      </div>
+      <div class="info">
+        <div class="label">Dias até o evento</div>
+        <div class="value" data-key="live_dias">—<small> dias</small></div>
+        <div class="sub" data-key="live_dias_sub">18/11/2026</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kpi-grid">
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_bilheteria" style="--pct:0;--pz-color-a:var(--success);--pz-color-b:#22c55e">
+        <div class="pz-num" data-key="pz_bilheteria_num">—</div>
+      </div>
+      <div class="info">
+        <div class="label">Receita Meta 100%</div>
+        <div class="value" data-key="meta_receita_total">R$ —</div>
+        <div class="sub" data-key="meta_receita_sub">Bilheteria completa (VIP + Premium + Empresarial)</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_vip" style="--pct:0;--pz-color-a:var(--gold-300);--pz-color-b:var(--gold-500)">
+        <div class="pz-num" data-key="pz_vip_num">—</div>
+      </div>
+      <div class="info">
+        <div class="label">Bilheteria VIP</div>
+        <div class="value" data-key="bilh_vip">—<small> lugares</small></div>
+        <div class="sub" data-key="bilh_vip_sub">— vendidos</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_prem" style="--pct:0;--pz-color-a:var(--gold-600);--pz-color-b:#c8933c">
+        <div class="pz-num" data-key="pz_prem_num">—</div>
+      </div>
+      <div class="info">
+        <div class="label">Bilheteria Premium</div>
+        <div class="value" data-key="bilh_prem">—<small> lugares</small></div>
+        <div class="sub" data-key="bilh_prem_sub">— vendidos</div>
+      </div>
+    </div>
+    <div class="live-kpi">
+      <div class="pz" data-key="pz_emp" style="--pct:0;--pz-color-a:#4b6a95;--pz-color-b:#6b8bb8">
+        <div class="pz-num" data-key="pz_emp_num">—</div>
+      </div>
+      <div class="info">
+        <div class="label">Pacote Empresarial</div>
+        <div class="value" data-key="bilh_emp">—<small> lugares</small></div>
+        <div class="sub" data-key="bilh_emp_sub">— vendidos</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2><span class="num">Premissas-chave</span>Meta geral · Mix · Lotes · Preços</h2>
+      <span class="hint">Espelho fiel da aba <em>Premissas</em></span>
+    </div>
+    <div class="card">
+      <div class="prem-title">Meta geral</div>
+      <div class="prem-grid">
+        <div class="prem-item"><div class="p-label">Ingressos</div><div class="p-val">550</div><div class="p-hint">janela de 90 dias</div></div>
+        <div class="prem-item"><div class="p-label">Coringa empresarial</div><div class="p-val">20</div><div class="p-hint">reserva para cobrir quebra</div></div>
+        <div class="prem-item"><div class="p-label">Dias de campanha</div><div class="p-val">90</div><div class="p-hint">3 meses corridos</div></div>
+      </div>
+
+      <div class="prem-title">Mix por tipo</div>
+      <div class="prem-grid" id="mix-por-tipo">
+        <div class="prem-item"><div class="p-label" id="mix-label-0">Board VIP</div><div class="p-val"><span id="mix-pct-0">—</span><small> · <span id="mix-count-0">—</span> lugares</small></div></div>
+        <div class="prem-item"><div class="p-label" id="mix-label-1">Board Premium</div><div class="p-val"><span id="mix-pct-1">—</span><small> · <span id="mix-count-1">—</span> lugares</small></div></div>
+        <div class="prem-item"><div class="p-label" id="mix-label-2">Pacote Empresarial</div><div class="p-val"><span id="mix-pct-2">—</span><small> · <span id="mix-count-2">—</span> lugares</small></div></div>
+      </div>
+
+      <div class="prem-title">Lotes</div>
+      <div class="prem-grid">
+        <div class="prem-item"><div class="p-label">Lote 1 (Mês 1+2)</div><div class="p-val">80%<small> das vendas</small></div><div class="p-hint">440 ingressos</div></div>
+        <div class="prem-item"><div class="p-label">Lote 2 (Mês 3)</div><div class="p-val">20%<small> das vendas</small></div><div class="p-hint">110 ingressos</div></div>
+        <div class="prem-item"><div class="p-label">Semanas por mês</div><div class="p-val">4<small> · 22 dias úteis</small></div></div>
+      </div>
+
+      <div class="prem-title">Preços</div>
+      <table class="ing-table">
+        <thead>
+          <tr><th>Categoria</th><th>Lote 1</th><th>Lote 2</th><th>Preço médio (80/20)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Board VIP</td><td>R$ 397</td><td>R$ 797</td><td>R$ 477</td></tr>
+          <tr><td>Board Premium</td><td>R$ 797</td><td>R$ 1.497</td><td>R$ 937</td></tr>
+          <tr><td>Pacote Empresarial (−30% VIP)</td><td>R$ 277,90</td><td>R$ 557,90</td><td>R$ 333,90</td></tr>
+        </tbody>
+      </table>
+
+      <div class="prem-title">Curva mensal</div>
+      <div class="prem-grid">
+        <div class="prem-item"><div class="p-label">Mês 1</div><div class="p-val">45%<small> das vendas</small></div></div>
+        <div class="prem-item"><div class="p-label">Mês 2</div><div class="p-val">35%<small> das vendas</small></div></div>
+        <div class="prem-item"><div class="p-label">Mês 3</div><div class="p-val">20%<small> das vendas</small></div></div>
+      </div>
+
+      <div class="prem-title">Backend do evento</div>
+      <div class="prem-grid">
+        <div class="prem-item"><div class="p-label">Combo PFC + Board 360</div><div class="p-val">R$ 18k<small> · preço unitário</small></div></div>
+        <div class="prem-item"><div class="p-label">Cadeiras convertíveis</div><div class="p-val">495<small> · 90% da sala</small></div><div class="p-hint">exclui alumni e cortesias</div></div>
+        <div class="prem-item"><div class="p-label">Verba de mídia</div><div class="p-val">R$ 100k<small> · base do ROI</small></div></div>
+      </div>
+
+      <div class="note"><strong>Quebra esperada:</strong> ~15% sobre 550 = ~82 ausências. O coringa de 20 cobre parte. Sala física estimada: 480 a 500 pessoas presentes no dia.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ FUNIL ============ -->
+<div class="panel" data-panel="funil">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">02 · Funil de Aquisição</span>De onde vêm os 550</h2>
+      <span class="hint">Orgânico 30% · Mídia paga 70%</span>
+    </div>
+    <div class="card">
+      <div class="funil-cols">
+        <div class="funil-block">
+          <h3>Orgânico · 165 vendas (30%)</h3>
+          <div class="funil-item">
+            <div class="fn-name">Indicação da base <small>Indique e ganhe · listas ganhos/perdidos · eventos passados</small></div>
+            <div class="fn-val">108</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:65%"></div></div>
+          </div>
+          <div class="funil-item">
+            <div class="fn-name">Social selling Instagram <small>Hunter dedicado</small></div>
+            <div class="fn-val">28</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:17.5%"></div></div>
+          </div>
+          <div class="funil-item">
+            <div class="fn-name">Social selling LinkedIn <small>Hunter dedicado</small></div>
+            <div class="fn-val">29</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:17.5%"></div></div>
+          </div>
+          <div class="funil-item" style="border-top:1px solid var(--line); margin-top:8px; padding-top:14px">
+            <div class="fn-name"><strong>Emissões (com quebra)</strong></div>
+            <div class="fn-val" style="color:var(--gold-300)">190</div>
+          </div>
+        </div>
+
+        <div class="funil-block">
+          <h3>Mídia Paga · 385 vendas (70%)</h3>
+          <div class="funil-item">
+            <div class="fn-name">Meta Ads <small>50% da atribuição</small></div>
+            <div class="fn-val">192</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:50%"></div></div>
+          </div>
+          <div class="funil-item">
+            <div class="fn-name">LinkedIn Ads <small>30% da atribuição</small></div>
+            <div class="fn-val">116</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:30%"></div></div>
+          </div>
+          <div class="funil-item">
+            <div class="fn-name">YouTube Ads <small>20% da atribuição</small></div>
+            <div class="fn-val">77</div>
+            <div class="fn-bar"><div class="fn-bar-fill" style="width:20%"></div></div>
+          </div>
+          <div class="funil-item" style="border-top:1px solid var(--line); margin-top:8px; padding-top:14px">
+            <div class="fn-name"><strong>Pacotes (3, 5 e empresariais)</strong><small>Incluídos na conta acima</small></div>
+            <div class="fn-val" style="color:var(--gold-300)">108</div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><strong>Alerta da planilha:</strong> a soma bruta de emissões da aba (771) conta os pacotes duas vezes. Emissões reais sem duplicação: <strong>620</strong> (190 orgânico + 430 pago via plataformas). O CPA médio da verba de R$ 100k é <strong>R$ 260 por venda paga</strong>.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ INGRESSOS ============ -->
+<div class="panel" data-panel="ingressos">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">03 · Metas por Ingresso</span>Composição dos 550 e receita por lote</h2>
+      <span class="hint">R$ 330K de bilheteria no cenário 100%</span>
+    </div>
+    <div class="cards-2">
+      <div class="card">
+        <div class="section-head" style="margin-bottom:16px">
+          <h2 style="font-size:22px"><span class="num">Mix</span>Distribuição da sala</h2>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut" id="mix-donut" style="background:conic-gradient(var(--gold-400) 0 80%,var(--gold-600) 80% 89%,#4b6a95 89% 100%)">
+            <div class="center">
+              <div class="big" id="mix-total">550</div>
+              <div class="small">Meta</div>
+            </div>
+          </div>
+          <div class="donut-legend" id="mix-legend">
+            <div class="leg-item"><span class="leg-dot" style="background:var(--gold-400)"></span><div class="leg-name">carregando…</div><span class="leg-val">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head" style="margin-bottom:16px">
+          <h2 style="font-size:22px"><span class="num">Receita</span>Por ingresso e lote</h2>
+        </div>
+        <div class="edit-bar">
+          <button type="button" class="btn-edit" data-editor="ing">Editar vendidos</button>
+          <button type="button" class="btn-save" data-editor-save="ing" style="display:none">Salvar</button>
+          <button type="button" class="btn-cancel" data-editor-cancel="ing" style="display:none">Cancelar</button>
+          <span class="edit-status" data-editor-status="ing"></span>
+        </div>
+        <table class="ing-table" id="ing-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th class="only-view">Meta</th>
+              <th class="only-view">Vendido</th>
+              <th class="only-view">% Meta</th>
+              <th class="only-view">Receita</th>
+              <th class="only-edit">Vendido L1</th>
+              <th class="only-edit">Vendido L2</th>
+              <th class="only-edit">Vendido L3</th>
+            </tr>
+          </thead>
+          <tbody data-key="ing_tbody">
+            <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">carregando dados da planilha…</td></tr>
+          </tbody>
+        </table>
+        <div class="note"><strong>Vendido</strong> e <strong>Receita</strong> vêm direto da planilha operacional. <strong>% Meta</strong> = vendido / meta total do tipo. Clique <strong>Editar vendidos</strong> pra atualizar por lote.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="section-head" style="margin-bottom:16px">
+        <h2 style="font-size:22px"><span class="num">Realizado</span>Ingressos vendidos por categoria</h2>
+        <span class="hint">Atualizado da planilha</span>
+      </div>
+      <div class="donut-wrap">
+        <div class="donut" id="vendido-donut" style="background:conic-gradient(rgba(143,162,189,0.25) 0 100%)">
+          <div class="center">
+            <div class="big" id="vendido-total">—</div>
+            <div class="small">Vendidos</div>
+          </div>
+        </div>
+        <div class="donut-legend" id="vendido-legend">
+          <div class="leg-item">
+            <span class="leg-dot" style="background:var(--muted)"></span>
+            <div class="leg-name">Carregando dados…</div>
+            <span class="leg-val">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ CASCATA ============ -->
+<div class="panel" data-panel="cascata">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">04 · Cascata 90 Dias</span>Mês a mês, semana a semana</h2>
+      <span class="hint">Ritmo obrigatório pra bater 550</span>
+    </div>
+    <div class="card">
+      <div class="months">
+        <div class="month">
+          <div class="m-label">Mês 1 · 45% do lote</div>
+          <div class="m-tickets">248</div>
+          <div class="m-rev">Receita R$ 125.079</div>
+          <div class="m-divider"></div>
+          <div class="m-line"><span>Semanal</span><strong>62 ingressos</strong></div>
+          <div class="m-line"><span>Diário (útil)</span><strong>11,3 ingressos</strong></div>
+          <div class="m-line"><span>Receita/sem</span><strong>R$ 31.270</strong></div>
+          <div class="m-line"><span>Board VIP</span><strong>149</strong></div>
+          <div class="m-line"><span>Premium</span><strong>74</strong></div>
+        </div>
+        <div class="month">
+          <div class="m-label">Mês 2 · 35% do lote</div>
+          <div class="m-tickets">192</div>
+          <div class="m-rev">Receita R$ 97.161</div>
+          <div class="m-divider"></div>
+          <div class="m-line"><span>Semanal</span><strong>48 ingressos</strong></div>
+          <div class="m-line"><span>Diário (útil)</span><strong>8,7 ingressos</strong></div>
+          <div class="m-line"><span>Receita/sem</span><strong>R$ 24.290</strong></div>
+          <div class="m-line"><span>Board VIP</span><strong>115</strong></div>
+          <div class="m-line"><span>Premium</span><strong>58</strong></div>
+        </div>
+        <div class="month">
+          <div class="m-label">Mês 3 · 20% (Lote 2)</div>
+          <div class="m-tickets">110</div>
+          <div class="m-rev">Receita R$ 108.140</div>
+          <div class="m-divider"></div>
+          <div class="m-line"><span>Semanal</span><strong>27,5 ingressos</strong></div>
+          <div class="m-line"><span>Diário (útil)</span><strong>5 ingressos</strong></div>
+          <div class="m-line"><span>Receita/sem</span><strong>R$ 27.035</strong></div>
+          <div class="m-line"><span>Board VIP</span><strong>66</strong></div>
+          <div class="m-line"><span>Premium</span><strong>33</strong></div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <div class="marcos">
+          <div class="marco">
+            <div class="m-dia">Dia 01</div>
+            <div class="m-nome">Abertura do Lote 1</div>
+            <div class="m-desc">Preços VIP R$ 397 · Premium R$ 797</div>
+          </div>
+          <div class="marco">
+            <div class="m-dia">Dia 60</div>
+            <div class="m-nome">Virada de Lote</div>
+            <div class="m-desc">Evento de urgência · disparo de campanha específica</div>
+          </div>
+          <div class="marco">
+            <div class="m-dia">Dia 90</div>
+            <div class="m-nome">Fechamento</div>
+            <div class="m-desc">Última chamada · pacotes empresariais coringa</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ CENÁRIOS ============ -->
+<div class="panel" data-panel="cenarios">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">05 · Cenários</span>Do horrível ao Everest</h2>
+      <span class="hint">Resultado vs custo de R$ 250K (sem backend)</span>
+    </div>
+    <div class="card">
+      <div class="scenarios">
+        <div class="scen-row">
+          <div class="name">Horrível</div>
+          <div class="pct">30%</div>
+          <div class="bar-track"><div class="bar-fill" style="width:30%;background:linear-gradient(90deg,#7a1e2b,#c73349)"></div></div>
+          <div class="rev">R$ 99.415</div>
+          <div class="res neg">−R$ 150.585</div>
+        </div>
+        <div class="scen-row">
+          <div class="name">Pior cenário</div>
+          <div class="pct">50%</div>
+          <div class="bar-track"><div class="bar-fill" style="width:50%;background:linear-gradient(90deg,#8a4520,#d97a3a)"></div></div>
+          <div class="rev">R$ 165.491</div>
+          <div class="res neg">−R$ 84.509</div>
+        </div>
+        <div class="scen-row">
+          <div class="name">Ruim</div>
+          <div class="pct">70%</div>
+          <div class="bar-track"><div class="bar-fill" style="width:70%;background:linear-gradient(90deg,#a56c25,#e6b45c)"></div></div>
+          <div class="rev">R$ 231.567</div>
+          <div class="res neg">−R$ 18.433</div>
+        </div>
+        <div class="scen-row">
+          <div class="name">Meta batida</div>
+          <div class="pct">100%</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#c8933c,#fff3d6)"></div></div>
+          <div class="rev">R$ 330.380</div>
+          <div class="res pos">+R$ 80.380</div>
+        </div>
+        <div class="scen-row">
+          <div class="name">Everest (mix Premium&gt;VIP)</div>
+          <div class="pct">120%</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#4ade80,#fff3d6)"></div></div>
+          <div class="rev">R$ 457.175</div>
+          <div class="res pos">+R$ 207.175</div>
+        </div>
+      </div>
+      <div class="scen-legend">Everest inverte o mix: 50% Premium vs 40% VIP. É venda de upgrade, não de volume. O backend (combo R$ 18k) não entra nesta conta.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ ACOMPANHAMENTO ============ -->
+<div class="panel" data-panel="acompanhamento">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">06 · Acompanhamento</span>Realizado vs meta · semana a semana</h2>
+      <span class="hint">Atualize as colunas azuis na planilha; aqui é só espelho</span>
+    </div>
+
+    <div class="acomp-progress">
+      <div class="progress-card">
+        <div class="pc-label">Acumulado (13 semanas)</div>
+        <div class="pc-big" data-key="acum_ingressos">—<small> / 550 ingressos</small></div>
+        <div class="pc-sub" data-key="acum_sub">carregando…</div>
+        <div class="progress-bar"><div class="progress-bar-fill" data-key="acum_bar" style="width:0%"></div></div>
+      </div>
+      <div class="progress-card">
+        <div class="pc-label">Receita realizada</div>
+        <div class="pc-big" data-key="acum_receita">R$ —</div>
+        <div class="pc-sub" data-key="acum_receita_sub">Meta 100% · R$ 330.380</div>
+        <div class="progress-bar"><div class="progress-bar-fill" data-key="acum_receita_bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="edit-bar">
+      <button type="button" class="btn-edit" data-editor="acomp">Editar</button>
+      <button type="button" class="btn-save" data-editor-save="acomp" style="display:none">Salvar</button>
+      <button type="button" class="btn-cancel" data-editor-cancel="acomp" style="display:none">Cancelar</button>
+      <span class="edit-status" data-editor-status="acomp"></span>
+    </div>
+    <div class="card">
+      <table class="acomp-table" id="acomp-table">
+        <thead>
+          <tr>
+            <th>Semana</th>
+            <th class="only-view">Meta da semana</th>
+            <th class="only-view">Vendas</th>
+            <th class="only-view">Receita</th>
+            <th class="only-view">Acumulado</th>
+            <th class="only-view">% Meta geral</th>
+            <th class="only-view">Cenário</th>
+            <th class="only-view">Status</th>
+            <th class="only-edit">VIP L1</th>
+            <th class="only-edit">VIP L2</th>
+            <th class="only-edit">VIP L3</th>
+            <th class="only-edit">Prem L1</th>
+            <th class="only-edit">Prem L2</th>
+            <th class="only-edit">Prem L3</th>
+            <th class="only-edit">Emp L1</th>
+            <th class="only-edit">Emp L2</th>
+            <th class="only-edit">Emp L3</th>
+          </tr>
+        </thead>
+        <tbody data-key="acomp_tbody">
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">carregando dados da planilha…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ============ BACKEND ============ -->
+<div class="panel" data-panel="backend">
+  <section class="section" style="margin-top:48px">
+    <div class="section-head">
+      <h2><span class="num">07 · Backend do Evento</span>Combo PFC + Board 360 · R$ 18.000</h2>
+      <span class="hint">Venda dentro do evento · 495 cadeiras convertíveis</span>
+    </div>
+    <div class="back-cards">
+      <div class="back-card">
+        <div class="bc-label">Mínimo</div>
+        <div class="bc-combos">30<small> combos</small></div>
+        <div class="bc-rev">R$ 540.000 em faturamento</div>
+        <ul class="bc-list">
+          <li><span>Conversão</span><strong>6,1%</strong></li>
+          <li><span>ROI s/ verba</span><strong>5,4x</strong></li>
+          <li><span>Resultado total</span><strong>R$ 620.380</strong></li>
+        </ul>
+      </div>
+      <div class="back-card alvo">
+        <div class="bc-label">Alvo</div>
+        <div class="bc-combos">50<small> combos</small></div>
+        <div class="bc-rev">R$ 900.000 em faturamento</div>
+        <ul class="bc-list">
+          <li><span>Conversão</span><strong>10,1%</strong></li>
+          <li><span>ROI s/ verba</span><strong>9,0x</strong></li>
+          <li><span>Resultado total</span><strong>R$ 980.380</strong></li>
+        </ul>
+      </div>
+      <div class="back-card">
+        <div class="bc-label">Stretch</div>
+        <div class="bc-combos">100<small> combos</small></div>
+        <div class="bc-rev">R$ 1.800.000 em faturamento</div>
+        <ul class="bc-list">
+          <li><span>Conversão</span><strong>20,2%</strong></li>
+          <li><span>ROI s/ verba</span><strong>18,0x</strong></li>
+          <li><span>Resultado total</span><strong>R$ 1.880.380</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">Resultado total = combo + bilheteria (meta 100% = R$ 330K) − custo do evento (R$ 250K). Conversão é sobre <strong>cadeiras convertíveis</strong> (90% da sala, exclui alumni e cortesias). Meta operacional: fechamento in-room (mesas no evento) + recuperação pós-evento em 14 dias, com 1ª parcela em fevereiro.</div>
+  </section>
+</div>
+
+<div class="footer">
+  <div>
+    <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold-200);margin-bottom:4px">Board Summit 2026 · Painel de Metas</div>
+    <div>Dados sincronizados da planilha operacional <em>Metas_90_Dias_Board_Summit_2026</em>.</div>
+  </div>
+  <div class="refresh"><span class="dot"></span><span>Sincronizado em <strong id="ts_footer" style="color:var(--gold-200)">—</strong></span></div>
+</div>
+
+</main>
+
+<script>
+  (function(){
+    var buttons = document.querySelectorAll('.tab-btn');
+    var panels = document.querySelectorAll('.panel');
+    function activate(name, push) {
+      buttons.forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
+      panels.forEach(function(p){ p.classList.toggle('active', p.dataset.panel === name); });
+      if (push) {
+        try { history.replaceState(null, '', '#' + name); } catch(e){}
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    buttons.forEach(function(b){
+      b.addEventListener('click', function(){ activate(b.dataset.tab, true); });
+    });
+    var hash = (location.hash || '').replace('#','');
+    if (hash && document.querySelector('[data-panel="'+hash+'"]')) activate(hash, false);
+  })();
+
+  // ============ SYNC COM PLANILHA ============
+  function fmtBRL(v) {
+    if (typeof v !== 'number') v = parseFloat(String(v).replace(/[^0-9.-]/g,'')) || 0;
+    return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  function pctNum(s) {
+    if (!s) return 0;
+    var n = parseFloat(String(s).replace(',', '.').replace('%',''));
+    return isNaN(n) ? 0 : n;
+  }
+  function setText(key, val) {
+    document.querySelectorAll('[data-key="'+key+'"]').forEach(function(el){ el.textContent = val; });
+  }
+  function setHTML(key, html) {
+    document.querySelectorAll('[data-key="'+key+'"]').forEach(function(el){ el.innerHTML = html; });
+  }
+  function setWidth(key, pct) {
+    document.querySelectorAll('[data-key="'+key+'"]').forEach(function(el){ el.style.width = Math.min(100, Math.max(0, pct)) + '%'; });
+  }
+  function parseMoney(v) {
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    // Planilha do Sheets em ingles: virgula = milhar, ponto = decimal.
+    // Aceita "R$ 5,970" (=5970), "R$ 1,234.56" (=1234.56), "R$ 5.970" (BR = 5970), "0.045" (=0.045).
+    var s = String(v).replace(/[R$\s]/g,'').replace(/%/g,'');
+    var neg = false;
+    if (s.startsWith('(') && s.endsWith(')')) { neg = true; s = s.slice(1, -1); }
+    if (s.includes('.') && s.includes(',')) {
+      // ingles: virgula milhar, ponto decimal
+      s = s.replace(/,/g,'');
+    } else if (s.includes(',')) {
+      var parts = s.split(',');
+      if (parts.length === 2 && /^\d{3}$/.test(parts[1])) {
+        // padrao ingles: 5,970 = 5970
+        s = s.replace(/,/g,'');
+      } else {
+        s = s.replace(/,/g,'.');
+      }
+    }
+    var n = parseFloat(s);
+    if (isNaN(n)) return 0;
+    return neg ? -n : n;
+  }
+  function cenarioChip(cenario) {
+    var c = (cenario || '').toUpperCase().trim();
+    var cls;
+    if (c.includes('HORR')) cls = 'cen-horr';
+    else if (c.includes('PIOR')) cls = 'cen-pior';
+    else if (c.includes('RUIM')) cls = 'cen-ruim';
+    else if (c.includes('EVEREST')) cls = 'cen-ever';
+    else if (c.includes('META') || c.includes('BATIDA')) cls = 'cen-meta';
+    else if (c.includes('RITMO') || c.includes('BOM') || c.includes('ADIANTADO')) cls = 'cen-bom';
+    else if (cenario) cls = 'pend';
+    else return '<span class="chip pend">Pendente</span>';
+    return '<span class="chip '+cls+'">'+(cenario||'—')+'</span>';
+  }
+
+  function renderMixDonut(metasIng) {
+    var cores = ['var(--gold-400)', 'var(--gold-600)', '#4b6a95'];
+    var donutEl = document.getElementById('mix-donut');
+    var totalEl = document.getElementById('mix-total');
+    var legendEl = document.getElementById('mix-legend');
+    if (!donutEl || !metasIng.length) return;
+
+    var totalMeta = 0;
+    metasIng.forEach(function(m){ totalMeta += parseFloat(m.meta_total) || 0; });
+    if (totalEl) totalEl.textContent = Math.round(totalMeta) || '550';
+
+    var cumPct = 0, gradParts = [], legHtml = '';
+    metasIng.forEach(function(m, i) {
+      var meta = parseFloat(m.meta_total) || 0;
+      var pct = totalMeta > 0 ? meta / totalMeta * 100 : 0;
+      var cor = cores[i % cores.length];
+      gradParts.push(cor + ' ' + cumPct.toFixed(2) + '% ' + (cumPct + pct).toFixed(2) + '%');
+      cumPct += pct;
+      var pctMix = m.pct_mix !== undefined ? m.pct_mix.toFixed(1).replace('.', ',') + '%' : pct.toFixed(1).replace('.', ',') + '%';
+      legHtml += '<div class="leg-item">'
+        + '<span class="leg-dot" style="background:'+cor+'"></span>'
+        + '<div class="leg-name">'+(m.tipo||'')+' <small>'+pctMix+' · '+Math.round(meta)+' lugares</small></div>'
+        + '<span class="leg-val">'+Math.round(meta)+'</span>'
+        + '</div>';
+    });
+    donutEl.style.background = 'conic-gradient(' + gradParts.join(', ') + ')';
+    if (legendEl) legendEl.innerHTML = legHtml;
+
+    // Atualiza seção "Mix por tipo" nas Premissas
+    metasIng.forEach(function(m, i) {
+      var pct = totalMeta > 0 ? m.meta_total / totalMeta * 100 : 0;
+      var pctStr = (m.pct_mix !== undefined ? m.pct_mix : pct).toFixed(1).replace('.', ',') + '%';
+      var labelEl = document.getElementById('mix-label-' + i);
+      var pctEl = document.getElementById('mix-pct-' + i);
+      var countEl = document.getElementById('mix-count-' + i);
+      if (labelEl && m.tipo) {
+        var nome = m.tipo.split('(')[0].trim();
+        labelEl.textContent = nome;
+      }
+      if (pctEl) pctEl.textContent = pctStr;
+      if (countEl) countEl.textContent = Math.round(m.meta_total);
+    });
+  }
+
+  function renderVendidoPizza(metasIng) {
+    var cores = ['var(--gold-400)', 'var(--gold-600)', '#4b6a95'];
+    var total = 0;
+    metasIng.forEach(function(m){ total += parseFloat(m.vendido_total) || 0; });
+
+    var donutEl = document.getElementById('vendido-donut');
+    var totalEl = document.getElementById('vendido-total');
+    var legendEl = document.getElementById('vendido-legend');
+    if (!donutEl) return;
+
+    totalEl.textContent = total > 0 ? Math.round(total) : '0';
+
+    if (total === 0) {
+      donutEl.style.background = 'conic-gradient(rgba(143,162,189,0.25) 0 100%)';
+      legendEl.innerHTML = metasIng.map(function(m, i){
+        return '<div class="leg-item">'
+          + '<span class="leg-dot" style="background:'+cores[i % cores.length]+'"></span>'
+          + '<div class="leg-name">'+(m.tipo||'')+'<small>0% da meta</small></div>'
+          + '<span class="leg-val">0</span></div>';
+      }).join('');
+      return;
+    }
+
+    var cumPct = 0;
+    var gradParts = [];
+    var legHtml = '';
+    metasIng.forEach(function(m, i) {
+      var vend = parseFloat(m.vendido_total) || 0;
+      var pct = vend / total * 100;
+      var cor = cores[i % cores.length];
+      gradParts.push(cor + ' ' + cumPct.toFixed(2) + '% ' + (cumPct + pct).toFixed(2) + '%');
+      cumPct += pct;
+      var metaNum = parseFloat(m.meta_total) || 0;
+      var pctMeta = metaNum > 0 ? (vend / metaNum * 100).toFixed(1).replace('.', ',') + '% da meta' : '';
+      legHtml += '<div class="leg-item">'
+        + '<span class="leg-dot" style="background:'+cor+'"></span>'
+        + '<div class="leg-name">'+(m.tipo||'')+'<small>'+pctMeta+'</small></div>'
+        + '<span class="leg-val">'+Math.round(vend)+'</span>'
+        + '</div>';
+    });
+    donutEl.style.background = 'conic-gradient(' + gradParts.join(', ') + ')';
+    legendEl.innerHTML = legHtml;
+  }
+
+  function setPct(key, pct) {
+    var v = Math.max(0, Math.min(100, pct || 0));
+    document.querySelectorAll('[data-key="'+key+'"]').forEach(function(el){
+      el.style.setProperty('--pct', v.toFixed(2));
+    });
+  }
+
+  function renderData(d) {
+    var p = d.premissas || {};
+    var acomp = d.acompanhamento || [];
+    var metasIng = d.metas_ingressos || [];
+    var META = parseFloat(p.meta_ingressos_total) || 550;
+    var META_RECEITA_TOTAL = parseFloat(p.meta_receita_total) || 414540;
+    // Total de dias da campanha (18/11/2026 - dia 0). Se dias_evento vem da planilha, calcula % decorrido.
+    var TOTAL_DIAS_CAMPANHA = 121 + 0; // placeholder — usaremos a data se disponivel
+
+    // ======= LIVE KPIs (aba Premissas) =======
+    var vendTotal = p.ingressos_vendidos_total || 0;
+    var receitaLive = parseMoney(p.receita_total);
+    var pctIngressos = META > 0 ? (vendTotal / META * 100) : 0;
+    var pctReceitaLive = META_RECEITA_TOTAL > 0 ? (receitaLive / META_RECEITA_TOTAL * 100) : 0;
+    var diasRestantes = parseInt(p.dias_evento) || 0;
+    // pct do tempo decorrido: se planilha tem "pct_tempo_decorrido" usa; senao, deduz de 121 dias base
+    var pctTempoDecorrido = 0;
+    if (p.dias_evento) {
+      // Assume janela total de 130 dias (referencia; ajustar quando planilha der esse dado)
+      var baseDias = 130;
+      pctTempoDecorrido = Math.max(0, Math.min(100, ((baseDias - diasRestantes) / baseDias) * 100));
+    }
+
+    document.querySelectorAll('[data-key="live_ingressos"]').forEach(function(el){
+      el.innerHTML = Math.round(vendTotal) + '<small> / ' + Math.round(META) + '</small>';
+    });
+    setText('live_ingressos_sub', 'Faltam ' + Math.max(0, Math.round(META) - Math.round(vendTotal)) + ' ingressos');
+    setText('live_pct', pctIngressos.toFixed(1).replace('.', ',') + '%');
+    setText('live_receita', fmtBRL(receitaLive));
+    setText('live_receita_sub', 'De ' + fmtBRL(META_RECEITA_TOTAL) + ' meta');
+    document.querySelectorAll('[data-key="live_dias"]').forEach(function(el){
+      el.innerHTML = (p.dias_evento || '—') + '<small> dias</small>';
+    });
+    setText('live_dias_sub', p.data_evento || '18/11/2026');
+
+    // Pizzas do topo
+    setText('pz_ingressos_num', pctIngressos.toFixed(1).replace('.', ',') + '%');
+    setPct('pz_ingressos', pctIngressos);
+    setText('pz_meta_num', pctIngressos.toFixed(1).replace('.', ',') + '%');
+    setPct('pz_meta', pctIngressos);
+    setText('pz_receita_num', pctReceitaLive.toFixed(1).replace('.', ',') + '%');
+    setPct('pz_receita', pctReceitaLive);
+    setText('pz_dias_num', pctTempoDecorrido.toFixed(0) + '%');
+    setPct('pz_dias', pctTempoDecorrido);
+
+    // ======= SEGUNDA LINHA — Receita Meta 100% + Bilheterias =======
+    setText('meta_receita_total', fmtBRL(META_RECEITA_TOTAL));
+    var pctReceita100 = META_RECEITA_TOTAL > 0 ? (receitaLive / META_RECEITA_TOTAL * 100) : 0;
+    setText('pz_bilheteria_num', pctReceita100.toFixed(1).replace('.', ',') + '%');
+    setPct('pz_bilheteria', pctReceita100);
+    setText('meta_receita_sub', 'Realizado ' + fmtBRL(receitaLive) + ' (' + pctReceita100.toFixed(1).replace('.', ',') + '%)');
+
+    // Bilheterias VIP / Premium / Empresarial
+    var mapaBilh = { vip: metasIng[0], prem: metasIng[1], emp: metasIng[2] };
+    ['vip', 'prem', 'emp'].forEach(function(k){
+      var m = mapaBilh[k];
+      if (!m) return;
+      var meta = parseFloat(m.meta_total) || 0;
+      var vend = parseFloat(m.vendido_total) || 0;
+      var pct = meta > 0 ? (vend / meta * 100) : 0;
+      var pctMixStr = (m.pct_mix !== undefined ? m.pct_mix : 0).toFixed(1).replace('.', ',') + '%';
+      setText('pz_'+k+'_num', pct.toFixed(1).replace('.', ',') + '%');
+      setPct('pz_'+k, pct);
+      document.querySelectorAll('[data-key="bilh_'+k+'"]').forEach(function(el){
+        el.innerHTML = Math.round(meta) + '<small> lugares · ' + pctMixStr + ' do mix</small>';
+      });
+      setText('bilh_'+k+'_sub', Math.round(vend) + ' vendidos');
+    });
+
+    // ======= TABELA METAS POR INGRESSO (aba Ingressos) =======
+    var ingHtml = '';
+    var totMeta = 0, totVend = 0, totRec = 0;
+    metasIng.forEach(function(m){
+      var meta = parseFloat(m.meta_total) || 0;
+      var vend = parseFloat(m.vendido_total) || 0;
+      var rec = parseMoney(m.receita_total);
+      totMeta += meta; totVend += vend; totRec += rec;
+      ingHtml += '<tr>'
+        + '<td>'+ (m.tipo || '') +'</td>'
+        + '<td>'+ Math.round(meta) +'</td>'
+        + '<td>'+ Math.round(vend) +'</td>'
+        + '<td>'+ (m.pct_meta || '—') +'</td>'
+        + '<td>'+ fmtBRL(rec) +'</td>'
+        + '</tr>';
+    });
+    var pctTotal = totMeta > 0 ? (totVend / totMeta * 100).toFixed(1).replace('.', ',') + '%' : '—';
+    ingHtml += '<tr class="total"><td>Total</td><td>'+ Math.round(totMeta) +'</td><td>'+ Math.round(totVend) +'</td><td>'+ pctTotal +'</td><td>'+ fmtBRL(totRec) +'</td></tr>';
+    setHTML('ing_tbody', ingHtml);
+
+    // ======= Acumulado ingressos (aba Acompanhamento) =======
+    var pctMeta = pctNum(p.pct_meta_vendida);
+    var pctBar = META > 0 ? (vendTotal / META * 100) : 0;
+    document.querySelectorAll('[data-key="acum_ingressos"]').forEach(function(el){
+      el.innerHTML = Math.round(vendTotal) + '<small> / ' + META + ' ingressos</small>';
+    });
+    setText('acum_sub', pctMeta.toFixed(1).replace('.', ',') + '% da meta geral · faltam ' + Math.max(0, META - Math.round(vendTotal)) + ' ingressos');
+    setWidth('acum_bar', pctBar);
+
+    // Receita
+    var receitaTotal = 0;
+    acomp.forEach(function(s){ receitaTotal += parseMoney(s.receita); });
+    var pctReceita = META_RECEITA_TOTAL > 0 ? (receitaTotal / META_RECEITA_TOTAL * 100) : 0;
+    setText('acum_receita', fmtBRL(receitaTotal));
+    setText('acum_receita_sub', 'Meta 100% · ' + fmtBRL(META_RECEITA_TOTAL) + ' · faltam ' + fmtBRL(Math.max(0, META_RECEITA_TOTAL - receitaTotal)));
+    setWidth('acum_receita_bar', pctReceita);
+
+    // Tabela semanas
+    var tbody = '';
+    acomp.forEach(function(s){
+      var vendas = parseFloat(s.total) || 0;
+      var receita = parseFloat(String(s.receita).replace(/[^0-9.-]/g,'')) || 0;
+      var pend = vendas === 0 && !s.total;
+      var isEmpty = !s.total || s.total === '' || s.total === '0';
+      var chip = isEmpty ? '<span class="chip pend">Pendente</span>' : '<span class="chip ok">Registrada</span>';
+      var rowClass = isEmpty ? 'pend' : '';
+      tbody += '<tr class="'+rowClass+'">'
+        + '<td>'+ (s.semana || '') +'</td>'
+        + '<td>'+ (s.meta_ajustada || '—') +'</td>'
+        + '<td>'+ (isEmpty ? '—' : Math.round(vendas)) +'</td>'
+        + '<td>'+ (isEmpty ? '—' : fmtBRL(receita)) +'</td>'
+        + '<td>'+ (s.acumulado || '—') +'</td>'
+        + '<td>'+ (s.pct_meta_geral || '—') +'</td>'
+        + '<td>'+ (isEmpty ? '<span class="chip pend">—</span>' : cenarioChip(s.cenario)) +'</td>'
+        + '<td>'+ chip +'</td>'
+        + '</tr>';
+    });
+    var totalVendas = 0, totalReceita = 0;
+    acomp.forEach(function(s){
+      totalVendas += parseFloat(s.total) || 0;
+      totalReceita += parseFloat(String(s.receita).replace(/[^0-9.-]/g,'')) || 0;
+    });
+    var pctFinal = acomp.length ? acomp[acomp.length-1].pct_meta_geral : '—';
+    tbody += '<tr class="total"><td>Total</td><td>—</td><td>'+ Math.round(totalVendas) +'</td><td>'+ fmtBRL(totalReceita) +'</td><td>—</td><td>'+ pctFinal +'</td><td>—</td><td>—</td></tr>';
+    setHTML('acomp_tbody', tbody);
+
+    // ======= PIZZA VENDIDO (aba Ingressos) =======
+    renderVendidoPizza(metasIng);
+    // ======= DONUT DE MIX (aba Ingressos + seção Premissas) =======
+    renderMixDonut(metasIng);
+
+    // Timestamp (sidebar + footer)
+    var ts = document.getElementById('ts');
+    var tsFooter = document.getElementById('ts_footer');
+    if (d.updated_at_display) {
+      if (ts) ts.textContent = d.updated_at_display;
+      if (tsFooter) tsFooter.textContent = d.updated_at_display;
+    }
+  }
+  function loadData() {
+    fetch('data.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(renderData)
+      .catch(function(err){ console.error('sync erro', err); });
+  }
+  loadData();
+  setInterval(loadData, 60 * 1000); // refresh no client a cada 1min
+</script>
+
+</body>
+</html>

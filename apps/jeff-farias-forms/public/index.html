@@ -3,7 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aplicação para Mentoria O Próximo Ciclo</title>
+<title>Aplicação Farias Souza</title>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1537250761230409');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -22,48 +39,41 @@
   }
   html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.6}
 
-  /* PROGRESS BAR */
   #progress-bar-wrapper{position:fixed;top:0;left:0;right:0;z-index:100}
   #progress-track{height:4px;background:#1A1A1A}
   #progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));width:0%;transition:width .5s cubic-bezier(.4,0,.2,1)}
   #progress-label{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 4px;background:var(--bg);letter-spacing:.5px}
 
-  /* LAYOUT */
   .container{max-width:680px;margin:0 auto;padding:80px 20px 60px}
 
-  /* HEADER */
   .header{text-align:center;margin-bottom:48px}
   .header .logo{font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.9}
   .header h1{font-size:clamp(24px,5vw,34px);font-weight:700;line-height:1.2;letter-spacing:-.5px}
   .header h1 span{color:var(--gold)}
   .header p{margin-top:12px;color:var(--muted);font-size:15px}
 
-  /* BLOCK LABEL */
   .bloco-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1E1A0F}
 
-  /* QUESTION SLIDE */
   .q-slide{display:none}
   .q-slide.active{display:block;animation:fadeInUp .4s ease}
   @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-  /* QUESTION */
   .q-label{display:block;font-size:18px;font-weight:600;margin-bottom:20px;line-height:1.4}
   .q-label .num{color:var(--gold);margin-right:6px;font-size:14px;font-weight:400}
-  .hint{font-size:12px;color:var(--muted);margin-top:-14px;margin-bottom:16px;font-style:italic}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;margin-bottom:16px;font-style:italic}
 
-  /* TEXT INPUT */
-  input[type=text],input[type=tel],input[type=url],textarea{
+  input[type=text],input[type=tel],input[type=email],input[type=url],textarea,select{
     width:100%;background:#111;border:1.5px solid var(--border);color:var(--text);
     border-radius:8px;padding:14px 16px;font-size:15px;font-family:inherit;
     transition:border-color .2s,box-shadow .2s;outline:none
   }
-  input[type=text]:focus,input[type=tel]:focus,input[type=url]:focus,textarea:focus{
+  input[type=text]:focus,input[type=tel]:focus,input[type=email]:focus,input[type=url]:focus,textarea:focus,select:focus{
     border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)
   }
-  textarea{min-height:150px;resize:vertical;line-height:1.6}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 20px) center,calc(100% - 14px) center;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:40px}
+  textarea{min-height:120px;resize:vertical;line-height:1.6}
   ::placeholder{color:#444}
 
-  /* RADIO OPTIONS */
   .options{display:flex;flex-direction:column;gap:10px}
   .option{
     display:flex;align-items:flex-start;gap:14px;
@@ -71,7 +81,7 @@
     padding:14px 16px;cursor:pointer;transition:all .2s;user-select:none
   }
   .option:hover{background:var(--radio-hover);border-color:#333}
-  .option input[type=radio]{display:none}
+  .option input[type=radio],.option input[type=checkbox]{display:none}
   .option.selected{background:var(--radio-checked);border-color:var(--radio-checked-border)}
   .radio-dot{
     width:20px;height:20px;min-width:20px;border-radius:50%;
@@ -82,13 +92,10 @@
   .radio-dot-inner{width:8px;height:8px;border-radius:50%;background:#0A0A0A;opacity:0;transition:opacity .2s}
   .option.selected .radio-dot-inner{opacity:1}
   .option-text{font-size:15px;line-height:1.5;padding-top:1px}
-  .option-text .persona-tag{font-size:11px;color:var(--muted);display:block;margin-bottom:2px;letter-spacing:.5px}
 
-  /* OUTRO INPUT */
   .outro-wrap{margin-top:10px;display:none}
   .outro-wrap.show{display:block}
 
-  /* BUTTONS */
   .btn-row{display:flex;gap:12px;justify-content:flex-end;margin-top:40px;align-items:center}
   .btn-back{
     background:transparent;border:1.5px solid var(--border);color:var(--muted);
@@ -105,15 +112,41 @@
   .btn-next:active{transform:translateY(0)}
   .btn-next:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 
-  /* SUCCESS */
   #success{display:none;text-align:center;padding:60px 20px;animation:fadeInUp .5s ease}
-  .success-icon{font-size:56px;margin-bottom:24px}
+  .success-icon{font-size:56px;margin-bottom:24px;color:var(--gold)}
   #success h2{font-size:26px;font-weight:700;margin-bottom:12px}
-  #success p{color:var(--muted);font-size:16px;line-height:1.7;max-width:440px;margin:0 auto}
+  #success p{color:var(--muted);font-size:16px;line-height:1.7;max-width:480px;margin:0 auto}
 
-  /* ERROR MSG */
   .error-msg{color:#ff6b6b;font-size:13px;margin-top:8px;display:none}
   .error-msg.show{display:block}
+
+  #modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;
+    display:none;align-items:center;justify-content:center;padding:20px;
+    backdrop-filter:blur(4px)
+  }
+  #modal-overlay.show{display:flex;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal-box{
+    background:var(--card);border:1.5px solid var(--gold);border-radius:14px;
+    max-width:440px;width:100%;padding:32px 28px;text-align:center;
+    box-shadow:0 20px 60px rgba(201,168,76,.2);animation:fadeInUp .3s ease
+  }
+  .modal-icon{
+    width:56px;height:56px;border-radius:50%;background:rgba(255,107,107,.15);
+    color:#ff6b6b;display:flex;align-items:center;justify-content:center;
+    font-size:32px;font-weight:700;margin:0 auto 18px
+  }
+  .modal-title{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:12px}
+  .modal-text{font-size:15px;line-height:1.6;color:var(--text);margin-bottom:8px}
+  .modal-hint{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  .modal-hint strong{color:var(--gold-light)}
+  .modal-btn{
+    background:var(--gold);color:#000;border:none;padding:12px 32px;
+    border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;
+    transition:all .2s;font-family:inherit
+  }
+  .modal-btn:hover{background:var(--gold-light);transform:translateY(-1px)}
 
   @media(max-width:480px){
     .container{padding:80px 16px 48px}
@@ -121,27 +154,40 @@
     .btn-next,.btn-back{width:100%}
   }
 </style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
 </head>
 <body>
 
+<div id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-icon">!</div>
+    <div class="modal-title" id="modal-title">Número de telefone incorreto</div>
+    <div class="modal-text" id="modal-text">Coloque o DDD, o nono dígito e o número do seu telefone.</div>
+    <div class="modal-hint" id="modal-hint">Exemplo: <strong>(11) 91234-5678</strong><br>Não use o código do país (55) no início.</div>
+    <button type="button" class="modal-btn" onclick="closeModal()">Corrigir</button>
+  </div>
+</div>
+
 <div id="progress-bar-wrapper">
   <div id="progress-track"><div id="progress-bar"></div></div>
-  <div id="progress-label">Pergunta <span id="cur-num">1</span> de <span id="tot-num">11</span></div>
+  <div id="progress-label">Pergunta <span id="cur-num">1</span> de <span id="tot-num">7</span></div>
 </div>
 
 <div class="container">
   <div class="header">
     <div class="logo">Farias Souza</div>
-    <h1>Mentoria <span>O Próximo Ciclo</span></h1>
-    <p>Preencha com atenção. Cada campo é avaliado antes da entrevista de seleção.</p>
+    <h1>Aplicação <span>Executiva</span></h1>
+    <p>Preencha com atenção. Um dos nossos consultores entrará em contato após a análise.</p>
   </div>
 
   <form id="form" novalidate>
 
-    <!-- Q1: Nome -->
+    <!-- Q1: Nome completo -->
     <div class="q-slide active" id="q1">
-      <div class="bloco-label">Bloco 1 — Identificação</div>
-      <label class="q-label" for="nome"><span class="num">1.</span> Nome Completo</label>
+      <label class="q-label" for="nome"><span class="num">1.</span> Nome completo</label>
       <input type="text" id="nome" name="nome" placeholder="Seu nome completo" autocomplete="name">
       <div class="error-msg" id="err-nome">Por favor, informe seu nome completo.</div>
       <div class="btn-row">
@@ -149,92 +195,84 @@
       </div>
     </div>
 
-    <!-- Q2: LinkedIn -->
+    <!-- Q2: Telefone com DDD -->
     <div class="q-slide" id="q2">
-      <div class="bloco-label">Bloco 1 — Identificação</div>
-      <label class="q-label" for="linkedin"><span class="num">2.</span> Link do seu perfil no LinkedIn</label>
-      <div class="hint">Essencial para validar o histórico profissional</div>
-      <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/seu-perfil">
-      <div class="error-msg" id="err-linkedin">Por favor, informe o link do seu LinkedIn.</div>
+      <label class="q-label" for="telefone"><span class="num">2.</span> Telefone com DDD</label>
+      <input type="tel" id="telefone" name="telefone" placeholder="(DDD) 9XXXX-XXXX" maxlength="20" autocomplete="tel">
+      <div class="hint">DDD + nono dígito + 8 dígitos (total 11 números)</div>
+      <div class="error-msg" id="err-telefone">Número inválido. Informe DDD + 9 dígitos reais.</div>
       <div class="btn-row">
         <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
         <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
       </div>
     </div>
 
-    <!-- Q3: WhatsApp -->
+    <!-- Q3: E-mail -->
     <div class="q-slide" id="q3">
-      <div class="bloco-label">Bloco 1 — Identificação</div>
-      <label class="q-label" for="whatsapp"><span class="num">3.</span> Seu telefone com DDD</label>
-      <input type="tel" id="whatsapp" name="whatsapp" placeholder="(DDD) 9XXXX-XXXX" maxlength="20">
-      <div class="hint">DDD + nono dígito + 8 dígitos — total 11 números</div>
-      <div class="error-msg" id="err-whatsapp">Número inválido. Informe DDD + 9 dígitos reais (sem sequências nem repetições).</div>
+      <label class="q-label" for="email"><span class="num">3.</span> E-mail</label>
+      <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email">
+      <div class="hint">Informe seu melhor e-mail para contato.</div>
+      <div class="error-msg" id="err-email">Informe um e-mail válido.</div>
       <div class="btn-row">
         <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
         <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
       </div>
     </div>
 
-    <!-- Q4: Posicionamento -->
+    <!-- Q4: Nome da empresa -->
     <div class="q-slide" id="q4">
-      <div class="bloco-label">Bloco 1 — Identificação</div>
-      <label class="q-label"><span class="num">4.</span> Qual é o seu posicionamento atual no mercado?</label>
-      <div class="options" id="opts-posicionamento">
-        <label class="option">
-          <input type="radio" name="posicionamento" value="Fundador / CEO / Sócio de uma empresa">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Sou Fundador / CEO / Sócio de uma empresa.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="posicionamento" value="Diretor / Vice-Presidente / C-Level em uma corporação">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Sou Diretor / Vice-Presidente / C-Level em uma corporação.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="posicionamento" value="Ex-CEO / Ex-Diretor em fase de transição de carreira">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Sou Ex-CEO / Ex-Diretor e estou em fase de transição de carreira.</span>
-        </label>
-        <label class="option" id="opt-outro-pos">
-          <input type="radio" name="posicionamento" value="Outro">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Outro.</span>
-        </label>
-      </div>
-      <div class="outro-wrap" id="outro-wrap">
-        <input type="text" id="posicionamento-outro" placeholder="Qual? Descreva seu posicionamento atual.">
-      </div>
-      <div class="error-msg" id="err-posicionamento">Por favor, selecione seu posicionamento.</div>
+      <label class="q-label" for="empresa"><span class="num">4.</span> Qual o nome da sua empresa?</label>
+      <input type="text" id="empresa" name="empresa" placeholder="Razão social ou nome fantasia" autocomplete="organization">
+      <div class="error-msg" id="err-empresa">Por favor, informe o nome da empresa.</div>
       <div class="btn-row">
         <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
         <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
       </div>
     </div>
 
-    <!-- Q5: Faturamento (condicional: empresário ou outro) -->
-    <div class="q-slide" id="q5">
-      <div class="bloco-label">Bloco 2 — Qualificação</div>
+    <!-- Q9: Faturamento -->
+    <div class="q-slide" id="q9">
       <label class="q-label"><span class="num">5.</span> Qual o faturamento anual atual da sua empresa?</label>
       <div class="options">
         <label class="option">
-          <input type="radio" name="faturamento" value="Até R$ 5 milhões">
+          <input type="radio" name="faturamento" value="Até R$ 500 mil/ano">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Até R$ 5 milhões.</span>
+          <span class="option-text">Até R$ 500 mil/ano.</span>
         </label>
         <label class="option">
-          <input type="radio" name="faturamento" value="Entre R$ 5 milhões e R$ 15 milhões">
+          <input type="radio" name="faturamento" value="De R$ 500 mil a R$ 1 milhão/ano">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Entre R$ 5 milhões e R$ 15 milhões.</span>
+          <span class="option-text">De R$ 500 mil a R$ 1 milhão/ano.</span>
         </label>
         <label class="option">
-          <input type="radio" name="faturamento" value="Entre R$ 15 milhões e R$ 30 milhões">
+          <input type="radio" name="faturamento" value="De R$ 1 milhão a R$ 2 milhões/ano">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Entre R$ 15 milhões e R$ 30 milhões.</span>
+          <span class="option-text">De R$ 1 milhão a R$ 2 milhões/ano.</span>
         </label>
         <label class="option">
-          <input type="radio" name="faturamento" value="Acima de R$ 30 milhões">
+          <input type="radio" name="faturamento" value="De R$ 2 a R$ 5 milhões/ano">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Acima de R$ 30 milhões.</span>
+          <span class="option-text">De R$ 2 a R$ 5 milhões/ano.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="faturamento" value="De R$ 5 a R$ 20 milhões/ano">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">De R$ 5 a R$ 20 milhões/ano.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="faturamento" value="De R$ 20 a R$ 50 milhões/ano">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">De R$ 20 a R$ 50 milhões/ano.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="faturamento" value="De R$ 50 a R$ 200 milhões/ano">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">De R$ 50 a R$ 200 milhões/ano.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="faturamento" value="Acima de R$ 200 milhões/ano">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Acima de R$ 200 milhões/ano.</span>
         </label>
       </div>
       <div class="error-msg" id="err-faturamento">Por favor, selecione o faturamento.</div>
@@ -244,161 +282,88 @@
       </div>
     </div>
 
-    <!-- Q6: Experiência executiva (condicional: executivo ou outro) -->
-    <div class="q-slide" id="q6">
-      <div class="bloco-label">Bloco 2 — Qualificação</div>
-      <label class="q-label"><span class="num">6.</span> Qual é o seu tempo de bagagem em posições de liderança sênior?</label>
-      <div class="options">
-        <label class="option">
-          <input type="radio" name="experiencia" value="Menos de 10 anos">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Menos de 10 anos.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="experiencia" value="Entre 10 e 20 anos">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Entre 10 e 20 anos.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="experiencia" value="Mais de 20 anos">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Mais de 20 anos de decisões acumuladas.</span>
-        </label>
-      </div>
-      <div class="error-msg" id="err-experiencia">Por favor, selecione o tempo de experiência.</div>
-      <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
-      </div>
-    </div>
-
-    <!-- Q7: Momento profissional -->
-    <div class="q-slide" id="q7">
-      <div class="bloco-label">Bloco 3 — Diagnóstico</div>
-      <label class="q-label"><span class="num">7.</span> Qual das afirmações melhor descreve o seu momento profissional HOJE?</label>
-      <div class="options">
-        <label class="option">
-          <input type="radio" name="momento" value="Meu ciclo na empresa atual está chegando ao fim e minha experiência está ficando invisível ou subutilizada">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">
-            <span class="persona-tag">Perfil Executivo</span>
-            Sinto que meu ciclo na empresa atual está chegando ao fim e que minha experiência está ficando invisível ou subutilizada.
-          </span>
-        </label>
-        <label class="option">
-          <input type="radio" name="momento" value="Saí do mundo corporativo e não quero ser consultor genérico — quero monetizar minha bagagem em mesas de conselho">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">
-            <span class="persona-tag">Perfil Conselheiro</span>
-            Já saí do mundo corporativo e não quero me tornar um consultor genérico que cobra barato por hora. Quero monetizar minha bagagem em mesas de conselho.
-          </span>
-        </label>
-        <label class="option">
-          <input type="radio" name="momento" value="Minha empresa cresceu mas eu virei o gargalo — decido tudo sozinho e preciso de um conselho para recuperar qualidade de vida">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">
-            <span class="persona-tag">Perfil Fundador</span>
-            Minha empresa cresceu, mas eu virei o gargalo. Decido tudo sozinho e quero montar uma estrutura de conselho para recuperar minha qualidade de vida.
-          </span>
-        </label>
-      </div>
-      <div class="error-msg" id="err-momento">Por favor, selecione a afirmação que melhor te representa.</div>
-      <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
-      </div>
-    </div>
-
-    <!-- Q8: Decisões sozinho -->
-    <div class="q-slide" id="q8">
-      <div class="bloco-label">Bloco 3 — Diagnóstico</div>
-      <label class="q-label"><span class="num">8.</span> Quantas decisões estratégicas cruciais você tomou completamente SOZINHO nos últimos 6 meses?</label>
-      <div class="options">
-        <label class="option">
-          <input type="radio" name="decisoes" value="Praticamente todas — sofro com a solidão estratégica no topo">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Praticamente todas. Sofro com a solidão estratégica no topo.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="decisoes" value="Algumas — sinto falta de pares de alto nível para tensionar minhas ideias">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Algumas, mas sinto falta de pares de alto nível para tensionar minhas ideias.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="decisoes" value="Tenho suporte e não decido sozinho">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Tenho suporte e não decido sozinho.</span>
-        </label>
-      </div>
-      <div class="error-msg" id="err-decisoes">Por favor, selecione uma opção.</div>
-      <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
-      </div>
-    </div>
-
-    <!-- Q9: Preocupação -->
-    <div class="q-slide" id="q9">
-      <div class="bloco-label">Bloco 3 — Diagnóstico</div>
-      <label class="q-label"><span class="num">9.</span> O que mais te preocupa em relação ao seu futuro profissional nos próximos 2 anos?</label>
-      <div class="options">
-        <label class="option">
-          <input type="radio" name="preocupacao" value="Ficar preso na execução/operação e ver minha qualidade de vida e saúde se deteriorarem">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Ficar preso na execução/operação e ver minha qualidade de vida e saúde se deteriorarem.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="preocupacao" value="Ver o mercado desvalorizar minha experiência acumulada porque não sei como me posicionar fora do crachá">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Ver o mercado desvalorizar meus 20-30 anos de experiência porque não sei como me posicionar fora do crachá.</span>
-        </label>
-        <label class="option">
-          <input type="radio" name="preocupacao" value="Errar na transição de carreira e aceitar cargo ou projeto menor do que o nível que já atingi">
-          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Errar na transição de carreira e aceitar um cargo ou projeto menor do que o nível que já atingi.</span>
-        </label>
-      </div>
-      <div class="error-msg" id="err-preocupacao">Por favor, selecione uma opção.</div>
-      <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
-      </div>
-    </div>
-
-    <!-- Q10: Por que está pronto -->
+    <!-- Q10: Você é -->
     <div class="q-slide" id="q10">
-      <div class="bloco-label">Bloco 4 — Comprometimento</div>
-      <label class="q-label" for="porque_pronto"><span class="num">10.</span> Por que você acredita que está pronto para assumir uma posição de influência, conselho e legado na mesa do Farias Souza?</label>
-      <textarea id="porque_pronto" name="porque_pronto" placeholder="Escreva em parágrafo, com honestidade. Este é o campo mais importante da sua aplicação."></textarea>
-      <div class="error-msg" id="err-porque">Por favor, responda esta pergunta. É o campo mais importante da aplicação.</div>
+      <label class="q-label"><span class="num">6.</span> Você é:</label>
+      <div class="options" id="opts-posicao">
+        <label class="option">
+          <input type="radio" name="posicao" value="Dono Fundador">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Sou Dono Fundador.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Sócio">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Sou Sócio.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Acionista">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Sou Acionista.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Diretor/CEO">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Diretor / CEO.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Executivo">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Executivo.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Gerente">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Gerente.</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="posicao" value="Outro">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text">Outro.</span>
+        </label>
+      </div>
+      <div class="outro-wrap" id="outro-wrap">
+        <input type="text" id="posicao-outro" placeholder="Qual? Descreva sua posição.">
+      </div>
+      <div class="error-msg" id="err-posicao">Por favor, selecione uma opção.</div>
       <div class="btn-row">
         <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
         <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
       </div>
     </div>
 
-    <!-- Q11: Capacidade financeira -->
+    <!-- Q11: Gargalo — SUBMIT AQUI -->
     <div class="q-slide" id="q11">
-      <div class="bloco-label">Bloco 4 — Comprometimento</div>
-      <label class="q-label"><span class="num">11.</span> A Mentoria "O Próximo Ciclo" é um programa de elite com encontros mensais, cujo investimento é de R$ 50.000. Você possui a capacidade financeira e o tempo para se comprometer agora?</label>
-      <div class="options">
+      <label class="q-label"><span class="num">7.</span> Qual é o maior gargalo da sua empresa hoje?</label>
+      <div class="hint">Escolha até 2 opções.</div>
+      <div class="options" data-multi="gargalo" data-max="2">
         <label class="option">
-          <input type="radio" name="capacidade_financeira" value="Sim — estou pronto para investir R$ 50.000 e priorizar minha transição">
+          <input type="checkbox" name="gargalo" value="Vendas e Atração">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Sim, estou pronto para investir R$ 50.000 e priorizar minha transição/empresa.</span>
+          <span class="option-text"><strong>Vendas e Atração:</strong> dependência de indicação, falta de previsibilidade de receita ou CAC alto.</span>
         </label>
         <label class="option">
-          <input type="radio" name="capacidade_financeira" value="Tenho interesse — preciso entender as condições de pagamento na entrevista">
+          <input type="checkbox" name="gargalo" value="Gestão de Pessoas">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">Tenho interesse, mas preciso entender melhor as condições de pagamento na entrevista de alinhamento.</span>
+          <span class="option-text"><strong>Gestão de Pessoas:</strong> dificuldade em contratar, reter talentos ou equipe sem autonomia.</span>
         </label>
         <label class="option">
-          <input type="radio" name="capacidade_financeira" value="No momento esse valor não está disponível no meu orçamento">
+          <input type="checkbox" name="gargalo" value="Processos e Operação">
           <span class="radio-dot"><span class="radio-dot-inner"></span></span>
-          <span class="option-text">No momento, esse valor não está disponível no meu orçamento.</span>
+          <span class="option-text"><strong>Processos e Operação:</strong> o dono precisa apagar incêndios diariamente; a empresa não roda sem ele.</span>
+        </label>
+        <label class="option">
+          <input type="checkbox" name="gargalo" value="Financeiro e Lucratividade">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text"><strong>Financeiro e Lucratividade:</strong> faturamento alto, mas margem baixa ou fluxo de caixa descontrolado.</span>
+        </label>
+        <label class="option">
+          <input type="checkbox" name="gargalo" value="Estratégia e Posicionamento">
+          <span class="radio-dot"><span class="radio-dot-inner"></span></span>
+          <span class="option-text"><strong>Estratégia e Posicionamento:</strong> falta de clareza sobre os próximos passos para escalar.</span>
         </label>
       </div>
-      <div class="error-msg" id="err-capacidade">Por favor, selecione uma opção.</div>
+      <div class="error-msg" id="err-gargalo">Selecione ao menos 1 e no máximo 2 opções.</div>
       <div id="submit-error" class="error-msg" style="margin-top:8px;font-size:15px"></div>
       <div class="btn-row">
         <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
@@ -408,182 +373,303 @@
 
   </form>
 
-  <!-- SUCCESS -->
   <div id="success">
     <div class="success-icon">&#10003;</div>
-    <h2>Aplicação enviada com sucesso!</h2>
-    <p>Nossa assessoria executiva analisará sua candidatura e entrará em contato via WhatsApp para agendar a entrevista de seleção nos próximos dias.</p>
+    <h2>Obrigado!</h2>
+    <p>Caso seja selecionado, em breve nosso time entrará em contato com você. Fique atento ao seu WhatsApp.</p>
   </div>
 </div>
 
 <script>
-// Q5 aparece se empresário ou outro; Q6 aparece se executivo ou outro
-const COND_IDS = ['q5', 'q6'];
-
-function getRadioValue(name) {
-  const el = document.querySelector('input[name="' + name + '"]:checked');
-  return el ? el.value : '';
-}
-
-function isEmpresario() {
-  const p = getRadioValue('posicionamento');
-  return p.includes('Fundador') || p.includes('CEO') || p.includes('Sócio');
-}
-function isExecutivo() {
-  const p = getRadioValue('posicionamento');
-  return p.includes('Diretor') || p.includes('Vice') || p.includes('C-Level') || p.includes('Ex-CEO') || p.includes('Ex-Diretor');
-}
-function isOutro() {
-  return getRadioValue('posicionamento') === 'Outro';
-}
-
-function isVisible(id) {
-  if (id === 'q5') return isEmpresario() || isOutro();
-  if (id === 'q6') return isExecutivo() || isOutro();
-  return true;
-}
-
-function getVisibleIds() {
-  return ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11'].filter(isVisible);
-}
-
-// Stack of visited question ids (for "voltar" navigation)
+const QUESTION_IDS = ['q1','q2','q3','q4','q9','q10','q11'];
 let history = ['q1'];
 
-function currentId() { return history[history.length - 1]; }
+// session_id persistente por aba do navegador (recupera se F5)
+const SESSION_KEY = 'far_forms_sid';
+function newSessionId(){
+  try {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  } catch(e){}
+  return 'sid_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+}
+let __sessionId = '';
+try {
+  __sessionId = sessionStorage.getItem(SESSION_KEY) || '';
+  if (!__sessionId){
+    __sessionId = newSessionId();
+    sessionStorage.setItem(SESSION_KEY, __sessionId);
+  }
+} catch(e){
+  __sessionId = newSessionId();
+}
 
-function updateUI() {
-  const ids = getVisibleIds();
+function currentId(){ return history[history.length - 1]; }
+
+function updateUI(){
   const cur = currentId();
-  const pos = ids.indexOf(cur) + 1;
-  const tot = ids.length;
-
+  const pos = QUESTION_IDS.indexOf(cur) + 1;
+  const tot = QUESTION_IDS.length;
   document.getElementById('cur-num').textContent = pos;
   document.getElementById('tot-num').textContent = tot;
-  document.getElementById('progress-bar').style.width = ((pos / tot) * 100) + '%';
-
+  document.getElementById('progress-bar').style.width = ((pos/tot)*100) + '%';
   document.querySelectorAll('.q-slide').forEach(el => el.classList.remove('active'));
   const active = document.getElementById(cur);
   if (active) active.classList.add('active');
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function isPhoneValid(digits) {
-  if (digits.length !== 11) return false;
-  // bloqueia 6+ dígitos iguais consecutivos (ex: 999991234xx)
-  if (/(.)\1{5}/.test(digits)) return false;
-  // bloqueia 7+ dígitos em sequência crescente ou decrescente
-  let asc = 1, desc = 1;
-  for (let i = 1; i < digits.length; i++) {
-    const d = parseInt(digits[i]) - parseInt(digits[i-1]);
-    if (d === 1)  { asc++;  if (asc  >= 7) return false; desc = 1; }
-    else if (d === -1) { desc++; if (desc >= 7) return false; asc  = 1; }
-    else { asc = 1; desc = 1; }
-  }
-  return true;
+function getRadioValue(name){
+  const el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
 }
-
-function setError(id, show) {
+function getCheckboxValues(name){
+  return Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(el => el.value);
+}
+function setError(id, show){
   const el = document.getElementById(id);
   if (el) show ? el.classList.add('show') : el.classList.remove('show');
 }
 
-function validateCurrent() {
-  const cur = currentId();
+const VALID_DDDS = new Set([
+  11,12,13,14,15,16,17,18,19,
+  21,22,24,27,28,
+  31,32,33,34,35,37,38,
+  41,42,43,44,45,46,47,48,49,
+  51,53,54,55,
+  61,62,63,64,65,66,67,68,69,
+  71,73,74,75,77,79,
+  81,82,83,84,85,86,87,88,89,
+  91,92,93,94,95,96,97,98,99
+]);
 
-  if (cur === 'q1') {
+function phoneValidationResult(digits){
+  if (!digits) return { ok:false, reason:'vazio' };
+  if (digits.length < 11) return { ok:false, reason:'curto' };
+  if (digits.length > 11) return { ok:false, reason:'longo' };
+  const ddd = parseInt(digits.substring(0,2), 10);
+  if (!VALID_DDDS.has(ddd)) return { ok:false, reason:'ddd' };
+  if (digits[2] !== '9') return { ok:false, reason:'nono' };
+  if (/(.)\1{5}/.test(digits)) return { ok:false, reason:'repetido' };
+  let asc=1, desc=1;
+  for (let i=1;i<digits.length;i++){
+    const d = parseInt(digits[i]) - parseInt(digits[i-1]);
+    if (d===1){ asc++; if (asc>=7) return { ok:false, reason:'sequencia' }; desc=1; }
+    else if (d===-1){ desc++; if (desc>=7) return { ok:false, reason:'sequencia' }; asc=1; }
+    else { asc=1; desc=1; }
+  }
+  return { ok:true };
+}
+
+function isPhoneValid(digits){ return phoneValidationResult(digits).ok; }
+
+function openPhoneModal(reason){
+  const title = document.getElementById('modal-title');
+  const text = document.getElementById('modal-text');
+  const hint = document.getElementById('modal-hint');
+  title.textContent = 'Número de telefone incorreto';
+  text.textContent = 'Coloque o DDD, o nono dígito e o número do seu telefone.';
+  if (reason === 'ddd'){
+    hint.innerHTML = 'O DDD informado não existe.<br>Exemplo: <strong>(11) 91234-5678</strong> — não use o código do país (55) no início.';
+  } else if (reason === 'nono'){
+    hint.innerHTML = 'Falta o <strong>9</strong> no início do celular.<br>Exemplo: <strong>(11) 91234-5678</strong>';
+  } else if (reason === 'longo'){
+    hint.innerHTML = 'Você digitou dígitos demais.<br>Use apenas <strong>DDD + 9 + 8 dígitos</strong>. Não coloque o 55 no início.';
+  } else if (reason === 'curto'){
+    hint.innerHTML = 'Faltam dígitos.<br>Formato correto: <strong>(DDD) 9XXXX-XXXX</strong>';
+  } else {
+    hint.innerHTML = 'Formato correto: <strong>(11) 91234-5678</strong><br>Não use o código do país (55) no início.';
+  }
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+  const tel = document.getElementById('telefone');
+  if (tel){ tel.focus(); tel.select(); }
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeModal();
+});
+
+function isEmailValid(v){
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return false;
+  return true;
+}
+
+function validateCurrent(){
+  const cur = currentId();
+  if (cur === 'q1'){
     const v = document.getElementById('nome').value.trim();
-    if (v.length < 3 || !v.includes(' ')) { setError('err-nome', true); return false; }
+    if (v.length < 3 || !v.includes(' ')){ setError('err-nome', true); return false; }
     setError('err-nome', false);
   }
-  if (cur === 'q2') {
-    const v = document.getElementById('linkedin').value.trim();
-    if (!v) { setError('err-linkedin', true); return false; }
-    setError('err-linkedin', false);
+  if (cur === 'q2'){
+    const v = document.getElementById('telefone').value.replace(/\D/g,'');
+    const res = phoneValidationResult(v);
+    if (!res.ok){
+      setError('err-telefone', true);
+      openPhoneModal(res.reason);
+      return false;
+    }
+    setError('err-telefone', false);
   }
-  if (cur === 'q3') {
-    const v = document.getElementById('whatsapp').value.replace(/\D/g,'');
-    if (!isPhoneValid(v)) { setError('err-whatsapp', true); return false; }
-    setError('err-whatsapp', false);
+  if (cur === 'q3'){
+    const v = document.getElementById('email').value.trim();
+    if (!isEmailValid(v)){ setError('err-email', true); return false; }
+    setError('err-email', false);
   }
-  if (cur === 'q4') {
-    if (!getRadioValue('posicionamento')) { setError('err-posicionamento', true); return false; }
-    setError('err-posicionamento', false);
+  if (cur === 'q4'){
+    const v = document.getElementById('empresa').value.trim();
+    if (v.length < 2){ setError('err-empresa', true); return false; }
+    setError('err-empresa', false);
   }
-  if (cur === 'q5') {
-    if (!getRadioValue('faturamento')) { setError('err-faturamento', true); return false; }
+  if (cur === 'q9'){
+    if (!getRadioValue('faturamento')){ setError('err-faturamento', true); return false; }
     setError('err-faturamento', false);
   }
-  if (cur === 'q6') {
-    if (!getRadioValue('experiencia')) { setError('err-experiencia', true); return false; }
-    setError('err-experiencia', false);
+  if (cur === 'q10'){
+    if (!getRadioValue('posicao')){ setError('err-posicao', true); return false; }
+    setError('err-posicao', false);
   }
-  if (cur === 'q7') {
-    if (!getRadioValue('momento')) { setError('err-momento', true); return false; }
-    setError('err-momento', false);
-  }
-  if (cur === 'q8') {
-    if (!getRadioValue('decisoes')) { setError('err-decisoes', true); return false; }
-    setError('err-decisoes', false);
-  }
-  if (cur === 'q9') {
-    if (!getRadioValue('preocupacao')) { setError('err-preocupacao', true); return false; }
-    setError('err-preocupacao', false);
-  }
-  if (cur === 'q10') {
-    const v = document.getElementById('porque_pronto').value.trim();
-    if (v.length < 30) { setError('err-porque', true); return false; }
-    setError('err-porque', false);
-  }
-  if (cur === 'q11') {
-    if (!getRadioValue('capacidade_financeira')) { setError('err-capacidade', true); return false; }
-    setError('err-capacidade', false);
+  if (cur === 'q11'){
+    const arr = getCheckboxValues('gargalo');
+    if (arr.length < 1 || arr.length > 2){ setError('err-gargalo', true); return false; }
+    setError('err-gargalo', false);
   }
   return true;
 }
 
-function nextQ() {
+let __initiateCheckoutFired = false;
+function nextQ(){
   if (!validateCurrent()) return;
-  const ids = getVisibleIds();
-  const pos = ids.indexOf(currentId());
-  if (pos < ids.length - 1) {
-    history.push(ids[pos + 1]);
+  const cur = currentId();
+  if (cur === 'q1' && !__initiateCheckoutFired){
+    __initiateCheckoutFired = true;
+    if (typeof fbq === 'function'){
+      try { fbq('track', 'InitiateCheckout', { content_name: 'Aplicacao Conselho do Dono', content_category: 'Aplicacao' }); } catch(e){}
+    }
+  }
+  const pos = QUESTION_IDS.indexOf(cur);
+  if (pos < QUESTION_IDS.length - 1){
+    history.push(QUESTION_IDS[pos + 1]);
     updateUI();
+    autosave(false); // grava progresso após avançar
   }
 }
 
-function prevQ() {
-  if (history.length > 1) {
+function prevQ(){
+  if (history.length > 1){
     history.pop();
     updateUI();
   }
 }
 
-async function submitForm() {
+const __startTime = Date.now();
+const __trackParams = (function(){
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return {
+      utm_source: p.get('utm_source') || '',
+      utm_medium: p.get('utm_medium') || '',
+      utm_campaign: p.get('utm_campaign') || '',
+      utm_content: p.get('utm_content') || '',
+      utm_term: p.get('utm_term') || '',
+      fbclid: p.get('fbclid') || '',
+      gclid: p.get('gclid') || '',
+      placement: p.get('placement') || p.get('utm_placement') || '',
+      origem: p.get('origem') || '',
+      creative_id: p.get('creative_id') || p.get('ad_id') || p.get('placement_id') || '',
+      referrer: document.referrer || ''
+    };
+  } catch { return {}; }
+})();
+
+function buildSnapshot(){
+  const posSel = getRadioValue('posicao');
+  const finalPos = posSel === 'Outro'
+    ? ((document.getElementById('posicao-outro').value || '').trim() || 'Outro')
+    : posSel;
+  const cur = currentId();
+  const perguntaNum = QUESTION_IDS.indexOf(cur) + 1;
+  return {
+    session_id: __sessionId,
+    current_id: cur,
+    pergunta_numero: perguntaNum,
+    nome: (document.getElementById('nome').value || '').trim(),
+    telefone: (document.getElementById('telefone').value || '').trim(),
+    email: (document.getElementById('email').value || '').trim(),
+    empresa: (document.getElementById('empresa').value || '').trim(),
+    colaboradores: '',
+    faturamento: getRadioValue('faturamento'),
+    posicao: finalPos,
+    gargalo: getCheckboxValues('gargalo').join(' | '),
+    desafio_90d: '',
+    impede_dobrar: '',
+    divisor_aguas: '',
+    pergunta_conselho: '',
+    rede: detectRede(),
+    tempo_ate_aqui: Math.round((Date.now() - __startTime) / 1000),
+    tracking: __trackParams
+  };
+}
+
+let __autosaveDisabled = false;
+function autosave(useBeacon){
+  if (__autosaveDisabled) return;
+  try {
+    const snap = buildSnapshot();
+    if (useBeacon && navigator.sendBeacon){
+      const blob = new Blob([JSON.stringify(snap)], { type: 'application/json' });
+      navigator.sendBeacon('/autosave', blob);
+      return;
+    }
+    fetch('/autosave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(snap),
+      keepalive: true
+    }).catch(()=>{});
+  } catch(e){}
+}
+
+// grava último estado quando a página é fechada / vai pra background
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'hidden') autosave(true);
+});
+window.addEventListener('pagehide', function(){ autosave(true); });
+window.addEventListener('beforeunload', function(){ autosave(true); });
+
+async function submitForm(){
   if (!validateCurrent()) return;
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
-  const pos = getRadioValue('posicionamento');
-  const finalPos = pos === 'Outro'
-    ? document.getElementById('posicionamento-outro').value.trim() || 'Outro'
-    : pos;
+  const posSel = getRadioValue('posicao');
+  const finalPos = posSel === 'Outro'
+    ? (document.getElementById('posicao-outro').value.trim() || 'Outro')
+    : posSel;
+
+  const tempoPreenchimento = Math.round((Date.now() - __startTime) / 1000);
 
   const data = {
+    session_id: __sessionId,
     nome: document.getElementById('nome').value.trim(),
-    linkedin: document.getElementById('linkedin').value.trim(),
-    whatsapp: document.getElementById('whatsapp').value.trim(),
-    posicionamento: finalPos,
+    telefone: document.getElementById('telefone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    empresa: document.getElementById('empresa').value.trim(),
+    colaboradores: '',
+    preferencia: '',
+    horario: '',
     faturamento: getRadioValue('faturamento'),
-    experiencia: getRadioValue('experiencia'),
-    momento: getRadioValue('momento'),
-    decisoes: getRadioValue('decisoes'),
-    preocupacao: getRadioValue('preocupacao'),
-    porque_pronto: document.getElementById('porque_pronto').value.trim(),
-    capacidade_financeira: getRadioValue('capacidade_financeira'),
-    rede: detectRede()
+    posicao: finalPos,
+    gargalo: getCheckboxValues('gargalo').join(' | '),
+    desafio_90d: '',
+    impede_dobrar: '',
+    divisor_aguas: '',
+    pergunta_conselho: '',
+    rede: detectRede(),
+    tempo_preenchimento: tempoPreenchimento,
+    tracking: __trackParams
   };
 
   try {
@@ -593,7 +679,32 @@ async function submitForm() {
       body: JSON.stringify(data)
     });
     const result = await resp.json();
-    if (result.ok) {
+    if (result.ok){
+      __autosaveDisabled = true;
+      try { sessionStorage.removeItem(SESSION_KEY); } catch(e){}
+      if (typeof fbq === 'function') {
+        try {
+          var nomeFull = data.nome.toLowerCase().trim();
+          var parts = nomeFull.split(/\s+/);
+          var fn = parts[0] || '';
+          var ln = parts.length > 1 ? parts[parts.length-1] : '';
+          var phDigits = data.telefone.replace(/\D/g,'');
+          var phE164 = phDigits ? ('55' + phDigits) : '';
+          fbq('init', '1537250761230409', {
+            em: data.email.toLowerCase(),
+            ph: phE164,
+            fn: fn,
+            ln: ln,
+            country: 'br'
+          });
+          fbq('track', 'Lead', {
+            content_name: 'Aplicacao Conselho do Dono',
+            content_category: 'Aplicacao',
+            currency: 'BRL',
+            value: 1
+          });
+        } catch(e){}
+      }
       document.getElementById('form').style.display = 'none';
       document.getElementById('success').style.display = 'block';
       document.getElementById('progress-bar').style.width = '100%';
@@ -608,13 +719,13 @@ async function submitForm() {
   }
 }
 
-function showSubmitError(msg) {
+function showSubmitError(msg){
   const el = document.getElementById('submit-error');
   el.textContent = msg;
   el.classList.add('show');
 }
 
-function detectRede() {
+function detectRede(){
   try {
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (!conn) return '';
@@ -624,27 +735,50 @@ function detectRede() {
   } catch { return ''; }
 }
 
-// Radio visual handler
 document.querySelectorAll('.options').forEach(group => {
   group.addEventListener('click', e => {
     const opt = e.target.closest('.option');
     if (!opt) return;
+
+    const cb = opt.querySelector('input[type=checkbox]');
+    if (cb){
+      e.preventDefault();
+      const groupEl = opt.closest('.options');
+      const name = cb.name;
+      const max = parseInt(groupEl.dataset.max || '0', 10);
+      const checkedCount = groupEl.querySelectorAll('input[type=checkbox]:checked').length;
+      if (!cb.checked){
+        if (max && checkedCount >= max) return; // bloqueia acima do máximo
+        cb.checked = true;
+        opt.classList.add('selected');
+      } else {
+        cb.checked = false;
+        opt.classList.remove('selected');
+      }
+      setError('err-' + name, false);
+      return;
+    }
+
     const radio = opt.querySelector('input[type=radio]');
     if (!radio) return;
     radio.checked = true;
     opt.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
 
-    if (radio.name === 'posicionamento') {
+    if (radio.name === 'posicao'){
       const wrap = document.getElementById('outro-wrap');
       radio.value === 'Outro' ? wrap.classList.add('show') : wrap.classList.remove('show');
     }
   });
 });
 
-// WhatsApp mask
-document.getElementById('whatsapp').addEventListener('input', function() {
+// Máscara telefone (auto-strip do 55 se veio código do país)
+document.getElementById('telefone').addEventListener('input', function(){
   let v = this.value.replace(/\D/g,'');
+  if ((v.length === 12 || v.length === 13) && v.startsWith('55')){
+    const ddd = parseInt(v.substring(2,4), 10);
+    if (VALID_DDDS.has(ddd)) v = v.substring(2);
+  }
   if (v.length > 11) v = v.substring(0,11);
   if (v.length > 6) v = '(' + v.substring(0,2) + ') ' + v.substring(2,7) + '-' + v.substring(7);
   else if (v.length > 2) v = '(' + v.substring(0,2) + ') ' + v.substring(2);
@@ -652,7 +786,6 @@ document.getElementById('whatsapp').addEventListener('input', function() {
   this.value = v;
 });
 
-// Init
 updateUI();
 </script>
 </body>

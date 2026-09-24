@@ -1,0 +1,179 @@
+#!/usr/bin/env node
+// CLI do Agente Posts: opera o Automatik Inst (ZEUS POST) pela API local.
+// Uso: zeuspost <comando> [opções]   |   zeuspost ajuda
+// Horários sempre em BRT, formato "AAAA-MM-DD HH:MM".
+process.env.TZ = 'America/Sao_Paulo';
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const { serviceToken } = require('../zeuspost');
+
+const HOST = process.env.ZEUSPOST_HOST || '127.0.0.1';
+const PORT = parseInt(process.env.ZEUSPOST_PORT || '3080', 10);
+
+const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif',
+  '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.m4v': 'video/x-m4v', '.webm': 'video/webm' };
+
+function call(method, p, body, rawHeaders) {
+  return new Promise((resolve, reject) => {
+    const isBuf = Buffer.isBuffer(body);
+    const data = body == null ? null : (isBuf ? body : Buffer.from(JSON.stringify(body)));
+    const headers = Object.assign({ authorization: 'Bearer ' + serviceToken(), 'x-forwarded-for': 'agente-posts' },
+      data && !isBuf ? { 'content-type': 'application/json' } : {}, rawHeaders || {}, data ? { 'content-length': data.length } : {});
+    const req = http.request({ host: HOST, port: PORT, method, path: '/api' + p, headers }, (res) => {
+      let out = '';
+      res.on('data', (d) => { out += d; });
+      res.on('end', () => {
+        let j; try { j = JSON.parse(out); } catch { j = { raw: out.slice(0, 2000) }; }
+        if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${j.error || out.slice(0, 300)}`));
+        resolve(j);
+      });
+    });
+    req.setTimeout(15 * 60 * 1000);
+    req.on('error', reject);
+    req.end(data || undefined);
+  });
+}
+
+function opts(argv) {
+  const o = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) { const k = a.slice(2); const v = argv[i + 1] !== undefined && !argv[i + 1].startsWith('--') ? argv[++i] : true; o[k] = v; }
+    else o._.push(a);
+  }
+  return o;
+}
+const brt = (ts) => ts ? new Date(ts * 1000).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+const epoch = (s, fimDoDia) => {
+  const t = String(s).trim().replace(' ', 'T');
+  const d = new Date(/T/.test(t) ? t : t + (fimDoDia ? 'T23:59:59' : 'T00:00:00'));
+  if (isNaN(d)) throw new Error('data inválida: ' + s + ' (use AAAA-MM-DD ou "AAAA-MM-DD HH:MM")');
+  return Math.floor(d.getTime() / 1000);
+};
+const quando = (s) => { epoch(s); return String(s).trim().replace(' ', 'T'); };
+const ids = (s) => String(s).split(',').map((x) => parseInt(x, 10)).filter(Boolean);
+const print = (x) => console.log(typeof x === 'string' ? x : JSON.stringify(x, null, 2));
+
+async function contasMap() {
+  const m = {}; (await call('GET', '/accounts')).forEach((c) => { m[c.id] = '@' + c.platform_username; }); return m;
+}
+async function getPost(id) {
+  const p = (await call('GET', '/posts')).find((x) => String(x.id) === String(id));
+  if (!p) throw new Error('post ' + id + ' não encontrado entre os 200 mais recentes');
+  return p;
+}
+async function upload(file) {
+  const abs = path.resolve(file);
+  if (!fs.existsSync(abs)) throw new Error('arquivo não existe: ' + abs);
+  const mime = MIME[path.extname(abs).toLowerCase()];
+  if (!mime) throw new Error('formato não aceito (use jpg, png, webp, gif, mp4, mov, webm)');
+  const bd = '----zeuspost' + Date.now().toString(16);
+  const body = Buffer.concat([
+    Buffer.from(`--${bd}\r\nContent-Disposition: form-data; name="file"; filename="${path.basename(abs).replace(/"/g, '')}"\r\nContent-Type: ${mime}\r\n\r\n`),
+    fs.readFileSync(abs), Buffer.from(`\r\n--${bd}--\r\n`)]);
+  return call('POST', '/upload', body, { 'content-type': 'multipart/form-data; boundary=' + bd });
+}
+function corpoPost(o, base) {
+  const b = Object.assign({ title: null, caption: '', media_path: null, media_type: null, post_type: 'image', platforms: ['instagram'], account_ids: [] }, base || {});
+  if (o.titulo !== undefined) b.title = o.titulo;
+  if (o.legenda !== undefined) b.caption = o.legenda === true ? '' : o.legenda;
+  if (o['legenda-arquivo']) b.caption = fs.readFileSync(o['legenda-arquivo'], 'utf8');
+  if (o.midia !== undefined) { b.media_path = o.midia; const mm = o['midia-mime'] || MIME[path.extname(String(o.midia)).toLowerCase()] || ''; b.media_type = mm.startsWith('video') ? 'video' : 'image'; }
+  if (o.contas !== undefined) b.account_ids = ids(o.contas);
+  if (o.quando !== undefined) b.scheduled_at = o.quando === true || o.quando === 'rascunho' ? null : quando(o.quando);
+  const video = String(b.media_type || '').startsWith('video');
+  if (o.tipo !== undefined) b.post_type = o.tipo === 'reel' ? 'video' : o.tipo === 'feed' ? (video ? 'video' : 'image') : o.tipo;
+  else if (!base) b.post_type = video ? 'video' : 'image';
+  return b;
+}
+
+const AJUDA = `Comandos (horários em BRT):
+  contas                                   contas conectadas (id, @, seguidores, status do token)
+  resumo [--conta ID]                      números do dashboard: agendadas, publicadas, falhas, próximas, scheduler
+  agenda [--de AAAA-MM-DD] [--ate AAAA-MM-DD] [--conta ID] [--status scheduled,failed,...] [--tipo feed,reel,story,carousel] [--json]
+                                           calendário unificado (posts + itens de campanha). Padrão: hoje até +14 dias
+  post ID                                  detalhes de um post (com resultado por conta)
+  upload ARQUIVO                           sobe imagem/vídeo e devolve o caminho /uploads/... pra usar em --midia
+  criar --legenda "..." [--legenda-arquivo F] [--midia /uploads/x | --arquivo LOCAL] --contas 1,5
+        [--tipo feed|reel|story] [--quando "AAAA-MM-DD HH:MM"] [--titulo "..."]
+                                           sem --quando vira rascunho. Story exige mídia e ignora legenda
+  editar ID [mesmas opções do criar]       altera só o que for passado (--quando rascunho tira o agendamento)
+  excluir ID                               apaga o post
+  publicar ID                              publica AGORA (ação externa, irreversível)
+  campanhas                                campanhas em massa com progresso
+  campanha ID                              detalhes e itens de uma campanha
+  pausar ID | retomar ID                   pausa/retoma campanha
+  scheduler                                saúde do worker que publica os agendados
+  diagnostico                              checa a conexão com a Meta (limite: 12/min)
+  raw METODO /caminho ['{"json":1}']       chamada direta na API (/api é prefixado)`;
+
+(async () => {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const o = opts(rest);
+  switch (cmd) {
+    case 'contas': {
+      const agora = Date.now() / 1000;
+      (await call('GET', '/accounts')).forEach((c) => print(`#${c.id}  ${c.platform}  @${c.platform_username}  ${c.followers ?? '?'} seg.  status=${c.status}` +
+        (c.token_expires_at ? `  token vence ${brt(c.token_expires_at)}${c.token_expires_at < agora + 7 * 86400 ? ' ⚠️' : ''}` : '')));
+      break;
+    }
+    case 'resumo': print(await call('GET', '/summary' + (o.conta ? '?account_id=' + parseInt(o.conta, 10) : ''))); break;
+    case 'agenda': {
+      const q = new URLSearchParams();
+      q.set('from', o.de ? epoch(o.de) : epoch(new Date().toLocaleDateString('sv-SE')));
+      q.set('to', o.ate ? epoch(o.ate, true) : Math.floor(Date.now() / 1000) + 14 * 86400);
+      if (o.conta) q.set('account_id', parseInt(o.conta, 10));
+      if (o.status) q.set('status', o.status);
+      if (o.tipo) q.set('type', o.tipo);
+      const { eventos } = await call('GET', '/schedule?' + q);
+      if (o.json) { print(eventos); break; }
+      const nomes = await contasMap();
+      print(`${eventos.length} evento(s)`);
+      eventos.forEach((ev) => print(`${brt(ev.quando)}  [${ev.status}]  ${ev.tipo}  ${ev.account_ids.map((i) => nomes[i] || '#' + i).join(',')}  ` +
+        (ev.origem === 'campanha' ? `campanha #${ev.campaign_id} "${ev.titulo}" item ${ev.item_id}${ev.media_name ? ' (' + ev.media_name + ')' : ''}` : `post #${ev.post_id} ${ev.titulo ? '"' + ev.titulo + '" ' : ''}${(ev.caption || '').replace(/\s+/g, ' ').slice(0, 70)}`) +
+        (ev.error_message ? `  ERRO: ${ev.error_message}` : '')));
+      break;
+    }
+    case 'post': print(await getPost(o._[0])); break;
+    case 'upload': print(await upload(o._[0])); break;
+    case 'criar': {
+      if (o.arquivo) { const up = await upload(o.arquivo); o.midia = up.path; o['midia-mime'] = up.mimetype; }
+      const b = corpoPost(o);
+      if (!b.account_ids.length) throw new Error('informe --contas (ids do comando "contas")');
+      const r = await call('POST', '/posts', b);
+      print({ ok: true, id: r.id, status: b.scheduled_at ? 'scheduled' : 'draft', quando_brt: b.scheduled_at || null, midia: b.media_path, contas: b.account_ids });
+      break;
+    }
+    case 'editar': {
+      const cur = await getPost(o._[0]);
+      if (!['draft', 'scheduled', 'failed'].includes(cur.status)) throw new Error(`post está "${cur.status}" e não pode ser editado`);
+      if (o.arquivo) { const up = await upload(o.arquivo); o.midia = up.path; o['midia-mime'] = up.mimetype; }
+      const b = corpoPost(o, { title: cur.title, caption: cur.caption, media_path: cur.media_path, media_type: cur.media_type, post_type: cur.post_type,
+        platforms: cur.platforms, account_ids: cur.account_ids,
+        scheduled_at: cur.scheduled_at ? new Date(cur.scheduled_at * 1000).toLocaleString('sv-SE').slice(0, 16).replace(' ', 'T') : null });
+      b.status = b.scheduled_at ? 'scheduled' : 'draft';
+      await call('PUT', '/posts/' + cur.id, b);
+      print({ ok: true, id: cur.id, status: b.status, quando_brt: b.scheduled_at });
+      break;
+    }
+    case 'excluir': print(await call('DELETE', '/posts/' + parseInt(o._[0], 10))); break;
+    case 'publicar': print(await call('POST', '/posts/' + parseInt(o._[0], 10) + '/publish', {})); break;
+    case 'campanhas': {
+      const nomes = await contasMap();
+      (await call('GET', '/bulk/campaigns')).forEach((c) => {
+        let acc = []; try { acc = typeof c.account_ids === 'string' ? JSON.parse(c.account_ids) : (c.account_ids || []); } catch {}
+        const prog = c.stats || c.progress || {};
+        print(`#${c.id}  "${c.name}"  [${c.status}]  ${c.post_format || ''}  ${acc.map((i) => nomes[i] || '#' + i).join(',')}  ${c.posts_per_day || '?'}/dia x ${c.total_days || '?'} dias  ${Object.keys(prog).length ? JSON.stringify(prog) : ''}`);
+      });
+      break;
+    }
+    case 'campanha': print(await call('GET', '/bulk/campaigns/' + parseInt(o._[0], 10))); break;
+    case 'pausar': print(await call('POST', '/bulk/campaigns/' + parseInt(o._[0], 10) + '/pause', {})); break;
+    case 'retomar': print(await call('POST', '/bulk/campaigns/' + parseInt(o._[0], 10) + '/resume', {})); break;
+    case 'scheduler': print(await call('GET', '/worker/status')); break;
+    case 'diagnostico': print(await call('GET', '/diagnostics/meta')); break;
+    case 'raw': print(await call(String(o._[0] || 'GET').toUpperCase(), o._[1], o._[2] ? JSON.parse(o._[2]) : null)); break;
+    default: print(AJUDA);
+  }
+})().catch((e) => { console.error('ERRO: ' + e.message); process.exit(1); });

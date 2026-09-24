@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIGC — Performance de Campanhas (últimos 30 dias)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --panel:#12121a;
+    --panel-2:#1a1a24;
+    --line:rgba(255,255,255,0.06);
+    --line-2:rgba(255,255,255,0.10);
+    --text:#f5f5f7;
+    --muted:#7a7a85;
+    --muted-2:#a8a8b3;
+    --gold:#d4af37;
+    --gold-2:#b8941f;
+    --green:#22c55e;
+    --red:#ef4444;
+    --amber:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(212,175,55,0.08), transparent 60%), var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(16px,4vw,32px)}
+  .tag{display:inline-block;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;background:rgba(212,175,55,0.10);color:var(--gold);border:1px solid rgba(212,175,55,0.30)}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase}
+  .status-paused{background:rgba(245,158,11,0.10);color:var(--amber);border:1px solid rgba(245,158,11,0.30)}
+  .status-paused::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber);display:inline-block}
+  header{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+  h1{font-size:clamp(24px,4vw,38px);font-weight:600;letter-spacing:-0.02em;margin:12px 0 6px}
+  h2{font-size:11px;font-weight:500;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin:36px 0 14px}
+  .sub{color:var(--muted-2);font-size:14px;margin:0}
+  .meta{text-align:right}
+  .meta .label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em}
+  .meta .val{color:var(--muted-2);font-size:13px;margin-top:2px}
+
+  /* KPI grid */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .kpi{background:linear-gradient(145deg,var(--panel) 0%,var(--panel-2) 100%);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .kpi .lbl{color:var(--muted);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+  .kpi .val{font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-0.02em;background:linear-gradient(135deg,#fff 0%,#a8a8b3 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .kpi .aux{color:var(--muted);font-size:12px;margin-top:6px}
+  .kpi.hero{border-color:rgba(212,175,55,0.30);background:linear-gradient(145deg,rgba(212,175,55,0.06) 0%,var(--panel-2) 100%)}
+  .kpi.hero .lbl{color:var(--gold)}
+
+  /* Campaigns */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative;overflow:hidden;transition:border-color .2s, transform .2s}
+  .card:hover{border-color:var(--line-2)}
+  .card .rank{position:absolute;top:16px;right:16px;font-size:11px;color:var(--muted);letter-spacing:0.08em}
+  .card .name{font-size:15px;font-weight:600;letter-spacing:-0.01em;margin:0 0 4px;padding-right:60px}
+  .card .date{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .card .row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .card .row:last-child{border-bottom:0}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:14px;font-weight:600}
+  .badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-top:12px}
+  .badge.win{background:rgba(34,197,94,0.10);color:var(--green);border:1px solid rgba(34,197,94,0.30)}
+  .badge.warn{background:rgba(245,158,11,0.10);color:var(--amber);border:1px solid rgba(245,158,11,0.30)}
+  .badge.alert{background:rgba(239,68,68,0.10);color:var(--red);border:1px solid rgba(239,68,68,0.30)}
+
+  /* Insights */
+  .insights{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px}
+  .insights ul{margin:0;padding:0;list-style:none}
+  .insights li{padding:12px 0;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+  .insights li:last-child{border-bottom:0}
+  .insights .dot{flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px}
+  .insights .txt{font-size:14px;line-height:1.55;color:var(--muted-2)}
+  .insights .txt strong{color:var(--text);font-weight:600}
+
+  footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+  @media (max-width:640px){
+    header{flex-direction:column;align-items:flex-start}
+    .meta{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <span class="tag">CIGC 2026 · Congresso de Gestores de Clínica</span>
+      <h1>Performance de Campanhas</h1>
+      <p class="sub">Consolidado dos últimos 30 dias · Conta CA — CIGC</p>
+    </div>
+    <div class="meta">
+      <div class="label">Período</div>
+      <div class="val">04/08 a 02/09/2026</div>
+      <div class="label" style="margin-top:10px">Status geral</div>
+      <div class="val"><span class="status-pill status-paused">Todas pausadas</span></div>
+    </div>
+  </header>
+
+  <h2>Consolidado</h2>
+  <div class="kpi-grid">
+    <div class="kpi hero">
+      <div class="lbl">Investimento total</div>
+      <div class="val">R$ 17.987,34</div>
+      <div class="aux">30 dias corridos</div>
+    </div>
+    <div class="kpi hero">
+      <div class="lbl">Conversas iniciadas</div>
+      <div class="val">958</div>
+      <div class="aux">WhatsApp (Click-to-Chat)</div>
+    </div>
+    <div class="kpi hero">
+      <div class="lbl">Custo por conversa</div>
+      <div class="val">R$ 18,78</div>
+      <div class="aux">média ponderada</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Impressões</div>
+      <div class="val">709.569</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Alcance</div>
+      <div class="val">122.417</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Cliques no link</div>
+      <div class="val">4.355</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">CTR</div>
+      <div class="val">1,07%</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Leads via formulário</div>
+      <div class="val">4</div>
+    </div>
+  </div>
+
+  <h2>Campanhas</h2>
+  <div class="cards">
+
+    <div class="card">
+      <span class="rank">#1</span>
+      <p class="name">Campanha por cidades</p>
+      <p class="date">Iniciada em 27/01</p>
+      <div class="row"><span class="k">Investimento</span><span class="v">R$ 10.364,01</span></div>
+      <div class="row"><span class="k">Conversas</span><span class="v">528</span></div>
+      <div class="row"><span class="k">Custo por conversa</span><span class="v">R$ 19,63</span></div>
+      <div class="row"><span class="k">CTR</span><span class="v">0,86%</span></div>
+      <div class="badge warn">58% da verba · 55% das conversas</div>
+    </div>
+
+    <div class="card">
+      <span class="rank">#2</span>
+      <p class="name">02 · WPP · Vendas</p>
+      <p class="date">Iniciada em 02/06</p>
+      <div class="row"><span class="k">Investimento</span><span class="v">R$ 3.839,37</span></div>
+      <div class="row"><span class="k">Conversas</span><span class="v">292</span></div>
+      <div class="row"><span class="k">Custo por conversa</span><span class="v">R$ 13,15</span></div>
+      <div class="row"><span class="k">CTR</span><span class="v">1,44%</span></div>
+      <div class="badge win">Mais eficiente do mês</div>
+    </div>
+
+    <div class="card">
+      <span class="rank">#3</span>
+      <p class="name">03 · WPP · Vendas</p>
+      <p class="date">Iniciada em 10/07 · orçamento R$ 2k</p>
+      <div class="row"><span class="k">Investimento</span><span class="v">R$ 2.355,40</span></div>
+      <div class="row"><span class="k">Conversas</span><span class="v">101</span></div>
+      <div class="row"><span class="k">Custo por conversa</span><span class="v">R$ 23,32</span></div>
+      <div class="row"><span class="k">CTR</span><span class="v">1,83%</span></div>
+      <div class="badge warn">CTR alto, custo por conversa acima da média</div>
+    </div>
+
+    <div class="card">
+      <span class="rank">#4</span>
+      <p class="name">ENG · WPP · Remarketing 45%</p>
+      <p class="date">Iniciada em 17/08</p>
+      <div class="row"><span class="k">Investimento</span><span class="v">R$ 982,15</span></div>
+      <div class="row"><span class="k">Conversas</span><span class="v">37</span></div>
+      <div class="row"><span class="k">Custo por conversa</span><span class="v">R$ 26,54</span></div>
+      <div class="badge warn">Remarketing puxou o custo</div>
+    </div>
+
+    <div class="card">
+      <span class="rank">#5</span>
+      <p class="name">Vendas · Acesso Online</p>
+      <p class="date">Cliques sem conversa</p>
+      <div class="row"><span class="k">Investimento</span><span class="v">R$ 446,41</span></div>
+      <div class="row"><span class="k">Conversas</span><span class="v">0</span></div>
+      <div class="row"><span class="k">CTR</span><span class="v">14,49%</span></div>
+      <div class="badge alert">Revisar destino e copy antes de reativar</div>
+    </div>
+
+  </div>
+
+  <h2>Leitura estratégica</h2>
+  <div class="insights">
+    <ul>
+      <li>
+        <span class="dot"></span>
+        <span class="txt"><strong>Vencedora do período:</strong> a campanha 02 · WPP · Vendas trouxe conversa a R$ 13,15, quase 30% abaixo da média. Estrutura para replicar na próxima rodada.</span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span class="txt"><strong>Distribuição saudável:</strong> a campanha por cidades consumiu 58% da verba e entregou 55% das conversas, dentro do padrão esperado.</span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span class="txt"><strong>Ponto de atenção:</strong> a Vendas · Acesso Online converteu clique em zero conversa mesmo com CTR de 14,49%. Revisar destino e copy antes de reativar.</span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span class="txt"><strong>Status atual:</strong> todas as campanhas estão pausadas no momento. Base pronta para próxima rodada com aprendizados aplicados.</span>
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    <span>CIGC · Alpha Digital</span>
+    <span>Fonte: conta CA — CIGC · Meta Ads</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -148,6 +148,27 @@
           <img id="qrImg" src="/qr?format=png" alt="QR Code" class="w-72 h-72 rounded-xl border border-slate-800 bg-white p-2" />
           <p class="text-xs text-slate-400 mt-3">WhatsApp &gt; Configurações &gt; Aparelhos conectados &gt; Conectar um aparelho</p>
           <p id="qrUpdated" class="text-[11px] text-slate-500 mt-1"></p>
+
+          <div class="w-full max-w-md mt-6 pt-5 border-t border-slate-800">
+            <button id="pairToggleBtn" type="button" class="text-sm text-sky-300 hover:text-sky-200 underline underline-offset-2">
+              Prefere conectar via código de 8 dígitos?
+            </button>
+            <div id="pairForm" class="hidden mt-4 text-left">
+              <label class="block text-xs text-slate-400 mb-1">Telefone com DDI (só dígitos)</label>
+              <div class="flex gap-2">
+                <input id="pairPhone" type="tel" inputmode="numeric" placeholder="5511999999999"
+                  class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500" />
+                <button id="pairSubmitBtn" type="button"
+                  class="bg-sky-700 hover:bg-sky-600 text-white text-sm font-medium rounded-lg px-4 py-2">Gerar código</button>
+              </div>
+              <p id="pairMsg" class="text-xs text-slate-400 mt-2"></p>
+              <div id="pairCodeBox" class="hidden mt-4 bg-slate-950 border border-sky-500/40 rounded-xl p-4 text-center">
+                <div class="text-xs text-slate-400 mb-1">Digite este código no WhatsApp</div>
+                <div id="pairCode" class="text-3xl font-mono tracking-[0.35em] text-sky-200"></div>
+                <p class="text-[11px] text-slate-500 mt-2">WhatsApp &gt; Aparelhos conectados &gt; Conectar um aparelho &gt; Conectar com número de telefone</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="errorCard" class="hidden mt-6 bg-red-950/40 border border-red-800 rounded-2xl p-4 text-sm text-red-200"></div>

@@ -13,7 +13,12 @@ const execP = promisify(exec);
 const AUTH_SALT = 'jeff-alpha-2026';
 const AUTH_HASH = 'cc189194985c4bac11329888a521216a265a8772db99d347512ebc2d9192bedb7c6b576d2dd3168f2b028b1d4fb36b7d1ea30c32515918f4c814bb03eabcca62';
 const sessions = new Map();
+// Senha redefinida pelo "Esqueci minha senha" fica em data/auth-override.json e vale no lugar do AUTH_HASH.
+const pwdReset = require('/opt/jeff-apps/jeff-shared/password-reset');
+const pwdOverride = pwdReset.overrideStore(require('path').join(__dirname, 'data'));
 function verifyPwd(pwd) {
+  const viaOverride = pwdOverride.check(pwd);
+  if (viaOverride !== null) return viaOverride;
   try {
     const test = crypto.scryptSync(pwd, AUTH_SALT, 64).toString('hex');
     return crypto.timingSafeEqual(Buffer.from(test, 'hex'), Buffer.from(AUTH_HASH, 'hex'));
@@ -49,6 +54,12 @@ function apiAuth(req, res, next) {
 const app = express();
 app.use(express.json());
 app.use(express.static(__dirname + '/public', { index: false }));
+
+
+pwdReset.mount(app, {
+  appName: 'VPS Monitor',
+  setPassword: (newPass) => { pwdOverride.write(newPass); sessions.clear(); return true; }
+});
 
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, 'public/login.html')));
 app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Farias Souza — Bônus exclusivos para quem garante a vaga: consultoria, aconselhamento estratégico, imersão in-company e treinamento comercial.">
+<title>Bônus Exclusivos — Farias Souza</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1537250761230409');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"/></noscript>
+
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --gold-dark:#8A6F2A;
+    --bg:#060606;
+    --bg-alt:#0C0C0C;
+    --card:#101010;
+    --border:rgba(201,168,76,.14);
+    --border-strong:rgba(201,168,76,.3);
+    --text:#F2EFE7;
+    --muted:#8A8378;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    scroll-behavior:smooth;
+  }
+
+  .container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* ============ TOP BANNER ============ */
+  .topbar{
+    position:relative;
+    background:linear-gradient(90deg,#0A0906 0%,#141007 50%,#0A0906 100%);
+    border-bottom:1px solid var(--border-strong);
+    padding:14px 24px;
+    text-align:center;
+    z-index:2;
+  }
+  .topbar-inner{
+    font-family:var(--serif);
+    font-size:14px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--gold-light);
+    font-weight:600;
+  }
+  .topbar-inner strong{
+    color:#fff;
+    font-weight:700;
+    letter-spacing:5px;
+  }
+  .topbar-inner .sep{
+    display:inline-block;
+    width:24px;height:1px;
+    background:var(--gold);
+    vertical-align:middle;
+    margin:0 14px;
+    opacity:.6;
+  }
+  @media (max-width:640px){
+    .topbar-inner{font-size:11px;letter-spacing:2px}
+    .topbar-inner .sep{width:14px;margin:0 8px}
+  }
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    padding:96px 0 72px;
+    text-align:center;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%,rgba(201,168,76,.10) 0%,transparent 60%),
+      linear-gradient(180deg,#0A0906 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+  }
+  .hero::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 60% 50% at 50% 40%,black 20%,transparent 70%);
+    pointer-events:none;
+  }
+  .hero-inner{position:relative;z-index:1}
+
+  .brand{
+    font-family:var(--serif);
+    font-size:13px;
+    letter-spacing:8px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:500;
+    margin-bottom:32px;
+    opacity:.92;
+  }
+  .brand::before,.brand::after{
+    content:"";
+    display:inline-block;
+    width:32px;height:1px;
+    background:var(--gold);
+    vertical-align:middle;
+    margin:0 16px;
+    opacity:.5;
+  }
+
+  .kicker{
+    display:inline-block;
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--gold);
+    background:rgba(201,168,76,.06);
+    border:1px solid var(--border-strong);
+    padding:8px 18px;
+    border-radius:100px;
+    margin-bottom:28px;
+    font-weight:600;
+  }
+
+  h1{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(38px,6vw,68px);
+    line-height:1.08;
+    letter-spacing:-.5px;
+    margin-bottom:24px;
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  h1 em{
+    font-style:italic;
+    color:var(--gold);
+    font-weight:500;
+  }
+
+  .lead{
+    font-size:clamp(16px,1.6vw,19px);
+    color:var(--muted);
+    max-width:640px;
+    margin:0 auto 40px;
+    line-height:1.65;
+  }
+
+  .value-strip{
+    display:inline-flex;
+    align-items:center;
+    gap:16px;
+    padding:14px 28px;
+    background:linear-gradient(180deg,rgba(201,168,76,.08),rgba(201,168,76,.02));
+    border:1px solid var(--border-strong);
+    border-radius:100px;
+    margin-top:8px;
+  }
+  .value-strip .label{
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .value-strip .amount{
+    font-family:var(--serif);
+    font-size:22px;
+    color:var(--gold-light);
+    font-weight:600;
+    letter-spacing:.5px;
+  }
+
+  /* ============ INTRO SECTION ============ */
+  .intro{
+    padding:80px 0 40px;
+    text-align:center;
+  }
+  .section-eyebrow{
+    font-size:11px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:20px;
+    font-weight:600;
+  }
+  .intro h2{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(28px,4vw,44px);
+    line-height:1.2;
+    max-width:780px;
+    margin:0 auto 20px;
+    letter-spacing:-.3px;
+  }
+  .intro p{
+    color:var(--muted);
+    max-width:620px;
+    margin:0 auto;
+    font-size:17px;
+  }
+
+  /* ============ BONUS GRID ============ */
+  .bonuses{
+    padding:60px 0 80px;
+    display:grid;
+    gap:28px;
+  }
+
+  .bonus{
+    position:relative;
+    background:linear-gradient(180deg,var(--card) 0%,#080808 100%);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:44px 44px 40px;
+    overflow:hidden;
+    transition:transform .4s cubic-bezier(.16,1,.3,1),border-color .3s;
+  }
+  .bonus:hover{
+    border-color:var(--border-strong);
+    transform:translateY(-2px);
+  }
+  .bonus::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;
+    height:1px;
+    background:linear-gradient(90deg,transparent 0%,var(--gold) 50%,transparent 100%);
+    opacity:.4;
+  }
+
+  .bonus-head{
+    display:flex;
+    align-items:flex-start;
+    gap:28px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .bonus-num{
+    flex-shrink:0;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,rgba(232,201,122,.25),rgba(201,168,76,.08));
+    border:1px solid var(--border-strong);
+    font-family:var(--serif);
+    font-size:26px;
+    font-weight:600;
+    color:var(--gold-light);
+    letter-spacing:.5px;
+  }
+  .bonus-title-wrap{flex:1;min-width:260px}
+  .bonus-label{
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .bonus-title{
+    font-family:var(--serif);
+    font-size:clamp(22px,2.6vw,30px);
+    font-weight:600;
+    color:var(--text);
+    line-height:1.2;
+    letter-spacing:-.2px;
+  }
+
+  .bonus-body{
+    color:#CFC9BC;
+    font-size:16px;
+    line-height:1.75;
+    margin-bottom:28px;
+    padding-left:92px;
+  }
+
+  .bonus-value{
+    margin-left:92px;
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+    padding:14px 24px;
+    background:rgba(201,168,76,.05);
+    border:1px solid var(--border);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+  }
+  .bonus-value .vlabel{
+    font-size:11px;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .bonus-value .vamount{
+    font-family:var(--serif);
+    font-size:20px;
+    color:var(--gold-light);
+    font-weight:600;
+  }
+  .bonus-value .vfree{
+    color:var(--text);
+    font-size:13px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    font-weight:600;
+    padding-left:14px;
+    border-left:1px solid var(--border-strong);
+  }
+
+  @media (max-width:640px){
+    .bonus{padding:32px 24px}
+    .bonus-body,.bonus-value{padding-left:0;margin-left:0}
+    .bonus-num{width:52px;height:52px;font-size:22px}
+    .bonus-value{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:10px}
+  }
+
+  /* ============ TOTAL / CTA ============ */
+  .cta-section{
+    padding:80px 0 120px;
+    text-align:center;
+    background:
+      radial-gradient(ellipse 60% 60% at 50% 40%,rgba(201,168,76,.10) 0%,transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,#0A0806 100%);
+    border-top:1px solid var(--border);
+  }
+
+  .total-card{
+    max-width:640px;
+    margin:0 auto 48px;
+    background:linear-gradient(180deg,#141210 0%,#0A0806 100%);
+    border:1px solid var(--border-strong);
+    border-radius:20px;
+    padding:56px 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .total-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(201,168,76,.10) 0%,transparent 60%);
+    pointer-events:none;
+  }
+  .total-eyebrow{
+    font-size:11px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:16px;
+  }
+  .total-line{
+    color:var(--muted);
+    font-size:15px;
+    margin-bottom:8px;
+  }
+  .total-strike{
+    font-family:var(--serif);
+    font-size:clamp(32px,5vw,48px);
+    color:var(--gold-light);
+    font-weight:600;
+    letter-spacing:-.5px;
+    margin:12px 0 24px;
+  }
+  .total-yours{
+    font-family:var(--serif);
+    font-size:clamp(20px,2.2vw,26px);
+    color:var(--text);
+    font-weight:500;
+    line-height:1.4;
+    max-width:480px;
+    margin:0 auto;
+  }
+  .total-yours em{color:var(--gold);font-style:italic}
+
+  .cta-btn{
+    display:inline-block;
+    padding:22px 56px;
+    background:linear-gradient(180deg,var(--gold-light) 0%,var(--gold) 50%,var(--gold-dark) 100%);
+    color:#0A0806;
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    text-decoration:none;
+    border-radius:100px;
+    box-shadow:
+      0 20px 40px rgba(201,168,76,.3),
+      0 0 0 1px rgba(232,201,122,.4) inset,
+      0 2px 0 rgba(255,255,255,.2) inset;
+    transition:transform .2s ease,box-shadow .3s ease;
+    animation:pulse 2.6s ease-in-out infinite;
+  }
+  .cta-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:
+      0 24px 50px rgba(201,168,76,.4),
+      0 0 0 1px rgba(232,201,122,.6) inset,
+      0 2px 0 rgba(255,255,255,.3) inset;
+  }
+  @keyframes pulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.03)}
+  }
+
+  .cta-sub{
+    color:var(--muted);
+    font-size:13px;
+    letter-spacing:1px;
+    margin-top:20px;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+
+  /* ============ FOOTER ============ */
+  footer{
+    padding:40px 0 32px;
+    text-align:center;
+    border-top:1px solid var(--border);
+    color:var(--muted);
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+  footer .fs{
+    font-family:var(--serif);
+    color:var(--gold);
+    letter-spacing:6px;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:8px;
+    display:block;
+  }
+
+  /* ============ REVEAL ============ */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s cubic-bezier(.16,1,.3,1)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">Bônus exclusivos<span class="sep"></span>para o programa<span class="sep"></span><strong>O Plano do Dono</strong></div>
+</div>
+
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="brand">Farias Souza</div>
+    <div class="kicker">Ao garantir a sua vaga</div>
+    <h1>Você recebe <em>4 bônus exclusivos</em><br>que redesenham a sua operação</h1>
+    <p class="lead">Consultoria, aconselhamento estratégico, imersão presencial e treinamento do seu time comercial. Tudo incluso, sem custo adicional.</p>
+    <div class="value-strip">
+      <span class="label">Valor total dos bônus</span>
+      <span class="amount">R$ 100.000+</span>
+    </div>
+  </div>
+</section>
+
+<section class="intro">
+  <div class="container">
+    <div class="section-eyebrow">O que está incluso</div>
+    <h2>Uma estrutura completa de aceleração para os próximos 30 dias do seu negócio</h2>
+    <p>Diagnóstico cirúrgico, plano de ação sob medida, imersão no seu campo de batalha e capacitação do seu time comercial.</p>
+  </div>
+</section>
+
+<section class="bonuses container">
+
+  <article class="bonus reveal">
+    <div class="bonus-head">
+      <div class="bonus-num">01</div>
+      <div class="bonus-title-wrap">
+        <div class="bonus-label">Bônus 1 &middot; 30 dias de acompanhamento</div>
+        <div class="bonus-title">Consultoria de Marketing e Growth</div>
+      </div>
+    </div>
+    <p class="bonus-body">Durante um mês, o meu time de especialistas analisa as métricas reais do seu produto e o seu cenário de mercado, entregando um diagnóstico cirúrgico: o que deve ser ajustado, o que precisa ser contratado e o que deve ser descontinuado na sua operação. Um encontro semanal online de 1 a 2 horas com o nosso estrategista, focado em ler os dados que a sua equipe não está enxergando e desenhar um panorama de ações imediatas.</p>
+    <div class="bonus-value">
+      <span class="vlabel">Valor de mercado</span>
+      <span class="vamount">R$ 30.000</span>
+      <span class="vfree">Incluso pra você</span>
+    </div>
+  </article>
+
+  <article class="bonus reveal">
+    <div class="bonus-head">
+      <div class="bonus-num">02</div>
+      <div class="bonus-title-wrap">
+        <div class="bonus-label">Bônus 2 &middot; Aconselhamento 1 a 1</div>
+        <div class="bonus-title">Duas sessões individuais com Farias Souza</div>
+      </div>
+    </div>
+    <p class="bonus-body">Você tem direito a dois encontros exclusivos, individuais, diretamente comigo. Vou dissecar as nuances e a realidade do seu negócio para desenhar um plano de ação sob medida, atuando pessoalmente como o seu conselheiro de negócios. No mercado cobro R$ 20.000 por hora de aconselhamento, e você tem duas sessões completas de imersão na minha visão estratégica.</p>
+    <div class="bonus-value">
+      <span class="vlabel">Valor de mercado</span>
+      <span class="vamount">R$ 40.000</span>
+      <span class="vfree">Incluso pra você</span>
+    </div>
+  </article>
+
+  <article class="bonus reveal">
+    <div class="bonus-head">
+      <div class="bonus-num">03</div>
+      <div class="bonus-title-wrap">
+        <div class="bonus-label">Bônus 3 &middot; Imersão presencial de até 5h</div>
+        <div class="bonus-title">Visita técnica e advisor in-company</div>
+      </div>
+    </div>
+    <p class="bonus-body">Vou pessoalmente até a sua empresa para avaliar o seu cenário operacional no campo de batalha. Realizamos um workshop estratégico de 2 horas com o seu time, baseado na dor mais urgente da sua operação atual (vendas, marketing ou gestão) e estarei com você durante um turno de até 5 horas, alinhando a sua equipe à cultura de resultados da alta gestão. Todo o treinamento é gravado e o material digital é entregue exclusivamente a você para aplicações futuras.</p>
+    <div class="bonus-value">
+      <span class="vlabel">Valor de mercado</span>
+      <span class="vamount">R$ 30.000</span>
+      <span class="vfree">Incluso pra você</span>
+    </div>
+  </article>
+
+  <article class="bonus reveal">
+    <div class="bonus-head">
+      <div class="bonus-num">04</div>
+      <div class="bonus-title-wrap">
+        <div class="bonus-label">Bônus 4 &middot; Treinamento em grupo</div>
+        <div class="bonus-title">Capacitação comercial para o seu time</div>
+      </div>
+    </div>
+    <p class="bonus-body">O nosso time comercial conduz um treinamento online exclusivo para toda a sua equipe, trazendo o cenário atual do mercado e o que está funcionando nas nossas operações, para que o seu time ganhe repertório, implemente com visão estratégica e enxergue, na prática, o que acontece no mercado.</p>
+    <div class="bonus-value">
+      <span class="vlabel">Valor de mercado</span>
+      <span class="vamount">Sob consulta</span>
+      <span class="vfree">Incluso pra você</span>
+    </div>
+  </article>
+
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <div class="total-card reveal">
+      <div class="total-eyebrow">O pacote completo</div>
+      <div class="total-line">4 bônus exclusivos, valor de mercado</div>
+      <div class="total-strike">R$ 100.000+</div>
+      <div class="total-yours">
+        Tudo <em>incluso</em>, sem custo adicional,<br>ao garantir a sua vaga hoje.
+      </div>
+    </div>
+
+    <a href="#" class="cta-btn" id="ctaBtn">Garantir minha vaga</a>
+    <div class="cta-sub">Vagas limitadas &middot; Confirmação imediata</div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span class="fs">Farias Souza</span>
+    &copy; 2026 &middot; Todos os direitos reservados
+  </div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}})
+  },{threshold:.15});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  document.getElementById('ctaBtn').addEventListener('click',(e)=>{
+    if(window.fbq) fbq('track','Lead',{content_name:'bonus-ocd-cta'});
+  });
+</script>
+
+</body>
+</html>

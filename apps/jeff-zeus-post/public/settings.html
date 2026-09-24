@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus Post - Configurações</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; max-width: 800px; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .card-desc { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+  input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent); }
+  .btn { padding: 11px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert-success { background: #10b98120; border: 1px solid #10b98140; color: #10b981; }
+  .alert-error { background: #ef444420; border: 1px solid #ef444440; color: #ef4444; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Zeus Post</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item">📊 Dashboard</a>
+  <a href="/calendar.html" class="nav-item">📅 Calendário</a>
+  <a href="/editor.html" class="nav-item">✍️ Novo Post</a>
+  <a href="/bulk.html" class="nav-item">🚀 Publicação em Massa</a>
+  <a href="/analytics.html" class="nav-item">📈 Analytics</a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item">🔗 Conectar Perfis</a>
+  <a href="/settings.html" class="nav-item active">⚙️ Configurações</a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn">🚪 Sair</a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Configurações</h1>
+  </div>
+
+  <div id="alertBox" class="alert"></div>
+
+  <div class="card">
+    <div class="card-title">Meta / Instagram</div>
+    <div class="card-desc">Credenciais do App da Meta para conectar contas do Instagram.</div>
+    <div class="form-group">
+      <label>App ID</label>
+      <input type="text" id="meta_app_id" placeholder="Ex: 839304975897478">
+    </div>
+    <div class="form-group">
+      <label>App Secret</label>
+      <input type="password" id="meta_app_secret" placeholder="••••••••••••••••">
+    </div>
+    <div class="form-group">
+      <label>ID da configuração do Login para Empresas (opcional)</label>
+      <input type="text" id="meta_login_config_id" placeholder="Só se o app usar 'Login do Facebook para Empresas'">
+      <div class="hint">
+        Deixe em branco se o app usa o Login do Facebook clássico. Se usa o <strong>para Empresas</strong>
+        (o painel mostra "Modelos" / "Configurações" no menu do Login), cole aqui o ID da configuração —
+        sem ele o Facebook autoriza mas devolve o callback sem o código, e a conexão falha.
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveMeta()">Salvar Meta</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Google / YouTube</div>
+    <div class="card-desc">Credenciais OAuth do Google Cloud Console para conectar YouTube.</div>
+    <div class="form-group">
+      <label>Client ID</label>
+      <input type="text" id="google_client_id" placeholder="Ex: xxxx.apps.googleusercontent.com">
+    </div>
+    <div class="form-group">
+      <label>Client Secret</label>
+      <input type="password" id="google_client_secret" placeholder="••••••••••••••••">
+    </div>
+    <button class="btn btn-primary" onclick="saveGoogle()">Salvar Google</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">TikTok</div>
+    <div class="card-desc">Credenciais do TikTok Developer App.</div>
+    <div class="form-group">
+      <label>Client Key</label>
+      <input type="text" id="tiktok_client_key" placeholder="Ex: awxxxxxxxxxxxx">
+    </div>
+    <div class="form-group">
+      <label>Client Secret</label>
+      <input type="password" id="tiktok_client_secret" placeholder="••••••••••••••••">
+    </div>
+    <button class="btn btn-primary" onclick="saveTikTok()">Salvar TikTok</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Alterar senha</div>
+    <div class="form-group">
+      <label>Senha atual</label>
+      <input type="password" id="currentPass">
+    </div>
+    <div class="form-group">
+      <label>Nova senha</label>
+      <input type="password" id="newPass">
+    </div>
+    <button class="btn btn-primary" id="changePassBtn" onclick="changePass()">Alterar senha</button>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted)">Após alterar, você será deslogado automaticamente para entrar com a senha nova.</div>
+  </div>
+</main>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+function showAlert(msg, type='success') {
+  const el = document.getElementById('alertBox');
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 4000);
+}
+
+async function loadSettings() {
+  const s = await API.get('/settings');
+  if (s.meta_app_id) document.getElementById('meta_app_id').value = s.meta_app_id;
+  if (s.meta_login_config_id) document.getElementById('meta_login_config_id').value = s.meta_login_config_id;
+  if (s.google_client_id) document.getElementById('google_client_id').value = s.google_client_id;
+  if (s.tiktok_client_key) document.getElementById('tiktok_client_key').value = s.tiktok_client_key;
+  // secrets ficam criptografados no servidor e não voltam pela API;
+  // campo vazio no salvar = manter o valor atual
+  const secretHint = (id, isSet) => {
+    const el = document.getElementById(id);
+    el.placeholder = isSet ? '•••••••• (configurado — deixe em branco pra manter)' : el.placeholder;
+  };
+  secretHint('meta_app_secret', s.meta_app_secret_set);
+  secretHint('google_client_secret', s.google_client_secret_set);
+  secretHint('tiktok_client_secret', s.tiktok_client_secret_set);
+}
+
+async function saveMeta() {
+  const r = await API.post('/settings', {
+    meta_app_id: document.getElementById('meta_app_id').value,
+    meta_app_secret: document.getElementById('meta_app_secret').value,
+    meta_login_config_id: document.getElementById('meta_login_config_id').value.trim()
+  });
+  r.ok ? showAlert('Credenciais Meta salvas!') : showAlert(r.error, 'error');
+}
+async function saveGoogle() {
+  const r = await API.post('/settings', { google_client_id: document.getElementById('google_client_id').value, google_client_secret: document.getElementById('google_client_secret').value });
+  r.ok ? showAlert('Credenciais Google salvas!') : showAlert(r.error, 'error');
+}
+async function saveTikTok() {
+  const r = await API.post('/settings', { tiktok_client_key: document.getElementById('tiktok_client_key').value, tiktok_client_secret: document.getElementById('tiktok_client_secret').value });
+  r.ok ? showAlert('Credenciais TikTok salvas!') : showAlert(r.error, 'error');
+}
+async function changePass() {
+  const cur = document.getElementById('currentPass').value;
+  const nova = document.getElementById('newPass').value;
+  const btn = document.getElementById('changePassBtn');
+
+  if (!cur || !nova) { showAlert('Preencha a senha atual e a nova.', 'error'); return; }
+  if (nova.length < 8) { showAlert('A nova senha precisa ter no mínimo 8 caracteres.', 'error'); return; }
+  if (cur === nova) { showAlert('A nova senha precisa ser diferente da atual.', 'error'); return; }
+
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Alterando...';
+
+  try {
+    const r = await API.post('/auth/change-password', { current: cur, newPass: nova });
+    if (r.ok) {
+      showAlert('Senha alterada! Deslogando em 2 segundos...', 'success');
+      setTimeout(() => { localStorage.clear(); location.href = '/'; }, 2000);
+    } else {
+      showAlert(r.error || 'Erro ao alterar senha.', 'error');
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  } catch (e) {
+    showAlert('Erro de conexão: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
+}
+
+loadSettings();
+</script>
+</body>
+</html>

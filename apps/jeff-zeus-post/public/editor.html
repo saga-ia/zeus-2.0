@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus Post - Editor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .back-btn { color: var(--muted); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
+  /* Editor layout */
+  .editor-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+  input, textarea, select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 120px; }
+  .form-group { margin-bottom: 20px; }
+  /* Upload */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(124,58,237,0.05); }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-text { color: var(--muted); font-size: 14px; }
+  .upload-text strong { color: var(--accent); }
+  .media-preview { border-radius: 12px; overflow: hidden; max-height: 300px; margin-top: 12px; }
+  .media-preview img, .media-preview video { width: 100%; object-fit: cover; max-height: 300px; }
+  /* Platform checkboxes */
+  .platform-option { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
+  .platform-option:hover { background: var(--surface2); }
+  .platform-option.selected { border-color: var(--accent); background: rgba(124,58,237,0.08); }
+  .platform-option input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  .platform-icon { font-size: 20px; }
+  .platform-label { flex: 1; }
+  .platform-label strong { display: block; font-size: 14px; }
+  .platform-label span { font-size: 12px; color: var(--muted); }
+  .account-select { margin-top: 8px; display: none; }
+  /* Date picker */
+  .schedule-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .toggle-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(124,58,237,0.1); }
+  /* Buttons */
+  .btn-group { display: flex; gap: 12px; }
+  .btn-primary { flex: 1; padding: 14px; background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: transparent; color: var(--text); font-size: 15px; cursor: pointer; }
+  .char-count { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert-success { background: #10b98120; border: 1px solid #10b98140; color: #10b981; }
+  .alert-error { background: #ef444420; border: 1px solid #ef444440; color: #ef4444; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Zeus Post</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item">📊 Dashboard</a>
+  <a href="/calendar.html" class="nav-item">📅 Calendário</a>
+  <a href="/editor.html" class="nav-item active">✍️ Novo Post</a>
+  <a href="/bulk.html" class="nav-item">🚀 Publicação em Massa</a>
+  <a href="/analytics.html" class="nav-item">📈 Analytics</a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item">🔗 Conectar Perfis</a>
+  <a href="/settings.html" class="nav-item">⚙️ Configurações</a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn">🚪 Sair</a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <a href="/calendar.html" class="back-btn">← Voltar</a>
+    <h1 id="pageTitle">Novo Post</h1>
+  </div>
+
+  <div id="alertBox" class="alert"></div>
+
+  <div class="editor-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">Conteudo</div>
+        <div class="form-group">
+          <label>Titulo (opcional)</label>
+          <input type="text" id="title" placeholder="Ex: Dica de marketing digital">
+        </div>
+        <div class="form-group">
+          <label>Legenda</label>
+          <textarea id="caption" placeholder="Escreva sua legenda aqui..." oninput="updateCharCount()"></textarea>
+          <div class="char-count"><span id="charCount">0</span> caracteres</div>
+        </div>
+        <div class="form-group">
+          <label>Midia</label>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">Clique ou arraste o arquivo aqui<br><strong>Imagem ou Video</strong> — max 100MB</div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept="image/*,video/*" onchange="handleUpload(this)">
+          <div id="mediaPreview" class="media-preview" style="display:none"></div>
+          <input type="hidden" id="mediaPath">
+          <input type="hidden" id="mediaType">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Tipo de publicação</div>
+        <div class="schedule-toggle">
+          <button class="toggle-btn active" id="ptFeed" onclick="setPostTarget('feed')">📰 Feed</button>
+          <button class="toggle-btn" id="ptStory" onclick="setPostTarget('story')">📲 Story</button>
+          <button class="toggle-btn" id="ptTrial" onclick="setPostTarget('trial')">🧪 Reel teste</button>
+        </div>
+        <div id="storyNotice" style="display:none;font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5">
+          Stories da API não aceitam legenda, figurinha, enquete nem link — só a mídia (vídeo de até 60s).
+          A legenda escrita ao lado fica salva só como registro interno.
+        </div>
+        <div id="trialNotice" style="display:none;font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5">
+          Reel de teste (is_trial): só sobe pra não-seguidores primeiro, não aparece no feed do perfil.
+          Precisa ser vídeo (mp4/mov/m4v, vertical 9:16). Se o Reel bombar, o Instagram promove pro feed.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Onde publicar</div>
+        <div id="platformList">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Carregando contas...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Quando publicar</div>
+        <div class="schedule-toggle">
+          <button class="toggle-btn active" onclick="setScheduleMode('now')">Agora</button>
+          <button class="toggle-btn" onclick="setScheduleMode('schedule')">Agendar</button>
+          <button class="toggle-btn" onclick="setScheduleMode('draft')">Rascunho</button>
+        </div>
+        <div id="datePickerWrap" style="display:none">
+          <input type="datetime-local" id="scheduledAt">
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="saveDraft()">Salvar rascunho</button>
+        <button class="btn-primary" onclick="saveAndPublish()">Publicar</button>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+let accounts = [];
+let selectedAccounts = [];
+let scheduleMode = 'now';
+let editId = null;
+
+const params = new URLSearchParams(location.search);
+if (params.get('id')) { editId = params.get('id'); document.getElementById('pageTitle').textContent = 'Editar Post'; }
+const dateParam = params.get('date');
+if (dateParam) { document.getElementById('scheduledAt').value = dateParam + 'T09:00'; setScheduleMode('schedule'); }
+
+async function init() {
+  accounts = await API.get('/accounts');
+  renderPlatforms();
+  if (editId) loadPost(editId);
+}
+
+function renderPlatforms() {
+  const el = document.getElementById('platformList');
+  if (!accounts.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:16px">Nenhuma conta conectada. <a href="/connect.html" style="color:var(--accent)">Conectar →</a></div>';
+    return;
+  }
+
+  const byPlatform = {};
+  accounts.forEach(a => { (byPlatform[a.platform] = byPlatform[a.platform] || []).push(a); });
+
+  const platformInfo = { instagram: { icon: '📸', name: 'Instagram', color: '#f09433' }, youtube: { icon: '▶️', name: 'YouTube', color: '#ff0000' }, tiktok: { icon: '🎵', name: 'TikTok', color: '#aaa' } };
+
+  el.innerHTML = Object.entries(byPlatform).map(([platform, accs]) => {
+    const info = platformInfo[platform] || { icon: '🌐', name: platform, color: '#7c3aed' };
+    return accs.map(a => `
+      <div class="platform-option" id="opt-${a.id}" onclick="toggleAccount(${a.id})">
+        <input type="checkbox" id="chk-${a.id}" onclick="event.stopPropagation();toggleAccount(${a.id})">
+        <div class="platform-icon">${info.icon}</div>
+        <div class="platform-label">
+          <strong>${a.platform_name || a.platform_username}</strong>
+          <span style="color:${info.color}">${info.name}</span>
+        </div>
+      </div>
+    `).join('');
+  }).join('');
+}
+
+function toggleAccount(id) {
+  const idx = selectedAccounts.indexOf(id);
+  if (idx >= 0) selectedAccounts.splice(idx, 1); else selectedAccounts.push(id);
+  document.getElementById(`chk-${id}`).checked = selectedAccounts.includes(id);
+  document.getElementById(`opt-${id}`).classList.toggle('selected', selectedAccounts.includes(id));
+}
+
+let postTarget = 'feed';
+function setPostTarget(t) {
+  postTarget = t;
+  document.getElementById('ptFeed').classList.toggle('active', t === 'feed');
+  document.getElementById('ptStory').classList.toggle('active', t === 'story');
+  document.getElementById('ptTrial').classList.toggle('active', t === 'trial');
+  document.getElementById('storyNotice').style.display = t === 'story' ? 'block' : 'none';
+  document.getElementById('trialNotice').style.display = t === 'trial' ? 'block' : 'none';
+}
+
+function setScheduleMode(mode) {
+  scheduleMode = mode;
+  document.querySelectorAll('.toggle-btn').forEach((b,i) => b.classList.toggle('active', ['now','schedule','draft'][i] === mode));
+  document.getElementById('datePickerWrap').style.display = mode === 'schedule' ? '' : 'none';
+}
+
+function updateCharCount() {
+  document.getElementById('charCount').textContent = document.getElementById('caption').value.length;
+}
+
+async function handleUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${API.token()}` }, body: form });
+  const data = await res.json();
+  if (data.error) { showAlert(data.error, 'error'); return; }
+  document.getElementById('mediaPath').value = data.path;
+  document.getElementById('mediaType').value = file.type.startsWith('video') ? 'video' : 'image';
+  const preview = document.getElementById('mediaPreview');
+  preview.style.display = '';
+  preview.innerHTML = file.type.startsWith('video')
+    ? `<video src="${data.path}" controls></video>`
+    : `<img src="${data.path}">`;
+}
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if (e.dataTransfer.files.length) { document.getElementById('fileInput').files = e.dataTransfer.files; handleUpload(document.getElementById('fileInput')); } });
+
+async function loadPost(id) {
+  const posts = await API.get('/posts');
+  const p = posts.find(x => x.id == id);
+  if (!p) return;
+  document.getElementById('title').value = p.title || '';
+  document.getElementById('caption').value = p.caption || '';
+  setPostTarget(p.post_type === 'story' ? 'story' : (p.is_trial ? 'trial' : 'feed'));
+  updateCharCount();
+  if (p.media_path) {
+    document.getElementById('mediaPath').value = p.media_path;
+    document.getElementById('mediaType').value = p.media_type || 'image';
+    const preview = document.getElementById('mediaPreview');
+    preview.style.display = '';
+    preview.innerHTML = p.media_type === 'video' ? `<video src="${p.media_path}" controls></video>` : `<img src="${p.media_path}">`;
+  }
+  selectedAccounts = p.account_ids || [];
+  selectedAccounts.forEach(id => {
+    const el = document.getElementById(`opt-${id}`);
+    const chk = document.getElementById(`chk-${id}`);
+    if (el) { el.classList.add('selected'); chk.checked = true; }
+  });
+  if (p.scheduled_at && p.status === 'scheduled') {
+    setScheduleMode('schedule');
+    const d = new Date(p.scheduled_at * 1000);
+    document.getElementById('scheduledAt').value = d.toISOString().slice(0,16);
+  }
+}
+
+function getFormData(overrideStatus) {
+  const platforms = [...new Set(selectedAccounts.map(id => accounts.find(a => a.id === id)?.platform).filter(Boolean))];
+  let status = overrideStatus;
+  if (!status) { status = scheduleMode === 'draft' ? 'draft' : scheduleMode === 'now' ? 'publishing' : 'scheduled'; }
+  const scheduledAt = scheduleMode === 'schedule' ? document.getElementById('scheduledAt').value : null;
+  const mediaType = document.getElementById('mediaType').value;
+  return {
+    title: document.getElementById('title').value,
+    caption: document.getElementById('caption').value,
+    media_path: document.getElementById('mediaPath').value,
+    media_type: mediaType,
+    post_type: postTarget === 'story' ? 'story' : (postTarget === 'trial' ? 'video' : (mediaType === 'video' ? 'video' : 'image')),
+    is_trial: postTarget === 'trial' ? 1 : 0,
+    platforms, account_ids: selectedAccounts, scheduled_at: scheduledAt, status
+  };
+}
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('alertBox');
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.style.display = '';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+async function saveDraft() {
+  const data = getFormData('draft');
+  // Story não tem legenda na API — exige mídia em vez de texto
+  if (postTarget === 'story') {
+    if (!data.media_path) { showAlert('Envie a imagem ou vídeo do story antes de salvar.', 'error'); return; }
+  } else if (postTarget === 'trial' && document.getElementById('mediaType').value !== 'video') {
+    showAlert('Reel de teste exige vídeo (mp4/mov/m4v).', 'error'); return;
+  } else if (!data.caption) { showAlert('Escreva a legenda antes de salvar.', 'error'); return; }
+  const res = editId ? await API.put('/posts/' + editId, data) : await API.post('/posts', data);
+  if (res.error) { showAlert(res.error, 'error'); return; }
+  showAlert('Rascunho salvo!');
+  if (!editId) { editId = res.id; history.replaceState({}, '', '/editor.html?id=' + editId); }
+}
+
+async function saveAndPublish() {
+  const data = getFormData();
+  if (postTarget === 'story') {
+    if (!data.media_path) { showAlert('Envie a imagem ou vídeo do story antes de publicar.', 'error'); return; }
+  } else if (postTarget === 'trial' && document.getElementById('mediaType').value !== 'video') {
+    showAlert('Reel de teste exige vídeo (mp4/mov/m4v).', 'error'); return;
+  } else if (!data.caption) { showAlert('Escreva a legenda antes de publicar.', 'error'); return; }
+  if (!selectedAccounts.length) { showAlert('Selecione pelo menos uma conta.', 'error'); return; }
+  if (scheduleMode === 'schedule' && !data.scheduled_at) { showAlert('Selecione o horario de publicação.', 'error'); return; }
+
+  let postId = editId;
+  if (scheduleMode !== 'now') {
+    data.status = 'scheduled';
+    const res = postId ? await API.put('/posts/' + postId, data) : await API.post('/posts', data);
+    if (res.error) { showAlert(res.error, 'error'); return; }
+    postId = postId || res.id;
+    showAlert('Post agendado com sucesso!');
+    setTimeout(() => location.href = '/calendar.html', 1500);
+  } else {
+    const res = postId ? await API.put('/posts/' + postId, {...data, status: 'draft'}) : await API.post('/posts', {...data, status: 'draft'});
+    if (res.error) { showAlert(res.error, 'error'); return; }
+    postId = postId || res.id;
+    showAlert('Publicando...');
+    const pubRes = await fetch('/api/posts/' + postId + '/publish', { method: 'POST', headers: API.headers() });
+    const pubData = await pubRes.json();
+    const failed = pubData.results?.filter(r => r.status === 'failed') || [];
+    if (failed.length === pubData.results?.length) { showAlert('Falha ao publicar: ' + (failed[0]?.error || 'Erro desconhecido'), 'error'); }
+    else { showAlert('Publicado com sucesso!'); setTimeout(() => location.href = '/calendar.html', 1500); }
+  }
+}
+
+init();
+</script>
+</body>
+</html>

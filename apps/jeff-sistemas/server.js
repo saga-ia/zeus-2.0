@@ -147,8 +147,25 @@ function apiAdmin(req, res, next) {
 }
 
 app.get('/', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
+
+// Esqueci minha senha (código via WhatsApp do dono) — módulo compartilhado jeff-shared
+require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
+  appName: 'Jeff Sistemas',
+  needsIdentifier: true,
+  identifierLabel: 'E-mail',
+  userExists: (email) => !!db.prepare('SELECT 1 FROM users WHERE lower(email) = ?').get(email),
+  setPassword: (newPass, email) => {
+    const u = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(email);
+    if (!u) return false;
+    const { hash, salt } = hashPassword(newPass);
+    db.prepare('UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?').run(hash, salt, u.id);
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(u.id);
+    return true;
+  }
+});
+
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
-app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
+app.get('/signup', (req, res) => res.status(403).send('Cadastro fechado. Acesso somente por convite.'));
 app.get('/pending', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pending.html')));
 app.get('/admin', requireAdmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
@@ -164,6 +181,8 @@ app.get('/api/systems', apiAuth, (req, res) => {
 });
 
 app.post('/api/signup', async (req, res) => {
+  return res.status(403).json({ error: 'Cadastro fechado. Acesso somente por convite.' });
+  // eslint-disable-next-line no-unreachable
   const { name, email, password } = req.body || {};
   if (!name || !email || !password) return res.status(400).json({ error: 'campos obrigatórios' });
   if (password.length < 6) return res.status(400).json({ error: 'senha precisa de 6+ caracteres' });

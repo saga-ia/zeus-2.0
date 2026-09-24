@@ -1,0 +1,28 @@
+'use strict';
+
+// Normaliza telefone pra formato BR padrao E.164 sem '+':
+//   - remove tudo que nao eh digito
+//   - se comeca com 55 e tem 12 ou 13 digitos, mantem
+//   - se tem 10 ou 11 digitos (BR sem DDI), prefixa 55
+//   - se tem >= 12 digitos e nao comeca com 55, mantem como esta (numero internacional)
+//   - retorna string normalizada ou null se invalido
+function normalizePhone(raw) {
+  const digits = String(raw == null ? '' : raw).replace(/\D/g, '');
+  if (!digits) return null;
+  if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) return digits;
+  if (digits.length === 10 || digits.length === 11) return '55' + digits;
+  if (digits.length >= 12 && digits.length <= 15) return digits;
+  return null;
+}
+
+// Versao permissiva: mesma normalizacao mas aceita comprimento minimo menor.
+// Uso em ingestao onde queremos preservar entrada mesmo que meio quebrada,
+// contando como skipped se voltar null.
+function normalizePhoneStrict(raw) {
+  const n = normalizePhone(raw);
+  if (!n) return null;
+  if (n.length < 12) return null; // ex-BR sem DDI muito curto
+  return n;
+}
+
+module.exports = { normalizePhone, normalizePhoneStrict };

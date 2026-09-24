@@ -1,0 +1,629 @@
+{
+  "sections": [
+    {
+      "id": 0,
+      "title": "Cabecalho",
+      "subtitle": "Empresa, ciclo, sponsor"
+    },
+    {
+      "id": 1,
+      "title": "01 Identidade e Direcao",
+      "subtitle": "Quem somos"
+    },
+    {
+      "id": 2,
+      "title": "02 Tese Estrategica de Tres Anos",
+      "subtitle": "Onde jogar - Como vencer"
+    },
+    {
+      "id": 3,
+      "title": "03 Mapa Estrategico - Balanced Scorecard",
+      "subtitle": "Como criamos valor"
+    },
+    {
+      "id": 4,
+      "title": "04 Revisao Anual e OKRs",
+      "subtitle": "O plano continua valido?"
+    },
+    {
+      "id": 5,
+      "title": "05 Quarter e Plano Tatico",
+      "subtitle": "Performance - Decisao"
+    },
+    {
+      "id": 6,
+      "title": "06 Governanca da Execucao",
+      "subtitle": "Quem viabiliza - Quando decidimos"
+    }
+  ],
+  "fields": [
+    {
+      "id": "t0_r1_c0_empresa",
+      "section": 0,
+      "label": "Empresa",
+      "kind": "inline",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 0,
+        "pattern": "empresa"
+      }
+    },
+    {
+      "id": "t0_r1_c0_ciclo_ini",
+      "section": 0,
+      "label": "Ciclo - ano inicio",
+      "kind": "inline_short",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 0,
+        "pattern": "ciclo_ini"
+      }
+    },
+    {
+      "id": "t0_r1_c0_ciclo_fim",
+      "section": 0,
+      "label": "Ciclo - ano fim",
+      "kind": "inline_short",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 0,
+        "pattern": "ciclo_fim"
+      }
+    },
+    {
+      "id": "t0_r1_c0_data",
+      "section": 0,
+      "label": "Data (DD/MM/AAAA)",
+      "kind": "inline_short",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 0,
+        "pattern": "data"
+      }
+    },
+    {
+      "id": "t0_r1_c0_quarter",
+      "section": 0,
+      "label": "Quarter (1-4)",
+      "kind": "inline_short",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 0,
+        "pattern": "quarter"
+      }
+    },
+    {
+      "id": "t0_r1_c1_sponsor",
+      "section": 0,
+      "label": "Sponsor",
+      "kind": "inline",
+      "target": {
+        "table": 0,
+        "row": 1,
+        "col": 1,
+        "pattern": "sponsor"
+      }
+    },
+    {
+      "id": "t1_r1_c0",
+      "section": 1,
+      "label": "PROPÓSITO",
+      "kind": "multiline",
+      "target": {
+        "table": 1,
+        "row": 1,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t1_r1_c1",
+      "section": 1,
+      "label": "MISSÃO",
+      "kind": "multiline",
+      "target": {
+        "table": 1,
+        "row": 1,
+        "col": 1,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t1_r1_c2",
+      "section": 1,
+      "label": "VISÃO EM TRÊS ANOS",
+      "kind": "multiline",
+      "target": {
+        "table": 1,
+        "row": 1,
+        "col": 2,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t1_r1_c3",
+      "section": 1,
+      "label": "VALORES INEGOCIÁVEIS",
+      "kind": "multiline",
+      "target": {
+        "table": 1,
+        "row": 1,
+        "col": 3,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r1_c0",
+      "section": 2,
+      "label": "AMBIÇÃO",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 1,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r1_c1",
+      "section": 2,
+      "label": "CAMPO DE JOGO",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 1,
+        "col": 1,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r1_c3",
+      "section": 2,
+      "label": "FORMA DE VENCER",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 1,
+        "col": 3,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r1_c4",
+      "section": 2,
+      "label": "CAPACIDADES CRÍTICAS",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 1,
+        "col": 4,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r2_c0",
+      "section": 2,
+      "label": "O QUE PRECISA SER VERDADE?",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 2,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r2_c1",
+      "section": 2,
+      "label": "O QUE NÃO FAREMOS?",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 2,
+        "col": 1,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r2_c3",
+      "section": 2,
+      "label": "O QUE DEIXAREMOS PARA DEPOIS?",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 2,
+        "col": 3,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r2_c4",
+      "section": 2,
+      "label": "PRINCIPAL DIFERENCIAL COMPETITIVO",
+      "kind": "text",
+      "target": {
+        "table": 2,
+        "row": 2,
+        "col": 4,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r3_c0",
+      "section": 2,
+      "label": "PRIORIDADE TRIENAL 1",
+      "kind": "multiline",
+      "target": {
+        "table": 2,
+        "row": 3,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r3_c2",
+      "section": 2,
+      "label": "PRIORIDADE TRIENAL 2",
+      "kind": "multiline",
+      "target": {
+        "table": 2,
+        "row": 3,
+        "col": 2,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t2_r3_c3",
+      "section": 2,
+      "label": "PRIORIDADE TRIENAL 3",
+      "kind": "multiline",
+      "target": {
+        "table": 2,
+        "row": 3,
+        "col": 3,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t3_r2_c1",
+      "section": 3,
+      "label": "Financeiro - Objetivo estrategico",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 2,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r2_c2",
+      "section": 3,
+      "label": "Financeiro - KPI",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 2,
+        "col": 2,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r2_c3",
+      "section": 3,
+      "label": "Financeiro - Baseline",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 2,
+        "col": 3,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r2_c4",
+      "section": 3,
+      "label": "Financeiro - Ambicao 3 anos",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 2,
+        "col": 4,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r3_c1",
+      "section": 3,
+      "label": "Cliente e mercado - Objetivo estrategico",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 3,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r3_c2",
+      "section": 3,
+      "label": "Cliente e mercado - KPI",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 3,
+        "col": 2,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r3_c3",
+      "section": 3,
+      "label": "Cliente e mercado - Baseline",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 3,
+        "col": 3,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r3_c4",
+      "section": 3,
+      "label": "Cliente e mercado - Ambicao 3 anos",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 3,
+        "col": 4,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r4_c1",
+      "section": 3,
+      "label": "Processos criticos - Objetivo estrategico",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 4,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r4_c2",
+      "section": 3,
+      "label": "Processos criticos - KPI",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 4,
+        "col": 2,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r4_c3",
+      "section": 3,
+      "label": "Processos criticos - Baseline",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 4,
+        "col": 3,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r4_c4",
+      "section": 3,
+      "label": "Processos criticos - Ambicao 3 anos",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 4,
+        "col": 4,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r5_c1",
+      "section": 3,
+      "label": "Aprendizado e capacidades - Objetivo estrategico",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 5,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r5_c2",
+      "section": 3,
+      "label": "Aprendizado e capacidades - KPI",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 5,
+        "col": 2,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r5_c3",
+      "section": 3,
+      "label": "Aprendizado e capacidades - Baseline",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 5,
+        "col": 3,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t3_r5_c4",
+      "section": 3,
+      "label": "Aprendizado e capacidades - Ambicao 3 anos",
+      "kind": "text",
+      "target": {
+        "table": 3,
+        "row": 5,
+        "col": 4,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t4_r1_c1",
+      "section": 4,
+      "label": "Decisao anual - Manter / Acelerar / Repriorizar / Interromper / Incorporar",
+      "kind": "multiline",
+      "target": {
+        "table": 4,
+        "row": 1,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t5_r1_c0",
+      "section": 5,
+      "label": "Quarter - Performance e decisao",
+      "kind": "multiline",
+      "target": {
+        "table": 5,
+        "row": 1,
+        "col": 0,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t5_r1_c1",
+      "section": 5,
+      "label": "Quarter - Performance e decisao",
+      "kind": "multiline",
+      "target": {
+        "table": 5,
+        "row": 1,
+        "col": 1,
+        "pattern": "set_empty"
+      }
+    },
+    {
+      "id": "t6_r2_c0",
+      "section": 6,
+      "label": "Campo 6-2-0",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 2,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r2_c1",
+      "section": 6,
+      "label": "Campo 6-2-1",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 2,
+        "col": 1,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r2_c3",
+      "section": 6,
+      "label": "Campo 6-2-3",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 2,
+        "col": 3,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r2_c4",
+      "section": 6,
+      "label": "Campo 6-2-4",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 2,
+        "col": 4,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r2_c5",
+      "section": 6,
+      "label": "Campo 6-2-5",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 2,
+        "col": 5,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r4_c0",
+      "section": 6,
+      "label": "Decisão esperada:",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 4,
+        "col": 0,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r4_c2",
+      "section": 6,
+      "label": "Decisão esperada:",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 4,
+        "col": 2,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r4_c4",
+      "section": 6,
+      "label": "Decisão esperada:",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 4,
+        "col": 4,
+        "pattern": "replace_underscores"
+      }
+    },
+    {
+      "id": "t6_r4_c5",
+      "section": 6,
+      "label": "Decisão esperada:",
+      "kind": "text",
+      "target": {
+        "table": 6,
+        "row": 4,
+        "col": 5,
+        "pattern": "replace_underscores"
+      }
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Turbo Max - Analytics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; max-width: 1200px; }
+  .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  .btn { padding: 10px 16px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .stat-label { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 700; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .card-sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+  /* Heatmap */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap { display: grid; grid-template-columns: 44px repeat(24, minmax(20px, 1fr)); gap: 2px; font-size: 10px; min-width: 640px; }
+  .hm-hd { color: var(--muted); text-align: center; padding: 4px 0; font-weight: 600; }
+  .hm-lbl { color: var(--muted); text-align: right; padding: 4px 6px; font-weight: 600; }
+  .hm-cell { aspect-ratio: 1; border-radius: 3px; background: var(--surface2); cursor: pointer; position: relative; }
+  .hm-cell[data-val="0"] { background: #13131f; opacity: 0.5; }
+  .hm-cell:hover::after {
+    content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--bg); border: 1px solid var(--accent); color: white; padding: 4px 8px;
+    border-radius: 6px; font-size: 11px; white-space: nowrap; z-index: 10;
+  }
+  .top-hours-list { list-style: none; }
+  .top-hours-list li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .top-hours-list li:last-child { border-bottom: none; }
+  .th-rank { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .th-info { flex: 1; }
+  .th-when { font-weight: 600; font-size: 14px; }
+  .th-metric { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  /* Recent posts */
+  .post-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .post-row:hover { background: var(--surface2); margin: 0 -12px; padding: 14px 12px; border-radius: 8px; border-bottom-color: transparent; }
+  .post-row:last-child { border-bottom: none; }
+  .post-thumb { width: 60px; height: 60px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; }
+  .post-thumb img, .post-thumb video { width: 100%; height: 100%; object-fit: cover; }
+  .post-info { flex: 1; min-width: 0; }
+  .post-cap { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .post-username { color: var(--muted); font-size: 12px; }
+  .post-metrics { display: flex; gap: 14px; flex-wrap: wrap; }
+  .metric { color: var(--muted); font-size: 12px; }
+  .metric strong { color: var(--text); }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 32px; }
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; max-width: 600px; width: 100%; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .modal-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+  .modal-metric { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; }
+  .modal-metric .lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .modal-metric .val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+</style>
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12Z"/></svg></div>
+    <div class="logo-text">Agenda Turbo Max</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item" data-icon="dashboard" data-label="Dashboard"></a>
+  <a href="/calendar.html" class="nav-item" data-icon="calendar" data-label="Calendário"></a>
+  <a href="/editor.html" class="nav-item" data-icon="compose" data-label="Novo Post"></a>
+  <a href="/bulk.html" class="nav-item" data-icon="bulk" data-label="Publicação em Massa"></a>
+  <a href="/analytics.html" class="nav-item active" data-icon="analytics" data-label="Analytics"></a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item" data-icon="link" data-label="Conectar Perfis"></a>
+  <a href="/settings.html" class="nav-item" data-icon="settings" data-label="Configurações"></a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn" data-icon="logout" data-label="Sair"></a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>Analytics</h1>
+      <p>Métricas reais coletadas do Instagram — atualizadas a cada 30min.</p>
+    </div>
+    <button class="btn btn-secondary" onclick="forceCollect()">🔄 Atualizar métricas agora</button>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Publicados</div><div class="stat-value" id="sTotal">-</div></div>
+    <div class="stat-card"><div class="stat-label">Alcance</div><div class="stat-value" id="sReach">-</div></div>
+    <div class="stat-card"><div class="stat-label">Views</div><div class="stat-value" id="sViews">-</div></div>
+    <div class="stat-card"><div class="stat-label">Curtidas</div><div class="stat-value" id="sLikes">-</div></div>
+    <div class="stat-card"><div class="stat-label">Comentários</div><div class="stat-value" id="sComments">-</div></div>
+    <div class="stat-card"><div class="stat-label">Salvos</div><div class="stat-value" id="sSaves">-</div></div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <div class="card-title">🔥 Melhores Horários (alcance médio por dia × hora)</div>
+      <div class="card-sub">Cor mais forte = maior alcance médio nos posts que caíram naquela hora. Passa o mouse pra ver detalhes.</div>
+      <div class="heatmap-wrap"><div id="heatmap" class="heatmap"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 Top 5 janelas de pico</div>
+      <div class="card-sub">Os horários que historicamente trouxeram mais alcance.</div>
+      <ul class="top-hours-list" id="topHours"></ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Publicações recentes</div>
+    <div class="card-sub">Clica em qualquer post pra ver métricas completas e abrir no Instagram.</div>
+    <div id="recentPosts"><div class="empty">Carregando...</div></div>
+  </div>
+</main>
+
+<!-- Modal de detalhes -->
+<div class="modal-overlay" id="postModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePostModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="/js/icons.js"></script>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function fmt(n) { return (n || 0).toLocaleString('pt-BR'); }
+
+async function load() {
+  const a = await API.get('/analytics');
+  document.getElementById('sTotal').textContent = fmt(a.totalPosts);
+  document.getElementById('sReach').textContent = fmt(a.totals.reach);
+  document.getElementById('sViews').textContent = fmt(a.totals.views);
+  document.getElementById('sLikes').textContent = fmt(a.totals.likes);
+  document.getElementById('sComments').textContent = fmt(a.totals.comments);
+  document.getElementById('sSaves').textContent = fmt(a.totals.saves);
+
+  renderHeatmap(a.heatmap);
+  renderTopHours(a.heatmap.top_hours);
+  renderPosts(a.recentPosts);
+}
+
+function renderHeatmap(hm) {
+  const cells = hm.heatmap; // 7 x 24
+  const max = Math.max(1, ...cells.flat());
+  const el = document.getElementById('heatmap');
+  const parts = [`<div class="hm-hd"></div>`];
+  for (let h = 0; h < 24; h++) parts.push(`<div class="hm-hd">${h}h</div>`);
+  for (let d = 0; d < 7; d++) {
+    parts.push(`<div class="hm-lbl">${DOW[d]}</div>`);
+    for (let h = 0; h < 24; h++) {
+      const val = cells[d][h];
+      const intensity = val > 0 ? Math.min(1, val / max) : 0;
+      const bg = val > 0
+        ? `background: rgba(124, 58, 237, ${(0.15 + intensity * 0.85).toFixed(2)})`
+        : '';
+      parts.push(`<div class="hm-cell" data-val="${val}" data-tip="${DOW[d]} ${h}h — alcance médio: ${fmt(val)}" style="${bg}"></div>`);
+    }
+  }
+  el.innerHTML = parts.join('');
+  if (hm.total_samples === 0) {
+    el.parentElement.innerHTML = '<div class="empty">Ainda sem dados — publique alguns posts e volte em 30 min.</div>';
+  }
+}
+
+function renderTopHours(top) {
+  const el = document.getElementById('topHours');
+  if (!top?.length) { el.innerHTML = '<li style="color:var(--muted)">Sem dados ainda.</li>'; return; }
+  el.innerHTML = top.map((t, i) => `
+    <li>
+      <div class="th-rank">${i+1}</div>
+      <div class="th-info">
+        <div class="th-when">${DOW[t.dow]} · ${String(t.hour).padStart(2,'0')}:00</div>
+        <div class="th-metric">Alcance médio: <strong>${fmt(t.avg_reach)}</strong> · ${t.samples} posts</div>
+      </div>
+    </li>
+  `).join('');
+}
+
+function renderPosts(posts) {
+  const el = document.getElementById('recentPosts');
+  if (!posts?.length) { el.innerHTML = '<div class="empty">Nenhum post publicado ainda.</div>'; return; }
+  el.innerHTML = posts.map(p => `
+    <div class="post-row" onclick="openPostModal(${p.post_id})">
+      <div class="post-thumb">${(p.post_type === 'video' ? '🎬' : p.post_type === 'carousel' ? '🎠' : '🖼️')}</div>
+      <div class="post-info">
+        <div class="post-cap">${(p.caption || '').slice(0, 90).replace(/[<>]/g,'')}${(p.caption||'').length > 90 ? '...' : ''}</div>
+        <div class="post-username">@${p.platform_username || ''} · ${new Date((p.published_at||0)*1000).toLocaleString('pt-BR')}</div>
+      </div>
+      <div class="post-metrics">
+        <span class="metric">👁️ <strong>${fmt(p.reach || p.views)}</strong></span>
+        <span class="metric">❤️ <strong>${fmt(p.likes)}</strong></span>
+        <span class="metric">💬 <strong>${fmt(p.comments)}</strong></span>
+        <span class="metric">🔖 <strong>${fmt(p.saves)}</strong></span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function openPostModal(postId) {
+  const p = await API.get('/analytics/post/' + postId);
+  const body = document.getElementById('modalBody');
+  const r = p.results?.[0];
+  const m = r?.analytics || {};
+  const permalink = m.permalink;
+  body.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:6px">Detalhes da publicação</h2>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
+      @${r?.platform_username || ''} · ${new Date((r?.published_at||0)*1000).toLocaleString('pt-BR')}
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:14px;line-height:1.6;max-height:200px;overflow-y:auto;white-space:pre-wrap">${(p.caption || '').replace(/[<>]/g,'')}</div>
+    <div class="modal-metrics">
+      <div class="modal-metric"><div class="lbl">Alcance</div><div class="val">${fmt(m.reach)}</div></div>
+      <div class="modal-metric"><div class="lbl">Views</div><div class="val">${fmt(m.views)}</div></div>
+      <div class="modal-metric"><div class="lbl">Impressões</div><div class="val">${fmt(m.impressions)}</div></div>
+      <div class="modal-metric"><div class="lbl">Curtidas</div><div class="val">${fmt(m.likes)}</div></div>
+      <div class="modal-metric"><div class="lbl">Comentários</div><div class="val">${fmt(m.comments)}</div></div>
+      <div class="modal-metric"><div class="lbl">Salvos</div><div class="val">${fmt(m.saves)}</div></div>
+      <div class="modal-metric"><div class="lbl">Compart.</div><div class="val">${fmt(m.shares)}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      ${permalink
+        ? `<a href="${permalink}" target="_blank" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;padding:12px 16px">🔗 Abrir no Instagram</a>`
+        : `<div style="flex:1;color:var(--muted);font-size:13px;text-align:center;padding:12px">Link nativo será obtido na próxima coleta</div>`}
+      <button class="btn btn-secondary" onclick="closePostModal()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('postModal').classList.add('open');
+}
+
+function closePostModal() { document.getElementById('postModal').classList.remove('open'); }
+document.getElementById('postModal').addEventListener('click', e => {
+  if (e.target.id === 'postModal') closePostModal();
+});
+
+async function forceCollect() {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Coletando...';
+  try {
+    const r = await API.post('/analytics/collect', {});
+    alert(r.error ? 'Erro: ' + r.error : `Coletado: ${r.collected}/${r.total} (falhas: ${r.failed})`);
+    load();
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Atualizar métricas agora';
+  }
+}
+
+load();
+</script>
+<script>
+// Menu lateral em gaveta no celular
+(function () {
+  var b = document.getElementById('menuToggle');
+  var bd = document.getElementById('sidebarBackdrop');
+  var sb = document.querySelector('.sidebar');
+  if (!b || !sb) return;
+  function fechar() { sb.classList.remove('open'); bd.classList.remove('open'); }
+  b.addEventListener('click', function () {
+    sb.classList.toggle('open'); bd.classList.toggle('open');
+  });
+  bd.addEventListener('click', fechar);
+  sb.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', fechar); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+})();
+</script>
+</body>
+</html>

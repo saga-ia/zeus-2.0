@@ -5,7 +5,9 @@ const crypto = require('crypto');
 const { execFile } = require('child_process');
 const multer = require('multer');
 const Database = require('better-sqlite3');
-const { SKILLS, ZEUS_AGENTS, CATEGORY_LABEL, GENERAL_RULES, LEGAL_WARN, zeusPrompt } = require('./agents-seed');
+const { AGENT_HOME, AGENT_PANELS, ZEUS_AGENTS, CATEGORY_LABEL, GENERAL_RULES, VIZ_RULE, LEGAL_WARN, zeusPrompt } = require('./agents-seed');
+// Catálogo de habilidades dinâmico (regras + skills do servidor, com as edições feitas pela interface)
+const skillsMod = require('./skills');
 
 const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data');
 const AGENTS_ROOT = path.join(DATA_DIR, 'agents');
@@ -99,6 +101,8 @@ function shape(a) {
     warn: a.warn || null,
     model: a.model || '',
     inWorkspace: !!a.in_workspace,
+    panel: AGENT_PANELS[a.id] || null,
+    home: AGENT_HOME[a.id] || null,
     fileCount: a.file_count || 0,
     createdAt: a.created_at,
     updatedAt: a.updated_at,
@@ -166,6 +170,8 @@ function buildAgentSystemPrompt(agentId) {
     out.push('Regras gerais:');
     GENERAL_RULES.forEach(l => out.push('- ' + l));
   }
+  // Agentes ZEUS têm as regras gravadas no banco pelo seed antigo: garante a regra de visuais em todos
+  if (!(a.prompt || '').includes('zeus-kpi')) { out.push(''); out.push('Visuais na tela: ' + VIZ_RULE); }
   if (a.warn) { out.push(''); out.push('Aviso obrigatório quando o tema for sensível: ' + a.warn); }
   const avisos = agentesCfg().avisos;
   if (avisos.length) {
@@ -174,11 +180,14 @@ function buildAgentSystemPrompt(agentId) {
     avisos.forEach(v => out.push(`- Quando a conversa envolver "${v.assunto}": ${ACAO_AVISO[v.acao] || ACAO_AVISO.avisar}.${v.descricao ? ' Contexto: ' + v.descricao : ''}`));
   }
 
-  const skills = SKILLS.filter(s => a.skills.includes(s.id));
+  const skills = skillsMod.all().filter(s => a.skills.includes(s.id));
   if (skills.length) {
     out.push('');
     out.push('## Habilidades ativas');
-    skills.forEach(s => out.push(`- **${s.name}**: ${s.instruction}`));
+    if (skills.some(s => s.kind === 'skill')) {
+      out.push('Algumas habilidades abaixo são skills instaladas neste servidor: para usá-las, invoque a ferramenta Skill com o nome indicado e siga as instruções que ela carrega. Não descreva a skill nem peça permissão, apenas execute.');
+    }
+    skills.forEach(s => out.push(`- **${s.name}**${s.kind === 'skill' ? ` (skill: ${s.slug})` : ''}: ${s.instruction}`));
   }
 
   if (a.files.length) {
@@ -246,7 +255,7 @@ function cleanInput(b, forCreate) {
   if (b.icebreakers !== undefined) o.icebreakers = JSON.stringify((Array.isArray(b.icebreakers) ? b.icebreakers : [])
     .map(s => String(s).trim()).filter(Boolean).slice(0, 8));
   if (b.skills !== undefined) o.skills = JSON.stringify((Array.isArray(b.skills) ? b.skills : [])
-    .filter(id => SKILLS.some(s => s.id === id)));
+    .filter(id => !!skillsMod.find(id)));
   if (b.model !== undefined) o.model = MODELS.includes(b.model) ? b.model : '';
   if (forCreate) {
     o.category = o.category || 'Geral';
@@ -262,7 +271,7 @@ function cleanInput(b, forCreate) {
 router.get('/', (_req, res) => {
   res.json({
     agents: stmt.list.all().map(shape),
-    skills: SKILLS.map(({ id, name, group }) => ({ id, name, group })),
+    skills: skillsMod.all().map(({ id, name, group, kind, desc, slug, origem }) => ({ id, name, group, kind: kind || 'regra', desc: desc || '', slug: slug || '', origem: origem || '' })),
     categories: ['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].map(c => ({ id: c, label: CATEGORY_LABEL[c] || c }))
       .concat(agentesCfg().categorias.filter(c => !['Geral', 'Marketing', 'Vendas', 'Produto', 'Pessoas', 'AJF'].includes(c.name)).map(c => ({ id: c.name, label: c.name, custom: true }))),
   });
@@ -275,7 +284,8 @@ router.get('/:id', (req, res) => {
 });
 
 // ─── Criar com ZEUS: conversa que monta o agente, e "Enriquecer" do prompt ────
-const CLAUDE_BIN = process.env.CLAUDE_BIN || '/root/.nvm/versions/node/v20.20.2/bin/claude';
+const claudeSpawn = require('./claude-spawn');
+const CLAUDE_BIN = claudeSpawn.CLAUDE_BIN;
 const ASSIST_DIR = path.join(DATA_DIR, 'assist-workdir');
 const ASSIST_NO_TOOLS = 'Bash Edit Write NotebookEdit WebFetch WebSearch Task Agent Read Glob Grep';
 if (!fs.existsSync(ASSIST_DIR)) fs.mkdirSync(ASSIST_DIR, { recursive: true });
@@ -283,8 +293,9 @@ if (!fs.existsSync(ASSIST_DIR)) fs.mkdirSync(ASSIST_DIR, { recursive: true });
 function claudeTexto(prompt, model) {
   return new Promise((resolve, reject) => {
     const { spawn } = require('child_process');
-    const p = spawn(CLAUDE_BIN, ['-p', '--output-format', 'text', '--model', model || 'sonnet', '--disallowedTools', ASSIST_NO_TOOLS],
-      { cwd: ASSIST_DIR, stdio: ['pipe', 'pipe', 'pipe'] });
+    // Só texto, sem ferramentas: esforço leve e sem MCPs (ver claude-spawn.js)
+    const p = spawn(CLAUDE_BIN, ['-p', '--output-format', 'text', '--model', model || 'sonnet', '--disallowedTools', ASSIST_NO_TOOLS, ...claudeSpawn.commonArgs({ light: true })],
+      { cwd: ASSIST_DIR, stdio: ['pipe', 'pipe', 'pipe'], env: claudeSpawn.claudeEnv() });
     let out = '', err = '';
     const t = setTimeout(() => { try { p.kill('SIGTERM'); } catch (_) {} }, 150000);
     p.stdout.on('data', d => { out += d; });
@@ -332,7 +343,7 @@ router.post('/assist', async (req, res) => {
       'Você é o ZEUS e ajuda o usuário a criar um agente de IA na plataforma ZEUS. Sempre em PT-BR, direto e amigável.',
       '', 'Categorias válidas: ' + cats.join(', '),
       'Habilidades disponíveis (use só estes ids):',
-      ...SKILLS.map(s => `- ${s.id}: ${s.name}`),
+      ...skillsMod.all().map(s => `- ${s.id}: ${s.name} [${s.group}]`),
       '', 'Rascunho atual do agente (JSON): ' + JSON.stringify({
         name: draft.name || '', category: draft.category || 'Geral', description: draft.description || '',
         prompt: String(draft.prompt || '').slice(0, 12000), icebreakers: draft.icebreakers || [], skills: draft.skills || [],
@@ -359,7 +370,7 @@ router.post('/assist', async (req, res) => {
       description: String(a.description || '').trim().slice(0, 500),
       prompt: String(a.prompt || '').slice(0, 40000),
       icebreakers: (Array.isArray(a.icebreakers) ? a.icebreakers : []).map(x => String(x).trim()).filter(Boolean).slice(0, 8),
-      skills: (Array.isArray(a.skills) ? a.skills : []).filter(id => SKILLS.some(s => s.id === id)),
+      skills: (Array.isArray(a.skills) ? a.skills : []).filter(id => !!skillsMod.find(id)),
     };
     res.json({ reply: String(j.resposta || 'Pronto, montei o agente. Revise na prévia ao lado.'), draft: out });
   } catch (e) {
@@ -439,4 +450,4 @@ router.delete('/:id/files/:fid', (req, res) => {
   res.json({ ok: true, agent: getAgent(req.params.id) });
 });
 
-module.exports = { router, getAgent, buildAgentSystemPrompt };
+module.exports = { router, getAgent, buildAgentSystemPrompt, extractText };

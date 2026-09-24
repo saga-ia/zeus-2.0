@@ -37,9 +37,12 @@ router.post(
     const phone = await resolvePhone(client, jid);
     if (!isWhitelistedPhone(phone)) throw new HttpError(403, 'audio_response_only_for_whitelisted');
 
-    // Jeff e clientes recebem voz clonada do Jeff (elevenlabs_voice_id).
-    // Zeus usa elevenlabs_voice_zeus (reservada pra uso interno).
-    const voiceId = getSetting('elevenlabs_voice_id');
+    // Quando Zeus fala com Jeff (dono), usa a voz própria do Zeus.
+    // Com clientes/terceiros, usa o clone do Jeff.
+    const isJeff = phone && phone.endsWith(JEFF_LAST9);
+    const voiceId = isJeff
+      ? (getSetting('elevenlabs_voice_zeus') || getSetting('elevenlabs_voice_id'))
+      : getSetting('elevenlabs_voice_id');
 
     const { base64, mimetype } = await synthesize(text, voiceId);
     const r = await req.app.locals.queue.enqueue({

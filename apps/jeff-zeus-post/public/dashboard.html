@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus Post - Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .stat-label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+  .stat-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  /* Grid */
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title a { color: var(--muted); font-size: 13px; font-weight: 400; text-decoration: none; }
+  .post-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .post-item:last-child { border-bottom: none; }
+  .post-thumb { width: 48px; height: 48px; border-radius: 10px; background: var(--surface2); object-fit: cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .post-info { flex: 1; min-width: 0; }
+  .post-caption { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .post-meta { color: var(--muted); font-size: 11px; }
+  .account-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .account-item:last-child { border-bottom: none; }
+  .account-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--surface2); flex-shrink: 0; object-fit: cover; }
+  .account-info .name { font-size: 14px; font-weight: 500; }
+  .account-info .meta { color: var(--muted); font-size: 12px; }
+  .platform-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pd-instagram { background: #f09433; }
+  .pd-youtube { background: #ff0000; }
+  .pd-tiktok { background: #aaa; }
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 24px; }
+  /* Filtro de contas */
+  .account-filter { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .account-filter label { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .account-filter select { background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; min-width: 260px; font-family: inherit; }
+  .account-filter select:focus { outline: none; border-color: var(--accent); }
+  .account-filter .badge { background: var(--surface2); color: var(--muted); font-size: 11px; padding: 4px 10px; border-radius: 20px; }
+  /* Card com scroll interno */
+  .card.scrollable { display: flex; flex-direction: column; max-height: 520px; }
+  .card.scrollable .scroll-body { flex: 1; overflow-y: auto; padding-right: 8px; margin-right: -4px; }
+  .card.scrollable .scroll-body::-webkit-scrollbar { width: 8px; }
+  .card.scrollable .scroll-body::-webkit-scrollbar-track { background: var(--surface2); border-radius: 4px; }
+  .card.scrollable .scroll-body::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+  .card.scrollable .scroll-body::-webkit-scrollbar-thumb:hover { background: #6d28d9; }
+  .stat-value.failed { color: #ef4444; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Zeus Post</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item active">📊 Dashboard</a>
+  <a href="/calendar.html" class="nav-item">📅 Calendário</a>
+  <a href="/editor.html" class="nav-item">✍️ Novo Post</a>
+  <a href="/bulk.html" class="nav-item">🚀 Publicação em Massa</a>
+  <a href="/analytics.html" class="nav-item">📈 Analytics</a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item">🔗 Conectar Perfis</a>
+  <a href="/settings.html" class="nav-item">⚙️ Configurações</a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn">🚪 Sair</a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <div style="color:var(--muted);font-size:14px;margin-top:4px">Ótimo dia, Jeff</div>
+    </div>
+    <a href="/editor.html" class="btn-primary">+ Novo Post</a>
+  </div>
+
+  <div class="account-filter">
+    <label for="accountFilter">Filtrar por conta:</label>
+    <select id="accountFilter" onchange="load()">
+      <option value="">Todas as contas</option>
+    </select>
+    <span class="badge" id="filterBadge">Mostrando: todas</span>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Posts publicados</div><div class="stat-value" id="statPublished">-</div><div class="stat-sub">Total</div></div>
+    <div class="stat-card"><div class="stat-label">Agendados</div><div class="stat-value" id="statScheduled">-</div><div class="stat-sub" id="statScheduledSub">Na fila</div></div>
+    <div class="stat-card"><div class="stat-label">Falhas</div><div class="stat-value failed" id="statFailed">-</div><div class="stat-sub">Não publicaram</div></div>
+    <div class="stat-card"><div class="stat-label">Contas</div><div class="stat-value" id="statAccounts">-</div><div class="stat-sub">Conectadas</div></div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card scrollable">
+      <div class="card-title">Posts recentes <a href="/calendar.html">Ver todos →</a></div>
+      <div class="scroll-body" id="recentPosts"><div class="empty">Carregando...</div></div>
+    </div>
+    <div class="card scrollable">
+      <div class="card-title">Contas conectadas <a href="/connect.html">Gerenciar →</a></div>
+      <div class="scroll-body" id="accountsList"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+</main>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+let _accountsCache = [];
+
+function esc(s) { return String(s || '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function load() {
+  const filterSel = document.getElementById('accountFilter');
+  const accountId = filterSel?.value || '';
+  const qs = accountId ? `?account_id=${accountId}` : '';
+
+  const analytics = await API.get('/analytics' + qs);
+  // Feed do dashboard: quando não há filtro, /posts?status= devolve todos os
+  // status. Com filtro, tem que casar com os posts recentes já filtrados por
+  // conta que /analytics devolve (recentPosts).
+  let recentList;
+  if (accountId) {
+    recentList = (analytics.recentPosts || []).map(p => ({
+      caption: p.caption, media_type: p.media_type, status: p.pub_status,
+      platforms: [p.platform], platform_username: p.platform_username
+    }));
+  } else {
+    const posts = await API.get('/posts?status=');
+    recentList = posts.map(p => ({
+      caption: p.caption, media_type: p.media_type, status: p.status,
+      platforms: p.platforms || [], platform_username: null
+    }));
+  }
+
+  document.getElementById('statPublished').textContent = analytics.totalPosts.toLocaleString('pt-BR');
+  document.getElementById('statScheduled').textContent = analytics.scheduled.toLocaleString('pt-BR');
+  document.getElementById('statFailed').textContent = analytics.failed.toLocaleString('pt-BR');
+  document.getElementById('statAccounts').textContent = analytics.accounts.length;
+
+  // Preenche o dropdown de contas 1x (mantém o valor selecionado)
+  if (!_accountsCache.length && analytics.accounts?.length) {
+    _accountsCache = analytics.accounts;
+    for (const a of analytics.accounts) {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = `@${a.platform_username || a.platform_name || a.id}`;
+      filterSel.appendChild(opt);
+    }
+  }
+  const badge = document.getElementById('filterBadge');
+  if (accountId) {
+    const a = analytics.accounts.find(x => x.id == accountId);
+    badge.textContent = `Mostrando: @${a?.platform_username || accountId}`;
+  } else {
+    badge.textContent = `Mostrando: todas (${analytics.accounts.length})`;
+  }
+
+  document.getElementById('recentPosts').innerHTML = recentList.length
+    ? recentList.map(p => `
+      <div class="post-item">
+        <div class="post-thumb">${p.media_type === 'video' ? '🎬' : '🖼️'}</div>
+        <div class="post-info">
+          <div class="post-caption">${esc(p.caption)}</div>
+          <div class="post-meta">${p.platform_username ? '@' + esc(p.platform_username) + ' · ' : ''}${(p.platforms || []).join(', ')} · ${statusBadge(p.status)}</div>
+        </div>
+      </div>
+    `).join('')
+    : '<div class="empty">Nenhum post ainda. <a href="/editor.html" style="color:var(--accent)">Criar primeiro post →</a></div>';
+
+  const accounts = analytics.accounts;
+  document.getElementById('accountsList').innerHTML = accounts.length
+    ? accounts.map(a => `
+      <div class="account-item">
+        ${a.profile_picture ? `<img class="account-avatar" src="${a.profile_picture}" onerror="this.style.background='var(--surface2)'">` : `<div class="account-avatar" style="display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>`}
+        <div class="account-info">
+          <div class="name">${esc(a.platform_name || a.platform_username)}</div>
+          <div class="meta">${(a.followers || 0).toLocaleString('pt-BR')} seguidores</div>
+        </div>
+        <div class="platform-dot pd-${a.platform}"></div>
+      </div>
+    `).join('')
+    : '<div class="empty">Nenhuma conta. <a href="/connect.html" style="color:var(--accent)">Conectar →</a></div>';
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mapa Integrado 3-1-Q | Planejamento Estratégico</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --bg-2: #12151a;
+    --card: #171b21;
+    --card-hover: #1f242c;
+    --border: #262c35;
+    --border-strong: #3a4250;
+    --text: #eef2f6;
+    --text-dim: #a3adb9;
+    --text-mute: #6b7480;
+    --accent: #c8a55b;
+    --accent-dim: #8a7136;
+    --success: #4ade80;
+    --danger: #f87171;
+    --shadow: 0 20px 60px rgba(0,0,0,.55);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); }
+  .container { max-width: 1240px; margin: 0 auto; padding: 40px 24px 120px; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .brand { display: flex; flex-direction: column; gap: 6px; }
+  .brand .eyebrow { font-size: 11px; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; font-weight: 600; }
+  .brand h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand .sub { color: var(--text-dim); font-size: 14px; font-weight: 400; }
+  .actions { display: flex; gap: 12px; align-items: center; }
+  .stat { text-align: right; padding-right: 12px; border-right: 1px solid var(--border); }
+  .stat .n { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat .l { font-size: 11px; letter-spacing: 1.5px; color: var(--text-mute); text-transform: uppercase; }
+  button, .btn { background: var(--accent); color: #12151a; border: none; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all .18s ease; font-family: inherit; letter-spacing: 0.2px; }
+  button:hover, .btn:hover { background: #d9b871; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,165,91,.25); }
+  button.ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border-strong); }
+  button.ghost:hover { color: var(--text); border-color: var(--accent); background: transparent; box-shadow: none; }
+  .section { margin-bottom: 28px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-head .title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .section-head .subtitle { color: var(--text-mute); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; }
+  .section-head .progress { color: var(--accent); font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+  .grid { display: grid; gap: 14px; }
+  .grid-1 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-5 { grid-template-columns: repeat(5, 1fr); }
+  @media (max-width: 900px) { .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 18px 16px; cursor: pointer; transition: all .18s ease; position: relative; overflow: hidden; min-height: 110px; display: flex; flex-direction: column; gap: 8px; }
+  .card:hover { background: var(--card-hover); border-color: var(--accent-dim); transform: translateY(-2px); }
+  .card.filled { border-color: var(--accent-dim); }
+  .card.filled::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+  .card .label { font-size: 11px; letter-spacing: 1.5px; color: var(--text-mute); text-transform: uppercase; font-weight: 600; }
+  .card.filled .label { color: var(--accent); }
+  .card .value { color: var(--text); font-size: 14px; line-height: 1.5; opacity: .95; word-break: break-word; }
+  .card .placeholder { color: var(--text-mute); font-size: 13px; font-style: italic; }
+  .card .edit-hint { color: var(--text-mute); font-size: 11px; margin-top: auto; opacity: 0; transition: opacity .15s; }
+  .card:hover .edit-hint { opacity: 1; }
+  .save-strip { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(11,13,16,0) 0%, rgba(11,13,16,.95) 40%, var(--bg) 100%); padding: 24px 24px 28px; display: flex; justify-content: center; gap: 12px; z-index: 40; }
+  .save-strip .btn { padding: 14px 32px; font-size: 15px; }
+  .status { position: fixed; top: 24px; right: 24px; background: var(--card); border: 1px solid var(--border-strong); padding: 10px 18px; border-radius: 999px; font-size: 12px; color: var(--text-dim); z-index: 30; opacity: 0; transform: translateY(-8px); transition: all .25s; }
+  .status.show { opacity: 1; transform: translateY(0); }
+  .status.ok { border-color: var(--success); color: var(--success); }
+  .status.err { border-color: var(--danger); color: var(--danger); }
+
+  /* modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--bg-2); border: 1px solid var(--border-strong); border-radius: var(--radius); max-width: 620px; width: 100%; max-height: 90vh; overflow: auto; box-shadow: var(--shadow); }
+  .modal-head { padding: 24px 28px 16px; border-bottom: 1px solid var(--border); }
+  .modal-head .eyebrow { font-size: 11px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .modal-head h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .modal-body { padding: 24px 28px; }
+  .modal-body textarea, .modal-body input { width: 100%; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 10px; color: var(--text); padding: 14px 16px; font-family: inherit; font-size: 15px; line-height: 1.55; resize: vertical; }
+  .modal-body textarea { min-height: 160px; }
+  .modal-body textarea:focus, .modal-body input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,165,91,.15); }
+  .modal-foot { padding: 16px 28px 24px; display: flex; justify-content: space-between; gap: 12px; }
+  .modal-foot .btns { display: flex; gap: 10px; }
+  .hint { color: var(--text-mute); font-size: 12px; }
+  .footer { text-align: center; color: var(--text-mute); font-size: 11px; letter-spacing: 1.5px; margin-top: 40px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Mapa integrado 3-1-Q</span>
+      <h1>Planejamento estratégico</h1>
+      <span class="sub">Preencha cada bloco. Salva automático. Baixe o Word quando quiser.</span>
+    </div>
+    <div class="actions">
+      <div class="stat">
+        <div class="n" id="stat-filled">0/0</div>
+        <div class="l">Preenchidos</div>
+      </div>
+      <button class="ghost" id="btn-reset">Zerar</button>
+      <button id="btn-download">Baixar Word</button>
+    </div>
+  </header>
+
+  <div id="sections"></div>
+
+  <div class="footer">Uma única visão da direção, das metas e da governança da execução.</div>
+</div>
+
+<div class="save-strip">
+  <button id="btn-download-bottom">Baixar Word preenchido</button>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="eyebrow" id="modal-section"></div>
+      <h3 id="modal-label"></h3>
+    </div>
+    <div class="modal-body">
+      <div id="modal-input-wrap"></div>
+      <div class="hint" style="margin-top:10px" id="modal-hint">Enter para nova linha - Ctrl/Cmd + Enter para salvar</div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="modal-clear">Limpar campo</button>
+      <div class="btns">
+        <button class="ghost" id="modal-cancel">Cancelar</button>
+        <button id="modal-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status" id="status"></div>
+
+<script>
+const STORAGE_KEY = 'planejamento-8-anos-v1';
+let META = null;
+let VALUES = {};
+let currentField = null;
+
+function loadValues() {
+  try { VALUES = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { VALUES = {}; }
+}
+function saveValues() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(VALUES));
+}
+
+function status(msg, kind='') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + kind;
+  clearTimeout(status._t);
+  status._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function fieldsBySection(sid) {
+  return META.fields.filter(f => f.section === sid);
+}
+
+function gridClass(n) {
+  if (n <= 1) return 'grid-1';
+  if (n === 2) return 'grid-2';
+  if (n === 3) return 'grid-3';
+  if (n === 4) return 'grid-4';
+  if (n === 5) return 'grid-5';
+  return 'grid-4';
+}
+
+function render() {
+  const wrap = document.getElementById('sections');
+  wrap.innerHTML = '';
+  let totalFilled = 0;
+  for (const sec of META.sections) {
+    const fields = fieldsBySection(sec.id);
+    if (!fields.length) continue;
+    const sectionFilled = fields.filter(f => (VALUES[f.id] || '').trim()).length;
+    totalFilled += sectionFilled;
+    const el = document.createElement('div');
+    el.className = 'section';
+    el.innerHTML = `
+      <div class="section-head">
+        <div>
+          <div class="title">${sec.title}</div>
+          <div class="subtitle">${sec.subtitle}</div>
+        </div>
+        <div class="progress">${sectionFilled}/${fields.length} preenchidos</div>
+      </div>
+      <div class="grid ${gridClass(Math.min(fields.length, 4))}" id="grid-${sec.id}"></div>
+    `;
+    wrap.appendChild(el);
+    const grid = el.querySelector(`#grid-${sec.id}`);
+    for (const f of fields) {
+      const val = (VALUES[f.id] || '').trim();
+      const card = document.createElement('div');
+      card.className = 'card' + (val ? ' filled' : '');
+      card.innerHTML = `
+        <div class="label">${escapeHtml(f.label)}</div>
+        ${val ? `<div class="value">${escapeHtml(val).replace(/\n/g,'<br>')}</div>` : `<div class="placeholder">Clique para preencher</div>`}
+        <div class="edit-hint">${val ? 'Clique para editar' : ''}</div>
+      `;
+      card.onclick = () => openModal(f);
+      grid.appendChild(card);
+    }
+  }
+  document.getElementById('stat-filled').textContent = `${totalFilled}/${META.fields.length}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function openModal(field) {
+  currentField = field;
+  document.getElementById('modal-label').textContent = field.label;
+  const sec = META.sections.find(s => s.id === field.section);
+  document.getElementById('modal-section').textContent = sec ? sec.title : '';
+  const wrap = document.getElementById('modal-input-wrap');
+  const val = VALUES[field.id] || '';
+  const isMulti = field.kind === 'multiline';
+  const isShort = field.kind === 'inline_short';
+  if (isMulti) {
+    wrap.innerHTML = `<textarea id="modal-input">${escapeHtml(val)}</textarea>`;
+    document.getElementById('modal-hint').textContent = 'Enter para nova linha - Ctrl/Cmd + Enter para salvar';
+  } else {
+    const maxlen = isShort ? 'maxlength="20"' : '';
+    wrap.innerHTML = `<input id="modal-input" type="text" ${maxlen} value="${escapeHtml(val)}" />`;
+    document.getElementById('modal-hint').textContent = 'Enter para salvar - Esc para cancelar';
+  }
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('modal-input').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  currentField = null;
+}
+
+function saveField() {
+  if (!currentField) return;
+  const val = document.getElementById('modal-input').value;
+  VALUES[currentField.id] = val;
+  saveValues();
+  render();
+  closeModal();
+  status('Salvo', 'ok');
+}
+
+document.getElementById('modal-cancel').onclick = closeModal;
+document.getElementById('modal-save').onclick = saveField;
+document.getElementById('modal-clear').onclick = () => {
+  if (!currentField) return;
+  delete VALUES[currentField.id];
+  saveValues();
+  render();
+  closeModal();
+  status('Campo limpo');
+};
+document.getElementById('modal').onclick = (e) => {
+  if (e.target.id === 'modal') closeModal();
+};
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('modal').classList.contains('show')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter') {
+    if (currentField && currentField.kind !== 'multiline') { e.preventDefault(); saveField(); }
+    else if ((e.ctrlKey || e.metaKey)) { e.preventDefault(); saveField(); }
+  }
+});
+
+document.getElementById('btn-reset').onclick = () => {
+  if (!confirm('Zerar todo o preenchimento? Não dá pra desfazer.')) return;
+  VALUES = {};
+  saveValues();
+  render();
+  status('Formulário zerado');
+};
+
+async function download() {
+  status('Gerando Word...');
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(VALUES),
+    });
+    if (!res.ok) throw new Error('erro ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const cd = res.headers.get('content-disposition') || '';
+    const m = cd.match(/filename="?([^"]+)"?/);
+    a.href = url;
+    a.download = m ? m[1] : 'planejamento-8-anos.docx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    status('Word baixado', 'ok');
+  } catch (e) {
+    console.error(e);
+    status('Erro ao gerar', 'err');
+  }
+}
+document.getElementById('btn-download').onclick = download;
+document.getElementById('btn-download-bottom').onclick = download;
+
+async function boot() {
+  loadValues();
+  const res = await fetch('/api/meta');
+  META = await res.json();
+  render();
+}
+boot();
+</script>
+</body>
+</html>

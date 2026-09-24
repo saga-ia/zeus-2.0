@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Turbo Max - Calendário</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  /* Calendar */
+  .cal-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .cal-nav h2 { font-size: 20px; font-weight: 700; flex: 1; }
+  .cal-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .cal-btn:hover { background: var(--surface2); }
+  .calendar { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-day-name { padding: 16px; text-align: center; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell { min-height: 120px; padding: 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; position: relative; }
+  .cal-cell:hover { background: var(--surface2); }
+  .cal-cell.today { background: rgba(124, 58, 237, 0.08); }
+  .cal-cell.other-month .cal-date { color: var(--muted); opacity: 0.4; }
+  .cal-date { font-size: 13px; font-weight: 600; margin-bottom: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .cal-cell.today .cal-date { background: var(--accent); color: white; }
+  .post-dot { font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-dot.scheduled { background: #7c3aed22; color: #a78bfa; }
+  .post-dot.published { background: #10b98122; color: #34d399; }
+  .post-dot.draft { background: #64748b22; color: #94a3b8; }
+  /* List view */
+  .post-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+  .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; }
+  .post-thumb { width: 56px; height: 56px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .post-info { flex: 1; }
+  .post-caption { font-size: 14px; margin-bottom: 6px; }
+  .post-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 12px; }
+  .post-actions { display: flex; gap: 8px; }
+  .btn-sm { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-sm:hover { background: var(--surface2); }
+  .btn-sm.danger { border-color: #ef444444; color: #ef4444; }
+  .btn-sm.danger:hover { background: #ef444420; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 48px; }
+  /* Filtros do calendário */
+  .cal-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .cal-filters .filtro { display: flex; flex-direction: column; gap: 6px; }
+  .cal-filters label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .cal-filters select { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px;
+    color: var(--text); font-size: 13px; outline: none; width: 100%; }
+  .cal-filters select:focus { border-color: var(--accent); }
+  .meta-atualizado { font-size: 11px; color: var(--muted); align-self: flex-end; margin-bottom: 4px; }
+  .view-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .tab { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+  /* Modal detalhes */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; max-width: 600px; width: 100%; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal-close-x { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .dm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+  .dm-cell { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; }
+  .dm-lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .dm-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+</style>
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12Z"/></svg></div>
+    <div class="logo-text">Agenda Turbo Max</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item" data-icon="dashboard" data-label="Dashboard"></a>
+  <a href="/calendar.html" class="nav-item active" data-icon="calendar" data-label="Calendário"></a>
+  <a href="/editor.html" class="nav-item" data-icon="compose" data-label="Novo Post"></a>
+  <a href="/bulk.html" class="nav-item" data-icon="bulk" data-label="Publicação em Massa"></a>
+  <a href="/analytics.html" class="nav-item" data-icon="analytics" data-label="Analytics"></a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item" data-icon="link" data-label="Conectar Perfis"></a>
+  <a href="/settings.html" class="nav-item" data-icon="settings" data-label="Configurações"></a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn" data-icon="logout" data-label="Sair"></a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Calendário</h1>
+    <a href="/editor.html" class="btn-primary">+ Novo Post</a>
+  </div>
+
+  <div class="view-tabs">
+    <button class="tab active" onclick="setView('calendar')">Calendário</button>
+    <button class="tab" onclick="setView('list')">Lista</button>
+  </div>
+
+  <!-- Filtros: conta, status e tipo -->
+  <div class="cal-filters">
+    <div class="filtro">
+      <label>Conta do Instagram</label>
+      <select id="fConta" onchange="loadPosts()">
+        <option value="">Todas as contas</option>
+      </select>
+    </div>
+    <div class="filtro">
+      <label>Status</label>
+      <select id="fStatus" onchange="loadPosts()">
+        <option value="">Todos</option>
+        <option value="scheduled">Agendada</option>
+        <option value="publishing">Em processamento</option>
+        <option value="published">Publicada</option>
+        <option value="failed">Falhou</option>
+        <option value="draft">Rascunho</option>
+        <option value="paused">Pausada</option>
+      </select>
+    </div>
+    <div class="filtro">
+      <label>Tipo</label>
+      <select id="fTipo" onchange="loadPosts()">
+        <option value="">Todos</option>
+        <option value="feed">Feed</option>
+        <option value="reel">Reels</option>
+        <option value="story">Stories</option>
+        <option value="carousel">Carrossel</option>
+      </select>
+    </div>
+    <div class="filtro" style="justify-content:flex-end">
+      <span class="meta-atualizado" id="calAtualizado"></span>
+      <button class="cal-btn" onclick="loadPosts()" title="Atualizar agora" style="padding:8px 12px">🔄</button>
+    </div>
+  </div>
+
+  <div id="calView">
+    <div class="cal-nav">
+      <button class="cal-btn" onclick="changeMonth(-1)">←</button>
+      <h2 id="calTitle"></h2>
+      <button class="cal-btn" onclick="changeMonth(1)">→</button>
+    </div>
+    <div class="calendar">
+      <div class="cal-header">
+        <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div><div class="cal-day-name">Ter</div>
+        <div class="cal-day-name">Qua</div><div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div><div class="cal-day-name">Sab</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <div id="listView" style="display:none">
+    <div id="postList" class="post-list"></div>
+  </div>
+</main>
+<script src="/js/icons.js"></script>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+let currentDate = new Date();
+let allPosts = [];
+let contas = [];
+let view = 'calendar';
+
+function setView(v) {
+  view = v;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (typeof event !== 'undefined' && event?.target) event.target.classList.add('active');
+  document.getElementById('calView').style.display = v === 'calendar' ? '' : 'none';
+  document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+  render();
+}
+
+async function loadContas() {
+  contas = (await API.get('/accounts')).filter(a => a.platform === 'instagram');
+  const sel = document.getElementById('fConta');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Todas as contas</option>' +
+    contas.map(c => `<option value="${c.id}">@${c.platform_username || c.platform_name || c.id}</option>`).join('');
+  sel.value = atual;
+}
+
+// Busca SEMPRE a janela do mês visível — antes o calendário carregava os 200
+// posts mais recentes uma única vez e navegar de mês não trazia nada novo.
+async function loadPosts() {
+  const y = currentDate.getFullYear(), m = currentDate.getMonth();
+  // margem de um mês para os dois lados: a lista usa o mesmo carregamento
+  const from = Math.floor(new Date(y, m - 1, 1).getTime() / 1000);
+  const to = Math.floor(new Date(y, m + 2, 0, 23, 59, 59).getTime() / 1000);
+
+  const q = new URLSearchParams({ from, to });
+  const conta = document.getElementById('fConta')?.value;
+  const status = document.getElementById('fStatus')?.value;
+  const tipo = document.getElementById('fTipo')?.value;
+  if (conta) q.set('account_id', conta);
+  if (status) q.set('status', status);
+  if (tipo) q.set('type', tipo);
+
+  const grid = document.getElementById('calGrid');
+  if (!allPosts.length) grid.innerHTML = uiLoading('Carregando agenda...');
+  try {
+    const r = await API.get('/schedule?' + q.toString());
+    if (r.error) throw new Error(r.error);
+    allPosts = r.eventos || [];
+    document.getElementById('calAtualizado').textContent = 'atualizado ' + tempoRelativo(r.atualizado_em);
+    render();
+  } catch (e) {
+    grid.innerHTML = uiError('Não consegui carregar a agenda: ' + e.message);
+  }
+}
+
+function render() {
+  renderCalendar();
+  if (view === 'list') renderList();
+}
+
+function changeMonth(dir) {
+  currentDate.setMonth(currentDate.getMonth() + dir);
+  loadPosts(); // busca o mês novo em vez de só redesenhar
+}
+
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('calTitle').textContent = `${months[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  const postsByDay = {};
+  allPosts.forEach(p => {
+    const ts = p.quando;
+    if (!ts) return;
+    const d = new Date(ts * 1000);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate();
+      (postsByDay[day] = postsByDay[day] || []).push(p);
+    }
+  });
+
+  const grid = document.getElementById('calGrid');
+  let html = '';
+
+  for (let i = 0; i < firstDay; i++) {
+    const d = daysInPrevMonth - firstDay + i + 1;
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    const dayPosts = postsByDay[d] || [];
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="location.href='/editor.html?date=${dateStr}'">
+      <div class="cal-date">${d}</div>
+      ${dayPosts.slice(0,3).map(p => renderDot(p)).join('')}
+      ${dayPosts.length > 3 ? `<div style="font-size:11px;color:var(--muted)">+${dayPosts.length-3}</div>` : ''}
+    </div>`;
+  }
+  const remaining = 42 - firstDay - daysInMonth;
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+  grid.innerHTML = html;
+}
+
+const ST_LABEL = {
+  draft:      ['Rascunho',        '#64748b'],
+  scheduled:  ['Agendada',        '#7c3aed'],
+  publishing: ['Em processamento','#f59e0b'],
+  published:  ['Publicada',       '#10b981'],
+  failed:     ['Falhou',          '#ef4444'],
+  partial:    ['Parcial',         '#f59e0b'],
+  paused:     ['Pausada',         '#64748b']
+};
+const TIPO_ICONE = { feed: '🖼️', reel: '🎬', story: '📲', carousel: '🎠' };
+
+function nomeConta(ids) {
+  if (!ids?.length) return '';
+  const nomes = ids.map(id => contas.find(c => c.id === id)?.platform_username).filter(Boolean);
+  if (!nomes.length) return '';
+  return nomes.length > 1 ? `@${nomes[0]} +${nomes.length - 1}` : `@${nomes[0]}`;
+}
+function corConta(ids) {
+  // cor estável por conta, para distinguir visualmente quando vê "todas"
+  const id = ids?.[0];
+  if (!id) return 'var(--muted)';
+  const cores = ['#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#14b8a6'];
+  return cores[id % cores.length];
+}
+
+function renderDot(p) {
+  const [label, cor] = ST_LABEL[p.status] || [p.status, '#64748b'];
+  const txt = p.origem === 'campanha' ? (p.media_name || p.titulo || 'campanha') : (p.caption || p.titulo || 'post');
+  const hora = new Date(p.quando * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const tip = `${hora} · ${label} · ${nomeConta(p.account_ids)} · ${String(txt).slice(0, 60)}`;
+  return `<div class="post-dot" style="border-left:3px solid ${corConta(p.account_ids)};background:${cor}22;color:${cor}"
+      title="${tip.replace(/"/g,'&quot;')}"
+      onclick="event.stopPropagation();openEvento('${p.id}')">
+      ${TIPO_ICONE[p.tipo] || ''} ${hora} ${String(txt).slice(0,14)}</div>`;
+}
+
+function renderList() {
+  const sorted = [...allPosts].sort((a,b) => (b.quando||0) - (a.quando||0));
+  const el = document.getElementById('postList');
+  if (!sorted.length) {
+    el.innerHTML = uiEmpty('Nenhuma publicação nos filtros selecionados.',
+      '<a href="/editor.html" style="color:var(--accent)">Criar post →</a>');
+    return;
+  }
+  el.innerHTML = sorted.map(p => {
+    const [label, cor] = ST_LABEL[p.status] || [p.status, '#64748b'];
+    const txt = p.origem === 'campanha' ? (p.media_name || 'mídia da campanha') : (p.caption || '(sem legenda)');
+    return `
+    <div class="post-card">
+      <div class="post-thumb">${TIPO_ICONE[p.tipo] || '🖼️'}</div>
+      <div class="post-info">
+        <div class="post-caption">${esc(String(txt).slice(0,100))}${String(txt).length>100?'...':''}</div>
+        <div class="post-meta">
+          <span style="background:${cor}22;color:${cor};padding:2px 10px;border-radius:20px;font-weight:600">${label}</span>
+          <span>${formatDate(p.quando)}</span>
+          <span style="color:${corConta(p.account_ids)}">${nomeConta(p.account_ids) || '—'}</span>
+          ${p.origem === 'campanha' ? `<span style="color:var(--muted)">campanha: ${esc(p.titulo)}</span>` : ''}
+        </div>
+        ${p.error_message ? `<div style="color:#ef4444;font-size:11px;margin-top:4px">${esc(p.error_message.slice(0,120))}</div>` : ''}
+      </div>
+      <div class="post-actions">
+        ${p.origem === 'campanha'
+          ? `<button class="btn-sm" onclick="location.href='/bulk.html'">Ver campanha</button>`
+          : (p.status === 'published' || p.status === 'partial'
+              ? `<button class="btn-sm" onclick="openDetailsModal(${p.post_id})">Ver detalhes</button>`
+              : `<button class="btn-sm" onclick="location.href='/editor.html?id=${p.post_id}'">Editar</button>`)}
+        ${p.origem === 'post' ? `<button class="btn-sm danger" onclick="deletePost(${p.post_id})">Excluir</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openEvento(id) {
+  const p = allPosts.find(e => String(e.id) === String(id));
+  if (!p) return;
+  if (p.origem === 'campanha') { location.href = '/bulk.html'; return; }
+  if (p.status === 'published' || p.status === 'partial') openDetailsModal(p.post_id);
+  else location.href = '/editor.html?id=' + p.post_id;
+}
+
+async function openDetailsModal(id) {
+  const p = await API.get('/analytics/post/' + id);
+  if (p.error) return alert(p.error);
+  const r = p.results?.[0];
+  const m = r?.analytics || {};
+  const fmt = n => (n||0).toLocaleString('pt-BR');
+  document.getElementById('detailsBody').innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:6px">Detalhes da publicação</h2>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
+      @${r?.platform_username || ''} · ${r?.published_at ? new Date(r.published_at*1000).toLocaleString('pt-BR') : ''}
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:14px;line-height:1.6;max-height:200px;overflow-y:auto;white-space:pre-wrap">${(p.caption||'').replace(/[<>]/g,'')}</div>
+    <div class="dm-grid">
+      <div class="dm-cell"><div class="dm-lbl">Alcance</div><div class="dm-val">${fmt(m.reach)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Views</div><div class="dm-val">${fmt(m.views)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Impressões</div><div class="dm-val">${fmt(m.impressions)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Curtidas</div><div class="dm-val">${fmt(m.likes)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Comentários</div><div class="dm-val">${fmt(m.comments)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Salvos</div><div class="dm-val">${fmt(m.saves)}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      ${m.permalink
+        ? `<a href="${m.permalink}" target="_blank" class="btn-primary" style="flex:1;text-align:center;text-decoration:none;padding:12px 16px;border-radius:10px">🔗 Abrir no Instagram</a>`
+        : `<div style="flex:1;color:var(--muted);font-size:13px;text-align:center;padding:12px">Link nativo aparece após próxima coleta</div>`}
+      <button class="btn-sm" onclick="closeDetailsModal()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('detailsModal').classList.add('open');
+}
+function closeDetailsModal() { document.getElementById('detailsModal').classList.remove('open'); }
+
+async function deletePost(id) {
+  if (!confirm('Excluir este post?')) return;
+  await API.del('/posts/' + id);
+  Live.invalidate(); // atualiza esta tela e sinaliza as outras abas
+}
+
+(async () => {
+  await loadContas();
+  await loadPosts();
+  Live.start(loadPosts, 60000); // atualiza ao focar a aba e a cada 60s
+})();
+</script>
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-box">
+    <button class="modal-close-x" onclick="closeDetailsModal()">✕</button>
+    <div id="detailsBody"></div>
+  </div>
+</div>
+<script>
+document.getElementById('detailsModal').addEventListener('click', e => {
+  if (e.target.id === 'detailsModal') closeDetailsModal();
+});
+</script>
+<script>
+// Menu lateral em gaveta no celular
+(function () {
+  var b = document.getElementById('menuToggle');
+  var bd = document.getElementById('sidebarBackdrop');
+  var sb = document.querySelector('.sidebar');
+  if (!b || !sb) return;
+  function fechar() { sb.classList.remove('open'); bd.classList.remove('open'); }
+  b.addEventListener('click', function () {
+    sb.classList.toggle('open'); bd.classList.toggle('open');
+  });
+  bd.addEventListener('click', fechar);
+  sb.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', fechar); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+})();
+</script>
+</body>
+</html>

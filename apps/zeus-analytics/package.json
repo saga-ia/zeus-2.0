@@ -1,0 +1,26 @@
+{
+  "name": "zeus-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Analise IA de conversas WhatsApp multi-tenant. Complementar ao Zeus.",
+  "main": "api/index.js",
+  "scripts": {
+    "migrate": "node db/migrate.js",
+    "api": "node api/index.js",
+    "worker": "node worker/index.js",
+    "analyzer": "node analyzer/index.js",
+    "notifier": "node analyzer/notifier.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "puppeteer": "^23.0.0",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}

@@ -1,0 +1,26 @@
+services:
+  omniroute:
+    image: diegosouzapw/omniroute:latest
+    container_name: jeff-omniroute
+    restart: unless-stopped
+    stop_grace_period: 40s
+    ports:
+      - "127.0.0.1:20128:20128"
+    volumes:
+      - omniroute-data:/app/data
+    environment:
+      NODE_ENV: production
+      PORT: "20128"
+    networks:
+      - default
+      - npm
+
+volumes:
+  omniroute-data:
+    name: jeff-omniroute-data
+
+networks:
+  default:
+  npm:
+    name: labastia-setup_labastia
+    external: true

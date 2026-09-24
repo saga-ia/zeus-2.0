@@ -40,4 +40,70 @@
       btn.textContent = 'Entrar';
     }
   });
+
+  const modal = document.getElementById('changePwModal');
+  const openBtn = document.getElementById('openChangePw');
+  const closeBtn = document.getElementById('closeChangePw');
+  const cpForm = document.getElementById('changePwForm');
+  const cpBtn = document.getElementById('cpSubmitBtn');
+  const cpErr = document.getElementById('cpErrorBox');
+  const cpOk = document.getElementById('cpOkBox');
+
+  function openModal() {
+    cpErr.classList.add('hidden');
+    cpOk.classList.add('hidden');
+    cpForm.reset();
+    const currentUser = document.getElementById('username').value;
+    if (currentUser) document.getElementById('cp_username').value = currentUser;
+    modal.classList.remove('hidden');
+  }
+  function closeModal() { modal.classList.add('hidden'); }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  cpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    cpErr.classList.add('hidden');
+    cpOk.classList.add('hidden');
+    cpBtn.disabled = true;
+    cpBtn.textContent = 'Salvando...';
+    const data = new FormData(cpForm);
+    try {
+      const resp = await fetch('/auth/change-password', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          username: data.get('username'),
+          currentPassword: data.get('currentPassword'),
+          newPassword: data.get('newPassword'),
+        }),
+      });
+      if (resp.status === 401) {
+        cpErr.textContent = 'Usuário ou senha atual incorretos.';
+        cpErr.classList.remove('hidden');
+        return;
+      }
+      if (resp.status === 400) {
+        cpErr.textContent = 'Nova senha inválida (mínimo 8 caracteres).';
+        cpErr.classList.remove('hidden');
+        return;
+      }
+      if (!resp.ok) {
+        cpErr.textContent = `Erro ${resp.status} ao alterar senha.`;
+        cpErr.classList.remove('hidden');
+        return;
+      }
+      cpOk.classList.remove('hidden');
+      cpForm.reset();
+    } catch (e) {
+      cpErr.textContent = 'Falha de rede.';
+      cpErr.classList.remove('hidden');
+    } finally {
+      cpBtn.disabled = false;
+      cpBtn.textContent = 'Salvar';
+    }
+  });
 })();

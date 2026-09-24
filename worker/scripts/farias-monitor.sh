@@ -109,7 +109,7 @@ check_new_messages() {
   rows=$(sqlite3 "$DB" "SELECT id, type, COALESCE(body,''), timestamp
     FROM messages
     WHERE chat_id='$FARIAS_GROUP'
-      AND author_name='$FARIAS_NAME'
+      AND LOWER(author_name)=LOWER('$FARIAS_NAME')
       AND from_me=0
       AND id > $last_id
     ORDER BY id ASC;")

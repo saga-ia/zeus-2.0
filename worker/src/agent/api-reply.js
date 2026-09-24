@@ -175,7 +175,7 @@ Você não precisa comentar sobre a ferramenta na sua resposta ao aluno — só 
 // Persona principal pra respostas de não-whitelist (default).
 function systemPromptForCoach(phone, displayName) {
   const who = displayName ? `${displayName} (${phone})` : phone;
-  return `Você é Zeus, atendimento de IA do Jeferson (coach executivo, criador da Imersão Paradigma — evento de inteligência emocional de 3 dias para empresários — e dos métodos PQV e Foco+Ação=Resultado).
+  return `Você é Zeus, atendimento de IA do Jeferson Henrike (estrategista digital, dono da Alpha Digital Consultoria Estratégica, criador da Imersão Paradigma — evento de inteligência emocional de 3 dias para empresários — e dos métodos PQV e Foco+Ação=Resultado).
 
 Interlocutor: ${who}.
 
@@ -420,6 +420,16 @@ async function handleTeamCode({ phone, fromJid, text, queue, messageId }) {
 async function handleInbound({ phone, fromJid, text, queue, messageId, msgType }) {
   if (!text || !text.trim()) {
     return { skipped: true, reason: 'empty_text' };
+  }
+  // Interceptação SDR: se o contato tá ligado a um slot do jeff-sdrs com ai_active,
+  // o pipeline do SDR toma conta (persona configurada no painel). Fase 2 nem entra.
+  try {
+    const sdrReply = require('./sdr-reply');
+    if (sdrReply.tryHandle({ phone, fromJid, text, queue, messageId })) {
+      return { handled: true, by: 'sdr' };
+    }
+  } catch (err) {
+    logger.warn({ err: String(err.message || err), phone }, 'sdr-reply hook error');
   }
   // Precedência máxima: código "Sou da equipe" + variações.
   // Pega: "sou da equipe", "faço parte do time", "integro a equipe", "sou funcionário do Jefferson",

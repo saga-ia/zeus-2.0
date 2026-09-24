@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+// CLI do Estrategista de Growth IA: lê a mídia paga real (Meta Ads) pelas mesmas funções do dashboard. Só leitura.
+// Uso: growth <comando> [conta] [--periodo 7d|14d|30d|90d|mes|mes_passado] [--de AAAA-MM-DD --ate AAAA-MM-DD]
+const g = require('../growth-data');
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] }; for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) o[a.slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; else o._.push(a); }
+const brl = (v) => 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const n = (v) => Math.round(Number(v) || 0).toLocaleString('pt-BR');
+const p = (v) => (Number(v) || 0).toFixed(2).replace('.', ',') + '%';
+const d = (v) => (v >= 0 ? '+' : '') + (Number(v) || 0).toFixed(0) + '%';
+const q = () => ({ preset: o.periodo || '30d', since: o.de, until: o.ate });
+
+async function conta() {
+  const { accounts, default_id } = await g.listAccounts(); const t = o._.join(' ').trim().toLowerCase();
+  if (!t) return accounts.find((a) => a.id === default_id) || accounts[0];
+  const hit = accounts.find((a) => a.id === t.replace(/^act_/, '')) || accounts.find((a) => a.name.toLowerCase() === t) || accounts.find((a) => a.name.toLowerCase().includes(t));
+  if (!hit) throw new Error('conta "' + t + '" não encontrada. Rode: growth contas');
+  return hit;
+}
+const linha = (m) => `invest ${brl(m.spend)} | impr ${n(m.impressions)} | alcance ${n(m.reach)} | cliques ${n(m.clicks)} | CTR ${p(m.ctr)} | CPC ${brl(m.cpc)} | CPM ${brl(m.cpm)} | leads ${n(m.leads)}${m.leads ? ' (CPL ' + brl(m.cpl) + ')' : ''} | conversas ${n(m.conversas)}${m.conversas ? ' (' + brl(m.custo_conversa) + ' cada)' : ''} | compras ${n(m.compras)}${m.compras ? ' (CPA ' + brl(m.cpa) + ', ROAS ' + m.roas.toFixed(2) + ')' : ''}`;
+
+const AJUDA = `Comandos (só leitura, dados reais da Meta Ads, cache de 10 min):
+  contas                         lista as contas de anúncio acessíveis (id, nome, grupo)
+  resumo [conta]                 totais do período, variação contra o período anterior, saúde, funil e recomendações
+  campanhas [conta]              todas as campanhas com objetivo, status e métricas, ordenadas por investimento
+  objetivos [conta]              investimento e resultado agrupados por objetivo
+  anuncios [conta] [--top 20]    anúncios por investimento, com conjunto e campanha
+  serie [conta]                  números dia a dia
+  publico [conta]                idade, gênero e regiões
+  json [conta]                   tudo em JSON (para análises cruzadas)
+  google                         estado da integração com Google Ads
+[conta] = id, nome ou parte do nome (sem nada, usa a conta padrão). Período: --periodo 7d|14d|30d|90d|mes|mes_passado ou --de/--ate.`;
+
+(async () => {
+  if (!cmd || cmd === 'ajuda') return console.log(AJUDA);
+  if (cmd === 'google') return console.log(JSON.stringify(g.googleStatus(), null, 2));
+  if (cmd === 'contas') { const r = await g.listAccounts(); r.accounts.forEach((a) => console.log(`${a.id}  ${a.name}  [${a.group}]  ${a.currency}${a.active ? '' : '  (inativa)'}${a.id === r.default_id ? '  <- padrão' : ''}`)); r.avisos.forEach((a) => console.log('AVISO: ' + a)); return; }
+  const c = await conta(), x = await g.metaDashboard(c.id, q());
+  const cab = `${x.conta.name} (act_${x.conta.id}) | ${x.periodo.label}: ${x.periodo.since} a ${x.periodo.until} | moeda ${x.conta.currency}`;
+  if (cmd === 'json') return console.log(JSON.stringify(x));
+  console.log(cab);
+  if (cmd === 'resumo') {
+    console.log('TOTAL: ' + linha(x.total) + ' | frequência ' + x.total.frequency.toFixed(2));
+    console.log('PERÍODO ANTERIOR (' + x.periodo.prev.since + ' a ' + x.periodo.prev.until + '): ' + linha(x.anterior));
+    console.log('VARIAÇÃO: ' + Object.entries(x.delta).map(([k, v]) => k + ' ' + d(v)).join(' | '));
+    console.log('SAÚDE: ' + x.saude.score + '/100' + (x.saude.motivos.length ? ' (' + x.saude.motivos.join('; ') + ')' : ''));
+    console.log('FUNIL: ' + x.funil.map((f) => f.etapa + ' ' + n(f.valor)).join(' > '));
+    console.log('POR OBJETIVO: ' + x.por_objetivo.map((b) => `${b.objetivo} ${brl(b.spend)} (${b.campanhas} camp.)`).join(' | '));
+    x.recomendacoes.forEach((r) => console.log(`REC [${r.p}]: ${r.t}`));
+  } else if (cmd === 'campanhas') x.campanhas.forEach((k) => console.log(`- [${k.status || '?'}] ${k.name} | ${k.objetivo}${k.orcamento_diario ? ' | orçamento/dia ' + brl(k.orcamento_diario) : ''} | ${linha(k)}`));
+  else if (cmd === 'objetivos') x.por_objetivo.forEach((b) => console.log(`- ${b.objetivo}: ${b.campanhas} campanha(s) | invest ${brl(b.spend)} (${((b.spend / (x.total.spend || 1)) * 100).toFixed(0)}%) | cliques ${n(b.clicks)} | leads ${n(b.leads)} | conversas ${n(b.conversas)} | compras ${n(b.compras)}`));
+  else if (cmd === 'anuncios') x.anuncios.slice(0, parseInt(o.top, 10) || 20).forEach((a) => console.log(`- ${a.name} | conjunto: ${a.adset} | campanha: ${a.campanha} | ${linha(a)}`));
+  else if (cmd === 'serie') x.serie.forEach((s) => console.log(`${s.data} | invest ${brl(s.spend)} | impr ${n(s.impressions)} | cliques ${n(s.clicks)} | leads ${n(s.leads)} | conversas ${n(s.conversas)} | compras ${n(s.compras)}`));
+  else if (cmd === 'publico') { const t = (nome, rows) => { console.log(nome + ':'); rows.forEach((r) => console.log(`  ${r.chave} | invest ${brl(r.spend)} | alcance ${n(r.reach)} | cliques ${n(r.clicks)} | leads ${n(r.leads)}`)); }; t('IDADE', x.idade); t('GÊNERO', x.genero); t('REGIÕES (top 12 por alcance)', x.regioes); }
+  else console.log(AJUDA);
+})().catch((e) => { console.error('ERRO: ' + e.message); process.exit(1); });

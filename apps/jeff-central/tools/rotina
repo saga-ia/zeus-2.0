@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+// CLI das Rotinas: o ZEUS usa no chat pra criar, listar, pausar e excluir rotinas agendadas (tela /rotinas).
+// O agendador vive no servidor da central e lê o banco a cada 30 s: o que for criado aqui já entra na fila.
+// Uso: rotina <comando> [args]   (rode "rotina ajuda")
+const rot = require('../rotinas');
+const [cmd, ...rest] = process.argv.slice(2);
+
+const AJUDA = `Comandos:
+  listar                         todas as rotinas com frequência, entrega, próxima e última execução
+  ver <id>                       detalhes e últimas 10 execuções
+  criar '<json>'                 cria uma rotina. Campos:
+      name (obrigatório), prompt (obrigatório: o pedido completo, como se fosse no chat),
+      freq: diaria | semanal | mensal | horas | unica   (padrão diaria)
+      hora: "HH:MM" em Brasília (diaria/semanal/mensal; padrão 08:00)
+      dias: [1..7] com 1 = segunda ... 7 = domingo (só semanal)
+      dia_mes: 1..28 (só mensal)   cada_horas: 1..168 (só horas)   quando: "AAAA-MM-DDTHH:MM" em Brasília (só unica)
+      entrega: chat | whatsapp | email (padrão chat)   destino: número com DDD (whatsapp) ou e-mail (email)
+      agent_id: id de um agente (opcional)   skill_id: id de uma habilidade (opcional)   enabled: true/false
+      tools: ferramentas liberadas, lista com ids entre: atividades, financeiro, google_agenda, gmail, drive, meta_ads, instagram, whatsapp, internet, contratos, central
+  editar <id> '<json>'           altera só os campos informados
+  pausar <id> | ativar <id>      liga ou desliga
+  excluir <id>                   remove a rotina e o histórico dela
+Exemplo: rotina criar '{"name":"Resumo do dia","prompt":"Monte meu resumo do dia com as tarefas do ClickUp que vencem hoje e a agenda.","freq":"diaria","hora":"07:30","entrega":"whatsapp","destino":"81999998888"}'
+Depois de criar, confirme pro usuário o nome, quando roda (em Brasília) e onde entrega, e diga que ele pode ajustar em /rotinas.`;
+
+const fmt = (ms) => ms ? new Date(ms).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+const DIAS = { 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sáb', 7: 'dom' };
+function quando(r) {
+  if (r.freq === 'diaria') return `todo dia às ${r.hora}`;
+  if (r.freq === 'semanal') return `${(r.dias || []).map(d => DIAS[d]).join(', ')} às ${r.hora}`;
+  if (r.freq === 'mensal') return `todo dia ${r.dia_mes} às ${r.hora}`;
+  if (r.freq === 'horas') return `a cada ${r.cada_horas} h`;
+  if (r.freq === 'unica') return `uma vez em ${String(r.quando || '').replace('T', ' ')}`;
+  return r.freq;
+}
+function linha(r) {
+  return `${r.id}  ${r.enabled ? 'ativa ' : 'pausada'}  "${r.name}"  | ${quando(r)} | entrega ${r.entrega}${r.destino ? ' → ' + r.destino : ''}${r.agent_id ? ' | agente ' + r.agent_id : ''}${r.skill_id ? ' | habilidade ' + r.skill_id : ''} | próxima ${fmt(r.next_run_at)} | última ${r.last_run_at ? fmt(r.last_run_at) + ' (' + r.last_status + ')' : 'nunca'}`;
+}
+function json(s) { try { return JSON.parse(s); } catch (e) { throw new Error('JSON inválido: ' + e.message); } }
+
+try {
+  if (!cmd || cmd === 'ajuda') { console.log(AJUDA); process.exit(0); }
+  if (cmd === 'listar') { const l = rot.listar(); if (!l.length) console.log('Nenhuma rotina cadastrada.'); l.forEach(r => console.log(linha(r))); process.exit(0); }
+  if (cmd === 'ver') { const r = rot.listar().find(x => x.id === rest[0]); if (!r) throw new Error('rotina não encontrada'); console.log(linha(r)); console.log('Pedido: ' + r.prompt); rot.execucoes(r.id, 10).forEach(x => console.log(`  ${fmt(x.started_at)}  ${x.status}${x.error ? '  ' + x.error : ''}${x.preview ? '  | ' + x.preview.replace(/\s+/g, ' ').slice(0, 140) : ''}`)); process.exit(0); }
+  if (cmd === 'criar') { const r = rot.criar(json(rest.join(' '))); console.log('Criada: ' + linha(r)); process.exit(0); }
+  if (cmd === 'editar') { const r = rot.atualizar(rest[0], json(rest.slice(1).join(' '))); console.log('Atualizada: ' + linha(r)); process.exit(0); }
+  if (cmd === 'pausar' || cmd === 'ativar') { const r = rot.ativar(rest[0], cmd === 'ativar'); console.log((cmd === 'ativar' ? 'Ativada: ' : 'Pausada: ') + linha(r)); process.exit(0); }
+  if (cmd === 'excluir') { rot.excluir(rest[0]); console.log('Excluída.'); process.exit(0); }
+  console.error('comando desconhecido: ' + cmd + '\n' + AJUDA); process.exit(1);
+} catch (e) { console.error('Erro: ' + e.message); process.exit(1); }

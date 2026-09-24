@@ -7,11 +7,13 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const Database = require('better-sqlite3');
 const agents = require('./agents');
+const claudeSpawn = require('./claude-spawn');
+const zeusContext = require('./zeus-context');
 
 const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data');
 const WORKDIR_ROOT = path.join(DATA_DIR, 'team-workdir');
 const DB_PATH = path.join(DATA_DIR, 'central.db');
-const CLAUDE_BIN = process.env.CLAUDE_BIN || '/root/.nvm/versions/node/v20.20.2/bin/claude';
+const CLAUDE_BIN = claudeSpawn.CLAUDE_BIN;
 const STEP_TIMEOUT_MS = parseInt(process.env.TEAM_STEP_TIMEOUT_MS || String(10 * 60 * 1000), 10);
 const MIN_AGENTS = 2;
 const MAX_AGENTS = 8;
@@ -22,6 +24,24 @@ const HANDOFF_CHARS = 12000;
 const NO_TOOLS = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Task', 'Agent'];
 
 if (!fs.existsSync(WORKDIR_ROOT)) fs.mkdirSync(WORKDIR_ROOT, { recursive: true });
+
+// Mesmo contexto da plataforma que o chat recebe (data/zeus-workdir/CLAUDE.md: telas, agentes, ferramentas do
+// servidor, regras). As execuções rodam em team-workdir/<run>/, então o CLAUDE.md entra por link no diretório pai.
+function ensurePlatformContext() {
+  try {
+    zeusContext.ensureContext();
+    const link = path.join(WORKDIR_ROOT, 'CLAUDE.md');
+    let ok = false;
+    try { ok = fs.lstatSync(link).isSymbolicLink() && fs.readlinkSync(link) === zeusContext.CTX_FILE; } catch (_) {}
+    if (!ok) { try { fs.rmSync(link, { force: true }); } catch (_) {} fs.symlinkSync(zeusContext.CTX_FILE, link); }
+  } catch (e) { console.error('[teams] contexto da plataforma:', e.message); }
+}
+ensurePlatformContext();
+
+// Trechos da base de conhecimento da empresa relevantes pra tarefa (mesmo RAG do chat). Vazio se não houver resultado.
+function knowledgeFor(text) {
+  try { return require('./knowledge').retrieve(text, { limit: 6, maxChars: 9000 }); } catch (e) { console.error('[teams] base de conhecimento:', e.message); return ''; }
+}
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -225,9 +245,12 @@ function runClaude(runId, prompt, opts, onToken) {
       fs.writeFileSync(spFile, opts.system);
       args.push('--append-system-prompt-file', spFile);
     }
-    if (opts.model) args.push('--model', opts.model);
+    // Sempre explícito (ver chat.js). Agente da equipe sem modelo marcado usa o padrão dos agentes (Sonnet);
+    // planejador e consolidador usam o modelo da equipe ou o do Zeus principal.
+    args.push('--model', opts.model || (opts.isAgent ? claudeSpawn.agentDefaultModel() : claudeSpawn.DEFAULT_MODEL));
+    args.push(...claudeSpawn.commonArgs()); // esforço explícito, MCPs desligados
     if (opts.noTools) args.push('--disallowedTools', NO_TOOLS.join(' '));
-    const proc = spawn(CLAUDE_BIN, args, { cwd: workdir, stdio: ['pipe', 'pipe', 'pipe'] });
+    const proc = spawn(CLAUDE_BIN, args, { cwd: workdir, stdio: ['pipe', 'pipe', 'pipe'], env: claudeSpawn.claudeEnv() });
     if (ctl) ctl.procs.add(proc);
     let buf = '', text = '', err = '', timedOut = false;
     const timer = setTimeout(() => { timedOut = true; try { proc.kill('SIGTERM'); } catch (_) {} }, STEP_TIMEOUT_MS);
@@ -338,6 +361,8 @@ function parsePlan(txt, roster) {
 
 function agentTaskPrompt(team, request, history, plan, task, prior) {
   const out = [];
+  const kb = knowledgeFor(request + '\n' + task);
+  if (kb) out.push(kb, '');
   if (history) out.push(history);
   out.push(`Você faz parte da equipe "${team.name}", coordenada por um orquestrador.`);
   if (team.objective) out.push('Objetivo da equipe: ' + team.objective);
@@ -350,6 +375,7 @@ function agentTaskPrompt(team, request, history, plan, task, prior) {
   }
   out.push('', '=== SUA TAREFA ===', task);
   out.push('', 'Entregue só a sua parte, completa e pronta para uso. Não faça perguntas ao usuário nesta etapa: se faltar informação, assuma premissas razoáveis e deixe-as explícitas no início.');
+  out.push('Trabalhe como o agente que você é: aplique as suas habilidades ativas (inclusive invocando as skills instaladas quando indicado) e priorize a sua base de conhecimento e os trechos da base da empresa acima sobre conhecimento genérico, citando o documento quando usar.');
   return out.join('\n');
 }
 
@@ -407,6 +433,7 @@ async function orchestrate(runId, request) {
 
   try {
     setRun('running');
+    ensurePlatformContext(); // CLAUDE.md da plataforma atualizado (agentes, habilidades, conhecimento, ferramentas)
     addStep(runId, turn, seq++, 'user', { content: request, status: 'done' });
     if (!run.title || run.title === 'Nova execução') {
       stmt.runTitle.run(request.trim().replace(/\s+/g, ' ').slice(0, 60), runId);
@@ -454,7 +481,7 @@ async function orchestrate(runId, request) {
         const ctx = agents.buildAgentSystemPrompt(x.agent.id);
         const pump = tokenPump(runId, x.stepId);
         const r = await runClaude(runId, agentTaskPrompt(team, request, history, plan, x.t.tarefa, prior),
-          { system: ctx && ctx.text, model: ctx && ctx.model }, t => pump.push(t));
+          { system: ctx && ctx.text, model: ctx && ctx.model, isAgent: true }, t => pump.push(t));
         pump.end();
         if (r.canceled) { finishStep(runId, x.stepId, r.text || '', 'canceled'); return null; }
         if (r.error && !r.text) { finishStep(runId, x.stepId, '[falhou] ' + r.error, 'error'); return { name: x.agent.name, task: x.t.tarefa, error: r.error }; }

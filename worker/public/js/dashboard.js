@@ -313,6 +313,54 @@
     }
   });
 
+  // Pairing code (alternativa ao QR)
+  const pairToggleBtn = document.getElementById('pairToggleBtn');
+  const pairForm = document.getElementById('pairForm');
+  const pairPhone = document.getElementById('pairPhone');
+  const pairSubmitBtn = document.getElementById('pairSubmitBtn');
+  const pairMsg = document.getElementById('pairMsg');
+  const pairCodeBox = document.getElementById('pairCodeBox');
+  const pairCode = document.getElementById('pairCode');
+
+  if (pairToggleBtn) {
+    pairToggleBtn.addEventListener('click', () => {
+      pairForm.classList.toggle('hidden');
+    });
+  }
+  if (pairSubmitBtn) {
+    pairSubmitBtn.addEventListener('click', async () => {
+      const phone = (pairPhone.value || '').replace(/\D+/g, '');
+      if (phone.length < 8) {
+        pairMsg.textContent = 'Informe o número com DDI (ex: 5511999999999).';
+        return;
+      }
+      pairSubmitBtn.disabled = true;
+      pairMsg.textContent = 'Gerando código...';
+      pairCodeBox.classList.add('hidden');
+      try {
+        const r = await fetch('/pair', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          pairMsg.textContent = 'Erro: ' + (data.hint || data.message || data.error || `HTTP ${r.status}`);
+          return;
+        }
+        const c = String(data.code || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        pairCode.textContent = c.length === 8 ? c.slice(0, 4) + '-' + c.slice(4) : c;
+        pairCodeBox.classList.remove('hidden');
+        pairMsg.textContent = 'Código válido por poucos minutos. Se expirar, gere outro.';
+      } catch (e) {
+        pairMsg.textContent = 'Erro: ' + e.message;
+      } finally {
+        pairSubmitBtn.disabled = false;
+      }
+    });
+  }
+
   // Initial + polling
   tickStatus();
   tickStats();

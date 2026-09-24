@@ -118,7 +118,8 @@ case "$cmd" in
     sqlite3 -json "$DB" "SELECT task_id, name, status, due_date, list_name, assignees_json, url FROM clickup_tasks_cache WHERE status_type != 'closed' AND due_date IS NOT NULL AND due_date < ${NOW_MS} ORDER BY due_date ASC" ;;
   assigned)
     [ -z "${2:-}" ] && { echo '{"error":"usage: assigned <user_id>"}'; exit 1; }
-    sqlite3 -json "$DB" "SELECT task_id, name, status, due_date, list_name, url FROM clickup_tasks_cache WHERE status_type != 'closed' AND assignees_json LIKE '%\"id\":${2}%' ORDER BY due_date ASC NULLS LAST" ;;
+    # assignees_json é gravado com espaço depois dos dois pontos ("id": 123); o LIKE aceita as duas formas
+    sqlite3 -json "$DB" "SELECT task_id, name, status, due_date, list_name, url FROM clickup_tasks_cache WHERE status_type != 'closed' AND (assignees_json LIKE '%\"id\": ${2},%' OR assignees_json LIKE '%\"id\":${2},%' OR assignees_json LIKE '%\"id\": ${2}}%' OR assignees_json LIKE '%\"id\":${2}}%') ORDER BY due_date ASC NULLS LAST" ;;
   recent-chase)
     [ -z "${2:-}" ] && { echo '{"error":"usage: recent-chase <user_id> [hours=24]"}'; exit 1; }
     HOURS="${3:-24}"

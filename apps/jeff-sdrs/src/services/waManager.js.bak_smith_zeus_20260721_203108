@@ -1,0 +1,769 @@
+'use strict';
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
+const QRCode = require('qrcode');
+const { db, TOTAL_SLOTS } = require('../db');
+const crmSync = require('./crmSync');
+const debouncer = require('./inboundDebouncer');
+const aiPipeline = require('./aiPipeline');
+
+const SESSIONS_DIR = path.join(__dirname, '..', '..', 'sessions');
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function slotSessionDir(slot) {
+  return path.join(SESSIONS_DIR, `session-slot-${slot}`);
+}
+
+async function killChromeForSlot(slot) {
+  const dir = slotSessionDir(slot);
+  try {
+    execSync(`pkill -f "user-data-dir=${dir}"`, { stdio: 'ignore' });
+  } catch {}
+  await sleep(600);
+  for (const f of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
+    try { fs.unlinkSync(path.join(dir, f)); } catch {}
+  }
+}
+
+const clients = new Map();
+const runtimeStatus = new Map();
+
+// Mapeia chatId -> hostSlot pra o pipeline conseguir enviar via cliente correto.
+const chatHostSlot = new Map();
+
+// Registra processor do debouncer 1x
+let _processorRegistered = false;
+function ensureAIProcessorRegistered() {
+  if (_processorRegistered) return;
+  _processorRegistered = true;
+  debouncer.setProcessor(async (slot, chatId, msgs) => {
+    const hostSlot = chatHostSlot.get(chatId) || resolveHostSlotFor(slot);
+    const client = clients.get(hostSlot);
+    if (!client || runtimeStatus.get(hostSlot) !== 'ready') {
+      console.warn(`[ai] host slot ${hostSlot} nao pronto, drop`);
+      return;
+    }
+    const send = async (cid, text) => {
+      // small typing indicator best-effort
+      try { const chat = await client.getChatById(cid); if (chat && chat.sendStateTyping) await chat.sendStateTyping(); } catch {}
+      // Detecta tags de midia no texto do LLM: [[SEND_LINK]], [[SEND_FILE]], [[SEND_IMAGE]].
+      // Remove tags do texto principal, envia o texto limpo e depois dispara o anexo.
+      const tags = {
+        link: /\[\[SEND_LINK\]\]/i.test(text),
+        file: /\[\[SEND_FILE\]\]/i.test(text),
+        image: /\[\[SEND_IMAGE\]\]/i.test(text),
+      };
+      let cleanText = text.replace(/\[\[SEND_LINK\]\]/gi, '')
+                          .replace(/\[\[SEND_FILE\]\]/gi, '')
+                          .replace(/\[\[SEND_IMAGE\]\]/gi, '')
+                          .replace(/\s{2,}/g, ' ').trim();
+      // Carrega config de midia do slot (o slot logico esta em outer scope: `slot`)
+      const media = db.prepare(`SELECT send_link_enabled, send_link_url,
+                                       send_file_enabled, send_file_path,
+                                       send_image_enabled, send_image_path
+                                FROM sdrs WHERE slot = ?`).get(slot) || {};
+      // Se ativou link e o LLM pediu, concatena link no texto principal (mais natural que 2 msgs)
+      if (tags.link && media.send_link_enabled && media.send_link_url) {
+        cleanText = (cleanText ? cleanText + '\n' : '') + String(media.send_link_url).trim();
+      }
+      if (cleanText) {
+        await client.sendMessage(cid, cleanText);
+      }
+      // Imagem: envia como MessageMedia
+      if (tags.image && media.send_image_enabled && media.send_image_path) {
+        try {
+          if (fs.existsSync(media.send_image_path)) {
+            const m = MessageMedia.fromFilePath(media.send_image_path);
+            await client.sendMessage(cid, m);
+          } else {
+            console.warn(`[wa] send_image_path nao existe: ${media.send_image_path}`);
+          }
+        } catch (e) { console.error('[wa] send image fail:', e.message); }
+      }
+      // Arquivo: envia como documento
+      if (tags.file && media.send_file_enabled && media.send_file_path) {
+        try {
+          if (fs.existsSync(media.send_file_path)) {
+            const m = MessageMedia.fromFilePath(media.send_file_path);
+            await client.sendMessage(cid, m, { sendMediaAsDocument: true });
+          } else {
+            console.warn(`[wa] send_file_path nao existe: ${media.send_file_path}`);
+          }
+        } catch (e) { console.error('[wa] send file fail:', e.message); }
+      }
+    };
+    const result = await aiPipeline.processConversation(slot, chatId, msgs, { sendMessage: send });
+    if (result && result.skipped) {
+      console.log(`[ai] slot=${slot} chat=${chatId} skipped:`, result.skipped);
+    } else if (result && result.ok) {
+      console.log(`[ai] slot=${slot} chat=${chatId} ok tokens=${result.tokensIn}/${result.tokensOut} lat=${result.latencyMs}ms`);
+    } else if (result && result.error) {
+      console.error(`[ai] slot=${slot} chat=${chatId} error:`, result.error);
+    }
+  });
+}
+
+function maybeEnqueueForAI(hostSlot, slot, chatId, msg) {
+  ensureAIProcessorRegistered();
+  // SDR nunca responde grupos — apenas DMs individuais.
+  if (String(chatId).endsWith('@g.us') || String(chatId).endsWith('@broadcast')) return;
+  const sdr = db.prepare(`SELECT ai_active, sdr_mode, ai_key_id FROM sdrs WHERE slot = ?`).get(slot);
+  if (!sdr) return;
+  if (!sdr.ai_active) return;
+  if (!sdr.ai_key_id) return;
+  chatHostSlot.set(chatId, hostSlot);
+  debouncer.onMessage(slot, chatId, msg);
+}
+
+function setSlotStatus(slot, status, extra = {}) {
+  const now = new Date().toISOString();
+  const fields = ['status = ?', 'updated_at = ?'];
+  const values = [status, now];
+  if (extra.qr !== undefined) { fields.push('last_qr = ?', 'last_qr_at = ?'); values.push(extra.qr, now); }
+  if (status === 'ready') {
+    fields.push('ready_at = ?', 'pairing_code = ?', 'pairing_code_at = ?', 'last_qr = ?', 'last_qr_at = ?');
+    values.push(now, null, null, null, null);
+  }
+  if (extra.phone !== undefined) { fields.push('phone = ?'); values.push(extra.phone); }
+  if (extra.pairingCode !== undefined) { fields.push('pairing_code = ?', 'pairing_code_at = ?'); values.push(extra.pairingCode, now); }
+  db.prepare(`UPDATE sdrs SET ${fields.join(', ')} WHERE slot = ?`).run(...values, slot);
+  runtimeStatus.set(slot, status);
+}
+
+function upsertConversation(slot, chatId, contactName, body, fromMe, ts) {
+  const phone = String(chatId || '').split('@')[0];
+  const existing = db.prepare('SELECT id, unread FROM conversations WHERE slot=? AND chat_id=?').get(slot, chatId);
+  const unreadInc = fromMe ? 0 : 1;
+  if (existing) {
+    db.prepare(`UPDATE conversations SET contact_name = COALESCE(?, contact_name), contact_phone = COALESCE(contact_phone, ?),
+                last_message = ?, last_from_me = ?, last_ts = ?, unread = unread + ?, updated_at = ? WHERE id = ?`)
+      .run(contactName || null, phone, body, fromMe ? 1 : 0, ts, unreadInc, new Date().toISOString(), existing.id);
+  } else {
+    db.prepare(`INSERT INTO conversations (slot, chat_id, contact_phone, contact_name, last_message, last_from_me, last_ts, unread)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(slot, chatId, phone, contactName || null, body, fromMe ? 1 : 0, ts, unreadInc);
+  }
+}
+
+function getSlotPhone(slot) {
+  const r = db.prepare('SELECT phone FROM sdrs WHERE slot = ?').get(slot);
+  return r && r.phone ? String(r.phone) : null;
+}
+
+// Slots que compartilham o mesmo chip do hostSlot.
+// Regra estrita: so entra na lista quem tem master_slot = hostSlot (vinculo explicito na UI Avancado)
+// ou o proprio hostSlot. Nao usa `phone = ?` porque phone duplicado (bug de duplo pareamento)
+// colapsava todas as mensagens no slot de menor id.
+function findSlotsSharingPhone(hostSlot) {
+  const rows = db.prepare(`SELECT slot FROM sdrs WHERE master_slot = ? OR slot = ?`).all(hostSlot, hostSlot);
+  const set = new Set(rows.map(r => r.slot));
+  set.add(hostSlot);
+  return [...set];
+}
+
+function matchTrigger(body, candidateSlots) {
+  const text = String(body || '').toLowerCase();
+  if (!text) return null;
+  const placeholders = candidateSlots.map(() => '?').join(',');
+  const rows = db.prepare(`SELECT slot, keyword FROM slot_triggers WHERE slot IN (${placeholders})`).all(...candidateSlots);
+  for (const r of rows) {
+    if (r.keyword && text.includes(r.keyword)) return { slot: r.slot, keyword: r.keyword };
+  }
+  return null;
+}
+
+function sendWelcomeIfNeeded(hostSlot, slot, chatId) {
+  const row = db.prepare('SELECT welcome_message, ai_active FROM sdrs WHERE slot = ?').get(slot);
+  if (!row || !row.ai_active) return;
+  const welcome = row.welcome_message ? String(row.welcome_message).trim() : '';
+  if (!welcome) return;
+  const client = clients.get(hostSlot);
+  if (!client || runtimeStatus.get(hostSlot) !== 'ready') return;
+  setTimeout(() => {
+    client.sendMessage(chatId, welcome).catch(e => {
+      console.error(`[wa slot ${hostSlot}] welcome send error:`, e.message);
+    });
+  }, 1200);
+}
+
+// Regra de roteamento (v2, fix Smith 2026-07-21):
+// 1) Binding ja existente (phone+chat_id) → mantem, isolado por lead.
+// 2) Se algum slot compartilhando o chip tem trigger que casa no body → escolhe esse slot.
+// 3) Se so ha 1 candidato (caso normal: chip conectado direto num slot) → esse slot atende,
+//    independente de trigger_mode. Isso garante que slot 2/3/4 conectado sozinho responde.
+// 4) Se ha varios candidatos (master_slot compartilhando chip): pega o primeiro `any` (fallback),
+//    ou o hostSlot como ultima trincheira.
+function resolveSlotForIncoming(hostSlot, chatId, body) {
+  const phone = String(chatId || '').split('@')[0];
+  const existing = db.prepare('SELECT slot, matched_keyword FROM contact_slot_binding WHERE phone = ? AND chat_id = ?').get(phone, chatId);
+  if (existing) return { slot: existing.slot, isolated: true, matched: existing.matched_keyword };
+
+  // Fix Smith 2026-07-21 (binding LID vs phone real):
+  // O dispatcher grava binding com (phone=<real do lead>, chat_id=<lid>@lid). Quando a resposta chega,
+  // o incoming vem SO com chat_id=<lid>@lid e o "phone" derivado do split viraria o proprio LID.
+  // Sem este fallback, criavamos um SEGUNDO binding com matched_keyword=NULL, poluindo a tabela e
+  // (pior) fazendo o gate `ativo_sem_dispatch_previo` do pipeline pular no caso NULL/BFS. Se ja existe
+  // qualquer binding pra este chat_id (independente do phone), reutiliza — nao cria segundo.
+  const anyForChat = db.prepare('SELECT slot, matched_keyword FROM contact_slot_binding WHERE chat_id = ? ORDER BY (matched_keyword = \'__upload__\') DESC, id ASC LIMIT 1').get(chatId);
+  if (anyForChat) return { slot: anyForChat.slot, isolated: true, matched: anyForChat.matched_keyword };
+
+  const candidateSlots = findSlotsSharingPhone(hostSlot);
+  const match = matchTrigger(body, candidateSlots);
+  if (match) {
+    db.prepare(`INSERT OR IGNORE INTO contact_slot_binding (phone, chat_id, slot, matched_keyword) VALUES (?, ?, ?, ?)`)
+      .run(phone, chatId, match.slot, match.keyword);
+    sendWelcomeIfNeeded(hostSlot, match.slot, chatId);
+    return { slot: match.slot, isolated: true, matched: match.keyword };
+  }
+
+  // Caso 3: slot unico (chip conectado direto nele) — ele atende.
+  let chosen;
+  if (candidateSlots.length === 1) {
+    chosen = candidateSlots[0];
+  } else {
+    // Caso 4: multiplos candidatos por master_slot. Prefere o hostSlot se for 'any',
+    // senao primeiro 'any' do grupo, senao hostSlot.
+    const modes = new Map();
+    for (const s of candidateSlots) {
+      const r = db.prepare('SELECT trigger_mode FROM sdrs WHERE slot = ?').get(s);
+      modes.set(s, r && r.trigger_mode);
+    }
+    if (modes.get(hostSlot) !== 'strict') {
+      chosen = hostSlot;
+    } else {
+      chosen = candidateSlots.find(s => modes.get(s) !== 'strict') || hostSlot;
+    }
+  }
+
+  db.prepare(`INSERT OR IGNORE INTO contact_slot_binding (phone, chat_id, slot, matched_keyword) VALUES (?, ?, ?, ?)`)
+    .run(phone, chatId, chosen, null);
+  return { slot: chosen, isolated: true, matched: null };
+}
+
+function saveMessage(hostSlot, msg) {
+  try {
+    const finalChat = msg.fromMe ? msg.to : msg.from;
+    const body = msg.body || (msg.type && msg.type !== 'chat' ? `[${msg.type}]` : '');
+    const ts = Math.floor((msg.timestamp || Date.now() / 1000));
+
+    let slot = hostSlot;
+    if (!msg.fromMe) {
+      const routing = resolveSlotForIncoming(hostSlot, finalChat, body);
+      slot = routing.slot;
+    } else {
+      const phone = String(finalChat || '').split('@')[0];
+      const existing = db.prepare('SELECT slot FROM contact_slot_binding WHERE phone = ? AND chat_id = ?').get(phone, finalChat);
+      if (existing) slot = existing.slot;
+    }
+
+    // Hook IA receptiva: msg do cliente + SDR configurado → debouncer.
+    // O gate final (ai_active, ai_key_id, sdr_mode, limite) roda dentro do aiPipeline.
+    if (!msg.fromMe) {
+      try { maybeEnqueueForAI(hostSlot, slot, finalChat, msg); } catch (e) { console.error('[wa] AI enqueue err:', e && e.message); }
+    }
+
+    // Fix Smith 2026-07-21 (wa_message_id [object Object]):
+    // whatsapp-web.js 1.26 nem sempre expoe msg.id._serialized (msgs LID novas).
+    // A fallback antiga `String(msg.id)` virava "[object Object]" e a UNIQUE(slot, wa_message_id)
+    // colidia em TODOS os inserts posteriores do slot, engolindo silenciosamente cada msg incoming.
+    // Agora: monta id a partir de fromMe/remote/id do MessageId, ou usa null (o UNIQUE aceita
+    // varios NULLs em SQLite — nao ha colisao).
+    function extractWaMsgId(m) {
+      if (!m || !m.id) return null;
+      const raw = m.id;
+      if (typeof raw === 'string') return raw;
+      if (raw._serialized && typeof raw._serialized === 'string') return raw._serialized;
+      // Reconstroi manualmente
+      const fm = raw.fromMe ? 'true' : 'false';
+      const rem = raw.remote || raw.remoteJid || '';
+      const idStr = raw.id || raw._serialized || '';
+      const part = raw.participant ? '_' + raw.participant : '';
+      if (rem && idStr) return `${fm}_${rem}_${idStr}${part}`;
+      return null;
+    }
+    const waMsgId = extractWaMsgId(msg);
+    const insertRes = db.prepare(`INSERT OR IGNORE INTO messages (slot, chat_id, wa_message_id, from_me, body, ts, type)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`)
+      .run(slot, finalChat, waMsgId, msg.fromMe ? 1 : 0, body, ts, msg.type || 'chat');
+    if (insertRes.changes === 0) {
+      console.warn(`[wa slot ${hostSlot}] msg IGNORED (dupe wa_message_id) slot=${slot} chat=${finalChat} wa_id=${waMsgId}`);
+    }
+    let contactName = null;
+    try { if (msg._data && msg._data.notifyName) contactName = msg._data.notifyName; } catch {}
+    upsertConversation(slot, finalChat, contactName, body, msg.fromMe ? 1 : 0, ts);
+
+    // Hook CRM: lead respondeu ao disparo → move casinha pra novo_lead + detect tags.
+    if (!msg.fromMe) {
+      const phone = String(finalChat || '').split('@')[0];
+      const wasDispatched = db.prepare(
+        `SELECT 1 FROM slot_upload_job WHERE target_phone = ? AND status = 'sent' LIMIT 1`
+      ).get(phone);
+      if (wasDispatched) {
+        crmSync.markReplied(phone, body || '', waMsgId).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.error(`[wa slot ${hostSlot}] saveMessage error:`, e.message);
+  }
+}
+
+const pendingPairPhone = new Map();
+
+async function connectSlot(slot, opts = {}) {
+  if (clients.has(slot)) {
+    const st = runtimeStatus.get(slot);
+    if (opts.force) {
+      try { await clients.get(slot).destroy(); } catch {}
+      clients.delete(slot);
+    } else if (st === 'connecting' || st === 'qr' || st === 'ready') {
+      if (opts.pairPhone) pendingPairPhone.set(slot, String(opts.pairPhone).replace(/\D/g, ''));
+      return;
+    } else {
+      try { await clients.get(slot).destroy(); } catch {}
+      clients.delete(slot);
+    }
+  }
+
+  if (opts.force) await killChromeForSlot(slot);
+
+  if (opts.pairPhone) pendingPairPhone.set(slot, String(opts.pairPhone).replace(/\D/g, ''));
+  setSlotStatus(slot, 'connecting');
+
+  const client = new Client({
+    authStrategy: new LocalAuth({
+      clientId: `slot-${slot}`,
+      dataPath: SESSIONS_DIR,
+    }),
+    puppeteer: {
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    },
+  });
+
+  client.on('qr', async (qr) => {
+    // Converte payload bruto do WA (ex: "2@abc...") pra data URL PNG.
+    // Se der ruim, cai no fallback do payload cru pra frontend tentar renderizar via lib CDN.
+    let qrToSave = qr;
+    try {
+      qrToSave = await QRCode.toDataURL(qr, { width: 320, margin: 1, errorCorrectionLevel: 'M' });
+    } catch (e) {
+      console.error(`[wa slot ${slot}] qrcode.toDataURL fail:`, e.message);
+    }
+    setSlotStatus(slot, 'qr', { qr: qrToSave });
+    const pairPhone = pendingPairPhone.get(slot);
+    if (pairPhone) {
+      pendingPairPhone.delete(slot);
+      try {
+        const code = await client.requestPairingCode(pairPhone, true);
+        setSlotStatus(slot, 'qr', { pairingCode: code });
+      } catch (e) {
+        console.error(`[wa slot ${slot}] pairing code error:`, e.message);
+      }
+    }
+  });
+
+  client.on('code', (code) => {
+    setSlotStatus(slot, 'qr', { pairingCode: code });
+  });
+
+  client.on('ready', async () => {
+    let phone = null;
+    try { phone = client.info && client.info.wid && client.info.wid.user; } catch {}
+    setSlotStatus(slot, 'ready', { phone });
+    try {
+      db.prepare('UPDATE sdrs SET zeus_mode = 0, zeus_mode_at = NULL WHERE slot = ? AND zeus_mode = 1').run(slot);
+    } catch {}
+    // Fix Smith 2026-07-21: quando o chip fica pronto num slot >1, garante que ele apareca
+    // como agente ativo na UI e receba mensagens. Antes, ai_active=0 fazia o slot recem-conectado
+    // ficar "morto" ate o Jeff notar e ligar o toggle manualmente.
+    try {
+      db.prepare(`UPDATE sdrs SET ai_active = 1, updated_at = ?
+                  WHERE slot = ? AND ai_active = 0`).run(new Date().toISOString(), slot);
+    } catch (e) { console.warn(`[wa slot ${slot}] auto-activate warn:`, e.message); }
+    // Anti-duplicidade de phone: se outro slot esta com o mesmo phone salvo (bug historico
+    // de duplo pareamento), zera o phone dele pra o roteador nao colapsar mensagens.
+    // NAO desconecta ninguem — so limpa o campo. Se o outro slot ainda estiver realmente conectado,
+    // o proprio on('ready') dele vai regravar o phone (comportamento estavel).
+    if (phone) {
+      try {
+        const dupes = db.prepare('SELECT slot FROM sdrs WHERE phone = ? AND slot != ?').all(phone, slot);
+        for (const d of dupes) {
+          console.warn(`[wa slot ${slot}] phone ${phone} tambem estava no slot ${d.slot}, limpando duplicidade`);
+          db.prepare('UPDATE sdrs SET phone = NULL, updated_at = ? WHERE slot = ?').run(new Date().toISOString(), d.slot);
+        }
+      } catch (e) { console.warn(`[wa slot ${slot}] dedupe phone warn:`, e.message); }
+    }
+    // Sonda presence: whatsapp-web.js 1.26 NAO emite 'presence_update' de forma confiavel
+    // sem chamar chat.presence.subscribe() por chat (feature ainda instavel). Tentamos best-effort;
+    // se falhar, degrade gracefull pra debounce puro de 30s (BASE_DEBOUNCE_MS).
+    try {
+      let handlerSet = false;
+      if (typeof client.on === 'function') {
+        client.on('presence_update', (presence) => {
+          try {
+            const chatId = presence && (presence.id || (presence.chat && presence.chat.id && presence.chat.id._serialized));
+            const state = presence && (presence.state || presence.type || presence.status);
+            if (!chatId || !state) return;
+            const phoneOnly = String(chatId).split('@')[0];
+            const bind = db.prepare('SELECT slot FROM contact_slot_binding WHERE phone = ? AND chat_id = ?').get(phoneOnly, chatId);
+            const slotForChat = (bind && bind.slot) || slot;
+            debouncer.onPresenceChange(slotForChat, chatId, state);
+          } catch { /* silencioso */ }
+        });
+        handlerSet = true;
+      }
+      if (handlerSet && !debouncer.isPresenceSupported()) {
+        // marcamos como "handler instalado", nao como "presence funcional".
+        // Sem eventos reais chegando, o timer base cai em 30s puro (BASE_DEBOUNCE_MS).
+        console.log(`[wa slot ${slot}] presence_update handler instalado (best-effort, pode nao emitir eventos)`);
+      }
+    } catch (e) {
+      console.warn(`[wa slot ${slot}] presence subscribe fail (degrade OK, debounce puro 30s):`, e && e.message);
+    }
+  });
+
+  client.on('disconnected', (reason) => {
+    setSlotStatus(slot, 'disconnected');
+    clients.delete(slot);
+  });
+
+  client.on('auth_failure', () => {
+    setSlotStatus(slot, 'idle');
+    clients.delete(slot);
+  });
+
+  client.on('message', (msg) => saveMessage(slot, msg));
+  client.on('message_create', (msg) => { if (msg.fromMe) saveMessage(slot, msg); });
+
+  // ACK do WhatsApp: 1=servidor, 2=DELIVERED (dois vezinhos cinza), 3=READ.
+  // Quando o disparo é entregue (2), move o card no Kanban pra conversa_iniciada.
+  client.on('message_ack', (msg, ack) => {
+    try {
+      if (ack < 2) return;
+      if (!msg.fromMe) return;
+      const to = msg.to || (msg.id && msg.id.remote) || '';
+      const phone = String(to || '').split('@')[0];
+      if (!phone) return;
+      const row = db.prepare(
+        `SELECT 1 FROM slot_upload_job WHERE target_phone = ? AND status = 'sent' LIMIT 1`
+      ).get(phone);
+      if (!row) return;
+      crmSync.markDelivered(phone).catch(() => {});
+    } catch (e) {
+      console.error(`[wa slot ${slot}] message_ack hook:`, e.message);
+    }
+  });
+
+  clients.set(slot, client);
+  client.initialize().catch(async (e) => {
+    console.error(`[wa slot ${slot}] initialize error:`, e && e.message);
+    setSlotStatus(slot, 'idle');
+    try { await client.destroy(); } catch {}
+    clients.delete(slot);
+    if (/already running/i.test(String(e && e.message))) {
+      await killChromeForSlot(slot);
+    }
+  });
+}
+
+async function disconnectSlot(slot, opts = {}) {
+  // opts.logout = true (default): desassocia o WhatsApp do celular (Aparelhos conectados some).
+  //                                E apaga sessao local, forcando novo QR/pair pra reconectar.
+  // opts.logout = false: so mata client em memoria, mantem sessao no disco (reconectar sem parear).
+  const logout = opts.logout !== false;
+  const client = clients.get(slot);
+  if (client) {
+    if (logout) {
+      try { await client.logout(); } catch (e) { console.warn(`[wa slot ${slot}] logout warn:`, e && e.message); }
+    }
+    try { await client.destroy(); } catch (e) { console.warn(`[wa slot ${slot}] destroy warn:`, e && e.message); }
+    clients.delete(slot);
+  }
+  // Garantia extra: mata puppeteer orfao caso client.destroy tenha falhado.
+  try { await killChromeForSlot(slot); } catch {}
+
+  if (logout) {
+    // Apaga SOMENTE a pasta desse slot. Sem isso, ao clicar "Conectar" de novo
+    // o LocalAuth tenta reusar a sessao antiga (que ja nao vale) e falha.
+    const dir = slotSessionDir(slot);
+    try {
+      if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+    } catch (e) {
+      console.warn(`[wa slot ${slot}] rm session dir warn:`, e && e.message);
+    }
+  }
+
+  setSlotStatus(slot, logout ? 'disconnected' : 'idle');
+  db.prepare('UPDATE sdrs SET phone = NULL, last_qr = NULL, last_qr_at = NULL, ready_at = NULL, pairing_code = NULL, pairing_code_at = NULL WHERE slot = ?').run(slot);
+}
+
+function getClient(slot) {
+  const st = runtimeStatus.get(slot);
+  if (st !== 'ready') return null;
+  return clients.get(slot) || null;
+}
+
+function isReady(slot) {
+  return runtimeStatus.get(slot) === 'ready';
+}
+
+async function sendText(slot, phone, message) {
+  const client = getClient(slot);
+  if (!client) throw new Error(`slot ${slot} not ready`);
+  const chatId = phone.includes('@') ? phone : `${phone}@c.us`;
+  await client.sendMessage(chatId, message);
+}
+
+async function restoreSlots() {
+  const readySlots = db.prepare("SELECT slot FROM sdrs WHERE status = 'ready'").all();
+  for (const { slot } of readySlots) {
+    await killChromeForSlot(slot);
+    setSlotStatus(slot, 'connecting');
+    connectSlot(slot).catch(e => console.error(`[wa slot ${slot}] restore error:`, e && e.message));
+  }
+}
+
+async function requestPairingCodeForSlot(slot, phone, force = false) {
+  const phoneDigits = String(phone || '').replace(/\D/g, '');
+  if (!phoneDigits || phoneDigits.length < 10 || phoneDigits.length > 15) throw new Error('phone_invalid');
+
+  // Limpa pairing_code antigo pra UI nao mostrar codigo vencido enquanto novo nao chega.
+  db.prepare('UPDATE sdrs SET pairing_code = NULL, pairing_code_at = NULL WHERE slot = ?').run(slot);
+
+  const client = clients.get(slot);
+  const st = runtimeStatus.get(slot);
+
+  // Se o slot ja tem client vivo em 'qr', pede o codigo direto (rapido, sem force).
+  if (!force && client && st === 'qr') {
+    try {
+      const code = await client.requestPairingCode(phoneDigits, true);
+      setSlotStatus(slot, 'qr', { pairingCode: code });
+      return code;
+    } catch (e) {
+      console.error(`[wa slot ${slot}] pair code fetch fail, force reconnect:`, e && e.message);
+    }
+  }
+
+  // Caso contrario: reinicia sessao e agenda o pairing pro proximo evento 'qr'.
+  // O frontend vai capturar o codigo via poll de refreshConnectModal em <5s.
+  await connectSlot(slot, { pairPhone: phoneDigits, force: true });
+  return null;
+}
+
+async function reconnectSlot(slot) {
+  db.prepare('UPDATE sdrs SET last_qr = NULL, last_qr_at = NULL, pairing_code = NULL, pairing_code_at = NULL WHERE slot = ?').run(slot);
+  await connectSlot(slot, { force: true });
+}
+
+function resolveHostSlotFor(slot) {
+  const row = db.prepare('SELECT slot, master_slot, phone FROM sdrs WHERE slot = ?').get(slot);
+  if (!row) return slot;
+  if (row.master_slot) return row.master_slot;
+  if (row.phone) {
+    const active = db.prepare(`SELECT slot FROM sdrs WHERE phone = ? AND master_slot IS NULL LIMIT 1`).get(row.phone);
+    if (active) return active.slot;
+  }
+  return slot;
+}
+
+function firstName(fullName) {
+  if (!fullName) return '';
+  const clean = String(fullName).trim().replace(/\s+/g, ' ');
+  if (!clean) return '';
+  const first = clean.split(' ')[0];
+  if (!first) return '';
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+const GREETING_RE = /^(ótimo dia|ótima tarde|ótima noite|otimo dia|otima tarde|otima noite|bom dia|boa tarde|boa noite|olá|ola|oi|ei|opa|prazer)([,!.]*)\s*/i;
+
+function renderWithName(template, name) {
+  const nome = firstName(name);
+  const hasPlaceholder = /\{nome\}/i.test(template);
+  if (hasPlaceholder) {
+    let out = template.replace(/\{nome\}/gi, nome);
+    if (!nome) {
+      out = out.replace(/\s+,/g, ',');
+      out = out.replace(/,\s*,/g, ',');
+      out = out.replace(/\b(Oi|Olá|Ola|Ei|Opa|Prazer)\s+([,!.])\s*/gi, '$1$2 ');
+      out = out.replace(/\b(Oi|Olá|Ola|Ei|Opa|Prazer)\s*,\s*/gi, '$1! ');
+      out = out.replace(/\s{2,}/g, ' ').trim();
+    }
+    return out;
+  }
+  if (!nome) return template;
+  const trimmed = template.trimStart();
+  if (GREETING_RE.test(trimmed)) {
+    return trimmed.replace(GREETING_RE, (m, greet) => `${greet} ${nome}, `);
+  }
+  return `Oi ${nome}, ` + trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+}
+
+function getDispatchMessage(slot, targetName) {
+  const rows = db.prepare('SELECT id, body FROM slot_dispatch_messages WHERE slot = ? ORDER BY position, id').all(slot);
+  let template = null;
+  if (rows.length) {
+    let state = db.prepare('SELECT next_message_index, sent_since_pause FROM slot_dispatch_state WHERE slot = ?').get(slot);
+    if (!state) {
+      db.prepare('INSERT OR IGNORE INTO slot_dispatch_state (slot, next_message_index, sent_since_pause, paused_until) VALUES (?, 0, 0, 0)').run(slot);
+      state = { next_message_index: 0, sent_since_pause: 0 };
+    }
+    const idx = state.next_message_index % rows.length;
+    template = rows[idx].body;
+    const nextIdx = (idx + 1) % rows.length;
+    db.prepare('UPDATE slot_dispatch_state SET next_message_index = ?, sent_since_pause = sent_since_pause + 1, updated_at = ? WHERE slot = ?')
+      .run(nextIdx, new Date().toISOString(), slot);
+  } else {
+    const wm = db.prepare('SELECT welcome_message FROM sdrs WHERE slot = ?').get(slot);
+    template = wm && wm.welcome_message ? String(wm.welcome_message).trim() : '';
+  }
+  if (!template) return null;
+  return renderWithName(template, targetName);
+}
+
+function checkAndSetPause(slot) {
+  const cfg = db.prepare('SELECT dispatch_pause_every, dispatch_pause_seconds FROM sdrs WHERE slot = ?').get(slot);
+  const state = db.prepare('SELECT sent_since_pause FROM slot_dispatch_state WHERE slot = ?').get(slot);
+  if (!cfg || !state) return;
+  const every = cfg.dispatch_pause_every || 10;
+  const secs = cfg.dispatch_pause_seconds || 0;
+  if (secs > 0 && state.sent_since_pause >= every) {
+    const until = Math.floor(Date.now() / 1000) + secs;
+    db.prepare('UPDATE slot_dispatch_state SET sent_since_pause = 0, paused_until = ?, updated_at = ? WHERE slot = ?')
+      .run(until, new Date().toISOString(), slot);
+  }
+}
+
+function isSlotPaused(slot) {
+  const s = db.prepare('SELECT paused_until FROM slot_dispatch_state WHERE slot = ?').get(slot);
+  if (!s) return false;
+  return (s.paused_until || 0) > Math.floor(Date.now() / 1000);
+}
+
+function randomDelaySec(slot) {
+  const cfg = db.prepare('SELECT dispatch_min_delay, dispatch_max_delay FROM sdrs WHERE slot = ?').get(slot);
+  const min = (cfg && cfg.dispatch_min_delay) || 30;
+  const max = (cfg && cfg.dispatch_max_delay) || 60;
+  return Math.floor(min + Math.random() * Math.max(1, max - min));
+}
+
+function isDispatchRunning(slot) {
+  const s = db.prepare('SELECT dispatch_running FROM slot_dispatch_state WHERE slot = ?').get(slot);
+  return !!(s && s.dispatch_running);
+}
+
+function readWorkerToken() {
+  try {
+    const env = fs.readFileSync(path.resolve(__dirname, '../../../../jeff-worker/.env'), 'utf8');
+    const m = env.match(/^API_TOKEN=(.+)$/m);
+    return m ? m[1].trim() : '';
+  } catch { return ''; }
+}
+const WORKER_TOKEN = readWorkerToken();
+const WORKER_URL = 'http://127.0.0.1:3002';
+
+async function sendViaWorker(phone, body) {
+  const r = await fetch(`${WORKER_URL}/messages/private`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WORKER_TOKEN}` },
+    body: JSON.stringify({ to: phone, body }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.error || `worker_send_fail_${r.status}`);
+  return j;
+}
+
+async function processUploadJobs() {
+  const bySlot = db.prepare(`SELECT DISTINCT slot FROM slot_upload_job WHERE status = 'pending'`).all();
+  for (const { slot } of bySlot) {
+    if (isSlotPaused(slot)) continue;
+    if (!isDispatchRunning(slot)) continue;
+    const gate = db.prepare('SELECT ai_active, zeus_mode, phone, master_slot FROM sdrs WHERE slot = ?').get(slot);
+    if (!gate || !gate.ai_active) continue;
+    const job = db.prepare(`SELECT id, slot, target_phone, target_name FROM slot_upload_job
+                            WHERE slot = ? AND status = 'pending' ORDER BY id ASC LIMIT 1`).get(slot);
+    if (!job) continue;
+    try {
+      // Defesa em profundidade: se ja existe um job 'sent' pro mesmo slot+phone,
+      // esse aqui vira duplicado, nao dispara. Cobre caso raro onde algo escapou
+      // do dedupe na ingestao (import antigo, corrida entre uploads paralelos).
+      const already = db.prepare(
+        `SELECT id FROM slot_upload_job WHERE slot = ? AND target_phone = ? AND status = 'sent' AND id <> ? LIMIT 1`
+      ).get(job.slot, job.target_phone, job.id);
+      if (already) {
+        db.prepare(`UPDATE slot_upload_job SET status = 'duplicate', error = 'dedupe: ja enviado', sent_at = ? WHERE id = ?`)
+          .run(new Date().toISOString(), job.id);
+        continue;
+      }
+      const message = getDispatchMessage(job.slot, job.target_name);
+      if (!message) {
+        db.prepare(`UPDATE slot_upload_job SET status = 'error', error = 'sem mensagem de disparo', sent_at = ? WHERE id = ?`)
+          .run(new Date().toISOString(), job.id);
+        continue;
+      }
+      const useZeus = gate.zeus_mode && !gate.master_slot && !gate.phone;
+      if (useZeus) {
+        await sendViaWorker(job.target_phone, message);
+        db.prepare(`INSERT OR IGNORE INTO contact_slot_binding (phone, chat_id, slot, matched_keyword) VALUES (?, ?, ?, ?)`)
+          .run(job.target_phone, job.target_phone + '@c.us', job.slot, '__upload__');
+      } else {
+        const hostSlot = resolveHostSlotFor(job.slot);
+        if (!isReady(hostSlot)) continue;
+        const client = getClient(hostSlot);
+        if (!client) continue;
+        const numberId = await client.getNumberId(job.target_phone);
+        if (!numberId) {
+          db.prepare(`UPDATE slot_upload_job SET status = 'error', error = 'nao existe no wpp', sent_at = ? WHERE id = ?`)
+            .run(new Date().toISOString(), job.id);
+          continue;
+        }
+        const chatId = numberId._serialized;
+        await client.sendMessage(chatId, message);
+        db.prepare(`INSERT OR IGNORE INTO contact_slot_binding (phone, chat_id, slot, matched_keyword) VALUES (?, ?, ?, ?)`)
+          .run(job.target_phone, chatId, job.slot, '__upload__');
+      }
+      db.prepare(`UPDATE slot_upload_job SET status = 'sent', sent_at = ? WHERE id = ?`)
+        .run(new Date().toISOString(), job.id);
+      // Notifica CRM: número foi disparado (garante presença no Kanban + timestamp sent_at).
+      crmSync.markSent(job.target_phone, job.target_name, job.slot).catch(() => {});
+      checkAndSetPause(job.slot);
+      const delaySec = randomDelaySec(job.slot);
+      await new Promise(r => setTimeout(r, delaySec * 1000));
+    } catch (e) {
+      db.prepare(`UPDATE slot_upload_job SET status = 'error', error = ?, sent_at = ? WHERE id = ?`)
+        .run(String(e.message || e).slice(0, 300), new Date().toISOString(), job.id);
+    }
+  }
+}
+
+function startUploadDispatcher() {
+  setInterval(() => { processUploadJobs().catch(e => console.error('upload dispatch:', e.message)); }, 8000);
+}
+
+// Watchdog: se um slot fica em 'connecting' > 90s sem virar 'qr' ou 'ready',
+// o Chrome provavelmente crashou. Force-reconnect pra reabrir o pareamento.
+function startConnectionWatchdog() {
+  setInterval(() => {
+    try {
+      const stuck = db.prepare(`
+        SELECT slot, status, updated_at FROM sdrs
+        WHERE status = 'connecting'
+          AND updated_at < datetime('now', '-90 seconds')
+      `).all();
+      for (const s of stuck) {
+        console.warn(`[wa watchdog] slot ${s.slot} travado em connecting, force reset`);
+        killChromeForSlot(s.slot).then(() => {
+          try { clients.delete(s.slot); } catch {}
+          setSlotStatus(s.slot, 'idle');
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('[wa watchdog] err:', e.message);
+    }
+  }, 30000);
+}
+
+module.exports = { connectSlot, disconnectSlot, getClient, isReady, sendText, restoreSlots, requestPairingCodeForSlot, reconnectSlot, clients, runtimeStatus, startUploadDispatcher, startConnectionWatchdog };

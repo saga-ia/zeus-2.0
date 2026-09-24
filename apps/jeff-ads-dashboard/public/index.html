@@ -52,7 +52,16 @@
         <option value="this_month">Este mês</option>
         <option value="last_month">Mês passado</option>
         <option value="maximum">Máximo</option>
+        <option value="custom">Personalizado</option>
       </select>
+    </div>
+    <div class="filter hidden" id="custom-range">
+      <label>De / Até</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="date" id="date-since" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px">
+        <span style="color:var(--text-2);font-size:12px">→</span>
+        <input type="date" id="date-until" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px">
+      </div>
     </div>
     <div class="filter">
       <label>Status</label>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Contrate Farias Souza para Palestrar | Governança, Estratégia e Legado</title>
+<meta name="description" content="Solicite uma proposta para contratar Farias Souza como palestrante em seu evento corporativo, congresso ou conselho.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --gold:#C9A84C;
+    --gold-light:#E8C97A;
+    --gold-dim:#8a7331;
+    --bg:#0A0A0A;
+    --card:#111111;
+    --border:#222;
+    --border-strong:#2a2a2a;
+    --text:#F2EFE8;
+    --muted:#8a8a8a;
+    --radius:14px;
+    --shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-weight:300;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    background:
+      radial-gradient(ellipse at top, rgba(201,168,76,.08), transparent 55%),
+      radial-gradient(ellipse at bottom, rgba(201,168,76,.04), transparent 55%),
+      var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:56px 22px 60px}
+
+  .hero{text-align:center;margin-bottom:40px}
+  .hero .badge{
+    display:inline-block;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;
+    letter-spacing:4px;text-transform:uppercase;color:var(--gold);
+    padding:8px 18px;border:1px solid rgba(201,168,76,.35);border-radius:999px;
+    margin-bottom:22px;background:rgba(201,168,76,.05)
+  }
+  .hero h1{
+    font-family:'Cormorant Garamond',serif;font-weight:500;
+    font-size:clamp(30px,6vw,44px);line-height:1.15;letter-spacing:-.5px;
+    margin-bottom:14px
+  }
+  .hero h1 em{font-style:italic;color:var(--gold)}
+  .hero p.lead{
+    color:var(--muted);font-size:15px;max-width:520px;margin:0 auto;font-weight:300
+  }
+  .rule{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:22px auto}
+
+  form{
+    background:linear-gradient(180deg, #131313 0%, #0f0f0f 100%);
+    border:1px solid var(--border-strong);
+    border-radius:var(--radius);
+    padding:32px 28px;
+    box-shadow:var(--shadow);
+  }
+  .field{margin-bottom:20px}
+  .field:last-of-type{margin-bottom:24px}
+  .field label{
+    display:block;font-size:12px;font-weight:500;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--gold);margin-bottom:8px
+  }
+  .field input{
+    width:100%;background:#0d0d0d;
+    border:1.5px solid var(--border);color:var(--text);
+    border-radius:10px;padding:14px 16px;font-size:15px;font-family:inherit;
+    transition:border-color .2s, box-shadow .2s, background .2s;outline:none;
+    font-weight:400;
+  }
+  .field input:focus{
+    border-color:var(--gold);background:#111;
+    box-shadow:0 0 0 3px rgba(201,168,76,.14)
+  }
+  ::placeholder{color:#3f3f3f;font-weight:300}
+
+  .actions{margin-top:6px}
+  button.cta{
+    width:100%;padding:16px 20px;font-family:inherit;font-size:14px;font-weight:600;
+    letter-spacing:2.5px;text-transform:uppercase;color:#0A0A0A;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold));
+    border:none;border-radius:10px;cursor:pointer;
+    transition:transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    box-shadow:0 8px 24px rgba(201,168,76,.22);
+  }
+  button.cta:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(201,168,76,.32);filter:brightness(1.05)}
+  button.cta:active{transform:translateY(0)}
+  button.cta[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;filter:grayscale(.35)}
+
+  .fine{font-size:12px;color:var(--muted);margin-top:14px;text-align:center;font-weight:300}
+
+  .msg{
+    display:none;margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:14px;line-height:1.5;
+  }
+  .msg.error{display:block;background:rgba(255,80,80,.06);border:1px solid rgba(255,80,80,.25);color:#ffb0b0}
+  .msg.ok{display:block;background:rgba(120,220,140,.06);border:1px solid rgba(120,220,140,.25);color:#b6f5c4}
+
+  .success{
+    display:none;text-align:center;padding:34px 24px;
+  }
+  .success.show{display:block;animation:fadeIn .5s ease}
+  .success .check{
+    width:64px;height:64px;border-radius:50%;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold));
+    color:#0A0A0A;font-size:32px;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 20px;box-shadow:0 8px 24px rgba(201,168,76,.3)
+  }
+  .success h2{
+    font-family:'Cormorant Garamond',serif;font-weight:500;font-size:28px;margin-bottom:10px;letter-spacing:-.3px
+  }
+  .success p{color:var(--muted);font-size:15px;max-width:420px;margin:0 auto}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .foot{
+    text-align:center;margin-top:34px;
+    font-family:'Cormorant Garamond',serif;
+    font-size:14px;letter-spacing:2px;color:var(--gold-dim);text-transform:uppercase
+  }
+</style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="hero">
+      <div class="badge">Contratar Palestra</div>
+      <h1>Traga <em>Farias Souza</em><br>ao palco do seu evento</h1>
+      <div class="rule"></div>
+      <p class="lead">
+        Governança, estratégia e legado empresarial em uma narrativa densa,
+        provocativa e apropriada ao seu público. Preencha os dados abaixo e
+        retornamos com proposta em até 24h úteis.
+      </p>
+    </div>
+
+    <form id="form" novalidate>
+
+      <div class="field">
+        <label for="nome">Nome completo</label>
+        <input id="nome" name="nome" type="text" required placeholder="Como devemos te chamar">
+      </div>
+
+      <div class="field">
+        <label for="telefone">Telefone / WhatsApp</label>
+        <input id="telefone" name="telefone" type="tel" required placeholder="(11) 90000-0000" inputmode="tel">
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" required placeholder="voce@empresa.com">
+      </div>
+
+      <div class="field">
+        <label for="empresa">Nome da empresa</label>
+        <input id="empresa" name="empresa" type="text" required placeholder="Nome da empresa ou instituição">
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="actions">
+        <button type="submit" class="cta" id="btnSubmit">Solicitar proposta</button>
+        <p class="fine">Retorno com proposta comercial em até 24h úteis.</p>
+      </div>
+    </form>
+
+    <div class="success" id="success">
+      <div class="check">&#10003;</div>
+      <h2>Solicitação recebida</h2>
+      <p>Obrigado! Sua solicitação chegou à nossa equipe. Em até 24h úteis um consultor entrará em contato pelo WhatsApp com a proposta.</p>
+    </div>
+
+    <div class="foot">Farias Souza</div>
+  </div>
+
+<script>
+(function(){
+  var form = document.getElementById('form');
+  var btn  = document.getElementById('btnSubmit');
+  var msg  = document.getElementById('msg');
+  var success = document.getElementById('success');
+
+  function showError(text){ msg.className='msg error'; msg.textContent=text; }
+  function clearMsg(){ msg.className='msg'; msg.textContent=''; }
+
+  function isEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v||'').trim()); }
+
+  function collectTracking(){
+    var q = new URLSearchParams(location.search);
+    return {
+      utm_source: q.get('utm_source')||'',
+      utm_medium: q.get('utm_medium')||'',
+      utm_campaign: q.get('utm_campaign')||'',
+      utm_content: q.get('utm_content')||'',
+      fbclid: q.get('fbclid')||'',
+      gclid: q.get('gclid')||'',
+      origem: q.get('origem')||'palestras',
+      referrer: document.referrer||''
+    };
+  }
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearMsg();
+
+    var nome = document.getElementById('nome').value.trim();
+    var telefone = document.getElementById('telefone').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var empresa = document.getElementById('empresa').value.trim();
+
+    if(!nome){ showError('Preencha seu nome.'); return; }
+    if(!telefone || telefone.replace(/\D/g,'').length < 10){ showError('Informe um telefone válido com DDD.'); return; }
+    if(!isEmail(email)){ showError('Informe um e-mail válido.'); return; }
+    if(!empresa){ showError('Informe o nome da empresa.'); return; }
+
+    var payload = {
+      nome: nome,
+      telefone: telefone,
+      email: email,
+      empresa: empresa,
+      tracking: collectTracking()
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try{
+      var r = await fetch('/submit-palestras', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      var j = await r.json();
+      if(!r.ok || !j.ok){
+        showError(j.error || 'Erro ao enviar. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = 'Solicitar proposta';
+        return;
+      }
+      form.style.display='none';
+      success.classList.add('show');
+      window.scrollTo({top:0, behavior:'smooth'});
+    } catch(err){
+      showError('Falha de conexão. Tente novamente.');
+      btn.disabled = false;
+      btn.textContent = 'Solicitar proposta';
+    }
+  });
+
+  // máscara simples de telefone BR
+  var tel = document.getElementById('telefone');
+  tel.addEventListener('input', function(){
+    var v = tel.value.replace(/\D/g,'').slice(0,11);
+    if(v.length<=10){
+      tel.value = v.replace(/(\d{0,2})(\d{0,4})(\d{0,4}).*/, function(_,a,b,c){
+        var out = '';
+        if(a) out += '('+a;
+        if(a && a.length===2) out += ')';
+        if(b) out += ' '+b;
+        if(c) out += '-'+c;
+        return out;
+      });
+    } else {
+      tel.value = v.replace(/(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+    }
+  });
+})();
+</script>
+</body>
+</html>

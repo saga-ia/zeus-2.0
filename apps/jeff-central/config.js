@@ -95,7 +95,7 @@ function permPadrao() {
 const DEFAULTS = {
   empresa: { nome: 'Empresa de Vinícius', identificador: '', logo: '', fuso: 'America/Sao_Paulo', idioma: 'pt-BR',
     razao: '', fantasia: '', cnpj: '', funcionarios: '', segmento: '', emailFin: '', whatsFin: '' },
-  marca: { primaria: '#17171A', acento: '#A8620A', fundo: '#FFFFFF', fonte: '', tom: '' },
+  marca: { primaria: '#17171A', acento: '#673DE6', fundo: '#FFFFFF', fonte: '', tom: '' },
   prefs: { membrosCriamAgentes: true, aprovarAgentesEmpresa: false, membrosConvidam: false, modeloPadrao: '', idiomaIA: 'pt-BR',
     retencaoDias: '365', resumoSemanal: true, canalResumo: 'email' },
   plano: { nome: 'Gratuito', assinatura: false, assentos: 10, ciclo: '', proxima: '', valor: 'Sob consulta' },

@@ -61,19 +61,31 @@ app.get('/webhook', (req, res) => {
 });
 
 // Validação de assinatura X-Hub-Signature-256
+// Retorna o nome do secret que casou (fb|ig) ou null
 function verifySig(req) {
-  const secret = setting('jeff_meta_app_secret_zeus');
-  if (!secret || !req.rawBody) return false;
+  if (!req.rawBody) return null;
   const got = req.header('x-hub-signature-256') || '';
-  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
-  try {
-    return got.length === expected.length &&
-           crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
-  } catch { return false; }
+  if (!got) return null;
+  const secrets = {
+    fb: setting('jeff_meta_app_secret_zeus'),
+    ig: setting('jeff_meta_app_secret_ig'),
+  };
+  for (const [name, secret] of Object.entries(secrets)) {
+    if (!secret) continue;
+    const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
+    try {
+      if (got.length === expected.length &&
+          crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected))) {
+        return name;
+      }
+    } catch { /* continue */ }
+  }
+  return null;
 }
 
 app.post('/webhook', (req, res) => {
-  if (!verifySig(req)) {
+  const sigApp = verifySig(req);
+  if (!sigApp) {
     console.warn('[ig-webhook] signature FAIL');
     return res.status(401).send('invalid signature');
   }
@@ -114,7 +126,7 @@ app.post('/webhook', (req, res) => {
     }
   }
 
-  console.log(`[ig-webhook] received object=${obj} entries=${(body.entry||[]).length}`);
+  console.log(`[ig-webhook] received object=${obj} entries=${(body.entry||[]).length} signed_by=${sigApp}`);
   // Meta exige 200 rápido (<5s) ou retenta
   res.status(200).send('OK');
 });

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIGC 2026 — Dashboard Captação</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0a0a0f; color: #f5f5f7; }
+  .glass { background: rgba(20, 20, 28, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+  .stat-card { background: linear-gradient(145deg, #12121a 0%, #1a1a24 100%); border: 1px solid rgba(255,255,255,0.06); }
+  .stat-value { background: linear-gradient(135deg, #fff 0%, #a8a8b3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .accent { color: #d4af37; }
+  .accent-bg { background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%); }
+  .divider { border-color: rgba(255,255,255,0.06); }
+  .tag { background: rgba(212,175,55,0.1); color: #d4af37; border: 1px solid rgba(212,175,55,0.3); }
+  table { border-collapse: collapse; }
+  th, td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  th { text-align: left; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a7a85; }
+  td { font-size: 13px; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+  <!-- Header -->
+  <header class="flex items-start justify-between mb-10 pb-8 border-b divider">
+    <div>
+      <div class="tag inline-block px-3 py-1 rounded-full text-xs font-medium mb-3">CIGC 2026 · Congresso de Gestores de Clínica</div>
+      <h1 class="text-4xl font-semibold tracking-tight mb-2">Dashboard de Captação</h1>
+      <p class="text-neutral-400 text-sm" id="periodoText">Consolidado tráfego pago + leads</p>
+    </div>
+    <div class="text-right">
+      <div class="text-xs text-neutral-500 mb-1">Última atualização</div>
+      <div class="text-sm text-neutral-300 num" id="ultimaAtualizacao">—</div>
+      <div class="text-xs text-neutral-500 mt-1">Fonte: Grupo Vitor Marketing + Gustavo</div>
+    </div>
+  </header>
+
+  <!-- KPIs de RESULTADO (Gustavo) -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="stat-card rounded-2xl p-6" style="border-color:rgba(212,175,55,0.35)">
+      <div class="text-xs uppercase tracking-wider mb-2 accent">Inscritos Totais (Gustavo)</div>
+      <div class="stat-value text-4xl font-semibold num" id="kpiInscritos">—</div>
+      <div class="text-xs text-neutral-500 mt-2" id="kpiInscritosAt">—</div>
+    </div>
+    <div class="stat-card rounded-2xl p-6" style="border-color:rgba(212,175,55,0.35)">
+      <div class="text-xs uppercase tracking-wider mb-2 accent">Vendas de Campanha (Gustavo)</div>
+      <div class="stat-value text-4xl font-semibold num" id="kpiVendas">—</div>
+      <div class="text-xs text-neutral-500 mt-2" id="kpiVendasAt">—</div>
+    </div>
+  </section>
+
+  <!-- KPIs principais -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div class="stat-card rounded-2xl p-6">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Investimento Total</div>
+      <div class="stat-value text-3xl font-semibold num" id="kpiInvestimento">—</div>
+      <div class="text-xs text-neutral-500 mt-2" id="kpiDias">—</div>
+    </div>
+    <div class="stat-card rounded-2xl p-6">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Conversas WhatsApp</div>
+      <div class="stat-value text-3xl font-semibold num" id="kpiConversas">—</div>
+      <div class="text-xs text-neutral-500 mt-2">CTWA · lead principal</div>
+    </div>
+    <div class="stat-card rounded-2xl p-6">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">CPL Conversa</div>
+      <div class="stat-value text-3xl font-semibold num" id="kpiCPL">—</div>
+      <div class="text-xs text-neutral-500 mt-2">investimento ÷ conversas</div>
+    </div>
+    <div class="stat-card rounded-2xl p-6">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Universo Total</div>
+      <div class="stat-value text-3xl font-semibold num" id="kpiUniverso">—</div>
+      <div class="text-xs text-neutral-500 mt-2">contatos capturados</div>
+    </div>
+  </section>
+
+  <!-- KPIs secundários -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Cliques no Link</div>
+      <div class="text-2xl font-medium num" id="kpiCliques">—</div>
+      <div class="text-xs text-neutral-500 mt-1" id="kpiCPC">—</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Leads no Site</div>
+      <div class="text-2xl font-medium num" id="kpiLeadsSite">—</div>
+      <div class="text-xs text-neutral-500 mt-1">Vitor · até 22/06</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Leads Zeus (bot)</div>
+      <div class="text-2xl font-medium num" id="kpiLeadsZeus">—</div>
+      <div class="text-xs text-neutral-500 mt-1">Gustavo · 14/05 a 09/06</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Form. Leandro</div>
+      <div class="text-2xl font-medium num" id="kpiLeadsLeandro">—</div>
+      <div class="text-xs text-neutral-500 mt-1">Gustavo · 14/05 a 16/06</div>
+    </div>
+  </section>
+
+  <!-- Gráfico principal -->
+  <section class="glass rounded-2xl p-6 mb-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-lg font-medium">Investimento diário</h2>
+        <p class="text-xs text-neutral-500 mt-1">R$ investidos por dia · escala de aceleração recente visível a partir de 28/07</p>
+      </div>
+      <span class="tag px-3 py-1 rounded-full text-xs">Vitor Marketing TLK</span>
+    </div>
+    <canvas id="chartGasto" height="90"></canvas>
+  </section>
+
+  <section class="glass rounded-2xl p-6 mb-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-lg font-medium">Conversas iniciadas por dia</h2>
+        <p class="text-xs text-neutral-500 mt-1">Métrica principal do Click-to-WhatsApp</p>
+      </div>
+      <span class="tag px-3 py-1 rounded-full text-xs">1.759 total</span>
+    </div>
+    <canvas id="chartConv" height="90"></canvas>
+  </section>
+
+  <!-- Por mês -->
+  <section class="mb-10">
+    <h2 class="text-lg font-medium mb-4">Fechamento por mês</h2>
+    <div class="glass rounded-2xl overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th class="text-right">Dias</th>
+            <th class="text-right">Investido</th>
+            <th class="text-right">Conversas</th>
+            <th class="text-right">Leads site</th>
+            <th class="text-right">CPL conv.</th>
+          </tr>
+        </thead>
+        <tbody id="tblMes"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tabela dia a dia -->
+  <section class="mb-10">
+    <h2 class="text-lg font-medium mb-4">Dia a dia (bruto)</h2>
+    <div class="glass rounded-2xl overflow-hidden">
+      <div class="max-h-[500px] overflow-y-auto">
+        <table class="w-full">
+          <thead class="sticky top-0" style="background:#12121a">
+            <tr>
+              <th>Data</th>
+              <th class="text-right">Gasto</th>
+              <th class="text-right">Conversas</th>
+              <th class="text-right">Leads site</th>
+              <th class="text-right">Cliques</th>
+            </tr>
+          </thead>
+          <tbody id="tblDia"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reports do Gustavo (histórico de inscritos + vendas) -->
+  <section class="mb-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-medium">Reports do Gustavo (inscritos + vendas)</h2>
+      <span class="tag px-3 py-1 rounded-full text-xs">Fonte: Grupo CIGC</span>
+    </div>
+    <div class="glass rounded-2xl overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th class="text-right">Inscritos totais</th>
+            <th class="text-right">Vendas de campanha</th>
+          </tr>
+        </thead>
+        <tbody id="tblGustavo"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Observações -->
+  <section class="glass rounded-2xl p-6 mb-10">
+    <h2 class="text-lg font-medium mb-4">Observações operacionais</h2>
+    <ul class="text-sm text-neutral-300 space-y-3">
+      <li class="flex gap-3"><span class="accent">•</span><span><strong class="text-white">Dados 100% do que o time reportou no grupo.</strong> Token da API Meta expirou em 01/07 e ainda não foi renovado. Enquanto isso, este dashboard consolida o que o Vitor e o Gustavo mandaram por WhatsApp.</span></li>
+      <li class="flex gap-3"><span class="accent">•</span><span><strong class="text-white">Vitor parou de reportar leads no site em 22/06.</strong> Depois disso só voltou a mandar conversas + cliques. O total de leads no site pode estar subestimado.</span></li>
+      <li class="flex gap-3"><span class="accent">•</span><span><strong class="text-white">Formulário Leandro foi desativado em 21/06.</strong> Somamos ~104 leads capturados por ele até esta data.</span></li>
+      <li class="flex gap-3"><span class="accent">•</span><span><strong class="text-white">Aceleração forte a partir de 28/07.</strong> Verba diária pulou de ~R$400 pra R$800-R$1.200. Conversas subiram na mesma proporção.</span></li>
+      <li class="flex gap-3"><span class="accent">•</span><span><strong class="text-white">Alguns dias sem post do Vitor.</strong> São ~14 dias sem reporte no período. Volume real de gasto pode ser um pouco maior.</span></li>
+    </ul>
+  </section>
+
+  <footer class="text-center text-xs text-neutral-600 pt-6 border-t divider">
+    Alpha Digital · CIGC 2026 · atualizado automaticamente a partir dos reports do Vitor no grupo
+  </footer>
+</div>
+
+<script>
+const fmtBR = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0 = new Intl.NumberFormat('pt-BR');
+const fmtInt = new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
+
+function ordenarDias(dias){
+  return [...dias].sort((a,b)=>{
+    const [da,ma] = a[0].split('/').map(Number);
+    const [db,mb] = b[0].split('/').map(Number);
+    return (ma-mb) || (da-db);
+  });
+}
+
+async function render(){
+  const res = await fetch('data.json?t='+Date.now());
+  const data = await res.json();
+  const dias = ordenarDias(data.dias);
+
+  // Header
+  document.getElementById('periodoText').textContent =
+    `Consolidado tráfego pago + leads · Período ${data.periodo.inicio} a ${data.periodo.fim}`;
+  document.getElementById('ultimaAtualizacao').textContent = data.periodo.atualizado_em;
+
+  // KPIs
+  const k = data.kpis;
+  document.getElementById('kpiInvestimento').textContent = 'R$ '+fmtInt.format(Math.round(k.investimento_total));
+  document.getElementById('kpiDias').textContent = `${k.dias_reportados} dias reportados`;
+  document.getElementById('kpiConversas').textContent = fmt0.format(k.conversas_total);
+  document.getElementById('kpiCPL').textContent = 'R$ '+fmtBR.format(k.cpl_conversa);
+  document.getElementById('kpiUniverso').textContent = fmt0.format(k.universo_total);
+  document.getElementById('kpiCliques').textContent = fmt0.format(k.cliques_total);
+  document.getElementById('kpiCPC').textContent = `CPC médio R$ ${fmtBR.format(k.cpc_medio)}`;
+  document.getElementById('kpiLeadsSite').textContent = fmt0.format(k.leads_site);
+  document.getElementById('kpiLeadsZeus').textContent = '~'+fmt0.format(k.leads_zeus);
+  document.getElementById('kpiLeadsLeandro').textContent = '~'+fmt0.format(k.leads_leandro);
+  document.getElementById('kpiInscritos').textContent = fmt0.format(k.inscritos_totais);
+  document.getElementById('kpiInscritosAt').textContent = 'Última info: '+k.inscritos_atualizado_em;
+  document.getElementById('kpiVendas').textContent = fmt0.format(k.vendas_campanha);
+  document.getElementById('kpiVendasAt').textContent = 'Última info: '+k.vendas_atualizado_em;
+
+  const tblGus = document.getElementById('tblGustavo');
+  tblGus.innerHTML = '';
+  (data.gustavo_reports || []).forEach(([d,i,v]) => {
+    tblGus.innerHTML += `<tr>
+      <td class="font-medium">${d}</td>
+      <td class="text-right num">${i===null?'—':fmt0.format(i)}</td>
+      <td class="text-right num accent">${v===null?'—':fmt0.format(v)}</td>
+    </tr>`;
+  });
+
+  // Tabela mensal
+  const tblMes = document.getElementById('tblMes');
+  tblMes.innerHTML = '';
+  Object.entries(data.meses).forEach(([mes, m]) => {
+    const cpl = m.conversas ? (m.investido/m.conversas) : 0;
+    tblMes.innerHTML += `<tr>
+      <td class="font-medium">${mes}</td>
+      <td class="text-right num">${m.dias}</td>
+      <td class="text-right num">R$ ${fmtBR.format(m.investido)}</td>
+      <td class="text-right num">${fmt0.format(m.conversas)}</td>
+      <td class="text-right num">${fmt0.format(m.leads_site)}</td>
+      <td class="text-right num accent">R$ ${fmtBR.format(cpl)}</td>
+    </tr>`;
+  });
+
+  // Tabela diária
+  const tblDia = document.getElementById('tblDia');
+  tblDia.innerHTML = '';
+  dias.forEach(([d,g,c,l,cl]) => {
+    tblDia.innerHTML += `<tr>
+      <td class="font-medium">${d}</td>
+      <td class="text-right num">R$ ${fmtBR.format(g)}</td>
+      <td class="text-right num">${c===null?'—':fmt0.format(c)}</td>
+      <td class="text-right num">${l===null?'—':fmt0.format(l)}</td>
+      <td class="text-right num">${cl===null?'—':fmt0.format(cl)}</td>
+    </tr>`;
+  });
+
+  // Charts
+  Chart.defaults.color = '#7a7a85';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+  const labels = dias.map(d=>d[0]);
+  const gastos = dias.map(d=>d[1]);
+  const convs = dias.map(d=>d[2]);
+
+  new Chart(document.getElementById('chartGasto'), {
+    type: 'bar',
+    data: { labels, datasets: [{
+      label: 'Investido (R$)', data: gastos,
+      backgroundColor: 'rgba(212,175,55,0.8)', borderRadius: 4
+    }]},
+    options: {
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'R$ '+fmtBR.format(c.raw)}}},
+      scales:{y:{ticks:{callback:v=>'R$'+fmt0.format(v)}}}
+    }
+  });
+
+  new Chart(document.getElementById('chartConv'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Conversas', data: convs,
+      borderColor: '#d4af37', backgroundColor: 'rgba(212,175,55,0.15)',
+      fill: true, tension: 0.35, spanGaps: true, pointRadius: 2, pointHoverRadius: 5
+    }]},
+    options: { plugins:{legend:{display:false}} }
+  });
+}
+
+render();
+</script>
+</body>
+</html>

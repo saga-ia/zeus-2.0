@@ -95,7 +95,7 @@ case "$cmd" in
     RNG="${4:?range required}"
     VALUES="${5:?json values required, ex: [[\"a\",\"b\"]]}"
     RNGENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$RNG")
-    call "$UK" POST "https://sheets.googleapis.com/v4/spreadsheets/$SID/values/$RNGENC:append?valueInputOption=USER_ENTERED" "{\"values\":$VALUES}"
+    call "$UK" POST "https://sheets.googleapis.com/v4/spreadsheets/$SID/values/$RNGENC:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS" "{\"values\":$VALUES}"
     ;;
   drive-upload)
     UK="${2:?usage: drive-upload <user_key> <file_path> [folder_id] [mime]}"

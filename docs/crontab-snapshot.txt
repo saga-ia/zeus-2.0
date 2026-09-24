@@ -9,7 +9,19 @@
 */5 * * * * /opt/jeff-worker/scripts/clickup-sync.py >> /opt/jeff-worker/logs/clickup-sync.log 2>&1
 0 11,14,17,21 * * * /opt/jeff-worker/scripts/clickup-cobranca.py >> /opt/jeff-worker/logs/clickup-cobranca.log 2>&1
 */2 * * * * /opt/jeff-worker/scripts/clickup-asaas-bridge.py >> /opt/jeff-worker/logs/clickup-asaas-bridge.log 2>&1
-*/5 * * * * /opt/jeff-worker/scripts/cigc-crm-health.sh
+# DESATIVADO 2026-09-08 Jeff pediu: */5 * * * * /opt/jeff-worker/scripts/cigc-crm-health.sh
 # Board Academy (Farias) — pausa 22h BRT / ativa 5h BRT
-0 1 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh pause >> /opt/jeff-worker/logs/board-schedule.log 2>&1
-0 8 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh activate >> /opt/jeff-worker/logs/board-schedule.log 2>&1
+#0 1 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh pause >> /opt/jeff-worker/logs/board-schedule.log 2>&1
+#0 8 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh activate >> /opt/jeff-worker/logs/board-schedule.log 2>&1
+
+# Refresh proativo OAuth Claude CLI (evita 401 que mata o Zeus)
+*/30 * * * * /opt/jeff-worker/scripts/claude-token-refresh.sh >> /opt/jeff-worker/logs/claude-token-refresh.log 2>&1
+# Healthcheck do agent-runner (alerta WhatsApp em transicao OK<->DOWN)
+*/5 * * * * /opt/jeff-worker/scripts/agent-runner-health.sh >> /opt/jeff-worker/logs/agent-runner-health.log 2>&1
+# Healthcheck do whatsapp-worker (detecta puppeteer travado, auto-restart)
+*/3 * * * * /opt/jeff-worker/scripts/wa-worker-health.sh >> /opt/jeff-worker/logs/wa-worker-health.log 2>&1
+#PAUSED * * * * * /opt/jeff-worker/scripts/ig-dm-dispatcher.sh >> /opt/jeff-worker/logs/ig-dm-dispatcher.cron.log 2>&1
+0 3 15 * * /opt/jeff-worker/scripts/ig-token-refresh.sh >> /opt/jeff-worker/logs/ig-token-refresh.cron.log 2>&1
+*/3 * * * * /usr/bin/python3 /opt/jeff-sites/boardsummit2026planilha/refresh.py >> /opt/jeff-sites/boardsummit2026planilha/refresh.log 2>&1
+*/10 * * * * /usr/bin/python3 /opt/jeff-sites/cigc-dashboard/update-from-vitor.py >> /var/log/cigc-dashboard-update.log 2>&1
+45 23 * * * /usr/bin/python3 /opt/jeff-sites/cigc-dashboard/update-from-gustavo.py >> /var/log/cigc-dashboard-update.log 2>&1

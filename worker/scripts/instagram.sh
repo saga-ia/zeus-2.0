@@ -18,9 +18,11 @@
 set -u
 DB="/opt/jeff-worker/data/worker.db"
 GRAPH="https://graph.facebook.com/v19.0"
+IG_GRAPH="https://graph.instagram.com/v21.0"
 
 TOKEN=$(sqlite3 "$DB" "SELECT value FROM app_settings WHERE key='jeff_meta_ig_user_token';")
 IG_ID=$(sqlite3 "$DB" "SELECT value FROM app_settings WHERE key='jeff_meta_ig_account_id';")
+IG_LOGIN_TOKEN=$(sqlite3 "$DB" "SELECT value FROM app_settings WHERE key='jeff_instagram_login_token';")
 [ -z "$TOKEN" ] && { echo '{"error":"jeff_meta_ig_user_token missing"}'; exit 2; }
 [ -z "$IG_ID" ] && { echo '{"error":"jeff_meta_ig_account_id missing"}'; exit 2; }
 
@@ -33,6 +35,20 @@ api() {
       -H "Content-Type: application/json" -d "$body"
   else
     curl -s -X "$method" "${GRAPH}${path}${sep}access_token=${TOKEN}"
+  fi
+}
+
+# API v2 (Instagram Login API — graph.instagram.com, usa token IGAA...)
+api_ig() {
+  local method="$1"; local path="$2"; local body="${3:-}"
+  [ -z "$IG_LOGIN_TOKEN" ] && { echo '{"error":"jeff_instagram_login_token missing"}'; return 2; }
+  if [ -n "$body" ]; then
+    curl -s -X "$method" "${IG_GRAPH}${path}" \
+      -H "Authorization: Bearer $IG_LOGIN_TOKEN" \
+      -H "Content-Type: application/json" -d "$body"
+  else
+    curl -s -X "$method" "${IG_GRAPH}${path}" \
+      -H "Authorization: Bearer $IG_LOGIN_TOKEN"
   fi
 }
 
@@ -91,9 +107,17 @@ case "$cmd" in
     api POST "/$IG_ID/media_publish" "{\"creation_id\":\"$CONTAINER\"}"
     ;;
   dm-send)
-    UID="${2:?usage: dm-send <ig_user_id> <text>}"
+    # Envio via Instagram Login API (graph.instagram.com) — recomendado
+    TARGET_UID="${2:?usage: dm-send <ig_user_id> <text>}"
     TEXT="${3:?text required}"
-    BODY=$(python3 -c "import json,sys;print(json.dumps({'recipient':{'id':sys.argv[1]},'message':{'text':sys.argv[2]}}))" "$UID" "$TEXT")
+    BODY=$(python3 -c "import json,sys;print(json.dumps({'recipient':{'id':sys.argv[1]},'message':{'text':sys.argv[2]}}))" "$TARGET_UID" "$TEXT")
+    api_ig POST "/me/messages" "$BODY"
+    ;;
+  dm-send-fb)
+    # Envio legado via Facebook Graph (exige instagram_manage_messages em Advanced Access)
+    TARGET_UID="${2:?usage: dm-send-fb <ig_user_id> <text>}"
+    TEXT="${3:?text required}"
+    BODY=$(python3 -c "import json,sys;print(json.dumps({'recipient':{'id':sys.argv[1]},'message':{'text':sys.argv[2]}}))" "$TARGET_UID" "$TEXT")
     api POST "/$IG_ID/messages" "$BODY"
     ;;
   raw)

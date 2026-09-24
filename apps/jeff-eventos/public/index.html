@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Jeff Eventos</title>
+  <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><div class="logo">J</div> Jeff Eventos</div>
+    <nav>
+      <a href="#/" data-nav="dashboard">Dashboard</a>
+      <a href="#/eventos" data-nav="eventos">Eventos</a>
+      <a href="#/config" data-nav="config">Configuracoes</a>
+      <a href="#/whatsapp" data-nav="whatsapp">WhatsApp</a>
+      <a href="#/logs" data-nav="logs">Logs</a>
+    </nav>
+    <div class="power">
+      <span id="powerLabel">Sistema</span>
+      <div class="switch" id="powerSwitch"></div>
+    </div>
+  </div>
+
+  <div class="container" id="view"></div>
+
+  <div class="modal-back" id="modal"><div class="modal" id="modalBody"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

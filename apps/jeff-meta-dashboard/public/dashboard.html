@@ -531,16 +531,16 @@ tr.top-row td { background: rgba(0,255,65,0.08); }
       </div>
     </div>
 
-    <div class="filter-btn" title="Business Manager">
+    <div class="filter-btn" title="Business Manager" id="bmFilterWrap">
       <span>🏢</span>
-      <select id="bmFilter">
+      <select id="bmFilter" onchange="onBmChange()">
         <option value="all">Todos os BMs</option>
       </select>
     </div>
 
     <div class="filter-btn" title="Conta de Anúncios">
       <span>📊</span>
-      <select id="adAccountFilter">
+      <select id="adAccountFilter" onchange="onAccountChange()">
         <option value="all">Conta de Anúncios</option>
       </select>
     </div>
@@ -923,11 +923,13 @@ let lastRegionsData = [];
 const token  = localStorage.getItem('meta_token');
 const role   = localStorage.getItem('meta_role');
 const viewAs = localStorage.getItem('meta_admin_preview_client');
+const _urlParams = new URLSearchParams(window.location.search);
+const _urlClient = _urlParams.get('client');
 
 if (!token) { window.location.href = '/login.html'; }
 
-if (role === 'admin' && viewAs) {
-  CLIENT_ID = viewAs;
+if (role === 'admin' && (viewAs || _urlClient)) {
+  CLIENT_ID = viewAs || _urlClient;
   localStorage.removeItem('meta_admin_preview_client');
 } else if (role === 'client') {
   CLIENT_ID = localStorage.getItem('meta_client_id');
@@ -1022,6 +1024,7 @@ const getDates = () => {
 
 // IDs de campanhas selecionadas via tabela da aba Campanhas
 let selectedCampaignIds = [];
+let selectedAccountId = 'all';
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
 function showPage(name) {
@@ -1108,9 +1111,60 @@ function initScrollSpy() {
   }, { passive: true });
 }
 
+// ─── Account / BM helpers ────────────────────────────────────────────────────
+async function loadAccountFilter() {
+  try {
+    const data = await API(`/api/clients/${CLIENT_ID}/accounts`);
+    const sel = document.getElementById('adAccountFilter');
+    sel.innerHTML = '<option value="all">Todas as Contas</option>';
+    (data?.accounts || []).forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.name || a.id;
+      sel.appendChild(opt);
+    });
+    selectedAccountId = 'all';
+  } catch(e) { /* silently ignore */ }
+}
+
+function onAccountChange() {
+  selectedAccountId = document.getElementById('adAccountFilter').value;
+  reload();
+}
+
+async function onBmChange() {
+  const newId = document.getElementById('bmFilter').value;
+  if (!newId || newId === 'all') return;
+  CLIENT_ID = newId;
+  selectedCampaignIds = [];
+  try {
+    clientInfo = await API(`/api/clients/${CLIENT_ID}`);
+    document.getElementById('clientName').textContent = clientInfo.name || 'Dashboard';
+    await loadAccountFilter();
+    await reload();
+    loadCampaignsByObjective();
+  } catch(e) { showError(e.message); }
+}
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 async function init() {
   try {
+    // Populate BM filter (admin only)
+    if (role === 'admin') {
+      const clients = await API('/api/clients');
+      const bmSel = document.getElementById('bmFilter');
+      bmSel.innerHTML = '';
+      (clients || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        if (c.id === CLIENT_ID) opt.selected = true;
+        bmSel.appendChild(opt);
+      });
+    } else {
+      document.getElementById('bmFilterWrap').style.display = 'none';
+    }
+
     clientInfo = await API(`/api/clients/${CLIENT_ID}`);
     document.getElementById('clientName').textContent = clientInfo.name || 'Dashboard';
     if (clientInfo.logo_url) {
@@ -1120,6 +1174,8 @@ async function init() {
       img.onerror = () => {};
       document.getElementById('clientLogo').replaceWith(img);
     }
+
+    await loadAccountFilter();
     await reload();
     loadCampaignList();
   } catch(e) { showError(e.message); }
@@ -1129,7 +1185,8 @@ async function init() {
 async function reload() {
   const { since, until } = getDates();
   const campaign_ids = selectedCampaignIds.join(',');
-  const qs = `since=${since}&until=${until}` + (campaign_ids ? `&campaign_ids=${encodeURIComponent(campaign_ids)}` : '');
+  const actPart = selectedAccountId && selectedAccountId !== 'all' ? `&act=${encodeURIComponent(selectedAccountId)}` : '';
+  const qs = `since=${since}&until=${until}` + (campaign_ids ? `&campaign_ids=${encodeURIComponent(campaign_ids)}` : '') + actPart;
   document.getElementById('lastUpdate').textContent = 'Atualizando...';
   try {
     const [overview, comparison, timeseries, campaigns] = await Promise.all([
@@ -1385,7 +1442,8 @@ function setCampStatus(status) {
 
 async function loadCampaignsByObjective() {
   const { since, until } = getDates();
-  const qs = `since=${since}&until=${until}&status=${campStatusFilter}`;
+  const actPart = selectedAccountId && selectedAccountId !== 'all' ? `&act=${encodeURIComponent(selectedAccountId)}` : '';
+  const qs = `since=${since}&until=${until}&status=${campStatusFilter}${actPart}`;
   const el = document.getElementById('campaignObjBlocks');
   if (el) el.innerHTML = '<div class="loading"><span class="spinner">⟳</span> Carregando...</div>';
   try {

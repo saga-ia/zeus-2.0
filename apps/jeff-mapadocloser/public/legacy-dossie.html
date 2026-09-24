@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossiê de Fechamento · O Plano do Dono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0B;
+    --ink-2:#141416;
+    --ink-3:#1C1C20;
+    --line:#2B2820;
+    --paper:#F2EDE2;
+    --paper-dim:#A69D89;
+    --gold:#C9A227;
+    --gold-2:#E6C87A;
+    --gold-soft:rgba(201,162,39,.12);
+    --blue:#2C4FCF;
+    --alert:#D66459;
+    --go:#5FA97C;
+    --steel:#8B97A8;
+    --radius:10px;
+    --font-display:'Oswald',sans-serif;
+    --font-body:'Instrument Sans',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--paper);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--gold);color:var(--ink)}
+
+  header.cockpit{
+    position:sticky;top:0;z-index:50;
+    background:linear-gradient(180deg,#0A0A0B 78%,rgba(10,10,11,.94));
+    border-bottom:1px solid var(--gold);backdrop-filter:blur(6px);overflow:hidden;
+  }
+  header.cockpit::before,header.cockpit::after{
+    content:"";position:absolute;top:-40px;width:220px;height:220px;pointer-events:none;
+    background:repeating-linear-gradient(45deg,transparent 0 9px,rgba(201,162,39,.28) 9px 10px,transparent 10px 22px);
+    -webkit-mask-image:radial-gradient(circle at 0 0,#000 0%,transparent 72%);
+    mask-image:radial-gradient(circle at 0 0,#000 0%,transparent 72%);opacity:.8;
+  }
+  header.cockpit::before{left:-30px}
+  header.cockpit::after{right:-30px;transform:scaleX(-1)}
+  .cockpit-inner{max-width:1280px;margin:0 auto;padding:14px 28px 12px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;position:relative;z-index:1}
+  .brand{display:flex;flex-direction:column;gap:1px;min-width:230px}
+  .brand .eyebrow{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+  .brand h1{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.05;text-transform:uppercase;letter-spacing:.04em}
+  .brand h1 .g{color:var(--gold)}
+  .brand .sub{font-size:11px;color:var(--paper-dim);letter-spacing:.04em}
+  .brand .sub b{color:#5B79E8;font-weight:700}
+  .cockpit-stats{display:flex;margin-left:auto;flex-wrap:wrap}
+  .cstat{padding:2px 20px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+  .cstat:first-child{border-left:none}
+  .cstat b{font-family:var(--font-mono);font-size:16px;font-weight:700}
+  .cstat span{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--paper-dim)}
+  .cstat.gold b{color:var(--gold-2)}
+  .cstat.save b{color:var(--go)}
+
+  nav.tabs{max-width:1280px;margin:0 auto;padding:0 28px;display:flex;gap:4px;overflow-x:auto;position:relative;z-index:1}
+  nav.tabs button{
+    background:none;border:none;cursor:pointer;font-family:var(--font-display);
+    font-weight:500;font-size:12.5px;color:var(--paper-dim);text-transform:uppercase;letter-spacing:.07em;
+    padding:10px 11px 12px;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;
+  }
+  nav.tabs button:hover{color:var(--paper)}
+  nav.tabs button.active{color:var(--gold-2);border-bottom-color:var(--gold)}
+  nav.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+
+  main{max-width:1280px;margin:0 auto;padding:34px 28px 90px}
+  section.tab-panel{display:none}
+  section.tab-panel.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){section.tab-panel.active{animation:none}html{scroll-behavior:auto}}
+
+  h2.sec{font-family:var(--font-display);font-size:30px;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+  h2.sec::after{content:"";display:block;width:64px;height:2px;background:var(--gold);margin-top:8px}
+  p.sec-sub{color:var(--paper-dim);margin:14px 0 26px;max-width:820px}
+  .gold{color:var(--gold-2)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  .card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .card h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+  .h4,.card h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--gold);margin:16px 0 6px}
+  .card h4:first-child{margin-top:0}
+  .card p{margin-bottom:8px}
+  .dim{color:var(--paper-dim)}
+  .card ul{list-style:none}
+  .card ul li{padding:6px 0 6px 18px;position:relative;border-bottom:1px dashed rgba(43,40,32,.8);font-size:14px}
+  .card ul li:last-child{border-bottom:none}
+  .card ul li::before{content:"◆";position:absolute;left:0;color:var(--gold);font-size:9px;top:11px}
+
+  .tag{display:inline-block;font-family:var(--font-mono);font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--paper-dim);margin:0 4px 4px 0;letter-spacing:.03em}
+  .tag.gold{border-color:rgba(201,162,39,.55);color:var(--gold-2);background:var(--gold-soft)}
+  .tag.go{border-color:rgba(95,169,124,.5);color:var(--go);background:rgba(95,169,124,.1)}
+  .tag.alert{border-color:rgba(214,100,89,.5);color:var(--alert);background:rgba(214,100,89,.08)}
+  .tag.steel{border-color:rgba(139,151,168,.5);color:var(--steel);background:rgba(139,151,168,.08)}
+  .tag.blue{border-color:rgba(91,121,232,.55);color:#7D95EE;background:rgba(44,79,207,.12)}
+
+  .callout{border-left:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:0 var(--radius) var(--radius) 0;margin:14px 0;font-size:14px}
+  .callout.red{border-left-color:var(--alert);background:rgba(214,100,89,.08)}
+  .callout.green{border-left-color:var(--go);background:rgba(95,169,124,.08)}
+  .callout.blue{border-left-color:#5B79E8;background:rgba(44,79,207,.1)}
+  .callout b{color:var(--gold-2)}
+  .callout.red b{color:var(--alert)}
+  .callout.green b{color:var(--go)}
+  .callout.blue b{color:#7D95EE}
+
+  .script{background:var(--ink);border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:8px;padding:14px 16px;font-size:14px;font-style:italic;position:relative;margin-top:8px}
+  .script::before{content:"FALA DO CLOSER";font-style:normal;font-family:var(--font-mono);font-size:9px;letter-spacing:.22em;color:var(--gold);display:block;margin-bottom:6px}
+  .script.qlead{border-left-color:var(--steel)}
+  .script.qlead::before{content:"PERGUNTA / FALA DO PRÓPRIO LEAD";color:var(--steel)}
+
+  .stars{font-size:13px;letter-spacing:2px;color:var(--gold-2);white-space:nowrap}
+  .stars .off{color:var(--line)}
+
+  /* Tooltip de módulos e bônus */
+  .mod{
+    position:relative;color:var(--gold-2);font-weight:600;cursor:help;
+    border-bottom:1px dotted rgba(201,162,39,.65);white-space:nowrap;
+  }
+  .mod::after{
+    content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);
+    width:min(300px,72vw);background:#1C1A12;border:1px solid var(--gold);border-radius:8px;
+    padding:10px 12px;font-family:var(--font-body);font-weight:400;font-style:normal;
+    font-size:12px;line-height:1.45;color:var(--paper);letter-spacing:0;white-space:normal;text-align:left;
+    box-shadow:0 10px 28px rgba(0,0,0,.55);
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease;z-index:80;
+  }
+  .mod::before{
+    content:"";position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:var(--gold);
+    opacity:0;visibility:hidden;transition:opacity .12s ease;z-index:81;
+  }
+  .mod:hover::after,.mod:focus::after,.mod:active::after,
+  .mod:hover::before,.mod:focus::before,.mod:active::before{opacity:1;visibility:visible}
+
+  /* SPIN */
+  .spin-wrap{display:grid;grid-template-columns:190px 1fr;gap:26px;align-items:start}
+  @media(max-width:900px){.spin-wrap{grid-template-columns:1fr}}
+  .spin-rail{position:sticky;top:124px;display:flex;flex-direction:column;gap:8px}
+  @media(max-width:900px){.spin-rail{position:static;flex-direction:row;flex-wrap:wrap}}
+  .spin-rail button{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;text-align:left;cursor:pointer;color:var(--paper);display:flex;align-items:center;gap:12px;font-family:var(--font-body);transition:border-color .15s,background .15s}
+  .spin-rail button .letter{font-family:var(--font-display);font-weight:700;font-size:24px;color:var(--paper-dim);width:28px;text-align:center}
+  .spin-rail button .lbl{display:flex;flex-direction:column}
+  .spin-rail button .lbl b{font-size:13px}
+  .spin-rail button .lbl span{font-size:11px;color:var(--paper-dim)}
+  .spin-rail button .count{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--paper-dim)}
+  .spin-rail button.active{border-color:var(--gold);background:var(--gold-soft)}
+  .spin-rail button.active .letter{color:var(--gold-2)}
+  .spin-stage{display:none}
+  .spin-stage.active{display:block;animation:fade .2s ease}
+  .spin-stage .stage-goal{font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .spin-stage .stage-why{color:var(--paper-dim);margin-bottom:18px;font-size:14px}
+  .qitem{display:flex;align-items:flex-start;gap:12px;background:var(--ink-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,opacity .15s}
+  .qitem:hover{border-color:var(--gold)}
+  .qitem.done{opacity:.45;border-color:var(--go)}
+  .qitem .box{width:18px;height:18px;flex:none;margin-top:2px;border:1.5px solid var(--paper-dim);border-radius:4px;position:relative}
+  .qitem.done .box{border-color:var(--go);background:var(--go)}
+  .qitem.done .box::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:12px;font-weight:700}
+  .qitem .qtext{font-size:14px}
+  .qitem .qnote{font-size:12px;color:var(--paper-dim);margin-top:3px}
+
+  /* LEADS */
+  .lead-layout{display:grid;grid-template-columns:370px 1fr;gap:24px;align-items:start}
+  @media(max-width:1000px){.lead-layout{grid-template-columns:1fr}}
+  .lead-side{display:flex;flex-direction:column;gap:12px}
+  .search-box{display:flex;align-items:center;gap:10px;background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
+  .search-box svg{flex:none;opacity:.6}
+  .search-box input{background:none;border:none;outline:none;color:var(--paper);font-family:var(--font-body);font-size:14px;width:100%}
+  .search-box input::placeholder{color:var(--paper-dim)}
+  .search-box:focus-within{border-color:var(--gold)}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .filters button{background:var(--ink-2);border:1px solid var(--line);border-radius:99px;color:var(--paper-dim);font-family:var(--font-mono);font-size:10.5px;font-weight:600;padding:5px 12px;cursor:pointer;letter-spacing:.03em;transition:all .15s}
+  .filters button:hover{color:var(--paper);border-color:var(--steel)}
+  .filters button.active{color:var(--gold-2);border-color:var(--gold);background:var(--gold-soft)}
+  .lead-list{display:flex;flex-direction:column;gap:8px;max-height:70vh;overflow-y:auto;padding-right:4px}
+  .lead-list::-webkit-scrollbar{width:6px}
+  .lead-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .lead-item{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px;cursor:pointer;text-align:left;color:var(--paper);font-family:var(--font-body);width:100%;transition:border-color .15s,background .15s}
+  .lead-item:hover{border-color:var(--steel)}
+  .lead-item.active{border-color:var(--gold);background:var(--gold-soft)}
+  .lead-item .l-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .lead-item .l-name{font-weight:600;font-size:14px}
+  .lead-item .l-co{font-size:12px;color:var(--paper-dim);margin-top:2px}
+  .lead-item .l-fat{font-family:var(--font-mono);font-size:10.5px;color:var(--gold-2);margin-top:3px;display:flex;justify-content:space-between;gap:8px}
+  .l-tier{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;padding:2px 8px;border-radius:99px;border:1px solid;white-space:nowrap}
+  .empty-state{color:var(--paper-dim);font-size:13px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius)}
+
+  .lead-detail .ld-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .lead-detail .ld-head h3{font-family:var(--font-display);font-size:22px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .ld-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .ld-meta .m{background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .ld-meta .m span{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--paper-dim);display:block}
+  .ld-meta .m b{font-size:13px}
+  .ld-meta .m b.mono{font-family:var(--font-mono);font-size:12px}
+  .ld-meta .m a{color:var(--go);text-decoration:none}
+  .ld-meta .m a:hover{text-decoration:underline}
+  .ld-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn{background:var(--gold);color:var(--ink);border:none;border-radius:8px;font-family:var(--font-display);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em;padding:10px 18px;cursor:pointer;transition:filter .15s}
+  .btn:hover{filter:brightness(1.12)}
+  .notes-area{width:100%;margin-top:10px;background:var(--ink);border:1px solid var(--line);border-radius:8px;color:var(--paper);font-family:var(--font-body);font-size:13.5px;padding:12px;min-height:70px;resize:vertical}
+  .notes-area:focus{outline:none;border-color:var(--gold)}
+
+  /* OBJEÇÕES */
+  details.obj{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+  details.obj summary{cursor:pointer;padding:16px 20px;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:12px}
+  details.obj summary::-webkit-details-marker{display:none}
+  details.obj summary .obj-tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--alert);border:1px solid rgba(214,100,89,.45);border-radius:99px;padding:2px 9px;flex:none}
+  details.obj summary::after{content:"+";margin-left:auto;font-family:var(--font-display);font-size:20px;color:var(--gold);transition:transform .2s}
+  details.obj[open] summary::after{transform:rotate(45deg)}
+  details.obj .obj-body{padding:0 20px 20px;border-top:1px dashed var(--line)}
+  details.obj .obj-body p{margin-top:12px;font-size:14px}
+
+  /* SIMULADOR */
+  .sim-layout{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+  @media(max-width:1000px){.sim-layout{grid-template-columns:1fr}}
+  .sim-lead-strip{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .sim-lead-strip button{background:var(--ink-2);border:1px solid var(--line);border-radius:99px;color:var(--paper-dim);font-size:11.5px;font-weight:600;padding:6px 13px;cursor:pointer;font-family:var(--font-body);transition:all .15s}
+  .sim-lead-strip button:hover{border-color:var(--steel);color:var(--paper)}
+  .sim-lead-strip button.active{border-color:var(--gold);color:var(--gold-2);background:var(--gold-soft)}
+  .field{margin-bottom:16px}
+  .field label{font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--paper-dim);display:block;margin-bottom:6px}
+  .field input,.field select{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;color:var(--paper);font-family:var(--font-mono);font-size:15px;padding:11px 14px}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+  .quick-vals{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .quick-vals button{background:var(--ink);border:1px solid var(--line);border-radius:6px;color:var(--paper-dim);font-family:var(--font-mono);font-size:11px;padding:4px 10px;cursor:pointer}
+  .quick-vals button:hover{border-color:var(--gold);color:var(--gold-2)}
+  .mode-switch{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .mode-switch button{flex:1;background:var(--ink);border:none;color:var(--paper-dim);font-family:var(--font-body);font-weight:600;font-size:12.5px;padding:10px;cursor:pointer}
+  .mode-switch button.active{background:var(--gold-soft);color:var(--gold-2)}
+  .sim-out{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  @media(max-width:700px){.sim-out{grid-template-columns:1fr}}
+  .out-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;background:var(--ink-2)}
+  .out-card.green{border-color:rgba(95,169,124,.5);background:rgba(95,169,124,.07)}
+  .out-card.goldc{border-color:rgba(201,162,39,.55);background:var(--gold-soft)}
+  .out-card .o-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--paper-dim)}
+  .out-card .o-val{font-family:var(--font-mono);font-size:27px;font-weight:700;margin:6px 0 2px}
+  .out-card.green .o-val{color:var(--go)}
+  .out-card.goldc .o-val{color:var(--gold-2)}
+  .out-card .o-note{font-size:12px;color:var(--paper-dim)}
+  .payback{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+  .payback .row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed rgba(43,40,32,.8);font-size:14px}
+  .payback .row:last-of-type{border-bottom:none}
+  .payback .row b{font-family:var(--font-mono);font-size:15px}
+  .payback .row b.go{color:var(--go)}
+  .payback .row b.gold{color:var(--gold-2)}
+
+  /* FECHAMENTO */
+  .close-step{display:grid;grid-template-columns:52px 1fr;gap:18px;margin-bottom:22px}
+  .close-step .n{font-family:var(--font-display);font-size:36px;font-weight:700;color:var(--line);line-height:1;text-align:right}
+  .close-step.hot .n{color:var(--gold)}
+  .close-step h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .price-duel{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+  @media(max-width:700px){.price-duel{grid-template-columns:1fr}}
+  .price-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;background:var(--ink)}
+  .price-card.featured{border-color:var(--gold);background:var(--gold-soft)}
+  .price-card .p-mode{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--paper-dim)}
+  .price-card .p-val{font-family:var(--font-mono);font-size:26px;font-weight:700;margin:6px 0 2px}
+  .price-card.featured .p-val{color:var(--gold-2)}
+  .price-card .p-note{font-size:12.5px;color:var(--paper-dim)}
+
+  table.mods{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+  table.mods td{padding:8px 10px;border-bottom:1px dashed rgba(43,40,32,.8);vertical-align:top}
+  table.mods td.mn{font-family:var(--font-mono);color:var(--gold-2);white-space:nowrap;font-size:11.5px;padding-top:10px}
+
+  /* WORKBOOK & MAPA */
+  .wb-band{background:linear-gradient(90deg,#101012,#17150E);border:1px solid var(--gold);border-radius:var(--radius);padding:20px 24px;margin-bottom:22px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .wb-band .wb-title{font-family:var(--font-display);font-size:19px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .wb-band .wb-title .g{color:var(--gold-2)}
+  .wb-band .wb-cred{margin-left:auto;font-size:12.5px;color:var(--paper-dim);text-align:right}
+  .wb-band .wb-cred b{color:var(--paper)}
+  .faixa{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:12px 0}
+  @media(max-width:800px){.faixa{grid-template-columns:1fr}}
+  .faixa .f{border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;background:var(--ink)}
+  .faixa .f .fn{font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;margin-bottom:6px;display:block}
+  .faixa .f.f1 .fn{color:var(--go)}
+  .faixa .f.f2 .fn{color:var(--gold-2)}
+  .faixa .f.f3 .fn{color:var(--alert)}
+  .faixa .f .ft{font-weight:700;font-size:14px;margin-bottom:4px}
+  .faixa .f p{font-size:13px;color:var(--paper-dim)}
+  .faixa .f .fs{font-size:13px;color:var(--paper);font-style:italic;margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+  table.wbmap{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.wbmap th{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-align:left;padding:8px 10px;border-bottom:1px solid var(--gold)}
+  table.wbmap td{padding:9px 10px;border-bottom:1px dashed rgba(43,40,32,.8);vertical-align:top}
+  table.wbmap td.wn{font-family:var(--font-mono);color:var(--gold-2);white-space:nowrap;font-size:11.5px}
+
+  .rank{counter-reset:rk}
+  .rank .rk-item{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+  .rank .rk-item:hover{border-color:var(--gold)}
+  .rank .rk-item::before{counter-increment:rk;content:counter(rk,decimal-leading-zero);font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--gold);text-align:center}
+  .rank .rk-item .rk-name{font-weight:600;font-size:14px}
+  .rank .rk-item .rk-why{font-size:12.5px;color:var(--paper-dim)}
+
+  footer{max-width:1280px;margin:0 auto;padding:20px 28px 40px;border-top:1px solid var(--line);color:var(--paper-dim);font-size:11.5px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer .mono{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em}
+</style>
+</head>
+<body>
+
+<header class="cockpit">
+  <div class="cockpit-inner">
+    <div class="brand">
+      <span class="eyebrow">Dossiê de fechamento · uso interno · enriquecido com pesquisa pública</span>
+      <h1>O Plano <span class="g">do Dono</span></h1>
+      <span class="sub"><b>FS</b> Farias Souza · Board Academy · Mesa de fechamento</span>
+    </div>
+    <div class="cockpit-stats">
+      <div class="cstat"><b>6 meses</b><span>Programa</span></div>
+      <div class="cstat"><b>12</b><span>Encontros</span></div>
+      <div class="cstat"><b>4</b><span>Bônus</span></div>
+      <div class="cstat gold"><b>R$ 55.000</b><span>À vista · PIX</span></div>
+      <div class="cstat"><b>12× R$ 6.000</b><span>Cartão · R$ 72k</span></div>
+      <div class="cstat save"><b>R$ 17.000</b><span>Economia à vista</span></div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Seções do dossiê">
+    <button class="active" data-tab="produto">Produto</button>
+    <button data-tab="mapa">Mapa da Sala</button>
+    <button data-tab="workbook">Imersão &amp; Workbook</button>
+    <button data-tab="spin">Navegador SPIN</button>
+    <button data-tab="leads">Sala de leads</button>
+    <button data-tab="simulador">Simulador ROI</button>
+    <button data-tab="objecoes">Objeções</button>
+    <button data-tab="fechamento">Fechamento</button>
+    <button data-tab="contrato">Contrato</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= PRODUTO ================= -->
+<section class="tab-panel active" id="tab-produto">
+  <h2 class="sec">O produto em <span class="gold">60 segundos</span></h2>
+  <p class="sec-sub">O que o closer precisa dominar de cor antes de sentar à mesa. O Plano do Dono não vende encontros: vende a saída do dono do operacional e a instalação de um Sistema Operacional da Empresa (SOE).</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>A tese central</h3>
+      <p>Mentoria executiva de 6 meses, 12 encontros quinzenais (6 presenciais + 6 online ao vivo), que estrutura, profissionaliza e acelera o <b class="gold">Sistema Operacional da Empresa</b> do mentorado.</p>
+      <div class="callout"><b>Frase de posicionamento (do próprio Farias):</b> "O maior patrimônio da empresa não é o caixa, o produto ou a marca — é a capacidade do dono construir um negócio que continue crescendo mesmo quando ele deixa de estar no centro de todas as decisões."</div>
+      <h4>Autoridade — prova social para a mesa</h4>
+      <p style="font-size:13.5px">Farias Souza é fundador da <b>Board Academy</b>, escola de educação empresarial em formação de conselheiros consultivos, com <b class="gold">mais de 12.500 alunos e 4.500 empresas atendidas em 5 anos</b>. Na própria sala há alumni ativos: Delmi (Especifer), Renata Saboia e Maria Torres.</p>
+      <h4>Os 12 módulos (o mapa da jornada)</h4>
+      <table class="mods">
+        <tr><td class="mn">M01</td><td>Diagnóstico Estratégico do Negócio</td></tr>
+        <tr><td class="mn">M02</td><td>Planejamento Estratégico e Metas 12 Meses</td></tr>
+        <tr><td class="mn">M03</td><td>Modelo de Negócio, Escalabilidade e Margem</td></tr>
+        <tr><td class="mn">M04</td><td>Estrutura Organizacional, Organograma e Liderança</td></tr>
+        <tr><td class="mn">M05</td><td>Cultura, Gestão de Pessoas e Accountability</td></tr>
+        <tr><td class="mn">M06</td><td>Gestão Financeira, DRE e Fluxo de Caixa</td></tr>
+        <tr><td class="mn">M07</td><td>Máquina Comercial de Alta Performance</td></tr>
+        <tr><td class="mn">M08</td><td>Marketing Estratégico e Geração de Demanda</td></tr>
+        <tr><td class="mn">M09</td><td>Tecnologia e IA Aplicadas à Operação</td></tr>
+        <tr><td class="mn">M10</td><td>Indicadores, Dashboards e Gestão por Dados</td></tr>
+        <tr><td class="mn">M11</td><td>Riscos, Compliance e Proteção Patrimonial</td></tr>
+        <tr><td class="mn">M12</td><td>Sucessão, Valuation e Legado</td></tr>
+      </table>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>O que o cliente sai com — o SOE entregue</h3>
+        <ul>
+          <li>Plano estratégico de 12 meses + plano de crescimento de 3 anos</li>
+          <li>Organograma ideal + matriz de responsabilidades</li>
+          <li>Dashboard executivo de indicadores + plano financeiro</li>
+          <li>Modelo de governança + modelo de reuniões executivas</li>
+          <li>Plano comercial previsível + roadmap de IA e tecnologia</li>
+          <li>Plano de sucessão</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>Os 4 bônus — condição do evento presencial</h3>
+        <ul>
+          <li><b>B1 · Consultoria de Marketing &amp; Growth (30 dias)</b> — 4 reuniões semanais com auditoria de métricas, canais, anúncios e funil.</li>
+          <li><b>B2 · Aconselhamento 1:1 com Farias Souza</b> — 2 sessões privativas sobre dados financeiros, estrutura societária e plano do CEO.</li>
+          <li><b>B3 · Imersão presencial in-company</b> — até 5h na operação + workshop de 2h com a liderança.</li>
+          <li><b>B4 · Capacitação comercial in-company</b> — treinamento online exclusivo para o time de vendas.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Garantia contratual de resultado</h3>
+        <p>Se, cumpridos os requisitos, o cliente não comprovar <b class="gold">+10% em pelo menos 1 de 3 indicadores</b> (faturamento bruto mensal, margem EBITDA ou indicador de eficiência definido no M01), recebe <b class="gold">100% do valor pago de volta</b>.</p>
+        <div class="callout red"><b>Compliance de mesa:</b> a garantia é de <b>10%</b> (Cláusula 4.2). Números acima disso são projeção — vivem no Simulador ROI, nunca na frase da garantia.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAPA DA SALA ================= -->
+<section class="tab-panel" id="tab-mapa">
+  <h2 class="sec">Mapa da <span class="gold">sala</span></h2>
+  <p class="sec-sub">Inteligência da pesquisa de perfis públicos (LinkedIn, JUCESP, sites institucionais, mídia). Três descobertas mudam a estratégia da sala inteira — leia antes de qualquer mesa. Relações familiares indicadas são hipóteses de pesquisa: trate como prováveis, confirme na conversa.</p>
+
+  <div class="grid2">
+    <div class="card" style="border-color:var(--gold)">
+      <h3>🔗 Descoberta 1 · O Grupo Especifer é uma rede real</h3>
+      <p style="font-size:14px">A pesquisa confirmou que o <b>Brasil Borges Direito Empresarial</b> (Claudinei) é o escritório que <b class="gold">advoga para a Especifer há pelo menos 8 anos</b> (processo TJSP/Salto, 2018, documentado). O grupo "indicado pelo Delmi" é, na verdade, um ecossistema familiar-empresarial consolidado:</p>
+      <ul>
+        <li><b>José Roberto Valquerizo</b> — sócio-fundador desde 1977, patriarca e decisor final.</li>
+        <li><b>Delmi (Dalmi) Silveira Jr.</b> — International Sales Director, <b class="gold">já aluno da Board</b> — o fiador interno da venda.</li>
+        <li><b>Ricardo Valquerizo</b> — Diretor Administrativo, voz ativa, guardião do orçamento.</li>
+        <li><b>Lucas Valquerizo</b> — Technical Account Manager, geração mais nova.</li>
+        <li><b>Claudinei Borges</b> — advogado da família; sociedade em transição com Isabelle (sócia desde 2022).</li>
+      </ul>
+      <div class="callout"><b>Implicação:</b> não são 3 mesas individuais — é UMA venda corporativa de "profissionalização e sucessão do grupo familiar" (M04, M05, M12 + Bônus 3 in-company). Delmi é o case vivo; três gerações na sala é o ângulo de alto ticket. Se a Especifer fecha, Claudinei tende a vir junto.</div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>🎯 Descoberta 2 · Paulo França = o Paulo do diagnóstico</h3>
+        <p style="font-size:14px">KTG Group é a <b>KTG Brasil Contábil</b> (Americana/SP, 11 anos) + K1 Audit. A dor que ele declarou no formulário é literal: <b class="gold">"o desafio está em gestão de pessoas e novas contratações"</b> — e ele tem meta explícita: sair de ~R$620k/mês para <b>R$860k/mês em 2026</b> (+12%). Atenção: ele tem <b>cofundador (William Sferra)</b> — a decisão não é solo. A ficha unificada está na Sala de Leads.</p>
+      </div>
+      <div class="card">
+        <h3>🎓 Descoberta 3 · Alumni na sala — mude o pitch</h3>
+        <p style="font-size:14px"><b>Renata Saboia</b> já é aluna da Board — e é professora de Neuroeconomia na FIA, citada no Valor Investe em julho/2026 (alta midiática agora). <b>Maria Torres</b> está em formação ativa. Para as duas, o pitch de primeira compra é um erro: a venda é <b class="gold">evolução, aprofundamento e parceria</b> (embaixadora, case, co-criação). Nunca vender o que já compraram.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="card">
+      <h3>Prioridades da sala — ordem de ataque</h3>
+      <p class="dim" style="font-size:13px;margin-bottom:10px">Ranking da pesquisa (clique para abrir a ficha):</p>
+      <div class="rank" id="rank-list"></div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>🚨 Alertas críticos por lead</h3>
+        <ul>
+          <li><b>Claudinei</b> ≠ lead individual — é parte do ecossistema Especifer. E a decisão pode passar por Isabelle (sócia desde 2022).</li>
+          <li><b>Waldemar</b> tem 30+ sócios (sociedade multifamiliar) — venda colegiada, nutrição longa, não forçar fechamento no evento.</li>
+          <li><b>Raul (60+)</b> e <b>Antônio Hertz (61–70)</b> — seniores: respeito absoluto, horizonte curto, nunca pressionar.</li>
+          <li><b>Janaina</b> fatura R$2M/ano — tíquete pesa: parcelamento e garantia carregam a venda; não empurrar upsells.</li>
+          <li><b>Cristiano</b> tem FGV + HEC + INSEAD — jamais comparar o programa com MBA; posicionar como implantação, não ensino.</li>
+          <li><b>Silvana</b> tem método próprio (TPI) — o programa complementa o TPI, nunca o substitui.</li>
+          <li><b>Maria Torres</b> está em formação — vender o que vem DEPOIS, não o que ela já comprou.</li>
+          <li><b>Paulo</b> decide com William Sferra; <b>Coliseu</b> decide em dupla (Rodrigo + Elvidio) — sócios na mesma mesa, sempre.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Leitura geográfica e térmica</h3>
+        <p style="font-size:13.5px">Núcleos: <b>Indaiatuba/Sorocaba</b> (Grupo Especifer + Brasil Borges), <b>SP capital</b> (executivos e consultores), <b>interior SP</b> (Americana, Jundiaí, Campinas, Taquaritinga, Arujá), e fora do eixo: <b>Florianópolis</b> (Janaina), <b>Rio</b> (Maria Torres), <b>Bahia</b> (Coliseu). Leads de tráfego pago (Waldemar, Paulo) são frios — precisam de mais SPIN antes do preço. Leads orgânicos da página e alumni são quentes — vão direto para Implicação.</p>
+        <div class="callout blue"><b>Perfil novo na carteira — Executivos C-Level</b> (Cristiano, Alex, Raul): investimento PESSOAL (e-mails Gmail/Hotmail), sem empresa própria na mesa. Para eles o Simulador de EBITDA não se aplica — o ROI é de carreira, network e ferramental. O painel já trata isso automaticamente.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WORKBOOK ================= -->
+<section class="tab-panel" id="tab-workbook">
+  <h2 class="sec">Imersão &amp; <span class="gold">Workbook</span></h2>
+  <p class="sec-sub">O lead chega à mesa depois de um dia inteiro escrevendo à caneta no workbook "O Conselho do Dono". A descoberta SPIN já está parcialmente feita — pelo próprio cliente. O trabalho do closer é colher essa munição, não recomeçar do zero.</p>
+
+  <div class="wb-band">
+    <span class="wb-title">O Conselho <span class="g">do Dono</span> · Imersão de 1 dia</span>
+    <span class="wb-cred">Abertura → 4 blocos → Fechamento · <b>10 ferramentas</b> do método completo<br>O programa de 6 meses é apresentado na pág. 53 como "O Próximo Nível"</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>O Assessment como qualificador de mesa</h3>
+      <p class="dim" style="font-size:13.5px;margin-bottom:10px">Na abertura, o lead responde 12 perguntas Sim/Parcial/Não e conta os "NÃO". Antes de qualquer pergunta SPIN, peça para ver essa página — ela define o tom da mesa inteira.</p>
+      <div class="faixa">
+        <div class="f f1">
+          <span class="fn">0–3 "NÃO"</span>
+          <div class="ft">Empresa em maturação</div>
+          <p>Sistemas nascendo. Dor menor, ambição maior.</p>
+          <div class="fs">Venda por ambição: "você está a método de distância de acelerar de verdade — o programa encurta anos."</div>
+        </div>
+        <div class="f f2">
+          <span class="fn">4–7 "NÃO"</span>
+          <div class="ft">Empresa dependente do dono</div>
+          <p>O crescimento cobra um preço pessoal cada vez maior.</p>
+          <div class="fs">Venda por custo pessoal: "quanto tempo você ainda aguenta pagar esse preço todo mês?"</div>
+        </div>
+        <div class="f f3">
+          <span class="fn">8–12 "NÃO"</span>
+          <div class="ft">Empresa refém do dono</div>
+          <p>Sem mudança de estrutura, o teto já foi atingido.</p>
+          <div class="fs">Venda por urgência real: "o próprio diagnóstico que você preencheu diz: sem estrutura, esse é o teto."</div>
+        </div>
+      </div>
+      <div class="callout"><b>Regra de ouro:</b> a classificação é do material — não do closer. "Não sou eu dizendo, é o seu diagnóstico" transfere a autoridade da conclusão para o próprio cliente.</div>
+    </div>
+
+    <div class="card">
+      <h3>A munição escrita — onde colher no workbook</h3>
+      <p class="dim" style="font-size:13.5px;margin-bottom:10px">Peça licença para folhear o workbook do lead na mesa. Estas páginas contêm as respostas SPIN prontas, na letra dele:</p>
+      <table class="wbmap">
+        <tr><th>Página / campo</th><th>O que entrega ao closer</th></tr>
+        <tr><td class="wn">Pág. 6</td><td>Nº de "NÃO" + "meu maior desafio atual como dono" + "resultado mais importante que quero alcançar" — a dor e o desejo, verbalizados.</td></tr>
+        <tr><td class="wn">Pág. 7</td><td>Declaração de intenção: "o que mais me impede de crescer", "a decisão que venho adiando", "em 90 dias minha empresa terá" — o Problema e a Necessidade já escritos.</td></tr>
+        <tr><td class="wn">Raio-X do Lucro</td><td>Linhas E/F/G: EBITDA mensal, anual e margem real — números do próprio cliente para carregar no Simulador ROI.</td></tr>
+        <tr><td class="wn">Valuation</td><td>EBITDA × múltiplo + "o que precisa mudar para dobrar em 3 anos" — a implicação patrimonial feita por ele.</td></tr>
+        <tr><td class="wn">Plano do Dono</td><td>Prioridade absoluta 30 dias, 5 projetos estratégicos, plano 30-90-180-365 — a ponte perfeita: "quem vai te cobrar isso?"</td></tr>
+        <tr><td class="wn">1ª Reunião do Conselho</td><td>Ele agendou uma reunião para os próximos 15 dias. O programa é exatamente o conselho que vai sustentar esse ritual.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="card">
+      <h3>Ferramentas do dia → Módulos do programa</h3>
+      <p class="dim" style="font-size:13.5px;margin-bottom:10px">A imersão entrega 10 ferramentas "de maior impacto no menor tempo". A venda: o programa aprofunda e implanta cada uma com acompanhamento. Prova de degustação → produto completo.</p>
+      <table class="wbmap">
+        <tr><th>Ferramenta da imersão</th><th>Vira no programa</th></tr>
+        <tr><td>01–02 · Agenda estratégica + Automação/IA</td><td class="wn">M02 · M09</td></tr>
+        <tr><td>03–04 · Pipeline de liderança 9-Box + Accountability</td><td class="wn">M04 · M05</td></tr>
+        <tr><td>05–06 · ICP + Funil / Pipeline + Forecast</td><td class="wn">M07 · M08</td></tr>
+        <tr><td>07–08 · Rituais + Plano 90d / Governança</td><td class="wn">M10 · M11</td></tr>
+        <tr><td>09–10 · Raio-X do Lucro / Valuation</td><td class="wn">M06 · M12</td></tr>
+      </table>
+      <div class="script">"Tudo que você preencheu hoje é a planta. O programa é a obra: nos próximos 6 meses a gente implanta cada uma dessas ferramentas na sua empresa, com o seu time, com cobrança quinzenal — e com garantia."</div>
+    </div>
+
+    <div class="card">
+      <h3>As perguntas do próprio método para reaproveitar</h3>
+      <ul>
+        <li>"Você gerencia sua empresa ou sua empresa te gerencia?"</li>
+        <li>"Se você tirar 2 semanas de férias amanhã, o que trava na empresa?"</li>
+        <li>"Você está construindo uma empresa ou um emprego bem remunerado?"</li>
+        <li>"Você lidera pessoas ou controla tarefas?"</li>
+        <li>"Se você parar de vender, as vendas da empresa param?"</li>
+        <li>"Qual é o custo real de não ter um sucessor preparado hoje?"</li>
+        <li>"Faturamento é vaidade, lucro é opinião, valuation é patrimônio."</li>
+      </ul>
+      <div class="callout green"><b>Fechamento com o compromisso da pág. 7:</b> o lead assinou "me comprometo a participar desta imersão com total abertura, honestidade e disposição para transformar minha empresa". Devolver isso na mesa — "você assinou isso hoje de manhã; o programa é a forma de honrar essa assinatura" — é consistência de Cialdini em estado puro.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SPIN ================= -->
+<section class="tab-panel" id="tab-spin">
+  <h2 class="sec">Navegador <span class="gold">SPIN</span></h2>
+  <p class="sec-sub">Marque as perguntas conforme conduz a conversa. Regra de ouro: o cliente só ouve o preço depois de verbalizar o custo de continuar como está (Implicação) e o valor de resolver (Necessidade). Se o lead veio da imersão, comece pelo workbook dele — metade das respostas já está escrita.</p>
+
+  <div class="spin-wrap">
+    <div class="spin-rail" role="tablist" aria-label="Etapas SPIN">
+      <button class="active" data-stage="s"><span class="letter">S</span><span class="lbl"><b>Situação</b><span>Mapear o terreno</span></span><span class="count" id="count-s">0/6</span></button>
+      <button data-stage="p"><span class="letter">P</span><span class="lbl"><b>Problema</b><span>Expor a dor</span></span><span class="count" id="count-p">0/7</span></button>
+      <button data-stage="i"><span class="letter">I</span><span class="lbl"><b>Implicação</b><span>Ampliar o custo</span></span><span class="count" id="count-i">0/7</span></button>
+      <button data-stage="n"><span class="letter">N</span><span class="lbl"><b>Necessidade</b><span>Cliente vende p/ si</span></span><span class="count" id="count-n">0/6</span></button>
+    </div>
+    <div>
+      <div class="spin-stage active" id="stage-s">
+        <p class="stage-goal">Situação — o mínimo necessário, no máximo 5 minutos</p>
+        <p class="stage-why">Perfil da mesa: donos de R$500 mil a R$200M/ano — e agora também executivos C-level em decisão pessoal. Eles odeiam interrogatório. A ficha do lead + o assessment do workbook já cobrem quase tudo — use-os e demonstre que fez lição de casa.</p>
+        <div id="qs-s"></div>
+        <div class="callout red"><b>Erro fatal:</b> ficar mais de 5–7 minutos em Situação. Closer de alto ticket usa a ficha e vai direto ao Problema.</div>
+      </div>
+      <div class="spin-stage" id="stage-p">
+        <p class="stage-goal">Problema — fazer o dono admitir onde dói</p>
+        <p class="stage-why">O padrão dos nossos leads: dependência do dono, gargalo de pessoas, margem/fluxo descontrolado, falta de previsibilidade comercial — e, nos grupos familiares, sucessão sem método.</p>
+        <div id="qs-p"></div>
+      </div>
+      <div class="spin-stage" id="stage-i">
+        <p class="stage-goal">Implicação — o coração da venda de alto ticket</p>
+        <p class="stage-why">É aqui que R$55 mil deixa de ser caro. Cada dor admitida vira cadeia de consequência: financeira → pessoal → patrimonial. Não afirme a consequência; pergunte, e deixe o dono calculá-la em voz alta.</p>
+        <div id="qs-i"></div>
+        <div class="callout"><b>Matemática da implicação:</b> peça um número — ou use o EBITDA que ele calculou no Raio-X do Lucro — e leve ao <b>Simulador ROI</b> com o lead selecionado.</div>
+      </div>
+      <div class="spin-stage" id="stage-n">
+        <p class="stage-goal">Necessidade de solução — o cliente apresenta a proposta</p>
+        <p class="stage-why">Inverta o jogo: pergunte o valor da solução. Quando o dono descreve o cenário resolvido, ele está vendendo o programa para si mesmo. Só depois conecte com módulos e bônus específicos.</p>
+        <div id="qs-n"></div>
+        <div class="callout green"><b>Ponte para o fechamento:</b> "Tudo isso que você descreveu — e que você mesmo escreveu no seu Plano do Dono hoje — é exatamente o que os 12 encontros instalam, com garantia contratual. Posso te mostrar o investimento?"</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SALA DE LEADS ================= -->
+<section class="tab-panel" id="tab-leads">
+  <h2 class="sec">Sala de <span class="gold">leads</span></h2>
+  <p class="sec-sub">18 fichas ordenadas por prioridade de fechamento. Busque por nome, empresa, setor ou dor. Selecionar um lead também carrega o cenário dele no Simulador ROI. As estrelas são o potencial de fechamento apurado na pesquisa de perfis.</p>
+
+  <div class="lead-layout">
+    <div class="lead-side">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F2EDE2" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="lead-search" placeholder="Buscar por nome, empresa, setor ou dor..." aria-label="Buscar lead">
+      </div>
+      <div class="filters" id="lead-filters">
+        <button class="active" data-f="todos">Todos</button>
+        <button data-f="grupo">Grupo Especifer</button>
+        <button data-f="tita">Titãs (+R$50M)</button>
+        <button data-f="tracao">Tração (R$2–50M)</button>
+        <button data-f="servicos">Serviços / Consultoria</button>
+        <button data-f="exec">Executivos C-Level</button>
+        <button data-f="vivo">Diagnóstico ao vivo</button>
+      </div>
+      <div class="lead-list" id="lead-list"></div>
+    </div>
+    <div class="lead-detail card" id="lead-detail"></div>
+  </div>
+</section>
+
+<!-- ================= SIMULADOR ================= -->
+<section class="tab-panel" id="tab-simulador">
+  <h2 class="sec">Simulador de <span class="gold">ROI &amp; EBITDA</span> na mesa</h2>
+  <p class="sec-sub">Conectado ao lead selecionado: faturamento pré-carregado pela faixa declarada e script gerado com o nome da pessoa. Se o lead preencheu o Raio-X do Lucro no workbook, substitua a estimativa pelos números reais dele (linhas E/F/G). Para executivos C-level em decisão pessoal, o painel troca automaticamente para o argumento de ROI de carreira. Sempre como <b>projeção conservadora</b> — nunca como promessa.</p>
+
+  <div class="sim-lead-strip" id="sim-lead-strip"></div>
+
+  <div class="sim-layout">
+    <div class="card">
+      <h3 style="margin-bottom:16px">Parâmetros financeiros do cliente</h3>
+      <div class="field">
+        <label for="sim-fat">Faturamento anual declarado (R$)</label>
+        <input type="number" id="sim-fat" min="0" step="100000" value="4000000">
+        <div class="quick-vals">
+          <button data-v="1500000">R$ 1.5M</button>
+          <button data-v="4000000">R$ 4M</button>
+          <button data-v="12000000">R$ 12M</button>
+          <button data-v="30000000">R$ 30M</button>
+          <button data-v="100000000">R$ 100M</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="sim-margem">Ganho de margem EBITDA conservador (%)</label>
+        <select id="sim-margem">
+          <option value="1">1% — Cenário ultraconservador</option>
+          <option value="2" selected>2% — Ajuste padrão de DRE</option>
+          <option value="3">3% — DRE + máquina comercial</option>
+          <option value="5">5% — Transformação completa do SOE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sim-multiplo">Múltiplo do setor para valuation</label>
+        <select id="sim-multiplo">
+          <option value="4">4× EBITDA — Serviços dependentes do dono</option>
+          <option value="6" selected>6× EBITDA — Média Brasil PMEs</option>
+          <option value="8">8× EBITDA — Setores premium / recorrência</option>
+        </select>
+      </div>
+      <label style="font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--paper-dim);display:block;margin-bottom:6px">Modalidade de investimento</label>
+      <div class="mode-switch" id="sim-mode">
+        <button class="active" data-mode="avista">À vista · R$ 55.000</button>
+        <button data-mode="parcelado">12× R$ 6.000 · R$ 72.000</button>
+      </div>
+      <p class="dim" style="font-size:12px">Valores conforme Cláusula 3.2 do contrato. O simulador nunca usa preço fora do contrato. Múltiplo de referência do método: 3× a 12× EBITDA para PMEs brasileiras.</p>
+    </div>
+
+    <div>
+      <div class="sim-out">
+        <div class="out-card green">
+          <div class="o-lbl">Lucro adicional gerado (EBITDA / ano)</div>
+          <div class="o-val" id="out-lucro">R$ 80.000</div>
+          <div class="o-note">Dinheiro direto novo no caixa da empresa, no cenário escolhido.</div>
+        </div>
+        <div class="out-card goldc">
+          <div class="o-lbl">Aumento do valuation patrimonial</div>
+          <div class="o-val" id="out-valuation">R$ 480.000</div>
+          <div class="o-note">Valor patrimonial adicionado ao negócio (EBITDA × múltiplo do setor).</div>
+        </div>
+      </div>
+
+      <div class="payback">
+        <div class="h4" style="margin-top:0">Métrica de payback para apresentar ao cliente</div>
+        <div class="row"><span>Investimento considerado</span><b class="gold" id="out-inv">R$ 55.000</b></div>
+        <div class="row"><span>Multiplicador do investimento (ROI ano 1)</span><b class="go" id="out-roi">1,45× o valor investido</b></div>
+        <div class="row"><span>Tempo estimado para recuperar o investimento</span><b class="go" id="out-payback">8,3 meses</b></div>
+        <div class="row"><span>Ganho por encontro estratégico (÷12)</span><b id="out-encontro">R$ 6.667</b></div>
+        <div class="script" id="sim-script"></div>
+        <p class="dim" style="font-size:12px;margin-top:10px">Enquadramento obrigatório: "projeção conservadora baseada nos seus números". A única promessa contratual é a Garantia da Cláusula 4 (+10% em 1 indicador ou 100% de volta).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OBJEÇÕES ================= -->
+<section class="tab-panel" id="tab-objecoes">
+  <h2 class="sec">Matriz de <span class="gold">objeções</span></h2>
+  <p class="sec-sub">Estrutura de resposta padrão: validar → reenquadrar → devolver com pergunta. Nunca rebater no primeiro segundo; objeção respondida rápido demais soa ensaiada.</p>
+
+  <details class="obj" open>
+    <summary><span class="obj-tag">PREÇO</span> "R$ 55 mil é muito caro."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Validar:</b> "Concordo que é um investimento sério — e é bom que seja, porque programa barato o dono abandona na terceira semana."</p>
+      <p><b class="gold">Reenquadrar (3 caminhos, escolha 1):</b></p>
+      <p>1 · <b>Diluição:</b> R$ 55 mil ÷ 12 encontros ≈ R$ 4.583 por sessão de conselho estratégico com implantação.</p>
+      <p>2 · <b>Simulador na mesa:</b> abra o Simulador ROI com o lead selecionado — de preferência com o EBITDA que ele mesmo calculou no Raio-X do Lucro.</p>
+      <p>3 · <b>Risco invertido:</b> "Caro é o que não devolve resultado. Aqui, se você cumprir o método e o número não melhorar 10%, o valor volta 100%."</p>
+      <div class="script">"Deixa eu te fazer uma pergunta honesta: o problema é o valor do programa, ou é a dúvida se ele funciona para o seu caso? Porque se for a segunda, a garantia responde por mim."</div>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">MBA</span> "Já fiz FGV / INSEAD / MBA — o que isso tem de novo?"</summary>
+    <div class="obj-body">
+      <p><b class="gold">Regra absoluta:</b> NUNCA compare com MBA nem desqualifique a formação dele — valide-a. O eixo é outro: MBA ensina; o programa implanta. (Perfis na sala: Cristiano — FGV+HEC+INSEAD; Telles; Alex; Raul.)</p>
+      <div class="script">"O seu MBA te deu o repertório — e isso aparece na sua carreira. O que a gente faz é diferente: 12 encontros de implantação NA SUA operação, com o seu time, tarefa por tarefa, e um contrato que devolve 100% se o número não subir. INSEAD não assina isso."</div>
+      <p class="dim">Complemento para C-levels: o valor está também no network de donos e conselheiros — círculo diferente do acadêmico.</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">MÉTODO</span> "Já tenho método próprio / já sou consultor experiente."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Validar de verdade:</b> quem tem método (Silvana/TPI, Antônio Hertz, Maria, Renata, Décio) é o pior público para "novidade" e o melhor para "camada complementar".</p>
+      <div class="script">"Justamente por vocês terem método é que isso funciona: o programa não substitui o seu sistema — entra como olhar externo, benchmark e cobrança estruturada em cima dele. E tem um efeito colateral: tudo que você implanta aqui vira repertório para aplicar com os seus próprios clientes."</div>
+      <p class="dim">Para consultores, o programa é também produto revendável: ferramentas aplicáveis na carteira deles. Esse é o ROI que os move.</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">TEMPO</span> "Não tenho agenda para 12 encontros."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Reenquadrar:</b> a falta de tempo É o diagnóstico — e o workbook dele provavelmente confirma (assessment: agenda que não reflete prioridades estratégicas).</p>
+      <div class="script">"Essa frase é o sintoma número 1 de empresa que depende do dono. São 2 horas a cada 15 dias para construir a máquina que te devolve as outras 200. Se nem isso a operação permite hoje, o programa não é opcional — é urgente."</div>
+      <p class="dim">Reforço prático: 6 presenciais + 6 online ao vivo; cronograma apresentado em 15 dias e ajustável de comum acordo (cláusula 1.3).</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">ADIAMENTO</span> "Vou pensar / me manda a proposta."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Isolar a objeção real:</b> "pensar" quase sempre esconde preço, sócio ou ceticismo. Descubra qual antes de liberar a mesa.</p>
+      <div class="script">"Claro. Só para eu te ajudar a pensar certo: o que exatamente você precisa avaliar — o valor, o formato, ou se isso resolve o seu caso? Porque cada um desses eu respondo de um jeito diferente, agora."</div>
+      <p><b class="gold">Urgência legítima:</b> os 4 bônus são condição de adesão no evento presencial (cláusula 2.1). Fora da mesa, a condição muda.</p>
+      <p><b class="gold">Consistência (workbook):</b> "Você escreveu hoje qual é a decisão que vem adiando. Quer mesmo adicionar mais uma à lista?"</p>
+      <p><b class="gold">Segurança para decidir agora:</b> direito de arrependimento de 7 dias com devolução integral (cláusula 8.1, quando aplicável).</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">TERCEIROS</span> "Preciso falar com meu sócio / esposa."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Validar e testar:</b> "Perfeito — decisão desse tamanho deve mesmo ser alinhada. Se dependesse só de você, fecharia hoje?" (Se hesitar, a objeção real é outra.)</p>
+      <div class="script">"O que o seu sócio vai te perguntar quando você contar? Vamos responder essas perguntas juntos agora, para você chegar nessa conversa com tudo na mão — inclusive a garantia por escrito."</div>
+      <p class="dim">Sócios mapeados na sala: Paulo ↔ William Sferra (KTG) · Claudinei ↔ Isabelle (Brasil Borges) · Coliseu (Rodrigo + Elvidio) · Othoniel (7 sócios + 2 investidores) · Waldemar (30+ sócios — não é objeção, é estrutura: nutrição). Sempre que possível, sócios na mesma mesa.</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">CETICISMO</span> "Já fiz mentoria e não funcionou."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Validar com sinceridade:</b> o mercado está cheio de mentoria de palco, sem implantação e sem pele em jogo.</p>
+      <div class="script">"E qual dessas mentorias assinou contrato dizendo: se o seu número não subir 10%, devolvo 100%? Aqui não é conteúdo — são 12 encontros de implantação, tarefa por tarefa, com o resultado garantido em cláusula."</div>
+      <p><b class="gold">Diferenciais concretos:</b> Workbook Executivo com planos de ação, documento final "Plano do Dono", imersão presencial in-company, restituição proporcional por entrega não realizada (cláusula 5.3). E prova viva: alumni na própria sala (Delmi, Renata, Maria).</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">GARANTIA</span> "Essa garantia deve ter pegadinha."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Transparência total — leia os requisitos com o cliente:</b> presença em 10 dos 12 encontros, tarefas do Workbook em até 5 dias, Plano do Dono preenchido, demonstrativos financeiros. Nada além do que um dono comprometido faria de qualquer forma.</p>
+      <div class="script">"A única 'pegadinha' é essa: você precisa fazer o programa. Presença, tarefa e número na mesa. Se fizer e não crescer 10% em pelo menos um indicador — que você escolhe —, o dinheiro volta integral. Está na Cláusula Quarta, posso te mostrar agora."</div>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">GOVERNANÇA</span> "Já temos consultores / investidores cuidando disso."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Reenquadrar:</b> consultor entrega diagnóstico; investidor cobra número. Nenhum dos dois constrói capacidade interna de execução — e é o time do cliente que executa a estratégia.</p>
+      <div class="script">"Investidor olha o número, consultor entrega o relatório. Quem executa é o seu time — e é exatamente essa capacidade interna que os 12 encontros constroem, com você e com eles. É complementar ao que os seus assessores fazem, não concorrente."</div>
+      <p class="dim">Perfis-alvo: Othoniel (CARPE/KR Capital exigem governança — o programa AJUDA a responder aos investidores), Telles (10 conselhos, muitos assessores), Waldemar (instituição com consultoria).</p>
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="obj-tag">TIMING</span> "Agora não é o momento — estou reestruturando o time."</summary>
+    <div class="obj-body">
+      <p><b class="gold">Reenquadrar:</b> reestruturação sem método é reformar a casa sem planta — daqui a 2 anos reforma de novo.</p>
+      <div class="script">"Momento de montagem de time é o MELHOR momento de entrar: você desenha organograma, cultura e accountability certos desde o dia 1, em vez de corrigir depois. Esperar 'organizar primeiro' é organizar errado duas vezes."</div>
+    </div>
+  </details>
+</section>
+
+<!-- ================= FECHAMENTO ================= -->
+<section class="tab-panel" id="tab-fechamento">
+  <h2 class="sec">Sequência de <span class="gold">fechamento</span></h2>
+  <p class="sec-sub">Só inicie depois do "N" do SPIN — quando o cliente já verbalizou o valor da solução. Se o preço chegar antes disso, você negocia um custo; depois disso, confirma um investimento.</p>
+
+  <div class="close-step hot">
+    <div class="n">1</div>
+    <div>
+      <h3>Resumo de valor na voz do cliente</h3>
+      <p class="dim">Devolva as 2–3 dores nas palavras exatas que ele usou — ou escreveu no workbook (pág. 6 e 7). Confirme: "É isso que precisamos resolver?" — obtenha um "sim" antes de continuar.</p>
+    </div>
+  </div>
+
+  <div class="close-step hot">
+    <div class="n">2</div>
+    <div>
+      <h3>Demonstração de ROI com os números dele</h3>
+      <p class="dim">Abra o <b>Simulador ROI</b> já carregado com o lead. Se ele preencheu o Raio-X do Lucro, use o EBITDA e a margem reais. Para executivos C-level, troque para o argumento de carreira que o simulador mostra. Quando o cliente valida o input, ele valida o output — o payback vira conta dele.</p>
+    </div>
+  </div>
+
+  <div class="close-step hot">
+    <div class="n">3</div>
+    <div>
+      <h3>Apresentação do investimento com ancoragem</h3>
+      <p class="dim">Sempre nesta ordem: valor total do pacote (programa + 4 bônus) → parcelado → à vista como decisão inteligente.</p>
+      <div class="price-duel">
+        <div class="price-card">
+          <span class="p-mode">Parcelado · Cartão</span>
+          <div class="p-val">12× R$ 6.000</div>
+          <span class="p-note">Total R$ 72.000 · CET apresentado por escrito antes da confirmação (cláusula 3.3)</span>
+        </div>
+        <div class="price-card featured">
+          <span class="p-mode">À vista · PIX ou TED</span>
+          <div class="p-val">R$ 55.000</div>
+          <span class="p-note">Quitação em até 3 dias úteis · economia de R$ 17.000 (23,6%)</span>
+        </div>
+      </div>
+      <div class="script">"O investimento no programa completo, com os 4 bônus, é de 12 parcelas de R$ 6 mil no cartão. Agora, para quem decide como dono — à vista no PIX — o valor cai para R$ 55 mil: R$ 17 mil de economia. Qual das duas faz mais sentido para o seu caixa?"</div>
+      <p class="dim" style="margin-top:8px">A pergunta final é de <b>escolha alternativa</b> — as duas respostas fecham o contrato. Para vendas em grupo (Especifer, Coliseu), apresente o investimento POR EMPRESA/CONTRATANTE, nunca invente pacote fora do item 3.2 — condições especiais de grupo precisam de aprovação da direção antes da mesa.</p>
+    </div>
+  </div>
+
+  <div class="close-step hot">
+    <div class="n">4</div>
+    <div>
+      <h3>Inversão de risco — a tríade de segurança</h3>
+      <ul style="list-style:none">
+        <li style="padding:6px 0 6px 18px;position:relative;border-bottom:1px dashed rgba(43,40,32,.8)"><span style="position:absolute;left:0;color:var(--gold);font-size:9px;top:11px">◆</span><b>Garantia de resultado:</b> +10% em 1 indicador à escolha, ou 100% de volta.</li>
+        <li style="padding:6px 0 6px 18px;position:relative;border-bottom:1px dashed rgba(43,40,32,.8)"><span style="position:absolute;left:0;color:var(--gold);font-size:9px;top:11px">◆</span><b>Garantia de entrega:</b> encontro ou bônus não entregue = restituição proporcional, cumulativa (cláusula 5.3).</li>
+        <li style="padding:6px 0 6px 18px;position:relative"><span style="position:absolute;left:0;color:var(--gold);font-size:9px;top:11px">◆</span><b>Arrependimento 7 dias:</b> quando aplicável, desistência com devolução integral (cláusula 8.1).</li>
+      </ul>
+      <div class="script">"Ou seja: o risco desta assinatura é praticamente todo nosso. O único risco que sobra para você é o de continuar mais 6 meses exatamente onde está."</div>
+    </div>
+  </div>
+
+  <div class="close-step">
+    <div class="n">5</div>
+    <div>
+      <h3>Silêncio e assinatura</h3>
+      <p class="dim">Depois da pergunta de escolha alternativa: silêncio absoluto. Quem fala primeiro, cede. Com a modalidade escolhida, marque o checkbox no contrato (item 3.2), preencha a qualificação e colha as assinaturas com as 2 testemunhas na hora.</p>
+    </div>
+  </div>
+
+  <div class="close-step">
+    <div class="n">6</div>
+    <div>
+      <h3>Pós-assinatura — blindagem contra distrato</h3>
+      <p class="dim">Nos 7 dias de arrependimento o cliente não pode ficar em silêncio. Roteiro: (1) mensagem de boas-vindas do Farias no mesmo dia; (2) agendamento do Módulo 01 e do Bônus 1 em até 48h; (3) envio do Workbook do programa. Bônus tático: a "Primeira Reunião do Conselho do Dono" que ele agendou no workbook para 15 dias — participe dela ou cite-a no follow-up. Cliente ativado não se arrepende.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTRATO ================= -->
+<section class="tab-panel" id="tab-contrato">
+  <h2 class="sec">Regras do contrato — <span class="gold">o que o closer não pode errar</span></h2>
+  <p class="sec-sub">Prometer além do contrato gera distrato e passivo. Estas são as cláusulas que o closer cita na mesa, com número, quando o cliente pedir precisão.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Garantia de resultado (Cláusula 4)</h3>
+      <h4>O que é garantido</h4>
+      <p style="font-size:13.5px">+10% em <b>1 de 3</b> indicadores, à escolha do cliente: faturamento bruto mensal, margem EBITDA ou indicador de eficiência definido no M01. Comparação: média dos 3 meses antes × média dos 3 últimos meses do programa.</p>
+      <h4>Requisitos cumulativos (4.3)</h4>
+      <ul>
+        <li>Presença do CEO em no mínimo <b>10 de 12</b> encontros (lista/registro).</li>
+        <li>Tarefas do Workbook entregues em até <b>5 dias</b> após cada encontro.</li>
+        <li>Documento "Plano do Dono" preenchido ao final (5 projetos + 30-90-180-365).</li>
+        <li>DRE/relatórios dos 6 meses do programa + 3 meses anteriores.</li>
+      </ul>
+      <h4>Prazos</h4>
+      <p style="font-size:13.5px">Pedido por escrito em até <b>30 dias</b> após o 12º encontro (senão decai) → análise em 15 dias úteis → restituição em até 30 dias corridos.</p>
+    </div>
+
+    <div class="card">
+      <h3>Pagamento e rescisão</h3>
+      <h4>Valores oficiais (3.2)</h4>
+      <p style="font-size:13.5px">À vista <b>R$ 55.000</b> (PIX/TED, até 3 dias úteis) ou <b>12× R$ 6.000 = R$ 72.000</b> no cartão. Qualquer material de mesa precisa refletir exatamente esses números.</p>
+      <h4>Inadimplência (3.4)</h4>
+      <p style="font-size:13.5px">Notificação de 5 dias úteis → suspensão de acessos e bônus → multa de 2% + juros de 1% a.m. <b>Nunca ameace com isso na mesa</b>; só informe se perguntado.</p>
+      <h4>Arrependimento (8.1)</h4>
+      <p style="font-size:13.5px">7 dias corridos com devolução integral — pessoa física ou CNPJ de natureza individual. Argumento de <b>segurança</b>, não de saída.</p>
+      <h4>Rescisão antecipada (8.2)</h4>
+      <p style="font-size:13.5px">Fora das garantias: parcelas vencidas + multa de <b>20% sobre o saldo remanescente</b>. Apresentar apenas se perguntado.</p>
+      <h4>Promessas proibidas na mesa</h4>
+      <ul>
+        <li>Garantir resultado sem citar os requisitos da 4.3.</li>
+        <li>Prometer faixa acima de 10% como "garantida" — acima disso é projeção.</li>
+        <li>Prometer que TODAS as sessões 1:1 serão com Farias sem mencionar o conselheiro sênior aprovado (Bônus 2).</li>
+        <li>Prometer gravação/mídia da imersão sem autorização prévia do cliente (Bônus 3).</li>
+        <li>Alterar valores, parcelas ou prazos fora do item 3.2 — inclusive "pacotes de grupo" improvisados para Especifer/Coliseu sem aprovação prévia da direção.</li>
+        <li>Reproduzir ou distribuir o workbook fora do programa — material protegido (Lei 9.610/98, cláusula 6.3).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:22px">
+    <b>Natureza do serviço (Cláusula 6.1):</b> mentoria e aconselhamento estratégico — execução e decisão final são do cliente. Isso <b>não</b> enfraquece a garantia (o contrato a define como autônoma e cumulativa). Se o cliente levantar a aparente contradição: "Exato — nós não operamos a sua empresa. E mesmo assim garantimos o resultado. É o tamanho da nossa convicção no método."
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>Board Academy · Farias Souza · Programa O Plano do Dono · Documento de apoio comercial — não substitui o contrato. Dados de leads: pesquisa de fontes públicas; hipóteses marcadas como prováveis devem ser confirmadas na conversa.</span>
+  <span class="mono">METODOLOGIA SPIN SELLING · CONFIDENCIAL</span>
+</footer>
+
+<script>
+/* ================= NAVEGAÇÃO ================= */
+const tabs = document.querySelectorAll('nav.tabs button');
+function goTab(name){
+  tabs.forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('section.tab-panel').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  window.scrollTo({top:0});
+}
+tabs.forEach(btn=>btn.addEventListener('click',()=>goTab(btn.dataset.tab)));
+
+/* ================= SPIN ================= */
+const spinData = {
+  s: [
+    {q:"Me conta em uma frase: o que a sua empresa faz e para quem?", n:"Deixe o dono se apresentar — revela como ele enxerga o próprio negócio."},
+    {q:"Quantos 'NÃO' deram no seu assessment de hoje? Posso ver?", n:"Atalho supremo: o workbook classifica a empresa (maturação / dependente / refém) pelo próprio punho do lead."},
+    {q:"Hoje, quantas pessoas no time e como está desenhada a liderança?", n:"Mapeia o terreno para M04/M05."},
+    {q:"Como vocês acompanham os números — DRE mensal, dashboard, ou sentimento?", n:"Prepara M06/M10 e o indicador da garantia."},
+    {q:"De onde vêm os clientes novos hoje? Indicação, tráfego, comercial ativo?", n:"Prepara M07/M08 e o Bônus 1."},
+    {q:"Você já investiu em consultoria, mentoria ou conselho antes? Como foi?", n:"Antecipa ceticismo E a objeção de MBA (Cristiano, Alex, Telles) antes do fechamento."}
+  ],
+  p: [
+    {q:"Se você tirasse 30 dias completamente off, o que acontece com a operação e o faturamento?", n:"A pergunta-mestra da dependência (o workbook pergunta com 2 semanas — suba a régua)."},
+    {q:"Qual decisão importante está parada hoje porque só você pode tomá-la?", n:"O workbook já perguntou 'a decisão que venho adiando' — peça para ler a resposta dele."},
+    {q:"Onde você sente que o time não entrega no nível que você entregaria?", n:"Abre o gargalo de pessoas (padrão Paulo/Silvana/Janaina)."},
+    {q:"O crescimento do último ano veio de sistema ou de esforço seu?", n:"Separa crescimento sustentável de heroísmo do dono."},
+    {q:"A geração de demanda é previsível ou vive de picos e sustos?", n:"Abre a dor comercial (padrão Renata/Marcelo)."},
+    {q:"O faturamento cresce, mas a margem acompanha? Onde o dinheiro escapa?", n:"Abre a dor de margem/fluxo (padrão Janaina/Othoniel) — cruze com o Raio-X do Lucro."},
+    {q:"Como está desenhada a sucessão? Quem assume se você sair de cena?", n:"Dor central dos grupos familiares (Especifer, Unianchieta) e dos seniores (Hertz, Raul)."}
+  ],
+  i: [
+    {q:"Se essa dependência continuar igual por mais 2 anos, o que acontece com o seu plano de crescimento?", n:"Projeta a dor no tempo."},
+    {q:"Quanto essa desorganização custa por ano — em vendas perdidas, retrabalho e margem?", n:"Exija um número — ou use o EBITDA do Raio-X do Lucro no Simulador."},
+    {q:"O que acontece com a empresa — e com a família — se você precisar parar por saúde?", n:"Implicação patrimonial. Use com respeito; é a mais forte (e a mais real em empresa familiar)."},
+    {q:"Quanto do valor da sua empresa um comprador descontaria hoje por ela depender de você?", n:"O workbook ensina: o que aumenta o múltiplo é independência do fundador. Devolva isso."},
+    {q:"Seus melhores talentos ficam quanto tempo numa empresa sem accountability claro?", n:"Implicação do gargalo de pessoas."},
+    {q:"Cada mês sem previsibilidade comercial adia em quanto a sua meta de faturamento?", n:"Implicação da dor de demanda — com Paulo, use a meta dele: R$860k/mês."},
+    {q:"O que uma sucessão sem método já custou a empresas que você conhece?", n:"Implicação de sucessão para patriarcas e sócios seniores — deixe ELE contar o caso."}
+  ],
+  n: [
+    {q:"Se a empresa rodasse 30 dias sem você e o número subisse, o que isso mudaria na sua vida?", n:"O dono descreve o resultado — anote e devolva no fechamento."},
+    {q:"Quanto valeria ter um plano de 12 meses com metas claras e o time inteiro cobrado por elas?", n:"Vende M02+M05 pela boca do cliente."},
+    {q:"O que mudaria no caixa se o comercial gerasse demanda previsível, todo mês?", n:"Vende M07/M08/B1 pela boca do cliente."},
+    {q:"Que diferença faria decidir olhando dashboard e DRE, em vez de sentimento?", n:"Vende M06/M10."},
+    {q:"Você escreveu 5 projetos estratégicos e um plano 30-90-180-365 hoje. Quem vai te cobrar isso?", n:"A pergunta-ponte do workbook: o programa É o sistema de cobrança do plano dele."},
+    {q:"Se em 6 meses um dos seus indicadores subisse 10% ou mais, esse programa teria se pagado?", n:"Pré-fechamento: conecta com a garantia contratual."}
+  ]
+};
+function renderStage(key, mount){
+  const wrap = document.getElementById(mount);
+  spinData[key].forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'qitem';
+    div.setAttribute('role','checkbox');
+    div.setAttribute('aria-checked','false');
+    div.tabIndex = 0;
+    div.innerHTML = `<span class="box"></span><span><span class="qtext">${item.q}</span><div class="qnote">${item.n}</div></span>`;
+    const toggle = ()=>{
+      div.classList.toggle('done');
+      div.setAttribute('aria-checked', div.classList.contains('done'));
+      updateCount(key);
+    };
+    div.addEventListener('click',toggle);
+    div.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();} });
+    wrap.appendChild(div);
+  });
+  updateCount(key);
+}
+function updateCount(key){
+  const total = spinData[key].length;
+  const done = document.querySelectorAll(`#qs-${key} .qitem.done`).length;
+  document.getElementById('count-'+key).textContent = `${done}/${total}`;
+}
+renderStage('s','qs-s'); renderStage('p','qs-p'); renderStage('i','qs-i'); renderStage('n','qs-n');
+document.querySelectorAll('.spin-rail button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.spin-rail button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.spin-stage').forEach(s=>s.classList.remove('active'));
+    document.getElementById('stage-'+btn.dataset.stage).classList.add('active');
+  });
+});
+
+/* ================= DADOS DOS LEADS (ordem = prioridade de ataque) ================= */
+const leads = [
+  {
+    id:'telles', name:"Ricardo C. D. Telles", first:"Ricardo", stars:5,
+    co:"Grupo Encalso Damha", role:"Diretor Presidente (desde fev/2026)",
+    tier:'tita', tierLabel:'Titã · Turnaround', grupo:false, vivo:false, noSim:false,
+    sector:"Engenharia pesada, incorporação e urbanismo · grupo fundado em 1964 (62 anos)",
+    fat:"Grupo estimado em centenas de milhões/ano", simFat:100000000, simMargem:1, simMultiplo:6,
+    func:"+200", city:"São Paulo/SP (Brig. Luís Antônio)", hora:"18:00–20:00", tel:"5511985712222", telShow:"(11) 98571-2222",
+    origem:"Página oficial (orgânico) + lista de ganhos · LinkedIn com 13 mil seguidores",
+    decisao:"Decisor executivo; presta contas a acionistas — veio de fora da família fundadora",
+    dor:"Recém-empossado (5 meses no cargo) com missão explícita de turnaround: nas palavras dele, 'reorganizar a empresa num momento empresarial diferente, num cenário muito mais competitivo' e 'recolocar a empresa no seu devido lugar no mercado nacional'. Veio de 10 conselhos em 2 anos; mantém assento em 3. Setor cíclico (incorporação × Selic) e dependente de licitação (construção pesada).",
+    pergunta:"\"Minha dedicação à Damha será altíssima.\" — post de posse: compromisso pessoal declarado publicamente.",
+    resposta:"O programa como ferramental de execução do turnaround: M01 (diagnóstico), M02 (plano 12 meses), M04 (estrutura herdada → estrutura desenhada), M10 (gestão por dados para prestar contas aos acionistas), M12 (governança e legado de uma marca de 62 anos). Ele é conselheiro por formação — a linguagem de 'Conselho do Dono' é a língua nativa dele.",
+    bonus:"B2 (1:1 com Farias) — conselheiro para conselheiro, confidencial, sobre a missão dos primeiros 12 meses.",
+    estrategia:"TIMING CRÍTICO: 5 meses de cargo = janela de máxima pressão e máxima abertura. Tratar como par, nunca como aluno; reuniões curtas e objetivas; co-criar, não vender. Não competir com os assessores dele — complementar (ver objeção Governança). Legitimidade técnica ele tem; o programa ajuda a construir a legitimidade política com o time herdado (M05).",
+    script:"\"Ricardo, o senhor assumiu há cinco meses com a missão pública de recolocar a Damha no lugar dela. Turnaround de marca de 62 anos não se faz com esforço — se faz com sistema. É exatamente esse sistema que os 12 encontros instalam, com o seu time, no seu ritmo.\"",
+    tags:["Prioridade #1","Turnaround","5 meses no cargo","Trata como par"]
+  },
+  {
+    id:'joseroberto', name:"José Roberto Valquerizo", first:"José Roberto", stars:5,
+    co:"Especifer · Ferramentas Especiais", role:"Sócio-fundador (desde 1977) · Patriarca",
+    tier:'tracao', tierLabel:'Grupo Especifer', grupo:true, vivo:false, noSim:false,
+    sector:"Indústria de ferramentas especiais automotivas e agrícolas · Indaiatuba/SP · 48 anos",
+    fat:"R$ 20–50M/ano (estimado pela estrutura)", simFat:30000000, simMargem:2, simMultiplo:6,
+    func:"Estrutura multi-CNPJ (Indústria + Comércio + Metalmix)", city:"Indaiatuba/SP", hora:"—", tel:"5511999770004", telShow:"(11) 99977-0004",
+    origem:"Indicação de Delmi Silveira — filho da casa e JÁ ALUNO da Board (fiador interno)",
+    decisao:"DECISOR FINAL do grupo. Compra por confiança e relação, não por planilha",
+    dor:"Empresa familiar de 3 gerações em sucessão crítica: Delmi (International Sales Director, já aluno) e Lucas (Technical Account Manager) sendo preparados; Vladimir Irovski (Diretor Industrial) marca a profissionalização em curso. 48 anos de história = resiliência E resistência a novidade. Operação internacional em formação.",
+    pergunta:null,
+    resposta:"Vender como PROJETO DE SUCESSÃO E PROFISSIONALIZAÇÃO DO GRUPO, não como curso individual: M04 (organograma da nova geração), M05 (accountability entre família e executivos), M12 (sucessão, valuation e legado — o módulo dele). Delmi é o case vivo dentro de casa: 'como o Delmi tem aplicado'. B3 (imersão in-company em Indaiatuba) é o formato que fala com indústria.",
+    bonus:"B3 (imersão presencial na fábrica) + B2 (1:1 sobre estrutura societária multi-CNPJ — tema confidencial e valioso para ele).",
+    estrategia:"Abordagem presidencial: respeito à autoridade do patriarca, foco em legado e continuidade, zero pressão. A mesa ideal tem José Roberto + Ricardo + Delmi juntos (o trio decide). Nunca bater de frente com o que o Delmi já fez — o programa é continuidade. Se fechar, Claudinei (advogado da família) tende a vir junto. Condições de grupo: só com aprovação prévia da direção.",
+    script:"\"Seu José Roberto, o senhor construiu 48 anos de empresa. A pergunta que o programa responde não é sobre os próximos 6 meses — é sobre os próximos 48 anos: como o Delmi e o Lucas assumem uma empresa que funciona por sistema, e não pela sua presença. O Delmi já começou esse caminho na Board. Falta a empresa inteira ir junto.\"",
+    tags:["Prioridade #2","Patriarca","Sucessão 3 gerações","Delmi = fiador"]
+  },
+  {
+    id:'alex', name:"Alex Reche Franco", first:"Alex", stars:5,
+    co:"Jeitto (fintech de crédito C/D/E)", role:"CRO & CTO (desde abr/2024)",
+    tier:'exec', tierLabel:'Executivo C-Level', grupo:false, vivo:false, noSim:true,
+    sector:"Fintech em growth · ex-Serasa Experian (20+ anos), Citibank, Barclays, ABN, Carrefour",
+    fat:"Investimento pessoal (+R$50k/mês) — Jeitto: R$2 bi em crédito, 7M clientes", simFat:0, simMargem:2, simMultiplo:6,
+    func:"—", city:"São Paulo/SP", hora:"—", tel:"5511981884864", telShow:"(11) 98188-4864",
+    origem:"Lista de alunos/ganhos · e-mail Gmail = decisão pessoal, não corporativa",
+    decisao:"Decisão 100% pessoal — investimento no próprio ferramental e network",
+    dor:"Frase dele no anúncio da Jeitto: 'vamos nos estruturar e acelerar o uso de novas tecnologias e dados' — sintonia literal com o programa. CRO+CTO simultâneo (risco + tecnologia) em startup em growth = agenda brutal e pressão por estruturação. Conectado ao IBGC = valoriza governança formal. Saiu do corporativo tradicional buscando propósito (inclusão financeira).",
+    pergunta:"\"Vamos nos estruturar e acelerar.\" — as palavras dele são o pitch pronto.",
+    resposta:"Para ele o produto não é 'sair do operacional' — é REPERTÓRIO DE DONO: frameworks de estruturação (M02, M04, M05), gestão por dados (M10), governança (M11) e o network de donos e conselheiros que um C-level de fintech não encontra em MBA. M09 (IA aplicada) conversa com o cargo de CTO.",
+    bonus:"B2 (1:1 com Farias) — nível de conselho. Papel de destaque possível (case, convidado) é gatilho forte para o perfil multiplicador dele.",
+    estrategia:"ROI de carreira, não de EBITDA (o simulador já troca o argumento). Linguagem executiva impecável — ele detecta clichê na primeira frase. Tratar como par; jamais comparar com MBA. Sondar ambição empreendedora latente (perfil que constrói) — se existir projeto próprio no horizonte, o programa é a ponte de executivo para dono.",
+    script:"\"Alex, você declarou publicamente que a missão é estruturar e acelerar. É literalmente o nome do jogo aqui: 12 encontros de implantação de sistema operacional de empresa — o mesmo ferramental que você vai usar na Jeitto hoje e no SEU projeto amanhã, com um network de donos que MBA nenhum entrega.\"",
+    tags:["Prioridade #3","Estruturar & acelerar","IBGC","ROI de carreira"]
+  },
+  {
+    id:'renata', name:"Renata Taveiros de Saboia", first:"Renata", stars:5,
+    co:"RTS Consultoria · Professora FIA (Neuroeconomia)", role:"Fundadora · JÁ ALUNA da Board",
+    tier:'servicos', tierLabel:'Alumni · Upsell', grupo:false, vivo:true, noSim:false,
+    sector:"Neuroeconomia + finanças comportamentais · clientes: grandes bancos",
+    fat:"R$ 500k–2M/ano (RTS) · +R$50k/mês", simFat:1200000, simMargem:5, simMultiplo:4,
+    func:"1–5 (\"eu-presa\")", city:"São Paulo/SP", hora:"—", tel:"5511999825678", telShow:"(11) 99982-5678",
+    origem:"Já aluna da Board · Diagnóstico ao vivo · Citada no Valor Investe em 04/07/2026 — alta midiática AGORA",
+    decisao:"Decide sozinha — mas pensa criticamente (professora universitária)",
+    dor:"Diagnóstico ao vivo: alta conversão, técnica excelente, metodologia autoral — mas escassez crítica de leads e empresa 100% refém da entrega dela ('patinando no que é fundamental'). A pesquisa elevou o perfil: professora de Neuroeconomia na FIA, autoridade em mídia especializada, formadora de formadores.",
+    pergunta:"\"Tenho muitas oportunidades com grandes bancos, mas nenhuma ideia de como escalar sem depender só de mim.\"",
+    resposta:"NÃO é primeira venda — é evolução de aluna. Produtizar a metodologia autoral (M03) + máquina de demanda (M07/M08, B1 nos primeiros 30 dias). E além da venda: parceria (case, palestra, co-criação) — ela está em janela de mídia e valoriza ser tratada como par.",
+    bonus:"B1 (Growth 30 dias) responde à dor nº 1. Benefício/reconhecimento de alumni na mesa reforça o vínculo.",
+    estrategia:"Reconhecer a expertise explicitamente (reconhecer ≠ bajular). Foco em diferenciação: o que o programa tem que ela ainda não viu — implantação com garantia, não conteúdo. Posicioná-la como multiplicadora (aplica com clientes da RTS e alunos da FIA). Timing: a exposição no Valor Investe é agora — marca pessoal em alta pede máquina de demanda embaixo.",
+    script:"\"Renata, você tem o problema mais raro do mercado: converte bem demais para ter tão pouco lead — e agora está na mídia nacional sem máquina para aproveitar isso. O Bônus 1 ataca a demanda nos primeiros 30 dias. E o programa inteiro existe para a RTS deixar de ser você.\"",
+    tags:["Alumni","Alta midiática","Eu-presa","Pensar parceria"]
+  },
+  {
+    id:'mariatorres', name:"Maria Torres", first:"Maria", stars:5,
+    co:"mariatorres.com · Consultora e Professora de Gestão Estratégica", role:"Dona Fundadora · EM FORMAÇÃO na Board",
+    tier:'servicos', tierLabel:'Alumni · Em formação', grupo:false, vivo:false, noSim:false,
+    sector:"Marca pessoal · educação executiva · @soumariatorres",
+    fat:"+R$50k/mês", simFat:1500000, simMargem:3, simMultiplo:4,
+    func:"0–20", city:"Rio de Janeiro/RJ (DDD 21)", hora:"12:00–14:00", tel:"5521981489349", telShow:"(21) 98148-9349",
+    origem:"Campanha Instagram ('pela primeira vez eu vou fazer isso') — e JÁ está fazendo a formação da Board",
+    decisao:"Decide sozinha — ciclo curto",
+    dor:"Negócio de marca pessoal (a empresa é ela) em momento decisivo: está DENTRO da formação. Professora de gestão estratégica = sabe o que está comprando e quer dominar o método para usar como próprio. Risco mapeado: virar concorrente em vez de parceira.",
+    pergunta:null,
+    resposta:"A venda é O QUE VEM DEPOIS da formação — nunca o que ela já comprou. Caminhos: aprofundamento premium, produtização da expertise dela (M03), máquina de demanda (M07/M08) e, principalmente, PARCERIA: embaixadora, case, co-criação de conteúdo para a audiência dela.",
+    bonus:"B1 (Growth 30 dias) para a marca @soumariatorres. Papel de destaque (case/embaixadora) é o gatilho mais forte.",
+    estrategia:"Sondar o plano pós-formação antes de ofertar qualquer coisa. Reconhecer a expertise; tratar como 'top da classe'. Rio de Janeiro: considerar logística/formato dos presenciais na conversa. Se a intenção dela for revender método, alinhar limites de propriedade intelectual (cláusula 6.3) com elegância.",
+    script:"\"Maria, você já está dentro — então a pergunta não é 'se', é 'o que você vai construir com isso'. Me conta o teu plano pós-formação, porque dependendo da resposta, o que eu tenho para te propor não é um programa: é uma parceria.\"",
+    tags:["Em formação","Personal brand","Rio de Janeiro","Vender o DEPOIS"]
+  },
+  {
+    id:'claudinei', name:"Claudinei Borges", first:"Claudinei", stars:5,
+    co:"Brasil Borges Direito Empresarial", role:"Advogado · Sócio-administrador (desde 2008)",
+    tier:'servicos', tierLabel:'Grupo Especifer', grupo:true, vivo:false, noSim:false,
+    sector:"Direito empresarial consultivo e contencioso estratégico · Sorocaba + Itaim Bibi/SP · ~10 pessoas",
+    fat:"+R$50k/mês", simFat:2400000, simMargem:3, simMultiplo:4,
+    func:"~10 (boutique, duas praças)", city:"Sorocaba/SP + São Paulo/SP", hora:"—", tel:"5515997715406", telShow:"(15) 99771-5406",
+    origem:"Indicação do Delmi — mas a pesquisa revelou: é o ADVOGADO DA ESPECIFER há 8+ anos (processo TJSP/Salto 2018)",
+    decisao:"Sócio-administrador; decisão possivelmente compartilhada com Isabelle (sócia de capital desde 2022 — provável familiar)",
+    dor:"Escritório boutique em transição clássica: entrada da Isabelle na sociedade (2022) sinaliza planejamento de continuidade; duas praças (Sorocaba + capital) exigem gestão que advocacia tradicional não ensina. Dor latente: escalar a banca sem perder a qualidade técnica. Slogan do site fala de 'expansão' — vocabulário de crescimento.",
+    pergunta:null,
+    resposta:"NÃO tratar como lead individual — é parte do ecossistema Especifer. Ângulos próprios: gestão e sucessão de banca (M04, M05, M12), expansão de duas praças (M02), e o efeito-rede: os clientes dele são donos de PME — tudo que ele implantar vira repertório para atender melhor a carteira.",
+    bonus:"B2 (1:1) sobre estrutura societária da banca. B3 pode ser no escritório — imersão de gestão jurídica.",
+    estrategia:"Confiança já existe por tabela (décadas com os Valquerizos). Mencionar Isabelle com naturalidade se surgir: 'vocês dois estão num momento de estruturar o crescimento'. Fechamento tende a ser reflexo do fechamento Especifer — sincronizar as mesas. Linguagem técnica e objetiva, respeitando a senioridade.",
+    script:"\"Doutor Claudinei, o senhor aconselha os Valquerizos há décadas — agora os três estão evoluindo a gestão juntos. Faz todo sentido o conselheiro jurídico do grupo evoluir junto: e o programa ainda resolve o desafio da sua própria banca, que é crescer em duas praças com sucessão estruturada.\"",
+    tags:["Advogado da família","Isabelle na decisão","Duas praças","Fecha com Especifer"]
+  },
+  {
+    id:'cristiano', name:"Cristiano Anjos Gonçalves", first:"Cristiano", stars:4,
+    co:"Ansell (multinacional de EPI)", role:"VP Latam & Caribbean",
+    tier:'exec', tierLabel:'Executivo C-Level', grupo:false, vivo:false, noSim:true,
+    sector:"EPI/EPP · ex-Prevent Senior · founder da Go Stickers · Eng. USF, MBA FGV, HEC Liège, INSEAD",
+    fat:"Investimento pessoal (+R$50k/mês)", simFat:0, simMargem:2, simMultiplo:6,
+    func:"—", city:"São Paulo/SP", hora:"—", tel:"5511979530228", telShow:"(11) 97953-0228",
+    origem:"Lista de ganhos (captação ativa) · e-mail Gmail = decisão pessoal",
+    decisao:"Decisão 100% pessoal",
+    dor:"VP de multinacional com formação premium (FGV + HEC + INSEAD) = acostumado a pagar caro por educação E a consumi-la com criticidade. Sinal de inquietude empreendedora: foi founder (Go Stickers). A comparação com INSEAD é inevitável — e é a armadilha da mesa.",
+    pergunta:null,
+    resposta:"Posicionar em OUTRO EIXO: MBA ensina teoria em sala; o programa implanta na operação com garantia contratual. Para ele: repertório de dono (M02–M05), governança (M11) e o network de empresários — círculo que o corporativo não dá. Se houver projeto próprio latente, o programa é a ponte executivo → dono.",
+    bonus:"B2 (1:1 com Farias) — exclusividade que INSEAD não oferece. Network qualificado como benefício central.",
+    estrategia:"NUNCA comparar com MBA — nem defensivamente. Linguagem sofisticada, zero clichê de marketing. Abordagem par-a-par, consultiva: co-criar, não vender. Investigar a Go Stickers com elegância — inquietude empreendedora é o gatilho profundo. ROI de carreira/transição (simulador já adapta).",
+    script:"\"Cristiano, você já tem a melhor prateleira acadêmica do mercado — FGV, HEC, INSEAD. O que nenhuma delas assina é um contrato de implantação com devolução de 100% se o resultado não vier. Não é mais um programa executivo: é a ponte entre o executivo que você é e o dono que, pelo teu histórico, está querendo voltar a ser.\"",
+    tags:["FGV+HEC+INSEAD","Founder latente","Nunca comparar MBA","Par-a-par"]
+  },
+  {
+    id:'paulofranca', name:"Paulo França", first:"Paulo", stars:4,
+    co:"KTG Brasil Contábil + K1 Audit", role:"Sócio-Administrador · CEO",
+    tier:'tracao', tierLabel:'Dor explícita', grupo:false, vivo:true, noSim:false,
+    sector:"Contabilidade + inteligência tributária · Americana/SP · 11 anos · clientes do segmento industrial",
+    fat:"R$ 5–20M/ano (~R$620k/mês · meta R$860k/mês)", simFat:7400000, simMargem:2, simMultiplo:4,
+    func:"20–50", city:"Americana/SP", hora:"18:00–20:00", tel:"5519996434555", telShow:"(19) 99643-4555",
+    origem:"Tráfego pago (lead frio) — MAS com dor e meta explícitas · CONFIRMADO: é o Paulo do diagnóstico ao vivo",
+    decisao:"Decisão compartilhada com William Sferra (cofundador) — alinhar os dois",
+    dor:"Nas palavras DELE: 'o desafio está em gestão de pessoas e novas contratações' + 'crescer sem deixar de fazer entregas'. Diagnóstico ao vivo confirmou a profundidade: dependência de 70% do dono, demitiu toda a equipe de operação, time em eterna montagem, crença de que 'sem a mão do dono não é possível crescer'. Meta 2026: +12% (R$620k → R$860k/mês). Já investe em IA/automação, falta gente e sistema.",
+    pergunta:"\"O desafio está em gestão de pessoas e novas contratações. Como crescer sem deixar de fazer entregas?\"",
+    resposta:"Espelhar a dor com as palavras dele — leitura obrigatória da fala antes da mesa. 16 anos de mercado e recomeço de time provam: o problema nunca foi contratação, é a ausência de sistema (M04 organograma, M05 accountability, M10 indicadores). O gap da meta é a âncora: R$240k/mês = R$2,88M/ano em jogo. M09 conversa com o investimento dele em IA.",
+    bonus:"B3 (imersão in-company em Americana) para redesenhar a operação + B4 para estruturar o comercial contábil.",
+    estrategia:"Lead frio com dor quente: fazer SPIN completo antes do preço, mas o 'P' já está dado — vá rápido para Implicação usando a meta dele. Trazer William Sferra para a mesa (ou ligação de 15 min). Assessment provável: faixa 'refém'. Garantia mata o ceticismo de quem já demitiu um time inteiro.",
+    script:"\"Paulo, você escreveu que o gargalo é gente — e você já provou que trocar as pessoas não resolve, porque trocou todas. O que nunca foi trocado foi o sistema. É isso que os 12 encontros instalam. E a sua meta de R$860 mil por mês? A diferença para hoje é R$2,9 milhões por ano. O programa custa 2% disso — com garantia.\"",
+    tags:["Dor explícita","Meta R$860k/mês","Sócio: William","Lead frio quente"]
+  },
+  {
+    id:'silvana', name:"Silvana Simões Pessoa", first:"Silvana", stars:4,
+    co:"Advocacia e Assessoria Simões Pessoa + MSP Soluções Financeiras", role:"Advogada · Sócia · Presidente",
+    tier:'servicos', tierLabel:'Método próprio (TPI)', grupo:false, vivo:true, noSim:false,
+    sector:"Advocacia full service + cobrança especializada p/ empresas · Arujá/SP · 27 anos · Prêmio MAPFRE",
+    fat:"+R$50k/mês", simFat:3000000, simMargem:2, simMultiplo:4,
+    func:"Escritório médio, equipe multidisciplinar", city:"Arujá/SP (JM600 Office & Mall)", hora:"—", tel:"5511964542561", telShow:"(11) 96454-2561",
+    origem:"Lista de alunos/ganhos + diagnóstico ao vivo",
+    decisao:"Decisora — mas sofisticada: exige abordagem à altura",
+    dor:"Diagnóstico ao vivo: pós-sociedade que engessava, dificuldade em capacitar pessoas e em fazer a nova geração 'enxergar a empresa'. A pesquisa revelou o outro lado: gestão MADURA — método próprio TPI (Tecnologias, Pessoas e Inovação), compliance completo, canal de denúncias, sistema próprio, operação verticalizada com a MSP (jurídico + financeiro). A dor não é falta de método: é fazer o TIME viver o método que ela criou.",
+    pergunta:"\"Como faço meu time enxergar a empresa do jeito que eu enxergo?\"",
+    resposta:"Regra de ouro: o programa COMPLEMENTA o TPI, jamais substitui — olhar externo, benchmark e sistema de cobrança em cima do método dela. M05 (cultura e accountability — a dor da nova geração), M04 (organograma pós-sociedade), M02 (metas que traduzem a visão dela em cobrança). Sondar a MSP: pode haver projeto de expansão financeira.",
+    bonus:"B3 (workshop de 2h com a liderança) — a ponte literal entre a visão dela e o time.",
+    estrategia:"Reconhecer o TPI logo na abertura (mostra pesquisa, gera respeito). Ela valoriza reconhecimento institucional (Prêmio MAPFRE) — tratar como par e autoridade. Confirmar na mesa a relação entre o relato do diagnóstico (ex-sócia, administradoras financeiras) e a estrutura atual — não presumir.",
+    script:"\"Silvana, vi que vocês têm o TPI — método próprio documentado é raridade até em empresa grande. O que o programa faz não é substituir: é instalar o sistema de cobrança que faz o seu time viver o TPI sem depender de você lembrar todo dia. É a resposta para a sua pergunta: o time passa a enxergar a empresa porque o sistema mostra, não porque você repete.\"",
+    tags:["Método TPI","Compliance maduro","Pós-sociedade","Complementar, não substituir"]
+  },
+  {
+    id:'othoniel', name:"Othoniel Rodrigues Lopes", first:"Othoniel", stars:4,
+    co:"Fiber Citrus Indústria e Comércio", role:"Presidente (CEO)",
+    tier:'tracao', tierLabel:'Agro · Investidores', grupo:false, vivo:false, noSim:false,
+    sector:"Fibras naturais de citrus (aproveitamento de resíduos) · Taquaritinga/SP · fundada 2021 · exporta p/ EUA, China, Europa",
+    fat:"Operação anunciada de R$83M (2022) — confirmar faturamento atual na mesa", simFat:15000000, simMargem:2, simMultiplo:6,
+    func:"Até 240 diretos em capacidade plena", city:"Taquaritinga/SP", hora:"—", tel:"5511983562128", telShow:"(11) 98356-2128",
+    origem:"Lista de alunos/ganhos · presença em mídia (InvestSP, imprensa regional)",
+    decisao:"7 sócios-fundadores + investidores institucionais (CARPE, KR Capital) — não é solo, mas a pressão é",
+    dor:"CEO de empresa em RAMP-UP industrial (não de empresa rodando): time em formação, margens de commodity, mercado de exportação volátil, e o desafio invisível — governança com 7 sócios e 2 gestoras de capital cobrando resultado e relatórios. Perfil líder: negociou com prefeituras, InvestSP, mídia.",
+    pergunta:null,
+    resposta:"Posicionar como o programa do PRÓXIMO NÍVEL de governança: de fundador-operador para CEO com investidores. M05 (time em formação — desenhar certo desde o dia 1), M06 (margem de commodity), M10 (dashboards que respondem aos investidores), M11 (riscos de exportação/regulatório), M04 (alinhar 7 cabeças em um organograma).",
+    bonus:"B3 (imersão na planta em Taquaritinga) — indústria se convence no chão de fábrica. B2 sobre a relação com CARPE/KR.",
+    estrategia:"Linguagem objetiva, sem glamour urbano — respeitar a vivência dele. Reenquadrar a objeção 'já temos investidores': investidor cobra número, não constrói capacidade interna. Sondar se sócios-chave vão juntos (venda múltipla potencial). Cases de agro/indústria valem ouro para esse perfil.",
+    script:"\"Othoniel, você está na fase mais perigosa de uma indústria: o ramp-up, com 7 sócios e duas gestoras olhando o número todo mês. Investidor cobra resultado — mas quem entrega é o sistema e o time que você está montando agora. Montar certo desde o dia 1 é infinitamente mais barato que corrigir no ano 3. É exatamente isso que os 12 encontros fazem.\"",
+    tags:["Ramp-up industrial","CARPE + KR Capital","7 sócios","Exportação"]
+  },
+  {
+    id:'janaina', name:"Janaina Massignani", first:"Janaina", stars:4,
+    co:"Instituto Otovida (2 unidades)", role:"Presidente · Fonoaudióloga fundadora",
+    tier:'tracao', tierLabel:'Saúde · Multi-unit', grupo:false, vivo:false, noSim:false,
+    sector:"Saúde auditiva · Florianópolis/SC · fundada em 2000 (26 anos) · 1.300m² · 25.000+ pacientes · 85.000+ Testes da Orelhinha",
+    fat:"R$ 2M/ano (~R$165k/mês)", simFat:2000000, simMargem:3, simMultiplo:6,
+    func:"Equipe multidisciplinar (fono, psico, otorrino, social) · <20% do tempo no operacional", city:"Florianópolis/SC (Capoeiras)", hora:"10:00–12:00", tel:"5548991456511", telShow:"(48) 99145-6511",
+    origem:"Instagram — JÁ ACOMPANHA o Farias · assessment completo",
+    decisao:"Liderança solo há 16 anos (sem sócio desde 2009) — decide sozinha, mas carrega tudo sozinha",
+    dor:"Assessment: margem baixa e fluxo de caixa descontrolado apesar do volume; gargalo em contratar profissionais de saúde e dúvida jurídica no modelo de remuneração (PJ × CLT × Sociedade × Porcentagem). A pesquisa somou o contexto: 26 anos de casa, 2ª clínica com 4 anos (fase multi-unit), liderança solo há 16 anos, marca pessoal em todo material — o clássico 'libertar a dona'.",
+    pergunta:"\"Qual a melhor forma de pagar profissionais da área da saúde? Como PJ, CLT, sociedade ou porcentagem sem gerar risco trabalhista?\"",
+    resposta:"Ajuste do modelo para 'Parceria por Produtividade' (clínica parceira / PJ com metas atreladas à DRE), eliminando CLT pesada sem vínculo passivo — tema dos M04, M06 e M11, com a modelagem final validada pelo jurídico dela (o programa direciona, não substitui advogado). E o arco maior: fazer a 2ª clínica rodar sem clonar a Janaina (M05, M10).",
+    bonus:"Reestruturação de DRE (M06) + modelagem de remuneração médica + Garantia como redutor de risco do tíquete.",
+    estrategia:"SENSIBILIDADE DE TÍQUETE: R$2M/ano — o parcelado 12× R$6.000 e a garantia carregam a venda; jamais empurrar além. Reconhecer os 16 anos de jornada solo (não subestimar). Formato: confirmar como funcionam os presenciais para quem vem de SC. Linguagem próxima — ela já conhece e segue o Farias.",
+    script:"\"Janaina, 26 anos de Otovida e 16 carregando sozinha — e agora duas clínicas. Na saúde, pagar profissional no modelo errado engessa a margem e cria passivo silencioso. O programa reestrutura a sua DRE e a modelagem de remuneração, e faz a segunda clínica rodar sem precisar de duas Janainas. E o risco é nosso: não subiu 10%, devolvemos 100%.\"",
+    tags:["Já segue o Farias","2 clínicas","Libertar a dona","Tíquete sensível"]
+  },
+  {
+    id:'ricardovalq', name:"Ricardo Valquerizo", first:"Ricardo", stars:4,
+    co:"Especifer · Ferramentas Especiais", role:"Diretor Administrativo",
+    tier:'tracao', tierLabel:'Grupo Especifer', grupo:true, vivo:false, noSim:false,
+    sector:"Indústria de ferramentas automotivas/agrícolas · Indaiatuba/SP",
+    fat:"R$ 20–50M/ano", simFat:30000000, simMargem:2, simMultiplo:6,
+    func:"50–200", city:"Indaiatuba/SP (formulário: Campinas)", hora:"16:00–18:00", tel:"5511997723342", telShow:"(11) 99772-3342",
+    origem:"Indicação do Delmi (já aluno) · página oficial",
+    decisao:"Voz ativa, mas NÃO é o decisor final — o trio José Roberto + Delmi + Ricardo decide",
+    dor:"Diretor Administrativo em indústria familiar de 48 anos em transição geracional: perfil executor, pragmático, guardião do orçamento ('guarda-costas do custo-benefício'). Dor típica do papel: processos administrativos e financeiros que não acompanham a sofisticação da operação (multi-CNPJ, internacional).",
+    pergunta:null,
+    resposta:"Para o Ricardo, a venda é por PROCESSO e NÚMERO: M04 (responsabilidades claras entre família e executivos), M06 (financeiro multi-CNPJ), M10 (indicadores administrativos), M05 (accountability na transição geracional). Ele é quem vai defender — ou vetar — o investimento na planilha: dar a ele o Simulador com os números da Especifer.",
+    bonus:"B3 (imersão in-company) — ele é o dono do 'como funciona por dentro'. B4 se houver time comercial próprio.",
+    estrategia:"NÃO vender sozinho — sempre no contexto do trio (ver ficha José Roberto). Linguagem de eficiência e retorno, não de sonho. O papel dele na venda: transformá-lo de guardião do orçamento em defensor do ROI — o simulador com 2% sobre R$30M (R$600k/ano) faz esse trabalho.",
+    script:"\"Ricardo, você é quem cuida para o dinheiro da Especifer render. Então deixa eu te mostrar a conta, não o discurso: 2% de margem recuperada numa operação de R$30 milhões são R$600 mil por ano — e o programa custa R$55 mil, com devolução de 100% se o número não subir 10%. É o tipo de investimento que o Diretor Administrativo aprova.\"",
+    tags:["Grupo Especifer","Guardião do orçamento","Vender pelo número","Nunca sozinho"]
+  },
+  {
+    id:'coliseu', name:"Rodrigo Santos & Elvidio Gomes", first:"Rodrigo", stars:4,
+    co:"Coliseu Holding (Comitiva BA)", role:"Diretores/CEOs",
+    tier:'tracao', tierLabel:'Comitiva VIP', grupo:false, vivo:false, noSim:false,
+    sector:"Holding · Teixeira de Freitas/BA",
+    fat:"R$ 2–5M/ano", simFat:3500000, simMargem:3, simMultiplo:6,
+    func:"20–50", city:"Teixeira de Freitas/BA", hora:"10:00–12:00", tel:"5511999511933", telShow:"(11) 99951-1933 · (11) 99906-0933",
+    origem:"Facebook/Instagram + página oficial · mesmo IP · preencheram o formulário mais de uma vez",
+    decisao:"Dupla decisora — comitê de compra já em movimento",
+    dor:"Dois decisores da mesma holding pesquisando juntos: interesse alto e comitê ativo. R$2–5M com 20–50 funcionários sugere margem apertada e operação intensiva em pessoas.",
+    pergunta:null,
+    resposta:"Âncoras: M03 (margem), M06 (financeiro), M05 (gestão de gente). A objeção 'preciso falar com meu sócio' já nasce morta se a mesa for conjunta.",
+    bonus:"B3 (imersão presencial) tem peso extra: eles viajaram da Bahia — presença física é a linguagem deles.",
+    estrategia:"ATENDIMENTO CONJUNTO OBRIGATÓRIO: um closer, uma mesa, os dois decisores. Nesse tíquete, a garantia e o parcelado carregam a venda. Empresa em que os dois decisores se movem juntos implanta o método duas vezes mais rápido — use isso como elogio de abertura.",
+    script:"\"Rodrigo, Elvidio — vocês vieram juntos da Bahia, e isso já diz muito. Empresa em que os dois decisores se movem juntos implanta o método duas vezes mais rápido. Vamos desenhar isso na mesa agora, com o número de vocês.\"",
+    tags:["Dupla decisora","Comitiva VIP","Interesse alto","Bahia"]
+  },
+  {
+    id:'hertz', name:"Antônio Hertz", first:"Antônio", stars:4,
+    co:"Norden Consultoria Empresarial e Participações", role:"Sócio-Administrador (sócio único)",
+    tier:'servicos', tierLabel:'Consultor Sênior', grupo:false, vivo:false, noSim:false,
+    sector:"Consultoria empresarial multissetorial + participações · Alphaville · fundada 2009 (16 anos)",
+    fat:"+R$50k/mês (estrutura provável em outros CNPJs)", simFat:1200000, simMargem:3, simMultiplo:4,
+    func:"Consultor autônomo estruturado", city:"Alphaville · Santana de Parnaíba/SP", hora:"—", tel:"5511984316490", telShow:"(11) 98431-6490",
+    origem:"Lista de alunos/ganhos",
+    decisao:"Decide sozinho — faixa etária 61–70: senioridade máxima, horizonte de decisão mais curto",
+    dor:"Consultor generalista premium com holding e 16 anos de Alphaville: lista enorme de CNAEs = 'atende tudo que aparece' — oportunidade clara de foco/especialização. Aos 61–70 anos, o tema silencioso da mesa é a sucessão e o legado da própria consultoria.",
+    pergunta:null,
+    resposta:"Vender como ATUALIZAÇÃO E ARSENAL, nunca como ensino: frameworks do programa viram produto revendável na carteira dele (aplicação imediata com clientes). M12 (sucessão/legado da Norden), M03 (foco e posicionamento), network de Alphaville como clube.",
+    bonus:"B2 (1:1) sobre o próximo capítulo da Norden — conversa de conselheiro para conselheiro.",
+    estrategia:"Respeito profundo à senioridade — tratar como autoridade da consultoria, jamais como aluno. Não pressionar: perfil sênior não aceita ser apressado. Sondar fase de carreira (foco? sucessão? novo capítulo?) antes de qualquer oferta. Possível parceiro/indicador futuro — cultivar mesmo sem fechamento imediato.",
+    script:"\"Seu Antônio, o senhor vive de dar conselho há 16 anos — então não vou fingir que vou te ensinar gestão. O que o programa te dá é arsenal atualizado para a sua carteira, network do seu nível, e uma conversa que quase ninguém tem coragem de ter com consultor sênior: qual é o plano de sucessão da Norden?\"",
+    tags:["Sênior 61–70","Alphaville","Atualização, não ensino","Não pressionar"]
+  },
+  {
+    id:'marcelo', name:"Marcelo", first:"Marcelo", stars:3,
+    co:"Importadora de próteses de silicone (estética)", role:"Dono",
+    tier:'tracao', tierLabel:'Saúde · Distribuição', grupo:false, vivo:true, noSim:false,
+    sector:"Saúde/Estética · importação e distribuição B2B · 8 anos · fabricante europeia exclusiva",
+    fat:"Porte não declarado — confirmar na mesa", simFat:8000000, simMargem:2, simMultiplo:6,
+    func:"Não declarado", city:"—", hora:"—", tel:null, telShow:"Ver com a produção do evento",
+    origem:"Diagnóstico ao vivo na mesa",
+    decisao:"Confirmar estrutura societária na mesa",
+    dor:"Importador exclusivo de fabricante europeia há 8 anos. ICP claríssimo: cirurgiões plásticos e mastologistas. Dores prováveis do modelo: vendas construídas sobre o relacionamento pessoal do dono com os médicos, exposição cambial/estoque e dependência de fornecedor único internacional.",
+    pergunta:"\"Meu cliente é o cirurgião. Como escalar essa carteira sem depender do meu relacionamento pessoal com cada médico?\"",
+    resposta:"O ICP dele já está definido (raro e valioso) — falta a máquina: funil documentado, cadência de visitação médica, pipeline com forecast e time que vende sem o dono 'sentir o cliente' (ferramenta 05 do workbook). M07 (máquina comercial B2B médica), M08 (posicionamento junto às sociedades de especialidade), M11 (regulatório/fornecedor único), M10 (cobertura de carteira).",
+    bonus:"B4 (capacitação comercial) para treinar representantes no funil médico. B1 para posicionamento digital junto ao ICP.",
+    estrategia:"Implicação: quantos cirurgiões compram porque confiam NELE, não na empresa? O que acontece se ele parar 60 dias? E se a fabricante trocar de distribuidor? 8 anos = assessment provável na faixa 'dependente'. Confirmar faturamento antes do simulador.",
+    script:"\"Marcelo, você tem o que a maioria não tem: um ICP cirúrgico — literalmente. O que falta não é clareza, é máquina: um comercial que cubra essa carteira médica sem depender do seu telefone. É exatamente isso que o Módulo 7 instala — e o Bônus 4 treina o seu time para operar.\"",
+    tags:["ICP definido","Relacionamento = dono","Fornecedor único","Confirmar porte"]
+  },
+  {
+    id:'decio', name:"Décio Sena Gouvea", first:"Décio", stars:3,
+    co:"DSG Tecnologia da Informação", role:"Empresário · Consultor/Arquiteto SAP",
+    tier:'servicos', tierLabel:'Tech · Especialista', grupo:false, vivo:false, noSim:false,
+    sector:"Consultoria SAP (S/4HANA certificado, ITIL4) · atende gigantes como MRS Logística · SP capital",
+    fat:"+R$50k/mês", simFat:1500000, simMargem:3, simMultiplo:4,
+    func:"Provável 1–10 (dono-operador)", city:"São Paulo/SP", hora:"—", tel:"5511970280240", telShow:"(11) 97028-0240",
+    origem:"Lista de alunos/ganhos",
+    decisao:"Decide sozinho — convencimento racional, não emocional",
+    dor:"Especialista técnico de elite (SAP S/4HANA, ITIL4, cliente MRS) com empresa pequena atendendo gigantes: relação de poder assimétrica, risco de commoditização se ficar só em SAP, e o clássico dono-operador 'faz-tudo'. Forte em técnica, provável lacuna em repertório de gestão/negócio.",
+    pergunta:null,
+    resposta:"O programa como diferencial competitivo: consultores SAP são todos técnicos; pouquíssimos são gestores — quem fala a língua do negócio cobra mais e commoditiza menos. M03 (posicionamento e precificação), M07 (comercial de consultoria), M05 (sair do faz-tudo). Framework é a língua dele: apresentar o método como sistema, não como inspiração.",
+    bonus:"B1 (Growth) para posicionamento de autoridade. B4 se quiser estruturar vendas consultivas.",
+    estrategia:"Linguagem tech-friendly, direta, com frameworks e zero enrolação. Usar a própria jornada dele (MRS → SAP → ITIL4) como prova de que ele já vive em ciclo de evolução contínua — o programa é o próximo módulo do ciclo, agora em gestão. Perfil conservador: garantia e racionalidade fecham.",
+    script:"\"Décio, no seu mercado todo mundo é certificado em SAP — quase ninguém é certificado em negócio. É essa a diferença entre consultor que briga por hora e consultor que senta com o board do cliente. O programa é o teu próximo certificado: gestão, com implantação e garantia contratual.\"",
+    tags:["SAP S/4HANA","Dono-operador","Anti-commodity","Racional"]
+  },
+  {
+    id:'raul', name:"Raul Mazza Jr", first:"Raul", stars:3,
+    co:"Veolia Water Technologies LATAM", role:"Diretor de Vendas — LATAM",
+    tier:'exec', tierLabel:'Executivo C-Level', grupo:false, vivo:false, noSim:true,
+    sector:"Tratamento de águas industriais · 30+ anos (SUEZ, ChemTreat, founder da GREEN Chemicals) · Eng. Químico UFPR 1984",
+    fat:"Investimento pessoal (+R$50k/mês)", simFat:0, simMargem:2, simMultiplo:6,
+    func:"—", city:"São Paulo/SP", hora:"—", tel:"5511988235308", telShow:"(11) 98823-5308",
+    origem:"Lista de alunos/ganhos · e-mail Gmail = decisão pessoal",
+    decisao:"Decisão pessoal · 60+ anos: horizonte curto, não pressionar",
+    dor:"Sênior de 30+ anos entre gigantes (SUEZ → Veolia), com passado de founder (GREEN Chemicals) — empreendedorismo latente. Aos 60+, a pergunta silenciosa é o próximo capítulo: projeto próprio pós-Veolia? Risco da mesa: 'já vi tudo isso' + comparação com treinamento corporativo de multinacional.",
+    pergunta:null,
+    resposta:"Dois ângulos possíveis — descobrir qual na Situação: (a) liderança comercial: desenvolver o time LATAM com M07 e frameworks de forecast; (b) o projeto pessoal: o programa como preparação para voltar a ser dono (a GREEN pode voltar à mesa). ROI de carreira/legado, não de EBITDA.",
+    bonus:"B2 (1:1) — conversa de sênior para sênior sobre o próximo capítulo. Network de donos é o diferencial vs. treinamento corporativo.",
+    estrategia:"Respeito máximo à senioridade; dados e cases, sem pirotecnia; ZERO pressa — perfil que se fecha sob pressão. Diferenciar de treinamento interno de multinacional: aqui é implantação com garantia e círculo de donos. Se o projeto pessoal aparecer, a venda muda de eixo na hora.",
+    script:"\"Raul, você já viu todo treinamento corporativo que existe — e fundou empresa própria no meio do caminho. A pergunta que eu te faço não é sobre a Veolia: é sobre o que você quer construir no próximo capítulo. Se a resposta envolver ser dono de novo, esse programa é a ponte — no seu ritmo, sem pressa.\"",
+    tags:["Sênior 60+","Founder latente","Sem pressa","ROI de carreira"]
+  },
+  {
+    id:'waldemar', name:"Waldemar Foelkel", first:"Waldemar", stars:3,
+    co:"Escolas Padre Anchieta (Unianchieta)", role:"Sócio (desde 1997 — 28 anos)",
+    tier:'tita', tierLabel:'Titã · Nutrição', grupo:false, vivo:false, noSim:false,
+    sector:"Educação superior · Jundiaí/SP · capital social R$10M · sociedade MULTIFAMILIAR com 30+ sócios",
+    fat:"R$ 50–200M/ano", simFat:100000000, simMargem:1, simMultiplo:6,
+    func:"+200", city:"Jundiaí/SP", hora:"08:00–10:00", tel:"5511991090051", telShow:"(11) 99109-0051",
+    origem:"Tráfego pago = LEAD FRIO · e-mail institucional @anchieta.br = decisão provavelmente colegiada",
+    decisao:"Sociedade com 30+ sócios de várias famílias (Fornari, Figueiredo, Savoy, Pernambuco, Foelkel...) — decisão colegiada; Therezinha Zorzi Foelkel (mesmo sobrenome) pode ser ponte",
+    dor:"A pesquisa revelou a dor latente que nem ele declarou: governança societária com 30+ sócios de múltiplas famílias — o caso mais complexo da sala. Somam-se os desafios do setor: captação/evasão, regulação MEC, marca de décadas a zelar, +200 funcionários.",
+    pergunta:null,
+    resposta:"NÃO é venda de evento — é nutrição de longo prazo. Ângulos quando amadurecer: M11 e o roadmap de governança (fases 1–5 do método) para sociedade multifamiliar, M04/M05 para gestão de massa, M12 (sucessão de sócio de 28 anos). No evento: relacionamento, diagnóstico e semente — sem forçar preço.",
+    bonus:"B2 (1:1) como porta de entrada consultiva, se houver abertura.",
+    estrategia:"Lead frio + decisão colegiada = maratona, não sprint. Linguagem institucional e séria; tratar como autoridade (28 anos, R$100M+). Objetivo realista da mesa: mapear a governança da sociedade, identificar quem mais decide, e sair com o próximo passo agendado — não com contrato. Mesmo 1% de margem sobre R$100M (R$1M/ano) fica plantado como semente no simulador.",
+    script:"\"Waldemar, uma sociedade com mais de trinta sócios de várias famílias, atravessando gerações, é um caso raríssimo — e o senhor está nela há 28 anos. Eu não vou te vender nada hoje. Quero entender como vocês decidem, porque se um dia fizer sentido estruturar essa governança com método, essa conversa começa aqui.\"",
+    tags:["Lead frio","30+ sócios","Nutrição longa","Não forçar"]
+  }
+];
+
+/* ================= ESTADO GLOBAL ================= */
+let selectedLeadId = leads[0].id;
+let currentFilter = 'todos';
+let searchTerm = '';
+const leadNotes = {};
+let simMode = 'avista';
+const PRICES = { avista:55000, parcelado:72000 };
+const PRICE_LABEL = { avista:'R$ 55.000 (à vista)', parcelado:'R$ 72.000 (12× R$ 6.000)' };
+const tierColors = { tita:{c:'#D66459'}, tracao:{c:'#E6C87A'}, servicos:{c:'#8B97A8'}, exec:{c:'#7D95EE'} };
+
+function starsHtml(n){
+  let s='';
+  for(let i=1;i<=5;i++) s += i<=n ? '★' : '<span class="off">★</span>';
+  return `<span class="stars" title="Potencial de fechamento ${n}/5">${s}</span>`;
+}
+
+/* ================= RANKING (Mapa da Sala) ================= */
+const rankData = [
+  {id:'telles', why:"Recém-empossado, missão de turnaround, capacidade alta — prioridade premium"},
+  {id:'joseroberto', why:"Patriarca decisor — a chave da venda múltipla do Grupo Especifer"},
+  {id:'alex', why:"CRO/CTO em 'estruturar e acelerar' — perfil premium multiplicador"},
+  {id:'renata', why:"Já aluna, professora FIA, em alta midiática — upsell + parceria"},
+  {id:'mariatorres', why:"Em formação ativa — vender o próximo passo, pensar embaixadora"},
+  {id:'cristiano', why:"VP Ansell, formação premium, founder latente — par-a-par ou nada"},
+  {id:'paulofranca', why:"Dor explícita + meta R$860k/mês — espelhar a fala dele"},
+  {id:'claudinei', why:"Advogado da família Valquerizo — fecha no vácuo da Especifer"},
+  {id:'silvana', why:"Método TPI + compliance maduro — complementar, nunca substituir"},
+  {id:'othoniel', why:"Ramp-up com investidores institucionais — governança em construção"}
+];
+const rankList = document.getElementById('rank-list');
+rankData.forEach(r=>{
+  const ld = leads.find(l=>l.id===r.id);
+  const div = document.createElement('div');
+  div.className='rk-item';
+  div.innerHTML = `<span><span class="rk-name">${ld.name}</span><div class="rk-why">${r.why}</div></span>${starsHtml(ld.stars)}`;
+  div.addEventListener('click',()=>{ selectLead(r.id); goTab('leads'); });
+  rankList.appendChild(div);
+});
+
+/* ================= LISTA DE LEADS ================= */
+const leadList = document.getElementById('lead-list');
+function matchesFilter(ld){
+  if(currentFilter==='vivo' && !ld.vivo) return false;
+  if(currentFilter==='grupo' && !ld.grupo) return false;
+  if(['tita','tracao','servicos','exec'].includes(currentFilter) && ld.tier!==currentFilter) return false;
+  if(searchTerm){
+    const hay = `${ld.name} ${ld.co} ${ld.sector} ${ld.dor} ${ld.tags.join(' ')} ${ld.city} ${ld.role}`.toLowerCase();
+    if(!hay.includes(searchTerm)) return false;
+  }
+  return true;
+}
+function renderLeadList(){
+  leadList.innerHTML = '';
+  const visible = leads.filter(matchesFilter);
+  document.querySelector('[data-f="todos"]').textContent = `Todos (${leads.length})`;
+  if(!visible.length){
+    leadList.innerHTML = '<div class="empty-state">Nenhum lead encontrado. Ajuste a busca ou o filtro.</div>';
+    return;
+  }
+  visible.forEach(ld=>{
+    const b = document.createElement('button');
+    b.className = 'lead-item'+(ld.id===selectedLeadId?' active':'');
+    const tc = tierColors[ld.tier].c;
+    b.innerHTML = `
+      <div class="l-top">
+        <span class="l-name">${ld.name}</span>
+        <span class="l-tier" style="color:${tc};border-color:${tc}55">${ld.tierLabel}</span>
+      </div>
+      <div class="l-co">${ld.co}</div>
+      <span class="l-fat"><span>${ld.fat}</span>${starsHtml(ld.stars)}</span>`;
+    b.addEventListener('click',()=>selectLead(ld.id));
+    leadList.appendChild(b);
+  });
+}
+document.getElementById('lead-search').addEventListener('input',e=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  renderLeadList();
+});
+document.querySelectorAll('#lead-filters button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#lead-filters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.f;
+    renderLeadList();
+  });
+});
+
+/* ================= DICIONÁRIO DE MÓDULOS E BÔNUS (tooltips) ================= */
+const MODINFO = {
+  M01:{n:"Diagnóstico Estratégico do Negócio", d:"Mapeia os gargalos da empresa e define o indicador de eficiência usado na garantia contratual."},
+  M02:{n:"Planejamento Estratégico e Metas 12 Meses", d:"Plano anual com metas claras e cobráveis para toda a liderança."},
+  M03:{n:"Modelo de Negócio, Escalabilidade e Margem", d:"Redesenha como a empresa ganha dinheiro: produtizar, escalar e proteger margem."},
+  M04:{n:"Estrutura Organizacional, Organograma e Liderança", d:"Desenha o organograma ideal, papéis e responsabilidades — inclusive entre família e executivos."},
+  M05:{n:"Cultura, Gestão de Pessoas e Accountability", d:"Time cobrado por resultado, com autonomia e consequência — sem microgestão do dono."},
+  M06:{n:"Gestão Financeira, DRE e Fluxo de Caixa", d:"DRE clara, margem real e caixa sob controle — base do indicador da garantia."},
+  M07:{n:"Máquina Comercial de Alta Performance", d:"ICP, funil, pipeline, forecast e cadência: um comercial que vende sem depender do dono."},
+  M08:{n:"Marketing Estratégico e Geração de Demanda", d:"Posicionamento e demanda previsível, todo mês — o fim dos picos e sustos."},
+  M09:{n:"Tecnologia e IA Aplicadas à Operação", d:"Automação e IA na rotina: relatórios, propostas e análises em minutos."},
+  M10:{n:"Indicadores, Dashboards e Gestão por Dados", d:"Decisão por dashboard e DRE, não por sentimento — visibilidade de toda a operação."},
+  M11:{n:"Riscos, Compliance e Proteção Patrimonial", d:"Blindagem regulatória, trabalhista e patrimonial da empresa e do dono."},
+  M12:{n:"Sucessão, Valuation e Legado", d:"Empresa pronta para suceder, valer mais (EBITDA × múltiplo) e durar além do dono."},
+  B1:{n:"Bônus 1 · Consultoria de Marketing & Growth (30 dias)", d:"4 reuniões semanais de 1h–2h: auditoria de métricas, canais, anúncios e funil, com plano de ação."},
+  B2:{n:"Bônus 2 · Aconselhamento 1:1 com Farias Souza", d:"2 sessões privativas sobre dados financeiros, estrutura societária e plano do CEO (hipótese de conselheiro sênior aprovado)."},
+  B3:{n:"Bônus 3 · Imersão presencial in-company", d:"Até 5h dentro da operação do cliente + workshop de 2h com a liderança."},
+  B4:{n:"Bônus 4 · Capacitação comercial in-company", d:"Treinamento online exclusivo para o time de vendas: abordagem, scripts, cadência e fechamento."}
+};
+function modTag(code){
+  const info = MODINFO[code];
+  if(!info) return code;
+  return `<span class="mod" tabindex="0" data-tip="${info.n} — ${info.d}">${code}</span>`;
+}
+function decorate(html){
+  if(!html) return html;
+  return html
+    .replace(/\b(M0[1-9]|M1[0-2])\b/g, (m)=>modTag(m))
+    .replace(/\bBônus ([1-4])\b/g, (m,n)=>modTag('B'+n).replace(`>B${n}<`, `>Bônus ${n}<`))
+    .replace(/\bMódulo 0?([1-9]|1[0-2])\b/g, (m,n)=>{
+      const code = 'M'+String(n).padStart(2,'0');
+      return modTag(code).replace(`>${code}<`, `>${m}<`);
+    })
+    .replace(/\bB([1-4])\b(?![^<]*<\/span>)/g, (m,n)=>modTag('B'+n));
+}
+
+/* ================= DETALHE DO LEAD ================= */
+const leadDetail = document.getElementById('lead-detail');
+function h4(t){return `<div class="h4">${t}</div>`;}
+function showLead(id){
+  const ld = leads.find(l=>l.id===id);
+  const tc = tierColors[ld.tier].c;
+  leadDetail.innerHTML = `
+    <div class="ld-head">
+      <h3>${ld.name}</h3>
+      ${starsHtml(ld.stars)}
+      <span style="color:${tc};border-color:${tc}55;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;padding:3px 10px;border-radius:99px;border:1px solid">${ld.tierLabel}</span>
+    </div>
+    <p class="dim" style="font-size:13px;margin-bottom:8px">${ld.co} · ${ld.role}</p>
+    <p class="dim" style="font-size:12.5px;margin-bottom:8px">${ld.sector}</p>
+    <div>${ld.tags.map(t=>`<span class="tag gold">${t}</span>`).join('')}${ld.grupo?'<span class="tag alert">Grupo Especifer</span>':''}${ld.vivo?'<span class="tag steel">Diagnóstico ao vivo</span>':''}${ld.noSim?'<span class="tag blue">ROI de carreira</span>':''}</div>
+    <div class="ld-meta">
+      <div class="m"><span>Porte / faturamento</span><b>${ld.fat}</b></div>
+      <div class="m"><span>Funcionários</span><b>${ld.func}</b></div>
+      <div class="m"><span>Cidade</span><b>${ld.city}</b></div>
+      <div class="m"><span>Janela WhatsApp</span><b class="mono">${ld.hora}</b></div>
+      <div class="m"><span>Contato</span><b class="mono">${ld.tel?`<a href="https://wa.me/${ld.tel}" target="_blank" rel="noopener">${ld.telShow}</a>`:ld.telShow}</b></div>
+      <div class="m"><span>Estrutura de decisão</span><b style="font-size:12px">${ld.decisao}</b></div>
+    </div>
+    ${h4('Origem')}<p class="dim" style="font-size:13.5px">${ld.origem}</p>
+    ${h4('Gargalo / dor mapeada')}<p style="font-size:14px">${decorate(ld.dor)}</p>
+    ${ld.pergunta?`${h4('Pergunta / fala do próprio lead')}<div class="script qlead">${ld.pergunta}</div>`:''}
+    ${ld.resposta?`${h4('Resposta estruturada &amp; solução SOE')}<p style="font-size:14px">${decorate(ld.resposta)}</p>`:''}
+    ${h4('Bônus-chave de venda para este lead')}<p style="font-size:14px">${decorate(ld.bonus)}</p>
+    ${h4('Estratégia de fechamento do closer')}<p style="font-size:14px">${decorate(ld.estrategia)}</p>
+    ${h4('Script exato de abertura na mesa')}<div class="script">${decorate(ld.script)}</div>
+    ${h4('Anotações da mesa (apenas nesta sessão)')}
+    <textarea class="notes-area" id="notes-field" placeholder="Nº de 'NÃO' do assessment, números do Raio-X do Lucro, objeções levantadas, próximos passos...">${leadNotes[ld.id]||''}</textarea>
+    <div class="ld-actions">
+      <button class="btn" id="go-sim">Abrir no Simulador ROI →</button>
+    </div>`;
+  document.getElementById('notes-field').addEventListener('input',e=>{ leadNotes[ld.id]=e.target.value; });
+  document.getElementById('go-sim').addEventListener('click',()=>{ goTab('simulador'); });
+}
+function selectLead(id){
+  selectedLeadId = id;
+  renderLeadList();
+  showLead(id);
+  renderSimStrip();
+  loadLeadIntoSim(id);
+}
+
+/* ================= SIMULADOR ================= */
+const fmt = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+const simFat = document.getElementById('sim-fat');
+const simMargem = document.getElementById('sim-margem');
+const simMultiplo = document.getElementById('sim-multiplo');
+
+function renderSimStrip(){
+  const strip = document.getElementById('sim-lead-strip');
+  strip.innerHTML = '';
+  leads.forEach(ld=>{
+    const b = document.createElement('button');
+    let label = ld.first;
+    if(ld.id==='coliseu') label = 'Rodrigo & Elvidio';
+    if(ld.id==='ricardovalq') label = 'Ricardo V.';
+    if(ld.id==='telles') label = 'Telles';
+    if(ld.id==='joseroberto') label = 'José Roberto';
+    b.textContent = label;
+    b.className = ld.id===selectedLeadId?'active':'';
+    b.addEventListener('click',()=>selectLead(ld.id));
+    strip.appendChild(b);
+  });
+}
+function loadLeadIntoSim(id){
+  const ld = leads.find(l=>l.id===id);
+  simFat.value = ld.simFat;
+  simMargem.value = String(ld.simMargem);
+  simMultiplo.value = String(ld.simMultiplo);
+  calcSim();
+}
+function calcSim(){
+  const ld = leads.find(l=>l.id===selectedLeadId);
+  const price = PRICES[simMode];
+  document.getElementById('out-inv').textContent = PRICE_LABEL[simMode];
+
+  if(ld.noSim){
+    document.getElementById('out-lucro').textContent = '—';
+    document.getElementById('out-valuation').textContent = '—';
+    document.getElementById('out-roi').textContent = 'ROI de carreira';
+    document.getElementById('out-payback').textContent = 'ver argumento abaixo';
+    document.getElementById('out-encontro').textContent = fmt(price/12)+' / encontro';
+    document.getElementById('sim-script').textContent =
+      `"${ld.first}, no seu caso a conta não é de EBITDA — é de carreira e de patrimônio pessoal. O investimento é de ${fmt(price)} (${fmt(price/12)} por encontro de conselho estratégico), pelo ferramental completo de dono, o network de empresários e conselheiros, e a garantia contratual de resultado sobre o indicador que definirmos juntos no Módulo 1. Compare com qualquer programa executivo do seu nível: nenhum devolve 100% se o resultado não vier."`;
+    return;
+  }
+
+  const fat = parseFloat(simFat.value)||0;
+  const margem = parseFloat(simMargem.value)/100;
+  const multiplo = parseFloat(simMultiplo.value);
+  const lucro = fat*margem;
+  const valuation = lucro*multiplo;
+  const roi = price>0 ? lucro/price : 0;
+  const paybackMeses = lucro>0 ? price/(lucro/12) : 0;
+  document.getElementById('out-lucro').textContent = fmt(lucro);
+  document.getElementById('out-valuation').textContent = fmt(valuation);
+  document.getElementById('out-roi').textContent = roi>=1
+    ? roi.toFixed(2).replace('.',',')+'× o valor investido no 1º ano'
+    : (roi*100).toFixed(0)+'% do investimento no 1º ano';
+  document.getElementById('out-payback').textContent = paybackMeses>0
+    ? (paybackMeses<=24 ? paybackMeses.toFixed(1).replace('.',',')+' meses' : (paybackMeses/12).toFixed(1).replace('.',',')+' anos')
+    : '—';
+  document.getElementById('out-encontro').textContent = fmt(lucro/12)+' / encontro';
+  document.getElementById('sim-script').textContent =
+    `"${ld.first}, com um faturamento de ${fmt(fat)}, um ganho conservador de apenas ${simMargem.value}% na sua margem EBITDA gera ${fmt(lucro)} de lucro novo por ano. `+
+    (paybackMeses>0 && paybackMeses<=12
+      ? `Isso paga o programa inteiro em ${paybackMeses.toFixed(1).replace('.',',')} meses e ainda adiciona ${fmt(valuation)} ao valuation da sua empresa. `
+      : `Além disso, adiciona ${fmt(valuation)} ao valuation da sua empresa. `)+
+    `E lembrando: isso é projeção conservadora — a garantia contratual é objetiva: se o seu indicador não subir 10%, devolvemos 100%."`;
+}
+[simFat,simMargem,simMultiplo].forEach(el=>el.addEventListener('input',calcSim));
+document.querySelectorAll('.quick-vals button').forEach(b=>{
+  b.addEventListener('click',()=>{ simFat.value=b.dataset.v; calcSim(); });
+});
+document.querySelectorAll('#sim-mode button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#sim-mode button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    simMode = b.dataset.mode;
+    calcSim();
+  });
+});
+
+/* ================= INIT ================= */
+renderLeadList();
+showLead(selectedLeadId);
+renderSimStrip();
+loadLeadIntoSim(selectedLeadId);
+</script>
+</body>
+</html>

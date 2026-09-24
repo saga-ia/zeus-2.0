@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Turbo Max - Conectar Perfis</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  /* Sidebar */
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  /* Main */
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { margin-bottom: 40px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  /* Platform cards */
+  .platforms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 48px; }
+  .platform-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .platform-card:hover { border-color: var(--platform-color, var(--accent)); transform: translateY(-2px); }
+  .platform-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    position: relative;
+  }
+  .platform-icon.ig { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+  .platform-icon.yt { background: #ff0000; }
+  .platform-icon.tt { background: #111; border: 1px solid #333; }
+  .platform-name { font-size: 20px; font-weight: 700; }
+  .platform-desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .btn-connect {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-connect:hover { background: var(--surface2); }
+  .btn-connect.ig { border-color: #e6683c; color: #f09433; }
+  .btn-connect.yt { border-color: #ff0000; color: #ff0000; }
+  .btn-connect.tt { border-color: #555; color: #aaa; }
+  /* Connected accounts */
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .accounts-list { display: flex; flex-direction: column; gap: 12px; }
+  .account-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .account-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .account-info { flex: 1; }
+  .account-name { font-weight: 600; font-size: 15px; }
+  .account-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .account-platform {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .account-platform.instagram { background: #f0943322; color: #f09433; }
+  .account-platform.youtube { background: #ff000022; color: #ff4444; }
+  .account-platform.tiktok { background: #ffffff11; color: #aaa; }
+  .btn-disconnect { background: transparent; border: 1px solid #ef444444; color: #ef4444; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-disconnect:hover { background: #ef444420; }
+  .empty-state { color: var(--muted); font-size: 14px; padding: 24px; text-align: center; }
+  /* Alert */
+  .alert { padding: 14px 18px; border-radius: 12px; font-size: 14px; margin-bottom: 24px; }
+  .alert-success { background: #10b98120; border: 1px solid #10b98140; color: #10b981; }
+  .alert-error { background: #ef444420; border: 1px solid #ef444440; color: #ef4444; }
+  /* Modal + Wizard (mesmo padrão do guia do Google Drive) */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 40px 20px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; max-width: 720px; width: 100%; padding: 32px; position: relative; margin: auto 0; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .modal h2 { font-size: 22px; margin-bottom: 6px; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn { padding: 11px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .step-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px; margin-top: 8px; font-family: monospace; }
+  .wizard-progress { margin-bottom: 24px; }
+  .wizard-progress-bar { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .wizard-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s; width: 7%; }
+  .wizard-progress-text { color: var(--muted); font-size: 12px; margin-top: 6px; text-align: right; font-weight: 600; }
+  .wstep h2 { font-size: 22px; margin-bottom: 10px; }
+  .wstep-desc { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
+  .wstep-tip { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); color: #a5f3fc; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-top: 14px; }
+  .wstep-tip strong { color: var(--accent2); }
+  .wstep-warn { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.28); color: #fca5a5; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-top: 14px; }
+  .wstep-warn strong { color: #ef4444; }
+  .wstep-instructions { background: var(--surface2); border-radius: 12px; padding: 16px 20px; margin-top: 16px; font-size: 14px; line-height: 1.7; }
+  .wstep-instructions ol, .wstep-instructions ul { padding-left: 22px; margin-top: 8px; }
+  .wstep-instructions li { margin-bottom: 6px; }
+  .wstep-instructions code { background: var(--bg); padding: 2px 8px; border-radius: 4px; color: var(--accent); font-size: 13px; word-break: break-all; }
+  .wstep-instructions strong { color: white; }
+  .wbig-btn { display: block; text-align: center; background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 14px 0; }
+  .wbig-btn:hover { opacity: 0.9; }
+  .wstep label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 14px; }
+</style>
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12Z"/></svg></div>
+    <div class="logo-text">Agenda Turbo Max</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item" data-icon="dashboard" data-label="Dashboard"></a>
+  <a href="/calendar.html" class="nav-item" data-icon="calendar" data-label="Calendário"></a>
+  <a href="/editor.html" class="nav-item" data-icon="compose" data-label="Novo Post"></a>
+  <a href="/bulk.html" class="nav-item" data-icon="bulk" data-label="Publicação em Massa"></a>
+  <a href="/analytics.html" class="nav-item" data-icon="analytics" data-label="Analytics"></a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item active" data-icon="link" data-label="Conectar Perfis"></a>
+  <a href="/settings.html" class="nav-item" data-icon="settings" data-label="Configurações"></a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn" data-icon="logout" data-label="Sair"></a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Conectar Perfis</h1>
+    <p>Conecte suas contas para começar a agendar conteudo.</p>
+  </div>
+
+  <div id="alertBox" style="display:none"></div>
+
+  <!-- Diagnóstico da conexão -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:700;font-size:15px">🩺 A conexão não está funcionando?</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:2px">Pergunta direto pra Meta o que está travando e mostra como corrigir cada item.</div>
+    </div>
+    <button class="btn-connect" id="btnDiag" onclick="runDiagnostics()" style="width:auto;padding:10px 18px;border-color:#06b6d4;color:#06b6d4;font-weight:700">Rodar diagnóstico</button>
+  </div>
+  <div id="diagResult" style="margin-bottom:24px"></div>
+
+  <!-- Aviso quando alguma conta não tem permissão de publicar -->
+  <div id="permissionWarning" class="alert alert-error" style="display:none;padding:16px 20px;margin-bottom:24px;border-radius:12px;background:#ef444422;border:1px solid #ef444444;color:#fca5a5">
+    <div style="font-weight:700;font-size:15px;margin-bottom:8px">⚠️ Uma ou mais contas SEM permissão pra publicar no Instagram</div>
+    <div style="font-size:13px;margin-bottom:12px" id="permWarningList"></div>
+    <a href="#" id="btnReauth" class="btn-connect" style="background:#ef4444;color:white;border-color:#ef4444;width:auto;padding:10px 18px;font-weight:700;text-decoration:none">
+      🔓 Corrigir permissões agora (reautorizar Instagram)
+    </a>
+    <div style="font-size:12px;color:#fca5a5;margin-top:10px;line-height:1.5">
+      Isso vai abrir o Facebook. Na tela que aparecer, marca <strong>TODAS as contas do Instagram</strong> que você quer usar e clica em "Continuar". Depois volta pra cá e clica em "🔄 Importar via BM (Meta)" logo abaixo.
+    </div>
+  </div>
+
+  <div class="platforms-grid">
+    <!-- Instagram -->
+    <div class="platform-card" style="--platform-color: #e6683c">
+      <div class="platform-icon ig">📸</div>
+      <div class="platform-name">Instagram</div>
+      <div class="platform-desc">Publique fotos, Reels e carrosseis diretamente na sua conta Business ou Creator.</div>
+      <button class="btn-connect ig" onclick="openMetaWizard()" style="border-color:#7c3aed;color:#a78bfa">
+        📖 Guia passo a passo
+      </button>
+      <a href="/oauth/instagram/start" data-oauth class="btn-connect ig">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Conectar Instagram
+      </a>
+    </div>
+
+    <!-- YouTube -->
+    <div class="platform-card" style="--platform-color: #ff0000">
+      <div class="platform-icon yt">▶️</div>
+      <div class="platform-name">YouTube</div>
+      <div class="platform-desc">Envie videos e Shorts para o seu canal do YouTube automaticamente.</div>
+      <a href="/oauth/youtube/start" data-oauth class="btn-connect yt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Conectar YouTube
+      </a>
+    </div>
+
+    <!-- TikTok -->
+    <div class="platform-card" style="--platform-color: #555">
+      <div class="platform-icon tt">🎵</div>
+      <div class="platform-name">TikTok</div>
+      <div class="platform-desc">Publique videos no TikTok com horario agendado e gerenciamento de conta.</div>
+      <a href="/oauth/tiktok/start" data-oauth class="btn-connect tt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Conectar TikTok
+      </a>
+    </div>
+  </div>
+
+  <!-- Importar colando um token do Explorador da Graph API -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:24px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">🔑 Importar contas com token do Explorador da Graph API</div>
+    <div style="color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px">
+      Caminho alternativo, para quando o botão "Conectar Instagram" não retorna nada.
+      Em <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color:var(--accent)">developers.facebook.com/tools/explorer</a>,
+      selecione seu app, adicione as permissões
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">instagram_basic</code>,
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">instagram_content_publish</code>,
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">instagram_manage_insights</code>,
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">pages_show_list</code>,
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">pages_read_engagement</code> e
+      <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px">business_management</code>,
+      clique em <strong>Generate Access Token</strong>, marque TODAS as contas e cole o token aqui.
+    </div>
+    <input type="password" id="explorerToken" class="step-input" placeholder="Cole aqui o token gerado (começa com EAA...)" style="margin-bottom:10px">
+    <button class="btn btn-primary" onclick="importWithToken()" style="width:100%">🔑 Importar contas com este token</button>
+    <div style="color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5">
+      O token do Explorador vale ~1 hora. Ao importar, o sistema o converte automaticamente para um de 60 dias — por isso o App ID e o App Secret precisam estar salvos em Configurações antes.
+    </div>
+    <div id="importTokenResult" style="margin-top:12px"></div>
+  </div>
+
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <span>Contas conectadas</span>
+    <button id="btnImportBm" class="btn-connect" style="width:auto;padding:8px 14px;font-size:12px;border-color:#7c3aed;color:#a78bfa">🔄 Importar via BM (Meta)</button>
+  </div>
+  <div id="accountsList" class="accounts-list">
+    <div class="empty-state">Carregando...</div>
+  </div>
+</main>
+
+<!-- ===== WIZARD: conectar Instagram via API oficial da Meta ===== -->
+<div class="modal-overlay" id="metaModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMetaWizard()">✕</button>
+
+    <div class="wizard-progress">
+      <div class="wizard-progress-bar"><div class="wizard-progress-fill" id="mzProgress"></div></div>
+      <div class="wizard-progress-text" id="mzStepLabel">Passo 1 de 14</div>
+    </div>
+
+    <!-- PASSO 1 -->
+    <div class="wstep" data-step="1">
+      <h2>📸 Conectar o Instagram — guia completo</h2>
+      <p class="wstep-desc">Vou te levar do zero até publicando. São 14 passos. Faça na ordem, sem pular — cada um depende do anterior.</p>
+      <div class="wstep-instructions">
+        <strong>Você vai precisar de:</strong>
+        <ul>
+          <li>A conta do <strong>Instagram</strong> que vai receber as publicações</li>
+          <li>Uma <strong>Página do Facebook</strong> (crio junto com você no passo 3, se não tiver)</li>
+          <li>Seu login do Facebook</li>
+          <li>Uns <strong>15 a 20 minutos</strong> na primeira vez</li>
+        </ul>
+      </div>
+      <div class="wstep-tip">
+        <strong>Por que tanto passo?</strong> A Meta não deixa nenhum sistema publicar no Instagram só com login e senha. Ela exige um "app" registrado que recebe uma autorização sua. Parece burocrático, mas é feito <strong>uma vez só</strong> — depois disso você conecta quantas contas quiser em 2 cliques.
+      </div>
+      <div class="wstep-warn">
+        <strong>Não faça isso com pressa no celular.</strong> O painel da Meta é ruim em tela pequena. Use o computador.
+      </div>
+    </div>
+
+    <!-- PASSO 2 -->
+    <div class="wstep" data-step="2" style="display:none">
+      <h2>Passo 2: Deixar o Instagram como conta profissional</h2>
+      <p class="wstep-desc">A API só publica em conta <strong>Business</strong> ou <strong>Creator</strong>. Conta pessoal não funciona — de jeito nenhum, em nenhuma ferramenta.</p>
+      <div class="wstep-instructions">
+        <strong>No aplicativo do Instagram (celular):</strong>
+        <ol>
+          <li>Vá no seu perfil e toque nas <strong>3 barrinhas</strong> (canto superior direito)</li>
+          <li>Toque em <strong>Configurações e privacidade</strong></li>
+          <li>Role até o final e toque em <strong>Tipo de conta e ferramentas</strong></li>
+          <li>Toque em <strong>Mudar para conta profissional</strong></li>
+          <li>Escolha uma categoria (qualquer uma serve — ex: "Empreendedor")</li>
+          <li>Escolha <strong>Empresa</strong> ou <strong>Criador de conteúdo</strong> — os dois funcionam</li>
+        </ol>
+      </div>
+      <div class="wstep-tip">
+        <strong>Já é profissional?</strong> Ótimo, pode ir pro próximo passo. Pra conferir: se em Configurações aparece "Mudar para conta pessoal", é porque já está profissional.
+      </div>
+    </div>
+
+    <!-- PASSO 3 -->
+    <div class="wstep" data-step="3" style="display:none">
+      <h2>Passo 3: Vincular o Instagram a uma Página do Facebook</h2>
+      <p class="wstep-desc">Esse é o passo que mais trava gente. A Meta exige que a conta do Instagram esteja <strong>amarrada a uma Página do Facebook</strong> — não ao seu perfil pessoal, mas a uma Página.</p>
+      <div class="wstep-instructions">
+        <strong>Se você não tem uma Página ainda:</strong>
+        <ol>
+          <li>Acesse <code>facebook.com/pages/create</code></li>
+          <li>Dê um nome (pode ser o mesmo do seu Instagram) e escolha uma categoria</li>
+          <li>Clique em <strong>Criar Página</strong> — pode pular foto, descrição, tudo</li>
+        </ol>
+      </div>
+      <div class="wstep-instructions">
+        <strong>Agora vincule (no app do Instagram):</strong>
+        <ol>
+          <li>Perfil → <strong>Editar perfil</strong></li>
+          <li>Toque em <strong>Página</strong> (ou "Central de contas" → Contas conectadas)</li>
+          <li>Escolha a Página do Facebook que você criou</li>
+          <li>Confirme</li>
+        </ol>
+      </div>
+      <div class="wstep-warn">
+        <strong>Sem esse vínculo, nada funciona.</strong> Se você pular esse passo, lá na frente o diagnóstico vai acusar "conta não retornada pela Graph API" e você vai ter que voltar aqui.
+      </div>
+    </div>
+
+    <!-- PASSO 4 -->
+    <div class="wstep" data-step="4" style="display:none">
+      <h2>Passo 4: Entrar no painel de desenvolvedor da Meta</h2>
+      <p class="wstep-desc">Agora vamos criar o "app" — é o crachá que o Agenda Turbo Max usa pra falar com o Instagram.</p>
+      <a href="https://developers.facebook.com" target="_blank" class="wbig-btn">🔗 Abrir developers.facebook.com</a>
+      <div class="wstep-instructions">
+        <strong>Na página que abriu:</strong>
+        <ol>
+          <li>Clique em <strong>Entrar</strong> (canto superior direito) e faça login com seu Facebook</li>
+          <li>Se for a primeira vez, vai aparecer <strong>"Começar"</strong> ou "Registrar-se como desenvolvedor"</li>
+          <li>Aceite os termos, confirme seu e-mail e escolha a ocupação <strong>"Desenvolvedor"</strong></li>
+        </ol>
+      </div>
+      <div class="wstep-tip">
+        Use a <strong>mesma conta do Facebook</strong> que administra a Página do passo 3. Se usar outra, as contas não vão aparecer depois.
+      </div>
+    </div>
+
+    <!-- PASSO 5 -->
+    <div class="wstep" data-step="5" style="display:none">
+      <h2>Passo 5: Criar o app</h2>
+      <div class="wstep-instructions">
+        <ol>
+          <li>No topo da página, clique em <strong>Meus Apps</strong></li>
+          <li>Clique no botão verde <strong>Criar aplicativo</strong></li>
+          <li>Em "O que você quer que seu app faça?", marque <strong>Outro</strong> e clique em Avançar</li>
+          <li>Em tipo, escolha <strong>Empresa</strong> (Business) e clique em Avançar</li>
+          <li>Em <strong>Nome do app</strong>, digite: <code>Agenda Turbo Max</code></li>
+          <li>Confira o e-mail de contato e clique em <strong>Criar aplicativo</strong></li>
+          <li>Ele vai pedir sua <strong>senha do Facebook</strong> pra confirmar — digite</li>
+        </ol>
+      </div>
+      <div class="wstep-tip">
+        Se aparecer a pergunta "Você tem um Portfólio empresarial?", pode escolher <strong>"Não vincular agora"</strong> — não é obrigatório.
+      </div>
+    </div>
+
+    <!-- PASSO 6 -->
+    <div class="wstep" data-step="6" style="display:none">
+      <h2>Passo 6: Adicionar o produto "Login do Facebook"</h2>
+      <p class="wstep-desc">Agora você caiu no painel do app. Precisamos adicionar duas peças. Esta é a primeira.</p>
+      <div class="wstep-instructions">
+        <ol>
+          <li>No menu da esquerda, clique em <strong>Adicionar produto</strong> (ou role a página até "Adicionar produtos ao app")</li>
+          <li>Ache o card <strong>Login do Facebook</strong></li>
+          <li>Clique em <strong>Configurar</strong></li>
+          <li>Se ele perguntar a plataforma, escolha <strong>Web</strong></li>
+          <li>Se pedir "URL do site", cole: <code>https://agendaturbomax.jefersonhenrike.com</code> e salve</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- PASSO 7 -->
+    <div class="wstep" data-step="7" style="display:none">
+      <h2>Passo 7: Cadastrar a URL de retorno ⚠️</h2>
+      <p class="wstep-desc">Este é o passo onde <strong>1 caractere errado quebra tudo</strong>. Use o botão de copiar, não digite na mão.</p>
+      <div class="wstep-instructions">
+        <ol>
+          <li>No menu da esquerda: <strong>Login do Facebook</strong> → <strong>Configurações</strong></li>
+          <li>Ache o campo <strong>URIs de redirecionamento do OAuth válidos</strong></li>
+          <li>Cole a URL abaixo nesse campo</li>
+          <li>Confirme que <strong>Login do OAuth do cliente</strong> e <strong>Login do OAuth da Web</strong> estão <strong>ligados</strong> (Sim)</li>
+          <li>Clique em <strong>Salvar alterações</strong> no rodapé</li>
+        </ol>
+      </div>
+      <label>URL de retorno — copie exatamente assim</label>
+      <input type="text" class="step-input" id="mzRedirect" readonly value="https://agendaturbomax.jefersonhenrike.com/oauth/instagram/callback">
+      <button class="copy-btn" onclick="copyMeta('mzRedirect')" style="margin-top:8px">📋 Copiar URL</button>
+      <div class="wstep-warn">
+        <strong>Sem barra no final. Sem espaço. Com https.</strong> Se ficar diferente disso, o Facebook devolve você pro Agenda Turbo Max sem autorizar e sem explicar o motivo — o erro clássico de "cliquei em conectar e não aconteceu nada".
+      </div>
+
+      <div class="wstep-instructions" style="margin-top:18px">
+        <strong>⚠️ Falta mais uma coisa nesta etapa — o domínio do app:</strong>
+        <ol>
+          <li>Menu da esquerda → <strong>Configurações do app</strong> → <strong>Básico</strong></li>
+          <li>Ache o campo <strong>Domínios do app</strong></li>
+          <li>Digite o domínio abaixo e aperte <strong>Enter</strong> (ele vira uma etiqueta)</li>
+          <li>Role até o fim: se não houver plataforma, clique em <strong>+ Adicionar plataforma → Site</strong> e informe <code>https://agendaturbomax.jefersonhenrike.com/</code></li>
+          <li><strong>Salvar alterações</strong></li>
+        </ol>
+      </div>
+      <label>Domínio do app — sem https, sem barra</label>
+      <input type="text" class="step-input" id="mzDomain" readonly value="agendaturbomax.jefersonhenrike.com">
+      <button class="copy-btn" onclick="copyMeta('mzDomain')" style="margin-top:8px">📋 Copiar domínio</button>
+      <div class="wstep-warn">
+        Sem isso, na hora de autorizar aparece <strong>"Não é possível carregar a URL — o domínio dessa URL não está incluído nos domínios do app"</strong>. São dois campos diferentes: a URL de retorno fica no Login do Facebook, o domínio fica nas Configurações Básicas. Os dois são obrigatórios.
+      </div>
+    </div>
+
+    <!-- PASSO 8 -->
+    <div class="wstep" data-step="8" style="display:none">
+      <h2>Passo 8: Adicionar a API do Instagram</h2>
+      <p class="wstep-desc">Segunda peça. Sem ela o app até autoriza, mas não consegue publicar.</p>
+      <div class="wstep-instructions">
+        <ol>
+          <li>Menu da esquerda → <strong>Adicionar produto</strong></li>
+          <li>Ache o card <strong>Instagram</strong> (pode aparecer como "Instagram Graph API" ou "API do Instagram")</li>
+          <li>Clique em <strong>Configurar</strong></li>
+        </ol>
+      </div>
+      <div class="wstep-tip">
+        Se aparecerem duas opções — <strong>"Instagram API com login do Facebook"</strong> e "Instagram API com login do Instagram" — escolha a primeira, <strong>com login do Facebook</strong>. É a que funciona com Página vinculada, que é o caminho deste guia.
+      </div>
+    </div>
+
+    <!-- PASSO 9 -->
+    <div class="wstep" data-step="9" style="display:none">
+      <h2>Passo 9: Pegar o App ID e o App Secret</h2>
+      <div class="wstep-instructions">
+        <ol>
+          <li>Menu da esquerda → <strong>Configurações do app</strong> → <strong>Básico</strong></li>
+          <li>No topo aparece o <strong>Identificação do aplicativo</strong> (App ID) — um número longo. Copie</li>
+          <li>Do lado, <strong>Chave Secreta do Aplicativo</strong> (App Secret) — clique em <strong>Mostrar</strong></li>
+          <li>Ele pede sua senha do Facebook de novo. Digite e copie o código que aparece</li>
+        </ol>
+      </div>
+      <div class="wstep-warn">
+        <strong>O App Secret é uma senha.</strong> Não mande por WhatsApp, não printe pra ninguém. Ele vai ser guardado criptografado aqui no Agenda Turbo Max.
+      </div>
+    </div>
+
+    <!-- PASSO 10 -->
+    <div class="wstep" data-step="10" style="display:none">
+      <h2>Passo 10: Colar as credenciais aqui</h2>
+      <p class="wstep-desc">Cole os dois códigos que você acabou de copiar:</p>
+      <label>App ID (só números)</label>
+      <input type="text" class="step-input" id="mzAppId" placeholder="Ex: 839304975897478">
+      <label>App Secret (letras e números)</label>
+      <input type="password" class="step-input" id="mzAppSecret" placeholder="Cole aqui a Chave Secreta">
+      <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="saveMetaCreds()">💾 Salvar credenciais</button>
+      <div id="mzSaveResult" style="margin-top:12px"></div>
+    </div>
+
+    <!-- PASSO 11 -->
+    <div class="wstep" data-step="11" style="display:none">
+      <h2>Passo 11: Adicionar você como Testador ⚠️</h2>
+      <p class="wstep-desc">Seu app nasce em <strong>Modo de Desenvolvimento</strong>. Nesse modo, ele só funciona pra quem estiver na lista de testadores. <strong>Este é o passo mais esquecido de todos.</strong></p>
+      <div class="wstep-instructions">
+        <ol>
+          <li>Menu da esquerda → <strong>Funções do app</strong> (App Roles) → <strong>Funções</strong></li>
+          <li>Ache a seção <strong>Testadores do Instagram</strong></li>
+          <li>Clique em <strong>Adicionar pessoas</strong></li>
+          <li>Digite o <strong>@ do seu Instagram</strong> (sem o @) e confirme</li>
+          <li>Agora abra o <strong>Instagram</strong> no celular: Configurações → <strong>Aplicativos e sites</strong> → <strong>Convites de testador</strong></li>
+          <li>Toque em <strong>Aceitar</strong></li>
+        </ol>
+      </div>
+      <div class="wstep-warn">
+        <strong>Repita isso para CADA conta do Instagram</strong> que você quiser usar no Agenda Turbo Max. Se a conta não aceitou o convite, ela não aparece na hora de autorizar — e você vai achar que o sistema está quebrado.
+      </div>
+      <div class="wstep-tip">
+        Enquanto o app está em Modo de Desenvolvimento, ele funciona <strong>perfeitamente</strong> para as contas testadoras. Você <strong>não precisa</strong> passar por revisão da Meta para usar o Agenda Turbo Max com as suas contas e as dos seus clientes.
+      </div>
+    </div>
+
+    <!-- PASSO 12 -->
+    <div class="wstep" data-step="12" style="display:none">
+      <h2>Passo 12: Autorizar o Agenda Turbo Max</h2>
+      <p class="wstep-desc">Chegou a hora. Clique no botão abaixo — ele abre o Facebook pedindo sua autorização.</p>
+      <a href="/oauth/instagram/start" data-oauth class="wbig-btn">🔓 Autorizar agora</a>
+      <div class="wstep-instructions">
+        <strong>Na tela do Facebook:</strong>
+        <ol>
+          <li>Escolha sua conta, se ele perguntar</li>
+          <li>Vai aparecer <strong>"Quais Páginas você quer usar?"</strong> — marque <strong>TODAS</strong></li>
+          <li>Depois: <strong>"Quais contas do Instagram?"</strong> — marque <strong>TODAS</strong> também</li>
+          <li>Na lista de permissões, deixe <strong>tudo ligado</strong> e clique em <strong>Concluído</strong> / <strong>Continuar</strong></li>
+          <li>Volta pra cá com uma mensagem verde de sucesso ✅</li>
+        </ol>
+      </div>
+      <div class="wstep-warn">
+        <strong>Marque TODAS as contas mesmo que você só vá usar uma.</strong> Este é o erro nº 1: as contas que você não marcar ficam com token válido mas sem permissão de publicar — e a publicação falha depois, na hora do agendamento, sem aviso.
+      </div>
+    </div>
+
+    <!-- PASSO 13 -->
+    <div class="wstep" data-step="13" style="display:none">
+      <h2>Passo 13: Conferir se ficou tudo certo</h2>
+      <p class="wstep-desc">Não confie no "parece que deu certo". Rode o diagnóstico — ele pergunta pra própria Meta o estado de cada conta.</p>
+      <button class="btn btn-primary" style="width:100%;padding:14px" onclick="closeMetaWizard(); runDiagnostics();">🩺 Rodar diagnóstico agora</button>
+      <div class="wstep-instructions">
+        <strong>O que você quer ver:</strong>
+        <ul>
+          <li>✅ App Secret confere</li>
+          <li>✅ Token válido</li>
+          <li>✅ Permissões concedidas</li>
+          <li>✅ <strong>Autorizada a publicar</strong> — em cada conta</li>
+          <li>✅ Conta Business/Creator</li>
+        </ul>
+      </div>
+      <div class="wstep-tip">
+        Se algum item vier vermelho, o próprio diagnóstico diz o que fazer e em qual passo deste guia voltar.
+      </div>
+    </div>
+
+    <!-- PASSO 14 -->
+    <div class="wstep" data-step="14" style="display:none">
+      <h2>🎉 Pronto! Instagram conectado</h2>
+      <p class="wstep-desc">A partir de agora é só usar. Você não precisa repetir nada disso.</p>
+      <div class="wstep-instructions">
+        <strong>Para conectar mais contas depois:</strong>
+        <ol>
+          <li>Adicione a conta como testadora (passo 11) e aceite o convite no Instagram dela</li>
+          <li>Clique em <strong>Conectar Instagram</strong> e marque a nova conta</li>
+          <li>Ou use <strong>🔄 Importar via BM</strong>, se a conta estiver no seu Business Manager</li>
+        </ol>
+      </div>
+      <div class="wstep-tip">
+        <strong>Sobre a validade:</strong> o acesso dura 60 dias e o Agenda Turbo Max renova sozinho todo dia de madrugada. Se alguma conta não puder ser renovada, ela aparece com <strong>"⚠️ token expirando"</strong> aqui nesta tela — aí é só clicar em conectar de novo.
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="closeMetaWizard()">Fechar guia</button>
+    </div>
+
+    <div class="modal-footer" id="mzNav">
+      <button class="btn btn-secondary" id="mzPrev" onclick="mzBack()">← Voltar</button>
+      <button class="btn btn-primary" id="mzNext" onclick="mzNext()" style="flex:1">Começar →</button>
+    </div>
+  </div>
+</div>
+<script src="/js/icons.js"></script>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+document.querySelectorAll('a[data-oauth]').forEach(a => {
+  const t = localStorage.getItem('zp_token');
+  if (t) a.href = a.getAttribute('href') + (a.getAttribute('href').includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(t);
+});
+
+// Alert from URL params
+const params = new URLSearchParams(location.search);
+const alertBox = document.getElementById('alertBox');
+if (params.get('success')) {
+  const platform = params.get('success');
+  const count = params.get('count');
+  alertBox.className = 'alert alert-success';
+  alertBox.textContent = `${platform.charAt(0).toUpperCase() + platform.slice(1)} conectado com sucesso!${count ? ` (${count} conta${count > 1 ? 's' : ''})` : ''}`;
+  alertBox.style.display = 'block';
+} else if (params.get('error')) {
+  const errors = {
+    no_meta_app: 'Configure o App ID da Meta em Configurações primeiro.',
+    instagram_denied: 'O Facebook não autorizou a conexão. Causas comuns: (1) app da Meta em <strong>Modo de Desenvolvimento</strong> e seu usuário não está em App Roles → Testadores; (2) a URI de redirecionamento não está cadastrada literal no painel Meta → Login do Facebook → Configurações; (3) o popup foi fechado antes de concluir. Corrija no painel da Meta e tente de novo.',
+    instagram_failed: 'Erro ao trocar o código por token. Confira App ID e App Secret em Configurações e se a conta do Instagram é <strong>Business/Creator vinculada a uma Página do Facebook</strong>.',
+    no_google_app: 'Configure o Client ID do Google em Configurações.',
+    youtube_denied: 'O Google bloqueou o consentimento. Se apareceu "app não verificado": no Google Cloud Console → OAuth consent screen, adicione seu e-mail em <strong>Test users</strong> (ou publique o app). Depois tente conectar de novo.',
+    youtube_failed: 'Erro ao conectar YouTube. Confira Client ID/Secret em Configurações e se a URI <code>https://agendaturbomax.jefersonhenrike.com/oauth/youtube/callback</code> está em Authorized redirect URIs no Google Cloud Console.',
+    no_youtube_channel: 'A conta Google autorizada não tem canal do YouTube. Entre com a conta dona do canal.',
+    no_tiktok_app: 'Configure as credenciais do TikTok App em Configurações.',
+    tiktok_denied: 'O TikTok bloqueou o consentimento. Se o app ainda não foi aprovado (audit), adicione sua conta como <strong>Target User</strong> no TikTok Developer Portal → seu app → Sandbox. Depois tente de novo.',
+    tiktok_failed: 'Erro ao conectar TikTok. Confira Client Key/Secret e se a Redirect URI <code>https://agendaturbomax.jefersonhenrike.com/oauth/tiktok/callback</code> está cadastrada no Developer Portal.'
+  };
+  const reason = params.get('reason');
+  alertBox.className = 'alert alert-error';
+  alertBox.innerHTML = (errors[params.get('error')] || 'Erro desconhecido.') + (reason ? ` <br><strong>Motivo do Facebook:</strong> ${decodeURIComponent(reason)}` : '');
+  alertBox.style.display = 'block';
+}
+
+// ==== Importar contas colando um token do Explorador da Graph API ====
+async function importWithToken() {
+  const input = document.getElementById('explorerToken');
+  const box = document.getElementById('importTokenResult');
+  const token = input.value.trim();
+  if (!token) { box.innerHTML = '<div class="alert alert-error" style="margin:0">Cole o token gerado no Explorador primeiro.</div>'; return; }
+  if (!token.startsWith('EAA')) {
+    box.innerHTML = '<div class="alert alert-error" style="margin:0">Isso não parece um token da Meta — ele começa com <strong>EAA</strong>. Copie de novo pelo ícone ao lado do campo "Token de acesso".</div>';
+    return;
+  }
+  box.innerHTML = '<div class="alert" style="margin:0;background:#06b6d415;border:1px solid #06b6d440;color:#06b6d4">Convertendo o token e buscando suas contas...</div>';
+  try {
+    const r = await API.post('/accounts/import-bm', { access_token: token });
+    if (r.error) throw new Error(r.error);
+    input.value = ''; // não deixa o token na tela
+    const dur = r.long_lived
+      ? '<div style="margin-top:6px">🔒 Token convertido para longa duração (60 dias) e guardado criptografado.</div>'
+      : `<div style="margin-top:6px;color:#f59e0b">⚠️ ${r.aviso}</div>`;
+    box.innerHTML = `<div class="alert alert-success" style="margin:0">
+      ✅ ${r.added} conta(s) nova(s) e ${r.updated} atualizada(s), de ${r.total_pages} Página(s) encontrada(s).${dur}</div>`;
+    if (r.added === 0 && r.updated === 0) {
+      box.innerHTML = `<div class="alert alert-error" style="margin:0">
+        Nenhuma conta do Instagram foi encontrada nas ${r.total_pages} Página(s) desse token.<br><br>
+        Causas mais comuns:<br>
+        • a conta do Instagram não está <strong>vinculada a uma Página do Facebook</strong>;<br>
+        • a conta não é <strong>Business/Creator</strong>;<br>
+        • na hora de gerar o token você não marcou todas as Páginas e contas.</div>`;
+    }
+    await loadAccounts();
+  } catch (e) {
+    box.innerHTML = `<div class="alert alert-error" style="margin:0">Falha ao importar: ${e.message || e}</div>`;
+  }
+}
+
+// ==== Wizard de conexão com a Meta ====
+const MZ_TOTAL = 14;
+let mzStep = 1;
+
+function openMetaWizard() {
+  mzStep = 1;
+  mzShow(1);
+  document.getElementById('metaModal').classList.add('open');
+  // pré-preenche o App ID se já estiver salvo
+  API.get('/settings').then(s => {
+    if (s.meta_app_id) document.getElementById('mzAppId').value = s.meta_app_id;
+  }).catch(() => {});
+}
+function closeMetaWizard() { document.getElementById('metaModal').classList.remove('open'); }
+
+function mzShow(n) {
+  mzStep = Math.max(1, Math.min(n, MZ_TOTAL));
+  document.querySelectorAll('#metaModal .wstep').forEach(el => {
+    el.style.display = parseInt(el.dataset.step, 10) === mzStep ? 'block' : 'none';
+  });
+  document.getElementById('mzStepLabel').textContent = `Passo ${mzStep} de ${MZ_TOTAL}`;
+  document.getElementById('mzProgress').style.width = (mzStep / MZ_TOTAL * 100).toFixed(0) + '%';
+  document.getElementById('mzPrev').style.visibility = mzStep === 1 ? 'hidden' : 'visible';
+  document.getElementById('mzNext').textContent = mzStep === 1 ? 'Começar →' : 'Já fiz, próximo passo →';
+  document.getElementById('mzNav').style.display = mzStep === MZ_TOTAL ? 'none' : 'flex';
+  // o link de autorizar (passo 12) precisa do token na URL — é redirect, não fetch
+  const t = localStorage.getItem('zp_token');
+  document.querySelectorAll('#metaModal a[data-oauth]').forEach(a => {
+    a.href = '/oauth/instagram/start?token=' + encodeURIComponent(t);
+  });
+  document.querySelector('#metaModal .modal').scrollTop = 0;
+  document.getElementById('metaModal').scrollTop = 0;
+}
+function mzNext() { mzShow(mzStep + 1); }
+function mzBack() { mzShow(mzStep - 1); }
+
+function copyMeta(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value);
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = '✅ Copiado!';
+  setTimeout(() => { btn.textContent = original; }, 1800);
+}
+
+async function saveMetaCreds() {
+  const appId = document.getElementById('mzAppId').value.trim();
+  const appSecret = document.getElementById('mzAppSecret').value.trim();
+  const box = document.getElementById('mzSaveResult');
+  if (!appId) { box.innerHTML = '<div class="alert alert-error" style="margin:0">Preencha o App ID.</div>'; return; }
+  if (!/^\d+$/.test(appId)) { box.innerHTML = '<div class="alert alert-error" style="margin:0">O App ID é só números — parece que você colou outra coisa.</div>'; return; }
+  const payload = { meta_app_id: appId };
+  if (appSecret) payload.meta_app_secret = appSecret;
+  const r = await API.post('/settings', payload);
+  if (r.error) { box.innerHTML = `<div class="alert alert-error" style="margin:0">${r.error}</div>`; return; }
+  document.getElementById('mzAppSecret').value = '';
+  box.innerHTML = '<div class="alert alert-success" style="margin:0">✅ Credenciais salvas e criptografadas. Pode seguir pro próximo passo.</div>';
+}
+
+document.getElementById('metaModal').addEventListener('click', e => {
+  if (e.target.id === 'metaModal') closeMetaWizard();
+});
+
+// ==== Diagnóstico da conexão com a Meta ====
+function diagLine(c) {
+  const cor = c.ok ? '#10b981' : '#ef4444';
+  return `
+    <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start">
+      <span style="color:${cor};font-size:15px;line-height:1.3">${c.ok ? '✅' : '❌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">${c.title}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:2px;line-height:1.5">${c.detail}</div>
+        ${c.fix ? `<div style="margin-top:8px;background:#f59e0b15;border-left:3px solid #f59e0b;padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.6;color:#fcd34d"><strong>Como corrigir:</strong> ${c.fix}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+async function runDiagnostics() {
+  const btn = document.getElementById('btnDiag');
+  const box = document.getElementById('diagResult');
+  btn.disabled = true; btn.textContent = 'Consultando a Meta...';
+  box.innerHTML = '<div class="alert" style="background:#06b6d415;border:1px solid #06b6d440;color:#06b6d4">Perguntando pra Graph API o estado de cada conta...</div>';
+  try {
+    const d = await API.get('/diagnostics/meta');
+    if (d.error) throw new Error(d.error);
+
+    let html = `<div style="background:var(--surface);border:1px solid ${d.ok ? '#10b98144' : '#ef444444'};border-radius:14px;padding:20px">
+      <div style="font-weight:700;font-size:16px;margin-bottom:4px">${d.ok ? '✅ Conexão saudável' : '❌ Encontrei o que está travando'}</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">${d.ok ? 'Todos os pontos verificados estão corretos — a publicação via API deve funcionar.' : 'Corrija os itens em vermelho na ordem em que aparecem.'}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Configuração do app</div>
+      ${d.steps.map(diagLine).join('')}`;
+
+    if (d.accounts?.length) {
+      for (const a of d.accounts) {
+        html += `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 4px">
+          Conta @${a.username || a.id} ${a.ok ? '' : '— com problema'}</div>
+          ${a.checks.map(diagLine).join('')}`;
+      }
+    }
+    html += '</div>';
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = `<div class="alert alert-error">Falha ao diagnosticar: ${e.message || e}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Rodar diagnóstico';
+  }
+}
+
+async function loadAccounts() {
+  const accounts = await API.get('/accounts');
+  const list = document.getElementById('accountsList');
+  if (!accounts.length) { list.innerHTML = '<div class="empty-state">Nenhuma conta conectada ainda.</div>'; return; }
+
+  // busca permissões reais em paralelo (não bloqueia)
+  const permsPromise = API.get('/accounts/permissions').catch(() => ({ accounts: [] }));
+
+  list.innerHTML = accounts.map(a => `
+    <div class="account-item" id="acc-item-${a.id}">
+      ${a.profile_picture ? `<img class="account-avatar" src="${escUrl(a.profile_picture)}" onerror="this.style.display='none'">` : `<div class="account-avatar">👤</div>`}
+      <div class="account-info">
+        <div class="account-name">${a.platform_name || a.platform_username || 'Sem nome'}</div>
+        <div class="account-meta">@${esc(a.platform_username)} · ${(a.followers || 0).toLocaleString('pt-BR')} seguidores${a.status === 'expiring' ? ' · <span style="color:#f59e0b;font-weight:700">⚠️ token expirando — reautorize</span>' : ''}</div>
+        <div id="acc-perm-${a.id}" style="margin-top:6px;font-size:11px"><span style="color:#64748b">verificando permissões...</span></div>
+      </div>
+      <span class="account-platform ${a.platform}">${a.platform}</span>
+      <button class="btn-disconnect" onclick="disconnect(${a.id})">Desconectar</button>
+    </div>
+  `).join('');
+
+  const perms = await permsPromise;
+  const noPub = [];
+  (perms.accounts || []).forEach(p => {
+    const el = document.getElementById(`acc-perm-${p.id}`);
+    if (!el) return;
+    if (p.error) { el.innerHTML = `<span style="color:#f59e0b">⚠️ ${p.error}</span>`; return; }
+    if (!p.can_publish) noPub.push('@' + p.username);
+    const pubBadge = p.can_publish
+      ? '<span style="background:#10b98122;color:#10b981;padding:2px 8px;border-radius:20px;font-weight:600">✅ pode publicar</span>'
+      : '<span style="background:#ef444422;color:#ef4444;padding:2px 8px;border-radius:20px;font-weight:600">❌ SEM permissão pra publicar</span>';
+    const insBadge = p.can_read_insights
+      ? '<span style="background:#10b98122;color:#10b981;padding:2px 8px;border-radius:20px;font-weight:600">✅ analytics</span>'
+      : '<span style="background:#f59e0b22;color:#f59e0b;padding:2px 8px;border-radius:20px;font-weight:600">⚠️ sem analytics</span>';
+    el.innerHTML = pubBadge + ' ' + insBadge;
+  });
+
+  // Mostra aviso vermelho + botão de reautorização se alguma conta não tem permissão
+  if (noPub.length) {
+    document.getElementById('permissionWarning').style.display = 'block';
+    document.getElementById('permWarningList').innerHTML =
+      `Contas bloqueadas: <strong>${noPub.join(', ')}</strong>. Você precisa reautorizar o app no Facebook incluindo essas contas.`;
+    const btn = document.getElementById('btnReauth');
+    const t = localStorage.getItem('zp_token');
+    btn.href = '/oauth/instagram/start?rerequest=1&token=' + encodeURIComponent(t);
+  }
+}
+
+async function disconnect(id) {
+  if (!confirm('Desconectar esta conta?')) return;
+  await API.del('/accounts/' + id);
+  loadAccounts();
+}
+
+document.getElementById('btnImportBm').addEventListener('click', async () => {
+  const btn = document.getElementById('btnImportBm');
+  btn.disabled = true; btn.textContent = 'Importando...';
+  try {
+    const r = await API.post('/accounts/import-bm', {});
+    alertBox.className = 'alert alert-success';
+    alertBox.textContent = `Importadas ${r.added} novas + ${r.updated} atualizadas (de ${r.total_pages} páginas Meta).`;
+    alertBox.style.display = 'block';
+    await loadAccounts();
+  } catch (e) {
+    alertBox.className = 'alert alert-error';
+    alertBox.textContent = 'Erro ao importar: ' + (e.message || e);
+    alertBox.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Importar via BM (Meta)';
+  }
+});
+
+loadAccounts();
+</script>
+<script>
+// Menu lateral em gaveta no celular
+(function () {
+  var b = document.getElementById('menuToggle');
+  var bd = document.getElementById('sidebarBackdrop');
+  var sb = document.querySelector('.sidebar');
+  if (!b || !sb) return;
+  function fechar() { sb.classList.remove('open'); bd.classList.remove('open'); }
+  b.addEventListener('click', function () {
+    sb.classList.toggle('open'); bd.classList.toggle('open');
+  });
+  bd.addEventListener('click', fechar);
+  sb.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', fechar); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+})();
+</script>
+</body>
+</html>

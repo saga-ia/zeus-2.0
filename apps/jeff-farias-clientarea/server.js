@@ -46,7 +46,12 @@ try { db.exec("ALTER TABLE overrides ADD COLUMN hidden INTEGER NOT NULL DEFAULT 
 const AUTH_SALT = 'jeff-alpha-2026';
 const AUTH_HASH = 'c87024690d8e99d03de873f3bc3fd46d2e1736947b5bdd4e0a924a47e41e87721d257e2b72c1fb72400fbc31aab0f00f031b485582f6a8a11c855c4a2c35d57b';
 const sessions = new Map();
+// Senha redefinida pelo "Esqueci minha senha" fica em data/auth-override.json e vale no lugar do AUTH_HASH.
+const pwdReset = require('/opt/jeff-apps/jeff-shared/password-reset');
+const pwdOverride = pwdReset.overrideStore(path.join(__dirname, 'data'));
 function verifyPwd(pwd) {
+  const viaOverride = pwdOverride.check(pwd);
+  if (viaOverride !== null) return viaOverride;
   try {
     const test = crypto.scryptSync(pwd, AUTH_SALT, 64).toString('hex');
     return crypto.timingSafeEqual(Buffer.from(test, 'hex'), Buffer.from(AUTH_HASH, 'hex'));
@@ -82,6 +87,12 @@ function apiAuth(req, res, next) {
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+
+
+pwdReset.mount(app, {
+  appName: 'Farias Souza · Área do Cliente',
+  setPassword: (newPass) => { pwdOverride.write(newPass); sessions.clear(); return true; }
+});
 
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, 'public/login.html')));
 app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {

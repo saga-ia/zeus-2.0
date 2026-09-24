@@ -166,6 +166,7 @@ function logout() { localStorage.clear(); window.location.href = '/login.html'; 
 
 async function api(method, path, body) {
   const r = await fetch(API + path, { method, headers: authHeader(), body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401) { localStorage.clear(); window.location.href = '/login.html'; throw new Error('Sessão expirada'); }
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || 'Erro na requisição');
   return d;

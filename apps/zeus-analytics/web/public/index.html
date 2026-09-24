@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Zeus Analytics</title>
+<style>
+:root{--bg:#0b0f17;--card:#121826;--ink:#e7edf6;--mute:#8a96ab;--ok:#26d07c;--warn:#f5a623;--bad:#ff5577;--accent:#7c5cff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:16px 24px;border-bottom:1px solid #1b2333;display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:18px;letter-spacing:.5px}
+main{padding:24px;max-width:1100px;margin:0 auto}
+.card{background:var(--card);border:1px solid #1c2435;border-radius:12px;padding:18px;margin-bottom:18px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+input,button,select,textarea{font:inherit;background:#0f1422;color:var(--ink);border:1px solid #1c2435;border-radius:8px;padding:10px 12px}
+button{background:var(--accent);border:none;cursor:pointer;font-weight:600}
+button.ghost{background:transparent;border:1px solid #2a3550;color:var(--ink)}
+button:hover{filter:brightness(1.1)}
+small{color:var(--mute)}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi .b{background:var(--card);border:1px solid #1c2435;border-radius:12px;padding:14px}
+.kpi .b strong{font-size:22px;display:block}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{padding:10px;border:1px solid #1c2435;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.tag{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #2a3550;color:var(--mute)}
+.tag.ok{color:var(--ok);border-color:#1d5a3a}
+.tag.warn{color:var(--warn);border-color:#574018}
+.tag.bad{color:var(--bad);border-color:#591728}
+.hidden{display:none}
+.qr{padding:12px;background:#fff;border-radius:8px;display:inline-block}
+.qr svg{width:260px;height:260px;display:block}
+</style>
+</head>
+<body>
+<header>
+  <h1>Zeus Analytics</h1>
+  <div id="who"><small>nao autenticado</small></div>
+</header>
+<main>
+
+<section id="auth" class="card">
+  <h2>Entrar / Criar conta</h2>
+  <div class="row">
+    <input id="email" placeholder="email" />
+    <input id="senha" placeholder="senha" type="password" />
+    <input id="nome" placeholder="nome (registro)" />
+    <input id="phone" placeholder="WhatsApp do gerente (registro)" />
+    <button onclick="login()">Entrar</button>
+    <button class="ghost" onclick="registrar()">Registrar</button>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+
+  <div class="kpi" id="kpis"></div>
+
+  <div class="card">
+    <h2>WhatsApps conectados</h2>
+    <div class="row">
+      <input id="apelido" placeholder='Apelido (ex: "Atendimento SP")' />
+      <button onclick="novoDevice()">Conectar novo WhatsApp</button>
+      <button class="ghost" onclick="recarregar()">Recarregar</button>
+    </div>
+    <div id="devices" class="list" style="margin-top:12px"></div>
+    <div id="qrbox" style="margin-top:14px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Vendedores</h2>
+    <div class="row">
+      <input id="vnome" placeholder="Nome do vendedor" />
+      <button onclick="novoVend()">Adicionar</button>
+    </div>
+    <div id="vendedores" class="list" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Conversas recentes</h2>
+    <div id="conversas" class="list"></div>
+  </div>
+
+</section>
+</main>
+
+<script>
+const T = () => localStorage.getItem('za_token');
+const H = () => ({ 'Content-Type':'application/json', Authorization: 'Bearer ' + T() });
+
+async function api(path, opts={}){
+  const r = await fetch(path, { headers: H(), ...opts });
+  if(r.status===401){ logout(); throw new Error('unauthorized'); }
+  return r.json();
+}
+function show(){ document.getElementById('auth').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); }
+function logout(){ localStorage.removeItem('za_token'); location.reload(); }
+
+async function login(){
+  const r = await fetch('/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email.value, senha: senha.value }) });
+  const j = await r.json();
+  if(j.token){ localStorage.setItem('za_token', j.token); init(); } else alert(j.error||'erro');
+}
+async function registrar(){
+  const r = await fetch('/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email.value, senha: senha.value, nome: nome.value, gerente_phone: phone.value }) });
+  const j = await r.json();
+  if(j.token){ localStorage.setItem('za_token', j.token); init(); } else alert(j.error||'erro');
+}
+
+async function init(){
+  if(!T()) return;
+  show();
+  const me = await api('/me');
+  document.getElementById('who').innerHTML = `<small>${me.tenant.nome} (${me.tenant.email})</small> <button class="ghost" onclick="logout()">sair</button>`;
+  recarregar();
+}
+
+async function recarregar(){
+  const k = await api('/dashboard/resumo');
+  document.getElementById('kpis').innerHTML = [
+    ['Devices ativos', k.counts.devices_ativos||0],
+    ['Vendedores', k.counts.vendedores_ativos||0],
+    ['Conversas hoje', k.counts.conversas_hoje||0],
+    ['Nota media hoje', (k.counts.nota_media_hoje||0).toFixed(1)],
+  ].map(([l,v])=>`<div class="b"><small>${l}</small><strong>${v}</strong></div>`).join('');
+
+  const devices = await api('/devices');
+  document.getElementById('devices').innerHTML = devices.map(d=>{
+    const st = d.status==='ready'?'ok':(d.status==='qr'||d.status==='authenticated'?'warn':'bad');
+    return `<div class="item"><div><strong>${d.apelido}</strong> <small>${d.numero||'(aguardando QR)'}</small></div>
+      <div><span class="tag ${st}">${d.status}</span>
+      ${d.status!=='ready'?`<button class="ghost" onclick="verQR(${d.id})">QR</button>`:''}
+      <button class="ghost" onclick="excluirDev(${d.id})">excluir</button></div></div>`;
+  }).join('') || '<small>nenhum device cadastrado</small>';
+
+  const v = await api('/vendedores');
+  document.getElementById('vendedores').innerHTML = v.map(x=>`<div class="item">
+    <div><strong>${x.nome}</strong> <small>${x.devices||'sem device amarrado'}</small></div>
+    <button class="ghost" onclick="excluirVend(${x.id})">excluir</button>
+  </div>`).join('') || '<small>nenhum vendedor</small>';
+
+  const c = await api('/conversas?limit=20');
+  document.getElementById('conversas').innerHTML = c.map(x=>`<div class="item">
+    <div><strong>${x.contato_nome||x.phone}</strong> <small>${x.vendedor_nome||'-'} • ${new Date(x.inicio).toLocaleString('pt-BR')}</small></div>
+    <div>${x.nota!=null?`<span class="tag ${x.nota>=7?'ok':x.nota>=5?'warn':'bad'}">nota ${x.nota.toFixed(1)}</span>`:'<span class="tag">sem analise</span>'}</div>
+  </div>`).join('') || '<small>aguardando primeiras conversas</small>';
+}
+
+async function novoDevice(){
+  if(!apelido.value) return alert('apelido?');
+  await api('/devices', { method:'POST', body: JSON.stringify({ apelido: apelido.value })});
+  apelido.value=''; recarregar();
+}
+async function excluirDev(id){
+  if(!confirm('excluir?')) return;
+  await api('/devices/'+id, { method:'DELETE' }); recarregar();
+}
+async function verQR(id){
+  const r = await api('/devices/'+id+'/qr');
+  const box = document.getElementById('qrbox');
+  if(r.status==='ready'){ box.innerHTML='<small>conectado</small>'; return; }
+  if(!r.qr_svg){ box.innerHTML='<small>aguardando QR ('+r.status+')...</small>'; setTimeout(()=>verQR(id), 2500); return; }
+  box.innerHTML = '<div class="qr">'+r.qr_svg+'</div><div><small>escaneie em WhatsApp > Aparelhos conectados</small></div>';
+  setTimeout(()=>verQR(id), 5000);
+}
+async function novoVend(){
+  if(!vnome.value) return alert('nome?');
+  await api('/vendedores', { method:'POST', body: JSON.stringify({ nome: vnome.value })});
+  vnome.value=''; recarregar();
+}
+async function excluirVend(id){
+  if(!confirm('excluir?')) return;
+  await api('/vendedores/'+id, { method:'DELETE' }); recarregar();
+}
+
+init();
+</script>
+</body>
+</html>

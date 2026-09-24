@@ -39,6 +39,7 @@ input:focus{border-color:var(--gold)}
     <div class="error" id="err"></div>
     <div class="spinner" id="spin">Verificando...</div>
   </form>
+  <a href="/redefinir-senha" style="display:block;text-align:center;margin-top:16px;font-size:13px;opacity:.75;color:inherit">Esqueci minha senha</a>
 </div>
 <script>
 async function doLogin(e) {
@@ -77,13 +78,19 @@ async function doLogin(e) {
     spin.style.display = 'none';
   }
 }
-// Redirect if already logged in
-(function() {
+// Redirect if already logged in (só depois de confirmar que o token ainda vale;
+// token velho ou dados incompletos eram descartados só no painel, que voltava pra cá: loop)
+(async function() {
   const token = localStorage.getItem('meta_token');
   const role = localStorage.getItem('meta_role');
-  if (token) {
-    window.location.href = role === 'admin' ? '/admin.html' : '/dashboard.html';
-  }
+  if (!token) return;
+  const completo = role === 'admin' || (role === 'client' && localStorage.getItem('meta_client_id'));
+  if (!completo) { localStorage.clear(); return; }
+  try {
+    const r = await fetch('/api/clients', { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) { localStorage.clear(); return; } // expirado ou inválido: fica no login
+  } catch (e) { return; }
+  window.location.href = role === 'admin' ? '/admin.html' : '/dashboard.html';
 })();
 </script>
 </body>

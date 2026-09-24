@@ -14,6 +14,7 @@ const { requireAuth, requireJwt, optionalAuth } = require('./auth/middleware');
 const healthRoutes = require('./routes/health');
 const statusRoutes = require('./routes/status');
 const qrRoutes = require('./routes/qr');
+const pairRoutes = require('./routes/pair');
 const authRoutes = require('./routes/auth');
 const messagesRoutes = require('./routes/messages');
 const groupsRoutes = require('./routes/groups');
@@ -119,6 +120,7 @@ function buildApp({ wa, queue }) {
   app.use(apiLimiter, requireAuth);
   app.use('/status', statusRoutes);
   app.use('/qr', qrRoutes);
+  app.use('/pair', pairRoutes);
   app.use('/messages', messagesRoutes);
   app.use('/groups', groupsRoutes);
   app.use('/', sendRoutes); // /send-message, /send-media, /send-audio

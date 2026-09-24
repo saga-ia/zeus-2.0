@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus Post - Calendário</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  /* Calendar */
+  .cal-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .cal-nav h2 { font-size: 20px; font-weight: 700; flex: 1; }
+  .cal-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .cal-btn:hover { background: var(--surface2); }
+  .calendar { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-day-name { padding: 16px; text-align: center; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell { min-height: 120px; padding: 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; position: relative; }
+  .cal-cell:hover { background: var(--surface2); }
+  .cal-cell.today { background: rgba(124, 58, 237, 0.08); }
+  .cal-cell.other-month .cal-date { color: var(--muted); opacity: 0.4; }
+  .cal-date { font-size: 13px; font-weight: 600; margin-bottom: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .cal-cell.today .cal-date { background: var(--accent); color: white; }
+  .post-dot { font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-dot.scheduled { background: #7c3aed22; color: #a78bfa; }
+  .post-dot.published { background: #10b98122; color: #34d399; }
+  .post-dot.draft { background: #64748b22; color: #94a3b8; }
+  /* List view */
+  .post-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+  .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; }
+  .post-thumb { width: 56px; height: 56px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .post-info { flex: 1; }
+  .post-caption { font-size: 14px; margin-bottom: 6px; }
+  .post-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 12px; }
+  .post-actions { display: flex; gap: 8px; }
+  .btn-sm { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-sm:hover { background: var(--surface2); }
+  .btn-sm.danger { border-color: #ef444444; color: #ef4444; }
+  .btn-sm.danger:hover { background: #ef444420; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 48px; }
+  .view-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .tab { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+  /* Modal detalhes */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; max-width: 600px; width: 100%; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal-close-x { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .dm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+  .dm-cell { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; }
+  .dm-lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .dm-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Zeus Post</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item">📊 Dashboard</a>
+  <a href="/calendar.html" class="nav-item active">📅 Calendário</a>
+  <a href="/editor.html" class="nav-item">✍️ Novo Post</a>
+  <a href="/bulk.html" class="nav-item">🚀 Publicação em Massa</a>
+  <a href="/analytics.html" class="nav-item">📈 Analytics</a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item">🔗 Conectar Perfis</a>
+  <a href="/settings.html" class="nav-item">⚙️ Configurações</a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn">🚪 Sair</a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Calendário</h1>
+    <a href="/editor.html" class="btn-primary">+ Novo Post</a>
+  </div>
+
+  <div class="view-tabs">
+    <button class="tab active" onclick="setView('calendar')">Calendário</button>
+    <button class="tab" onclick="setView('list')">Lista</button>
+  </div>
+
+  <div id="calView">
+    <div class="cal-nav">
+      <button class="cal-btn" onclick="changeMonth(-1)">←</button>
+      <h2 id="calTitle"></h2>
+      <button class="cal-btn" onclick="changeMonth(1)">→</button>
+    </div>
+    <div class="calendar">
+      <div class="cal-header">
+        <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div><div class="cal-day-name">Ter</div>
+        <div class="cal-day-name">Qua</div><div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div><div class="cal-day-name">Sab</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <div id="listView" style="display:none">
+    <div id="postList" class="post-list"></div>
+  </div>
+</main>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+let currentDate = new Date();
+let allPosts = [];
+
+function setView(v) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('calView').style.display = v === 'calendar' ? '' : 'none';
+  document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+  if (v === 'list') renderList();
+}
+
+async function loadPosts() {
+  allPosts = await API.get('/posts');
+  renderCalendar();
+}
+
+function changeMonth(dir) {
+  currentDate.setMonth(currentDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('calTitle').textContent = `${months[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  const postsByDay = {};
+  allPosts.forEach(p => {
+    const ts = p.scheduled_at || p.published_at || p.created_at;
+    if (!ts) return;
+    const d = new Date(ts * 1000);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate();
+      (postsByDay[day] = postsByDay[day] || []).push(p);
+    }
+  });
+
+  const grid = document.getElementById('calGrid');
+  let html = '';
+
+  for (let i = 0; i < firstDay; i++) {
+    const d = daysInPrevMonth - firstDay + i + 1;
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    const dayPosts = postsByDay[d] || [];
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="location.href='/editor.html?date=${dateStr}'">
+      <div class="cal-date">${d}</div>
+      ${dayPosts.slice(0,3).map(p => `<div class="post-dot ${p.status}" title="${(p.caption||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();handlePostClick(${p.id},'${p.status}')">${(p.caption||'').slice(0,20)}</div>`).join('')}
+      ${dayPosts.length > 3 ? `<div style="font-size:11px;color:var(--muted)">+${dayPosts.length-3}</div>` : ''}
+    </div>`;
+  }
+  const remaining = 42 - firstDay - daysInMonth;
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderList() {
+  const sorted = [...allPosts].sort((a,b) => (b.scheduled_at || b.created_at) - (a.scheduled_at || a.created_at));
+  const el = document.getElementById('postList');
+  el.innerHTML = sorted.length ? sorted.map(p => `
+    <div class="post-card">
+      <div class="post-thumb">${p.media_type === 'video' ? '🎬' : '🖼️'}</div>
+      <div class="post-info">
+        <div class="post-caption">${p.caption.slice(0,100)}${p.caption.length>100?'...':''}</div>
+        <div class="post-meta">
+          ${statusBadge(p.status)}
+          <span>${formatDate(p.scheduled_at || p.created_at)}</span>
+          <span>${(p.platforms||[]).join(', ')}</span>
+        </div>
+      </div>
+      <div class="post-actions">
+        ${p.status === 'published' || p.status === 'partial'
+          ? `<button class="btn-sm" onclick="handlePostClick(${p.id},'published')">Ver detalhes</button>`
+          : `<button class="btn-sm" onclick="location.href='/editor.html?id=${p.id}'">Editar</button>`}
+        <button class="btn-sm danger" onclick="deletePost(${p.id})">Excluir</button>
+      </div>
+    </div>
+  `).join('') : '<div class="empty">Nenhum post. <a href="/editor.html" style="color:var(--accent)">Criar →</a></div>';
+}
+
+function handlePostClick(id, status) {
+  if (status === 'published' || status === 'partial') openDetailsModal(id);
+  else location.href = '/editor.html?id=' + id;
+}
+
+async function openDetailsModal(id) {
+  const p = await API.get('/analytics/post/' + id);
+  if (p.error) return alert(p.error);
+  const r = p.results?.[0];
+  const m = r?.analytics || {};
+  const fmt = n => (n||0).toLocaleString('pt-BR');
+  document.getElementById('detailsBody').innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:6px">Detalhes da publicação</h2>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
+      @${r?.platform_username || ''} · ${r?.published_at ? new Date(r.published_at*1000).toLocaleString('pt-BR') : ''}
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:14px;line-height:1.6;max-height:200px;overflow-y:auto;white-space:pre-wrap">${(p.caption||'').replace(/[<>]/g,'')}</div>
+    <div class="dm-grid">
+      <div class="dm-cell"><div class="dm-lbl">Alcance</div><div class="dm-val">${fmt(m.reach)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Views</div><div class="dm-val">${fmt(m.views)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Impressões</div><div class="dm-val">${fmt(m.impressions)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Curtidas</div><div class="dm-val">${fmt(m.likes)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Comentários</div><div class="dm-val">${fmt(m.comments)}</div></div>
+      <div class="dm-cell"><div class="dm-lbl">Salvos</div><div class="dm-val">${fmt(m.saves)}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      ${m.permalink
+        ? `<a href="${m.permalink}" target="_blank" class="btn-primary" style="flex:1;text-align:center;text-decoration:none;padding:12px 16px;border-radius:10px">🔗 Abrir no Instagram</a>`
+        : `<div style="flex:1;color:var(--muted);font-size:13px;text-align:center;padding:12px">Link nativo aparece após próxima coleta</div>`}
+      <button class="btn-sm" onclick="closeDetailsModal()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('detailsModal').classList.add('open');
+}
+function closeDetailsModal() { document.getElementById('detailsModal').classList.remove('open'); }
+
+async function deletePost(id) {
+  if (!confirm('Excluir este post?')) return;
+  await API.del('/posts/' + id);
+  loadPosts();
+}
+
+loadPosts();
+</script>
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-box">
+    <button class="modal-close-x" onclick="closeDetailsModal()">✕</button>
+    <div id="detailsBody"></div>
+  </div>
+</div>
+<script>
+document.getElementById('detailsModal').addEventListener('click', e => {
+  if (e.target.id === 'detailsModal') closeDetailsModal();
+});
+</script>
+</body>
+</html>

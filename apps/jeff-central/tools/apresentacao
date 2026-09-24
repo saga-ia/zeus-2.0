@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+// CLI do Criador de Apresentações: gera PDF/PPTX no Presenton (jeff-presenton, local) e devolve o link de download do chat.
+// Uso: apresentacao gerar --arquivo slides.md [--formato pdf|pptx] [--template general] [--instrucoes "..."]
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const { spawn } = require('child_process');
+
+const PRESENTON = process.env.PRESENTON_URL || 'http://127.0.0.1:5001';
+const PRESENTON_DIR = process.env.PRESENTON_DIR || '/opt/jeff-apps/jeff-presenton';
+const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, '..', 'data');
+const UPLOADS_ROOT = path.join(DATA_DIR, 'uploads');
+const WORKDIR_ROOT = path.join(DATA_DIR, 'zeus-workdir');
+const PUBLIC_URL = (process.env.CENTRAL_PUBLIC_URL || 'https://central.jefersonhenrike.com').replace(/\/+$/, '');
+const ESPERA_MS = 9 * 60 * 1000; // o Bash do agente corta em 10 min
+const LIMITE_MS = 40 * 60 * 1000;
+
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] };
+for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) { o[a.slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; } else o._.push(a); }
+
+const AJUDA = `Comandos:
+  gerar --arquivo slides.md      gera a apresentação a partir do seu roteiro (recomendado). No arquivo, cada slide é um
+                                 bloco em markdown e os slides são separados por uma linha contendo só ---
+  gerar --tema "..." --slides 8  deixa o Presenton criar o roteiro sozinho a partir de um tema
+    opções: --formato pdf|pptx (padrão pdf)   --template general (padrão)   --idioma "Portuguese (Brazil)"
+            --instrucoes "orientações de layout, ex: use gráfico de barras no slide 3"
+  aguardar ID                    continua esperando uma geração que ainda não terminou
+  ajuda                          esta tela
+A geração leva de 3 a 10 minutos (cerca de 40s por slide). Avise o usuário antes de rodar.
+Ao terminar, o comando imprime LINK: copie esse link exatamente como veio, em formato markdown [Baixar apresentação](LINK).`;
+
+function sessao() {
+  const cwd = process.cwd();
+  return path.dirname(cwd) === WORKDIR_ROOT ? path.basename(cwd) : null;
+}
+function jobFile(id) { return path.join(process.cwd(), `.apresentacao-${id}.json`); }
+function lerJob(id) { try { return JSON.parse(fs.readFileSync(jobFile(id), 'utf8')); } catch (_) { return null; } }
+
+function post(body) {
+  return new Promise((resolve, reject) => {
+    const key = fs.readFileSync(path.join(PRESENTON_DIR, '.api_key'), 'utf8').trim();
+    const u = new URL(PRESENTON + '/api/v1/ppt/presentation/generate');
+    const data = Buffer.from(JSON.stringify(body));
+    const req = http.request({ hostname: u.hostname, port: u.port || 80, path: u.pathname, method: 'POST', timeout: LIMITE_MS,
+      headers: { 'Content-Type': 'application/json', 'Content-Length': data.length, Authorization: 'Bearer ' + key } }, (res) => {
+      let buf = ''; res.on('data', d => { buf += d; });
+      res.on('end', () => {
+        let j = null; try { j = JSON.parse(buf); } catch (_) {}
+        if (res.statusCode >= 200 && res.statusCode < 300 && j && j.path) return resolve(j);
+        reject(new Error(`Presenton respondeu ${res.statusCode}: ${buf.slice(0, 400)}`));
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('tempo limite de geração estourado')));
+    req.on('error', reject);
+    req.end(data);
+  });
+}
+
+// Roda destacado do agente: a geração pode passar do tempo máximo de um comando Bash
+async function worker(id) {
+  const job = lerJob(id);
+  const salvar = (patch) => fs.writeFileSync(jobFile(id), JSON.stringify(Object.assign(job, patch)));
+  try {
+    const r = await post(job.body);
+    const origem = path.join(PRESENTON_DIR, r.path.replace(/^\/+/, '')); // /app_data/... é volume em jeff-presenton/app_data
+    if (!fs.existsSync(origem)) throw new Error('arquivo gerado não encontrado em ' + origem);
+    const ext = path.extname(origem) || '.' + job.body.export_as;
+    const base = (path.basename(origem, ext).replace(/_[0-9a-f-]{36}$/i, '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'apresentacao');
+    const nome = `${base}-${id}${ext}`;
+    let link, destino;
+    if (job.sid) {
+      const dir = path.join(UPLOADS_ROOT, job.sid); fs.mkdirSync(dir, { recursive: true });
+      destino = path.join(dir, nome); link = `${PUBLIC_URL}/api/chat/file/${encodeURIComponent(job.sid)}/${encodeURIComponent(nome)}`;
+    } else { destino = path.join(job.cwd, nome); link = destino; }
+    fs.copyFileSync(origem, destino);
+    salvar({ status: 'ok', link, arquivo: destino, fim: Date.now() });
+  } catch (e) {
+    salvar({ status: 'erro', erro: String(e.message || e).slice(0, 600), fim: Date.now() });
+  }
+}
+
+async function aguardar(id) {
+  const t0 = Date.now();
+  for (;;) {
+    const j = lerJob(id);
+    if (!j) throw new Error(`geração ${id} não encontrada nesta conversa`);
+    if (j.status === 'ok') {
+      console.log(`Apresentação pronta em ${Math.round((j.fim - j.inicio) / 1000)}s.`);
+      console.log('LINK: ' + j.link);
+      console.log(`Entregue ao usuário assim: [Baixar apresentação (${String(j.body.export_as).toUpperCase()})](${j.link})`);
+      return;
+    }
+    if (j.status === 'erro') throw new Error('a geração falhou: ' + j.erro);
+    if (Date.now() - j.inicio > LIMITE_MS) throw new Error('a geração passou de 40 minutos e foi dada como perdida');
+    if (Date.now() - t0 > ESPERA_MS) {
+      console.log(`Ainda gerando (${Math.round((Date.now() - j.inicio) / 60000)} min). Rode agora: apresentacao aguardar ${id}`);
+      return;
+    }
+    await new Promise(r => setTimeout(r, 5000));
+  }
+}
+
+async function gerar() {
+  const formato = String(o.formato || 'pdf').toLowerCase();
+  if (!['pdf', 'pptx'].includes(formato)) throw new Error('--formato deve ser pdf ou pptx');
+  const body = { content: '', language: o.idioma || 'Portuguese (Brazil)', template: o.template || 'general', export_as: formato };
+  if (o.arquivo) {
+    const txt = fs.readFileSync(path.resolve(String(o.arquivo)), 'utf8');
+    const slides = txt.split(/^\s*---+\s*$/m).map(s => s.trim()).filter(Boolean);
+    if (!slides.length) throw new Error('o arquivo não tem nenhum slide');
+    if (slides.length > 30) throw new Error(`são ${slides.length} slides; o limite é 30`);
+    body.slides_markdown = slides;
+    if (typeof o.tema === 'string') body.content = o.tema;
+  } else if (typeof o.tema === 'string') {
+    body.content = o.tema;
+    body.n_slides = Math.min(Math.max(parseInt(o.slides, 10) || 8, 1), 30);
+  } else throw new Error('informe --arquivo slides.md (recomendado) ou --tema "..."');
+  if (typeof o.instrucoes === 'string') body.instructions = o.instrucoes;
+
+  const id = Date.now().toString(36);
+  fs.writeFileSync(jobFile(id), JSON.stringify({ id, status: 'gerando', inicio: Date.now(), sid: sessao(), cwd: process.cwd(), body }));
+  const filho = spawn(process.execPath, [__filename, '_worker', id], { cwd: process.cwd(), detached: true, stdio: 'ignore' });
+  filho.unref();
+  const n = body.slides_markdown ? body.slides_markdown.length : body.n_slides;
+  console.log(`Geração ${id} iniciada: ${n} slides, ${formato.toUpperCase()}, template ${body.template}. Aguardando...`);
+  await aguardar(id);
+}
+
+(async () => {
+  if (cmd === '_worker') return worker(o._[0]);
+  if (cmd === 'gerar') return gerar();
+  if (cmd === 'aguardar') { if (!o._[0]) throw new Error('informe o ID da geração'); return aguardar(o._[0]); }
+  console.log(AJUDA);
+})().catch(e => { console.error('ERRO: ' + (e.message || e)); process.exit(1); });

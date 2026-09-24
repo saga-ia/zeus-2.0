@@ -15,7 +15,7 @@ const WORKER_DB_PATH = process.env.WORKER_DB_PATH || '/opt/jeff-worker/data/work
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 const AUTH_SALT = 'jeff-central-2026';
-const AUTH_HASH = process.env.CENTRAL_AUTH_HASH || ''; // REDACTED no repo: valor real só em produção
+const AUTH_HASH = 'ed5abdcfb6390b649b9dabba706936f093d3370f70fa0b7fbca2079da1657b2cbe209bc307b0a4184aa0bb86a7d30951ca09c3443cdf63213cf02ac2308b7a7c';
 const sessions = new Map();
 const SESSION_TTL = 30 * 24 * 60 * 60 * 1000;
 
@@ -225,8 +225,31 @@ const computeAppsState = async () => {
 
 // ─── HTTP ─────────────────────────────────────────────────────────────────────
 const app = express();
+// Painel do Agente Posts (Automatik Inst embutido). Fica antes do express.json pra não consumir o corpo.
+require('./zeuspost').mount(app, requireAuth);
+
+// Exportar resposta do chat em PDF. Antes do express.json global porque uma resposta
+// longa passa do limite de 256kb; este router usa um limite próprio.
+app.use('/api/export', apiAuth, express.json({ limit: '4mb' }), require('./export').router);
+
 app.use(express.json({ limit: '256kb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+
+
+// Esqueci minha senha (código via WhatsApp do dono) — módulo compartilhado jeff-shared
+require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
+  appName: 'Jeff Central',
+  needsIdentifier: true,
+  identifierLabel: 'E-mail',
+  userExists: (email) => !!getUserByEmail(email),
+  setPassword: (newPass, email) => {
+    if (!db) return false;
+    const salt = crypto.randomBytes(16).toString('hex');
+    const r = db.prepare('UPDATE central_users SET password_hash = ?, salt = ? WHERE email = ?').run(hashPassword(newPass, salt), salt, normEmail(email));
+    if (r.changes > 0) sessions.clear();
+    return r.changes > 0;
+  }
+});
 
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, 'public/login.html')));
 
@@ -296,7 +319,7 @@ app.get('/', requireAuth, (_req, res) => {
 
 // ─── WhatsApp (Evolution API proxy) ───────────────────────────────────────────
 const EVOLUTION_URL = process.env.EVOLUTION_URL || 'https://evolution.jefersonhenrike.com';
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || ''; // REDACTED no repo
+const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || '81e2543a6cef506445dd9554223deffe89cdc1e4f6a65526';
 
 if (db) {
   try {
@@ -516,9 +539,20 @@ app.get('/api/links', apiAuth, (_req, res) => res.json(LINKS(PUBLIC_HOST, SERVER
 const chat = require('./chat');
 app.use('/api/chat', apiAuth, chat.router);
 
+// "Seu dia" da home: tarefas reais do ClickUp (cache do worker) e do Agente de Ações
+app.use('/api/home', apiAuth, require('./home-dia').router);
+
 // Agentes (ZEUS + próprios): persona, habilidades e base de conhecimento
 const agents = require('./agents');
 app.use('/api/agents', apiAuth, agents.router);
+
+// Base de conhecimento da empresa (tela /conhecimento): documentos, extração, chunks e busca pro RAG
+const knowledge = require('./knowledge');
+app.use('/api/knowledge', apiAuth, knowledge.router);
+
+// Motor de Growth: dashboard de mídia paga com dados reais (Meta Ads) e base do Estrategista de Growth IA
+const growth = require('./growth');
+app.use('/api/growth', apiAuth, growth.router);
 
 // Equipes de agentes: orquestrador planeja, distribui entre os agentes e consolida
 const teams = require('./teams');
@@ -528,9 +562,38 @@ app.use('/api/teams', apiAuth, teams.router);
 const pdi = require('./pdi');
 app.use('/api/pdi', apiAuth, pdi.router);
 
+// OKRs (/okrs): ciclos, objetivos desdobrados, resultados-chave, check-ins e criação com IA
+const okrs = require('./okrs');
+app.use('/api/okrs', apiAuth, okrs.router);
+
 // Configurações: dados da empresa, marca, preferências, pessoas, estrutura, liderança, permissões e consumo
 const config = require('./config');
 app.use('/api/config', apiAuth, config.router);
+
+// Botão flutuante: tarefas do Agente de Ações e chamados de Suporte
+const widget = require('./widget');
+app.use('/api/widget', apiAuth, widget.router);
+
+// Habilidades (/habilidades): regras de prompt e skills do Claude Code, com criação e edição
+const skills = require('./skills');
+app.use('/api/skills', apiAuth, skills.router);
+
+// Ações (/acoes): tarefas reais do ClickUp (token em app_settings.clickup_api_token)
+const clickup = require('./clickup');
+app.use('/api/clickup', apiAuth, clickup.router);
+
+// Rotinas (/rotinas): pedidos agendados que o ZEUS executa sozinho e entrega em Conversas, WhatsApp ou e-mail
+const rotinas = require('./rotinas');
+app.use('/api/rotinas', apiAuth, rotinas.router);
+rotinas.startScheduler();
+
+// Rotas do app com URL limpa (/okrs, /motor/vendas): tudo que não é /api nem arquivo cai no index
+app.get(/^\/(?!api\/)[^.]*$/, requireAuth, (_req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`[jeff-central] up on :${PORT} (public: ${PUBLIC_HOST}, server ip: ${SERVER_IP || '?'})`);

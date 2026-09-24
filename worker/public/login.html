@@ -92,9 +92,45 @@
             id="submitBtn"
             class="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-800 disabled:cursor-not-allowed text-slate-950 font-semibold py-2.5 rounded-lg transition"
           >Entrar</button>
+          <button
+            type="button"
+            id="openChangePw"
+            class="w-full text-xs text-slate-400 hover:text-emerald-400 transition mt-1"
+          >Alterar senha</button>
         </form>
       </div>
       <p class="text-center text-xs text-slate-500 mt-6">sagazeus.jefersonhenrike.com</p>
+    </div>
+
+    <div id="changePwModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+      <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+        <h2 class="text-lg font-semibold mb-4">Alterar senha</h2>
+        <form id="changePwForm" class="space-y-4">
+          <div>
+            <label class="block text-sm text-slate-300 mb-1.5" for="cp_username">Usuário</label>
+            <input id="cp_username" name="username" type="text" required autocomplete="username"
+              class="w-full px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/40 outline-none transition" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-300 mb-1.5" for="cp_current">Senha atual</label>
+            <input id="cp_current" name="currentPassword" type="password" required autocomplete="current-password"
+              class="w-full px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/40 outline-none transition" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-300 mb-1.5" for="cp_new">Nova senha (mínimo 8 caracteres)</label>
+            <input id="cp_new" name="newPassword" type="password" required minlength="8" autocomplete="new-password"
+              class="w-full px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/40 outline-none transition" />
+          </div>
+          <div id="cpErrorBox" class="hidden text-sm text-red-300 bg-red-900/40 border border-red-800 rounded-lg px-3 py-2"></div>
+          <div id="cpOkBox" class="hidden text-sm text-emerald-300 bg-emerald-900/40 border border-emerald-800 rounded-lg px-3 py-2">Senha alterada. Já pode entrar com a nova.</div>
+          <div class="flex gap-3">
+            <button type="button" id="closeChangePw"
+              class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold py-2.5 rounded-lg transition">Cancelar</button>
+            <button type="submit" id="cpSubmitBtn"
+              class="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-800 disabled:cursor-not-allowed text-slate-950 font-semibold py-2.5 rounded-lg transition">Salvar</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script src="/public/js/login.js"></script>

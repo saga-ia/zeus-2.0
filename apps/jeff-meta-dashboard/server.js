@@ -109,6 +109,17 @@ const filteringParam = (campaign_ids) => {
   return JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: ids }]);
 };
 
+const resolveAccount = (c, actParam) => {
+  if (actParam && actParam !== 'all') {
+    const all = c.ad_accounts?.length
+      ? c.ad_accounts
+      : [{ id: c.meta_account_id, name: 'Conta Principal' }];
+    const found = all.find(a => a.id === actParam);
+    if (found) return { account_id: found.id, token: found.token || c.meta_access_token };
+  }
+  return { account_id: c.meta_account_id, token: c.meta_access_token };
+};
+
 // slug helpers
 function toSlug(name) {
   return name.toLowerCase()
@@ -128,6 +139,23 @@ function uniqueSlug(name, existingClients, excludeId) {
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
+
+// Esqueci minha senha (código via WhatsApp do dono) — módulo compartilhado jeff-shared
+require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
+  appName: 'Meta Dashboard',
+  loginPath: '/',
+  needsIdentifier: true,
+  identifierLabel: 'E-mail',
+  userExists: (email) => db.users().some(u => u.email?.toLowerCase() === email),
+  setPassword: (newPass, email) => {
+    const users = db.users();
+    const idx = users.findIndex(u => u.email?.toLowerCase() === email);
+    if (idx < 0) return false;
+    users[idx].password_hash = bcrypt.hashSync(newPass, 10);
+    db.saveUsers(users);
+    return true;
+  }
+});
 
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -279,23 +307,35 @@ app.delete('/api/clients/:clientId/users/:userId', auth, adminOnly, (req, res) =
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/clients/:id/accounts', auth, (req, res) => {
+  if (!canAccessClient(req, res, req.params.id)) return;
+  try {
+    const c = clientMeta(req.params.id);
+    const accounts = c.ad_accounts?.length
+      ? c.ad_accounts
+      : [{ id: c.meta_account_id, name: 'Conta Principal' }];
+    res.json({ accounts });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
+
 // ── META API PROXY ────────────────────────────────────────────────────────────
 
 app.get('/api/meta/:clientId/overview', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const fi = filteringParam(req.query.campaign_ids);
     const level = fi ? 'campaign' : 'account';
     const params = {
       fields: 'spend,impressions,reach,clicks,actions,cost_per_action_type,' +
               'video_p25_watched_actions,video_p75_watched_actions,frequency,cpm,cpc,ctr',
-      level, limit: fi ? 200 : 1, access_token: c.meta_access_token,
+      level, limit: fi ? 200 : 1, access_token: token,
     };
     if (tr) params.time_range = tr;
     if (fi) params.filtering = fi;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     if (fi) {
       // agregar múltiplas campanhas em um único objeto
       const rows = data.data || [];
@@ -326,16 +366,17 @@ app.get('/api/meta/:clientId/timeseries', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const fi = filteringParam(req.query.campaign_ids);
     const params = {
       fields: 'spend,impressions,reach,clicks,actions,cost_per_action_type,date_start',
       time_increment: 1, level: fi ? 'campaign' : 'account', limit: 500,
-      access_token: c.meta_access_token,
+      access_token: token,
     };
     if (tr) params.time_range = tr;
     if (fi) params.filtering = fi;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     if (fi) {
       // agregar por data
       const byDate = {};
@@ -366,6 +407,7 @@ app.get('/api/meta/:clientId/comparison', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c   = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const { since, until } = req.query;
     if (!since || !until) return res.status(400).json({ error: 'Datas obrigatorias' });
 
@@ -377,11 +419,11 @@ app.get('/api/meta/:clientId/comparison', auth, async (req, res) => {
 
     const base = {
       fields: 'spend,impressions,reach,clicks,actions,cost_per_action_type',
-      level: 'account', limit: 1, access_token: c.meta_access_token,
+      level: 'account', limit: 1, access_token: token,
     };
     const [curr, prev] = await Promise.all([
-      metaGet(`${c.meta_account_id}/insights`, { ...base, time_range: JSON.stringify({ since, until }) }),
-      metaGet(`${c.meta_account_id}/insights`, { ...base, time_range: JSON.stringify({ since: fmt(prevStart), until: fmt(prevEnd) }) }),
+      metaGet(`${accountId}/insights`, { ...base, time_range: JSON.stringify({ since, until }) }),
+      metaGet(`${accountId}/insights`, { ...base, time_range: JSON.stringify({ since: fmt(prevStart), until: fmt(prevEnd) }) }),
     ]);
     res.json({ current: curr.data?.[0] || null, previous: prev.data?.[0] || null });
   } catch (e) { res.status(500).json({ error: e.response?.data?.error?.message || e.message }); }
@@ -391,15 +433,16 @@ app.get('/api/meta/:clientId/campaigns', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c  = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const fi = filteringParam(req.query.campaign_ids);
     const params = {
       fields: 'campaign_id,campaign_name,adset_name,ad_name,spend,impressions,reach,clicks,actions,cost_per_action_type',
-      level: 'ad', limit: 200, access_token: c.meta_access_token,
+      level: 'ad', limit: 200, access_token: token,
     };
     if (tr) params.time_range = tr;
     if (fi) params.filtering = fi;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     res.json(data.data || []);
   } catch (e) { res.status(500).json({ error: e.response?.data?.error?.message || e.message }); }
 });
@@ -408,13 +451,14 @@ app.get('/api/meta/:clientId/campaign-list', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c  = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const params = {
       fields: 'campaign_id,campaign_name,spend',
-      level: 'campaign', limit: 200, access_token: c.meta_access_token,
+      level: 'campaign', limit: 200, access_token: token,
     };
     if (tr) params.time_range = tr;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     res.json((data.data || []).map(d => ({ id: d.campaign_id, name: d.campaign_name, spend: d.spend })));
   } catch (e) { res.status(500).json({ error: e.response?.data?.error?.message || e.message }); }
 });
@@ -423,16 +467,17 @@ app.get('/api/meta/:clientId/demographics', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c  = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const fi = filteringParam(req.query.campaign_ids);
     const params = {
       fields: 'reach,impressions,actions',
       breakdowns: 'age,gender', level: fi ? 'campaign' : 'account', limit: 200,
-      access_token: c.meta_access_token,
+      access_token: token,
     };
     if (tr) params.time_range = tr;
     if (fi) params.filtering = fi;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     res.json(data.data || []);
   } catch (e) { res.status(500).json({ error: e.response?.data?.error?.message || e.message }); }
 });
@@ -441,16 +486,17 @@ app.get('/api/meta/:clientId/regions', auth, async (req, res) => {
   if (!canAccessClient(req, res, req.params.clientId)) return;
   try {
     const c  = clientMeta(req.params.clientId);
+    const { account_id: accountId, token } = resolveAccount(c, req.query.act);
     const tr = trParam(req.query.since, req.query.until);
     const fi = filteringParam(req.query.campaign_ids);
     const params = {
       fields: 'reach,impressions,spend,clicks',
       breakdowns: 'region', level: fi ? 'campaign' : 'account', limit: 100,
-      access_token: c.meta_access_token,
+      access_token: token,
     };
     if (tr) params.time_range = tr;
     if (fi) params.filtering = fi;
-    const data = await metaGet(`${c.meta_account_id}/insights`, params);
+    const data = await metaGet(`${accountId}/insights`, params);
     if (fi) {
       const byRegion = {};
       (data.data || []).forEach(r => {
@@ -681,6 +727,7 @@ app.get('/m/:token', (req, res) => {
       JWT_SECRET, { expiresIn: '30d' }
     );
 
+    res.cookie('meta_auth', jwt_token, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: 'lax' });
     res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Carregando...</title></head><body>
 <script>
   localStorage.setItem('meta_token', ${JSON.stringify(jwt_token)});

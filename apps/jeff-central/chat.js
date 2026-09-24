@@ -6,13 +6,17 @@ const { spawn } = require('child_process');
 const multer = require('multer');
 const Database = require('better-sqlite3');
 const agents = require('./agents');
+const skillsMod = require('./skills');
+const zeusContext = require('./zeus-context');
+const claudeSpawn = require('./claude-spawn');
 
 const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data');
 const WORKDIR_ROOT = path.join(DATA_DIR, 'zeus-workdir');
 const UPLOADS_ROOT = path.join(DATA_DIR, 'uploads');
 const DB_PATH = path.join(DATA_DIR, 'central.db');
 const MAX_SESSIONS = parseInt(process.env.CHAT_MAX_SESSIONS || '50', 10);
-const CLAUDE_BIN = process.env.CLAUDE_BIN || '/root/.nvm/versions/node/v20.20.2/bin/claude';
+const CLAUDE_BIN = claudeSpawn.CLAUDE_BIN;
+const DOC_INLINE_CHARS = 12000; // trecho do documento que vai direto no prompt; o resto fica no .txt
 const FFMPEG_BIN = process.env.FFMPEG_BIN || 'ffmpeg';
 
 [DATA_DIR, WORKDIR_ROOT, UPLOADS_ROOT].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
@@ -43,13 +47,17 @@ if (!db.prepare(`PRAGMA table_info(sessions)`).all().some(c => c.name === 'agent
   db.exec(`ALTER TABLE sessions ADD COLUMN agent_id TEXT`);
 }
 db.exec(`CREATE INDEX IF NOT EXISTS idx_sess_agent ON sessions(agent_id, updated_at)`);
+// Conversas abertas pelo botão flutuante: context = 'assistente' (recebem o mapa da plataforma e os dados da empresa)
+if (!db.prepare(`PRAGMA table_info(sessions)`).all().some(c => c.name === 'context')) {
+  db.exec(`ALTER TABLE sessions ADD COLUMN context TEXT`);
+}
 
 const stmt = {
   sessList: db.prepare(`SELECT s.id, s.title, s.created_at, s.updated_at,
     (SELECT COUNT(*) FROM messages WHERE session_id = s.id) AS msg_count
     FROM sessions s WHERE s.agent_id IS ? ORDER BY s.updated_at DESC`),
   sessGet: db.prepare(`SELECT * FROM sessions WHERE id = ?`),
-  sessIns: db.prepare(`INSERT INTO sessions (id, title, created_at, updated_at, agent_id) VALUES (?, ?, ?, ?, ?)`),
+  sessIns: db.prepare(`INSERT INTO sessions (id, title, created_at, updated_at, agent_id, context) VALUES (?, ?, ?, ?, ?, ?)`),
   sessTouch: db.prepare(`UPDATE sessions SET updated_at = ? WHERE id = ?`),
   sessTitle: db.prepare(`UPDATE sessions SET title = ? WHERE id = ?`),
   sessDel: db.prepare(`DELETE FROM sessions WHERE id = ?`),
@@ -199,6 +207,17 @@ async function processAttachments(sid, files) {
           item.paths.push(audioPath);
           item.transcript = await transcribeAudio(audioPath).catch((e) => '[falha ao transcrever: ' + e.message + ']');
         }
+      } else {
+        // PDF, Word, PowerPoint, Excel e texto: extrai o conteúdo e guarda um .txt ao lado pro Zeus ler inteiro
+        const text = await agents.extractText(f.path, f.originalname, f.mimetype);
+        if (text != null) {
+          item.kind = 'doc';
+          const txtPath = f.path + '.txt';
+          fs.writeFileSync(txtPath, text);
+          item.paths.push(txtPath);
+          item.excerpt = text.replace(/\s+\n/g, '\n').slice(0, DOC_INLINE_CHARS);
+          item.chars = text.length;
+        }
       }
     } catch (e) {
       item.error = e.message;
@@ -216,7 +235,8 @@ function buildPrompt(sid, currentMsgContent, attachments, agentName) {
   if (agentName) {
     lines.push(`Você é o agente "${agentName}" (persona, habilidades e base de conhecimento definidas no system prompt). Responda como esse agente.`);
   } else {
-    lines.push('Você é Zeus, assistente do Jefferson Henrike. Responda de forma direta, em PT-BR, sem rodeios. Tom amigável-profissional. Sem travessões em respostas curtas.');
+    lines.push('Você é Zeus, a IA da plataforma ZEUS Central. O CLAUDE.md carregado neste diretório descreve toda a plataforma (agentes, habilidades, conhecimento, pessoas, tarefas, ferramentas): consulte-o e use as ferramentas antes de dizer que não sabe. Responda de forma direta, em PT-BR, sem rodeios. Tom amigável-profissional. Sem travessões em respostas curtas. Nunca escreva raciocínio ou frases em inglês: o usuário vê tudo; trabalhe em silêncio e entregue só a resposta.');
+    lines.push("Quando a resposta tiver números (métricas, comparações, evolução no tempo, rankings), mostre-os em visual na tela em vez de só texto, usando blocos de código com JSON válido: ```zeus-kpi {\"titulo\":\"Resumo da conta · Nome\",\"periodo\":\"Últimos 30 dias\",\"itens\":[{\"rotulo\":\"Investimento\",\"valor\":\"R$ 27.740,75\",\"delta\":\"+12% vs período anterior\"}]} ``` vira um painel de indicadores (3 a 10 itens, valor já formatado, delta opcional começando com + ou -); ```zeus-grafico {\"tipo\":\"barras\",\"titulo\":\"Leads por semana\",\"periodo\":\"...\",\"unidade\":\"\",\"categorias\":[\"S1\",\"S2\"],\"series\":[{\"nome\":\"Leads\",\"valores\":[120,150]}]} ``` vira gráfico: tipo \"barras\" (comparar categorias), \"linhas\" (evolução no tempo) ou \"ranking\" (barras horizontais, ex.: campanhas por investimento); unidade \"R$\", \"%\" ou \"\"; valores numéricos puros (sem R$ ou %), até 5 séries e 30 categorias. Escreva 1 ou 2 frases de leitura antes ou depois do visual. Não use isso para um número que cabe numa frase.");
   }
   lines.push('');
   if (msgs.length > 1) {
@@ -230,6 +250,7 @@ function buildPrompt(sid, currentMsgContent, attachments, agentName) {
           if (a.kind === 'image') return `[imagem: ${a.originalname}]`;
           if (a.kind === 'audio') return `[áudio: "${(a.transcript || '').slice(0, 200)}"]`;
           if (a.kind === 'video') return `[vídeo: "${(a.transcript || '').slice(0, 200)}"]`;
+          if (a.kind === 'doc') return `[documento: ${a.originalname}]`;
           return `[arquivo: ${a.originalname}]`;
         }).join(' ');
         txt = (txt + ' ' + desc).trim();
@@ -257,6 +278,10 @@ function buildPrompt(sid, currentMsgContent, attachments, agentName) {
           lines.push(`  Frames extraídos (use Read pra ver):`);
           frames.forEach(p => lines.push(`    - ${p}`));
         }
+      } else if (a.kind === 'doc') {
+        const txt = a.paths.find(p => p.endsWith('.txt')) || a.paths[0];
+        lines.push(`- Documento "${a.originalname}" (${a.mime}), ${a.chars || 0} caracteres. Texto completo em: ${txt} (use Read se precisar além do trecho). Original: ${a.paths[0]}`);
+        if (a.excerpt) { lines.push(`  Conteúdo${a.chars > (a.excerpt || '').length ? ' (início)' : ''}:`); lines.push('  """'); lines.push(a.excerpt); lines.push('  """'); }
       } else {
         lines.push(`- Arquivo: ${a.paths[0]} (${a.mime})`);
       }
@@ -268,8 +293,54 @@ function buildPrompt(sid, currentMsgContent, attachments, agentName) {
   return lines.join('\n');
 }
 
+// ─── Leitura do stream-json do claude ─────────────────────────────────────────
+// O texto que o Claude escreve antes de usar uma ferramenta é narração ("vou checar..."), não resposta.
+// Só o texto do último turno (depois da última ferramenta) vira a resposta; o resto vira status na tela.
+const TOOL_LABEL = { Bash: 'Executando no servidor', Read: 'Lendo arquivo', Grep: 'Procurando no sistema', Glob: 'Procurando arquivos',
+  WebSearch: 'Pesquisando na web', WebFetch: 'Lendo página da web', Write: 'Escrevendo arquivo', Edit: 'Editando arquivo', Task: 'Delegando tarefa', TodoWrite: 'Organizando etapas' };
+const BASH_HINTS = [[/clickup/i, 'Consultando o ClickUp'], [/asaas/i, 'Consultando o Asaas'], [/google\.sh/i, 'Consultando o Google'], [/meta-ads|tools\/growth/i, 'Consultando a Meta Ads'],
+  [/instagram|zeuspost/i, 'Consultando o Instagram'], [/zapsign/i, 'Consultando o ZapSign'], [/wapi\.sh/i, 'Acessando o WhatsApp'], [/sqlite3|\.db\b/i, 'Consultando o banco de dados'],
+  [/apresentacao/i, 'Gerando a apresentação'], [/pm2|docker/i, 'Verificando o servidor']];
+function streamState() { return { turn: '', final: '', tools: 0, toolName: null, toolInput: '' }; }
+function toolLabel(name, input) {
+  if (name === 'Bash' && input) { const h = BASH_HINTS.find(([re]) => re.test(input)); if (h) return h[1]; }
+  if (TOOL_LABEL[name]) return TOOL_LABEL[name];
+  if (/^mcp__/.test(name || '')) return 'Consultando integração';
+  return 'Usando ' + (name || 'ferramenta');
+}
+function onStreamJson(j, st, emit) {
+  if (j.type === 'stream_event' && j.event) {
+    const ev = j.event;
+    if (ev.type === 'message_start') { st.turn = ''; return; }
+    if (ev.type === 'content_block_start' && ev.content_block && ev.content_block.type === 'tool_use') {
+      st.tools++; st.toolName = ev.content_block.name; st.toolInput = '';
+      if (st.turn) { st.turn = ''; emit('reset', {}); } // o que veio antes era narração, não resposta
+      emit('status', { text: toolLabel(st.toolName) });
+      return;
+    }
+    if (ev.type === 'content_block_delta' && ev.delta) {
+      if (ev.delta.type === 'input_json_delta') { st.toolInput += ev.delta.partial_json || ''; return; }
+      const t = ev.delta.text;
+      if (t) { st.turn += t; emit('token', { text: t }); }
+      return;
+    }
+    if (ev.type === 'content_block_stop' && st.toolName) {
+      const lbl = toolLabel(st.toolName, st.toolInput);
+      if (lbl !== toolLabel(st.toolName)) emit('status', { text: lbl });
+      st.toolName = null;
+      return;
+    }
+    return;
+  }
+  if (j.type === 'result') {
+    st.final = st.turn || (typeof j.result === 'string' ? j.result : '');
+    if (!st.turn && st.final) emit('token', { text: st.final });
+  }
+}
+
 // ─── Spawn Claude streaming ───────────────────────────────────────────────────
-function runClaude(sid, prompt, assistantMsgId, agentCtx) {
+function runClaude(sid, prompt, assistantMsgId, agentCtx, opts) {
+  opts = opts || {};
   const workdir = path.join(WORKDIR_ROOT, sid);
   if (!fs.existsSync(workdir)) fs.mkdirSync(workdir, { recursive: true });
   const args = ['-p', prompt, '--output-format', 'stream-json', '--include-partial-messages', '--verbose'];
@@ -278,12 +349,18 @@ function runClaude(sid, prompt, assistantMsgId, agentCtx) {
     const spFile = path.join(workdir, '.agente-system.md');
     fs.writeFileSync(spFile, agentCtx.text);
     args.push('--append-system-prompt-file', spFile);
-    if (agentCtx.model) args.push('--model', agentCtx.model);
   }
-  const proc = spawn(CLAUDE_BIN, args, { cwd: workdir, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Sempre modelo explícito: o padrão do settings.json pode apontar pra um modelo que o CLI instalado não suporta.
+  // Agente do catálogo sem modelo marcado usa o padrão dos agentes (Sonnet); o Zeus principal usa CENTRAL_CHAT_MODEL.
+  args.push('--model', claudeSpawn.pickModel(agentCtx && agentCtx.model, !!agentCtx));
+  // Esforço explícito e MCPs desligados (ver claude-spawn.js); widget assistente roda mais leve
+  args.push(...claudeSpawn.commonArgs({ light: !!opts.light }));
+  const started = Date.now();
+  const proc = spawn(CLAUDE_BIN, args, { cwd: workdir, stdio: ['ignore', 'pipe', 'pipe'], env: claudeSpawn.claudeEnv() });
   let buf = '';
-  let fullText = '';
   let errBuf = '';
+  const st = streamState();
+  const emit = (ev, data) => busEmit(sid, ev, Object.assign({ id: assistantMsgId }, data));
 
   proc.stdout.on('data', (chunk) => {
     buf += chunk.toString('utf8');
@@ -292,36 +369,27 @@ function runClaude(sid, prompt, assistantMsgId, agentCtx) {
       const line = buf.slice(0, nl).trim();
       buf = buf.slice(nl + 1);
       if (!line) continue;
-      try {
-        const j = JSON.parse(line);
-        if (j.type === 'stream_event' && j.event && j.event.type === 'content_block_delta') {
-          const t = j.event.delta && j.event.delta.text;
-          if (t) {
-            fullText += t;
-            busEmit(sid, 'token', { id: assistantMsgId, text: t });
-          }
-        } else if (j.type === 'result') {
-          if (typeof j.result === 'string' && j.result && !fullText) {
-            fullText = j.result;
-            busEmit(sid, 'token', { id: assistantMsgId, text: j.result });
-          }
-        }
-      } catch (_) {}
+      try { onStreamJson(JSON.parse(line), st, emit); } catch (_) {}
     }
   });
   proc.stderr.on('data', d => errBuf += d.toString());
   proc.on('close', (code) => {
+    let fullText = st.final || st.turn;
     if (code !== 0 && !fullText) {
       fullText = '[erro do claude] ' + (errBuf.slice(-400) || ('exit ' + code));
     }
+    console.log(`[chat] resposta em ${((Date.now() - started) / 1000).toFixed(1)}s, ${st.tools} ferramenta(s), sessão ${sid}${agentCtx ? ', agente ' + agentCtx.name : ''}`);
     stmt.msgUpd.run(fullText, 'done', assistantMsgId);
     stmt.sessTouch.run(Date.now(), sid);
     busEmit(sid, 'done', { id: assistantMsgId, content: fullText });
+    if (opts.onDone) opts.onDone(fullText, code);
   });
   proc.on('error', (e) => {
     stmt.msgUpd.run('[erro] ' + e.message, 'error', assistantMsgId);
     busEmit(sid, 'done', { id: assistantMsgId, content: '[erro] ' + e.message });
+    if (opts.onDone) opts.onDone('[erro] ' + e.message, -1);
   });
+  return proc;
 }
 
 function pruneSessions(agentId) {
@@ -353,7 +421,8 @@ router.post('/sessions', express.json(), (req, res) => {
   const title = (req.body && req.body.title) || 'Nova conversa';
   const agentId = (req.body && req.body.agent_id) ? String(req.body.agent_id) : null;
   if (agentId && !agents.getAgent(agentId)) return res.status(404).json({ error: 'agente não encontrado' });
-  stmt.sessIns.run(id, title, now, now, agentId);
+  const context = (req.body && req.body.context === 'assistente') ? 'assistente' : null;
+  stmt.sessIns.run(id, title, now, now, agentId, context);
   pruneSessions(agentId);
   res.json({ id, title, agent_id: agentId });
 });
@@ -387,13 +456,38 @@ router.get('/sessions/:sid/stream', (req, res) => {
   req.on('close', () => { clearInterval(ping); busDel(req.params.sid, res); });
 });
 
+// Ditado por voz: recebe o áudio gravado no navegador e devolve só o texto (Whisper via Groq)
+const TRANSCRIBE_DIR = path.join(UPLOADS_ROOT, '_transcribe');
+const uploadVoz = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _f, cb) => { if (!fs.existsSync(TRANSCRIBE_DIR)) fs.mkdirSync(TRANSCRIBE_DIR, { recursive: true }); cb(null, TRANSCRIBE_DIR); },
+    filename: (_req, file, cb) => cb(null, Date.now() + '_' + crypto.randomBytes(4).toString('hex') + (path.extname(file.originalname).replace(/[^.\w]/g, '').slice(0, 8) || '.webm')),
+  }),
+  limits: { fileSize: 25 * 1024 * 1024, files: 1 },
+});
+router.post('/transcribe', uploadVoz.single('audio'), async (req, res) => {
+  const f = req.file;
+  if (!f) return res.status(400).json({ error: 'nenhum áudio recebido' });
+  try {
+    const text = (await transcribeAudio(f.path)).trim();
+    res.json({ text });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  } finally {
+    fs.rm(f.path, { force: true }, () => {});
+  }
+});
+
 router.post('/sessions/:sid/send', upload.array('files', 6), async (req, res) => {
   const sid = req.params.sid;
   const sess = stmt.sessGet.get(sid);
   if (!sess) return res.status(404).json({ error: 'session not found' });
-  const text = (req.body.text || '').toString();
+  const rawText = (req.body.text || '').toString();
   const files = req.files || [];
-  if (!text.trim() && !files.length) return res.status(400).json({ error: 'mensagem vazia' });
+  if (!rawText.trim() && !files.length) return res.status(400).json({ error: 'mensagem vazia' });
+  // Habilidade acionada com "/" no chat: vale só para esta mensagem
+  const skill = req.body.skill ? skillsMod.find(String(req.body.skill)) : null;
+  const text = skill ? `[Habilidade: ${skill.name}] ${rawText}` : rawText;
 
   let attachments = [];
   try {
@@ -406,8 +500,8 @@ router.post('/sessions/:sid/send', upload.array('files', 6), async (req, res) =>
   const userMsgId = newId();
   stmt.msgIns.run(userMsgId, sid, 'user', text, JSON.stringify(attachments), 'done', now);
 
-  if (sess.title === 'Nova conversa' && text.trim()) {
-    stmt.sessTitle.run(text.trim().slice(0, 60), sid);
+  if (sess.title === 'Nova conversa' && rawText.trim()) {
+    stmt.sessTitle.run(rawText.trim().slice(0, 60), sid);
   }
   stmt.sessTouch.run(now, sid);
 
@@ -417,9 +511,21 @@ router.post('/sessions/:sid/send', upload.array('files', 6), async (req, res) =>
   busEmit(sid, 'user_msg', { id: userMsgId, role: 'user', content: text, attachments, created_at: now });
   busEmit(sid, 'zeus_start', { id: assistantMsgId });
 
+  zeusContext.ensureContext(); // CLAUDE.md da plataforma em zeus-workdir/, carregado pelo claude em toda conversa
   const agentCtx = sess.agent_id ? agents.buildAgentSystemPrompt(sess.agent_id) : null;
-  const prompt = buildPrompt(sid, text, attachments, agentCtx && agentCtx.name);
-  runClaude(sid, prompt, assistantMsgId, agentCtx);
+  let prompt = buildPrompt(sid, text, attachments, agentCtx && agentCtx.name);
+  // RAG: trechos da base de conhecimento da empresa relevantes pra mensagem (só entra se houver resultado)
+  try {
+    const kb = require('./knowledge').retrieve(rawText, { limit: 6, maxChars: 9000 });
+    if (kb) prompt = kb + '\n\n' + prompt;
+  } catch (e) { console.error('[chat] base de conhecimento', e.message); }
+  if (sess.context === 'assistente') {
+    try { prompt = require('./widget').assistantPrelude() + '\n\n' + prompt; } catch (e) { console.error('[chat] contexto do assistente', e.message); }
+  }
+  if (skill) {
+    prompt = `=== Habilidade acionada pelo usuário nesta mensagem ===\n${skill.name}: ${skill.instruction}\n\n` + prompt;
+  }
+  runClaude(sid, prompt, assistantMsgId, agentCtx, { light: sess.context === 'assistente' });
 
   res.json({ ok: true, userId: userMsgId, assistantId: assistantMsgId });
 });
@@ -430,4 +536,55 @@ router.get('/file/:sid/:name', (req, res) => {
   res.sendFile(p);
 });
 
-module.exports = { router };
+// ─── Rotinas: roda um pedido agendado como uma conversa normal (fica salva em Conversas) ──────────
+// Usado por rotinas.js. Cria a sessão "Rotina: <nome>", grava a mensagem e resolve com o texto final.
+const ROTINA_TIMEOUT_MS = parseInt(process.env.CENTRAL_ROTINA_TIMEOUT_MS || String(20 * 60 * 1000), 10);
+function runRoutine(opts) {
+  opts = opts || {};
+  return new Promise((resolve) => {
+    const agentId = opts.agentId && agents.getAgent(opts.agentId) ? String(opts.agentId) : null;
+    const skill = opts.skillId ? skillsMod.find(String(opts.skillId)) : null;
+    const rawText = String(opts.text || '').trim();
+    if (!rawText) return resolve({ sid: null, text: '', error: 'rotina sem instrução' });
+    const sid = newId();
+    const now = Date.now();
+    stmt.sessIns.run(sid, ('Rotina: ' + (opts.title || rawText)).slice(0, 60), now, now, agentId, null);
+    pruneSessions(agentId);
+    const text = skill ? `[Habilidade: ${skill.name}] ${rawText}` : rawText;
+    const userMsgId = newId();
+    stmt.msgIns.run(userMsgId, sid, 'user', text, '[]', 'done', now);
+    const assistantMsgId = newId();
+    stmt.msgIns.run(assistantMsgId, sid, 'zeus', '', '[]', 'pending', now + 1);
+
+    zeusContext.ensureContext();
+    const agentCtx = agentId ? agents.buildAgentSystemPrompt(agentId) : null;
+    let prompt = buildPrompt(sid, text, [], agentCtx && agentCtx.name);
+    try {
+      const kb = require('./knowledge').retrieve(rawText, { limit: 6, maxChars: 9000 });
+      if (kb) prompt = kb + '\n\n' + prompt;
+    } catch (e) { console.error('[rotina] base de conhecimento', e.message); }
+    if (skill) prompt = `=== Habilidade acionada nesta rotina ===\n${skill.name}: ${skill.instruction}\n\n` + prompt;
+    const prelude = `=== Rotina automática "${opts.title || 'sem nome'}" ===\n`
+      + 'Esta mensagem foi disparada por uma rotina agendada da ZEUS Central, sem ninguém online pra responder perguntas. '
+      + 'Execute com o que tem, usando as ferramentas do servidor quando precisar de dados reais, e entregue o resultado final completo em PT-BR. '
+      + 'Não faça perguntas de volta; se faltar algo, diga o que faltou no fim da resposta. '
+      + (opts.entrega === 'whatsapp' ? 'O resultado será enviado por WhatsApp: escreva curto, sem tabelas, sem títulos markdown (#) e sem blocos zeus-kpi/zeus-grafico; use *negrito* do WhatsApp com moderação.'
+        : opts.entrega === 'email' ? 'O resultado será enviado por e-mail em texto simples: sem tabelas e sem blocos zeus-kpi/zeus-grafico.' : '');
+    prompt = prelude + '\n\n' + (opts.ferramentas ? opts.ferramentas + '\n\n' : '') + prompt;
+    let done = false;
+    const proc = runClaude(sid, prompt, assistantMsgId, agentCtx, {
+      onDone: (out, code) => {
+        if (done) return; done = true; clearTimeout(timer);
+        const erro = /^\[erro/.test(out || '') || (code !== 0 && !out);
+        resolve({ sid, text: out || '', error: erro ? (out || 'exit ' + code) : null });
+      },
+    });
+    const timer = setTimeout(() => {
+      if (done) return;
+      try { proc.kill('SIGTERM'); } catch (_) {}
+      setTimeout(() => { if (!done) { done = true; resolve({ sid, text: '', error: `tempo esgotado (${Math.round(ROTINA_TIMEOUT_MS / 60000)} min)` }); } }, 5000);
+    }, ROTINA_TIMEOUT_MS);
+  });
+}
+
+module.exports = { router, runRoutine, _onStreamJson: onStreamJson, _streamState: streamState };

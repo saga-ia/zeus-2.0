@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus Post - Publicação em Massa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; max-width: 1080px; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card-desc { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+  input, textarea, select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 100px; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  .form-group { margin-bottom: 16px; }
+  .btn { padding: 11px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--surface2); }
+  .btn-ghost { background: transparent; color: var(--accent); padding: 6px 10px; font-size: 13px; }
+  .btn-danger { background: #ef4444; color: white; }
+  .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+  .alert-success { background: #10b98120; border: 1px solid #10b98140; color: #10b981; }
+  .alert-error { background: #ef444420; border: 1px solid #ef444440; color: #ef4444; }
+  .alert-info { background: #06b6d420; border: 1px solid #06b6d440; color: #06b6d4; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .b-ok { background: #10b98122; color: #10b981; }
+  .b-off { background: #ef444422; color: #ef4444; }
+  .format-grid, .caption-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .format-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .format-card:hover { background: var(--surface2); }
+  .format-card.selected { border-color: var(--accent); background: rgba(124,58,237,0.08); }
+  .format-icon { font-size: 24px; margin-bottom: 6px; }
+  .format-label { font-size: 13px; font-weight: 600; }
+  .time-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .time-chip { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; }
+  .time-chip input { width: 90px; padding: 4px 8px; background: transparent; border: none; color: var(--text); font-size: 14px; }
+  .time-chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .account-item { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; }
+  .account-item.selected { border-color: var(--accent); background: rgba(124,58,237,0.08); }
+  .account-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+  .stat { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface2); border-radius: 10px; margin-bottom: 8px; }
+  .stat-label { color: var(--muted); font-size: 13px; }
+  .stat-value { font-size: 20px; font-weight: 700; margin-left: auto; }
+  .campaign-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .campaign-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .meta-line { color: var(--muted); font-size: 12px; }
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 40px 20px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; max-width: 720px; width: 100%; padding: 32px; position: relative; margin: auto 0; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .modal h2 { font-size: 22px; margin-bottom: 6px; }
+  .modal .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .step { display: flex; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; padding-bottom: 0; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 600; margin-bottom: 6px; font-size: 15px; }
+  .step-desc { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .step-desc code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--accent); word-break: break-all; }
+  .step-desc a { color: var(--accent); text-decoration: underline; font-weight: 600; }
+  .step-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .step-btn:hover { opacity: 0.9; }
+  .copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-left: 6px; }
+  .step-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px; margin-top: 8px; font-family: monospace; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  /* Wizard */
+  .wizard-progress { margin-bottom: 24px; }
+  .wizard-progress-bar { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .wizard-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s; width: 8%; }
+  .wizard-progress-text { color: var(--muted); font-size: 12px; margin-top: 6px; text-align: right; font-weight: 600; }
+  .wstep h2 { font-size: 22px; margin-bottom: 10px; }
+  .wstep-desc { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
+  .wstep-tip { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); color: #a5f3fc; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-top: 14px; }
+  .wstep-tip strong { color: var(--accent2); }
+  .wstep-instructions { background: var(--surface2); border-radius: 12px; padding: 16px 20px; margin-top: 16px; font-size: 14px; line-height: 1.7; }
+  .wstep-instructions ol { padding-left: 22px; margin-top: 8px; }
+  .wstep-instructions li { margin-bottom: 6px; }
+  .wstep-instructions code { background: var(--bg); padding: 2px 8px; border-radius: 4px; color: var(--accent); font-size: 13px; }
+  .wstep-instructions strong { color: white; }
+  .wbig-btn { display: block; text-align: center; background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 14px 0; transition: opacity 0.2s; }
+  .wbig-btn:hover { opacity: 0.9; }
+  .wstep label { margin-top: 14px; }
+  /* Upload zone (bulk) */
+  .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(124,58,237,0.05); }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-text { color: var(--text); font-size: 14px; }
+  .uploaded-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+  .uploaded-item .thumb { width: 34px; height: 34px; border-radius: 6px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .uploaded-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .uploaded-item .size { color: var(--muted); font-size: 11px; }
+  /* Tabs por formato */
+  .format-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 6px; margin-bottom: 20px; }
+  .ftab { flex: 1; padding: 12px 16px; border-radius: 12px; border: none; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .ftab:hover { color: var(--text); background: var(--surface2); }
+  .ftab.active { background: linear-gradient(135deg, var(--accent), #5b21b6); color: white; }
+  /* Carrossel builder */
+  .carousel-group { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .carousel-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .carousel-group-name { font-weight: 700; font-size: 14px; }
+  .carousel-slides { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .slide-card { position: relative; aspect-ratio: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .slide-card .slide-num { position: absolute; top: 4px; left: 4px; background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .slide-card .slide-actions { position: absolute; bottom: 4px; left: 4px; right: 4px; display: flex; justify-content: space-between; gap: 2px; }
+  .slide-card .slide-actions button { background: rgba(0,0,0,0.6); border: none; color: white; border-radius: 4px; padding: 2px 4px; cursor: pointer; font-size: 10px; }
+  .slide-card img { width: 100%; height: 100%; object-fit: cover; }
+</style>
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12Z"/></svg></div>
+    <div class="logo-text">Zeus Post</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item" data-icon="dashboard" data-label="Dashboard"></a>
+  <a href="/calendar.html" class="nav-item" data-icon="calendar" data-label="Calendário"></a>
+  <a href="/editor.html" class="nav-item" data-icon="compose" data-label="Novo Post"></a>
+  <a href="/bulk.html" class="nav-item active" data-icon="bulk" data-label="Publicação em Massa"></a>
+  <a href="/analytics.html" class="nav-item" data-icon="analytics" data-label="Analytics"></a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item" data-icon="link" data-label="Conectar Perfis"></a>
+  <a href="/settings.html" class="nav-item" data-icon="settings" data-label="Configurações"></a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn" data-icon="logout" data-label="Sair"></a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1>🚀 Configurar Publicações em Massa</h1>
+    <p>Automatize dezenas ou centenas de posts a partir de uma pasta do Google Drive.</p>
+  </div>
+
+  <div id="alertBox"></div>
+
+  <!-- Abas por formato -->
+  <div class="format-tabs">
+    <button class="ftab active" data-tab="video" onclick="switchTab('video')">🎬 Vídeo (Reels)</button>
+    <button class="ftab" data-tab="image" onclick="switchTab('image')">🖼️ Imagem Única</button>
+    <button class="ftab" data-tab="carousel" onclick="switchTab('carousel')">🎠 Carrossel</button>
+    <button class="ftab" data-tab="story" onclick="switchTab('story')">📲 Stories</button>
+  </div>
+
+  <!-- Barra de Stories: botão dedicado de configurações -->
+  <div id="storyBar" style="display:none;background:linear-gradient(135deg,#7c3aed22,#06b6d422);border:1px solid #7c3aed44;border-radius:14px;padding:14px 18px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:700;font-size:15px">📲 Modo Stories</div>
+      <div class="meta-line" id="storyBarSummary">Sequência de 1 story por horário · sem intervalo</div>
+    </div>
+    <button class="btn btn-primary" onclick="openStoryConfig()" style="padding:10px 18px">⚙️ Configurações de Stories</button>
+  </div>
+
+  <!-- Espelhamento: campanhas de feed publicam também nos Stories -->
+  <div id="mirrorBar" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:0">
+      <input type="checkbox" id="mirrorToStory" onchange="toggleMirror()" style="width:20px;height:20px;cursor:pointer;accent-color:#7c3aed">
+      <span>
+        <span style="font-weight:700;font-size:15px;color:var(--text)">📲 Publicar também nos Stories</span>
+        <span class="meta-line" style="display:block">A mesma publicação que for pro feed sai também como story, na mesma quantidade.</span>
+      </span>
+    </label>
+    <button class="btn btn-secondary" onclick="openStoryConfig()" style="padding:10px 18px">⚙️ Configurações de Stories</button>
+  </div>
+
+  <!-- Modal de configurações de Stories -->
+  <div class="modal-overlay" id="storyConfigModal">
+    <div class="modal" style="max-width:560px">
+      <button class="modal-close" onclick="closeStoryConfig()">✕</button>
+      <h2 style="font-size:20px;margin-bottom:6px">⚙️ Configurações de Stories</h2>
+      <p class="wstep-desc">Estas opções valem só para campanhas no formato Stories.</p>
+
+      <div class="form-group" style="margin-top:18px">
+        <label>Quantos stories publicar em sequência por horário</label>
+        <input type="number" id="storiesPerBurst" min="1" max="10" value="1">
+        <div class="meta-line" style="margin-top:6px">Ex: 3 = a cada horário definido, publica 3 stories seguidos (formato "sequência" típico do Instagram).</div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px">
+        <label>Intervalo entre os stories da sequência (minutos)</label>
+        <input type="number" id="storyBurstInterval" min="0" max="60" value="3">
+        <div class="meta-line" style="margin-top:6px">Sem intervalo mínimo — configure o que quiser.</div>
+      </div>
+
+      <div id="mirrorConfigSection" style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:0">
+          <input type="checkbox" id="mirrorToStoryModal" style="width:20px;height:20px;cursor:pointer;accent-color:#7c3aed">
+          <span>
+            <span style="font-weight:700;color:var(--text)">Espelhar o feed nos Stories</span>
+            <span class="meta-line" style="display:block">Cada post publicado no feed sai também como story, logo em seguida.</span>
+          </span>
+        </label>
+        <div class="meta-line" style="margin-top:10px;padding-left:32px">
+          Em carrossel, o story recebe a <strong>primeira lâmina</strong> (a API não aceita carrossel em story).
+        </div>
+      </div>
+
+      <div class="stat" style="margin-top:18px">
+        <span class="stat-label">Total de stories por dia (por conta)</span>
+        <span class="stat-value" id="storyTotalPerDay">–</span>
+      </div>
+
+      <div class="alert alert-info" style="margin-top:18px;font-size:12px;line-height:1.6">
+        <strong>O que a API oficial do Instagram permite em Stories:</strong> publicar imagem ou vídeo (até 60s).<br>
+        <strong>O que ela não permite:</strong> legenda, figurinhas, enquete, música, marcação e link/swipe-up — nada disso pode ser enviado por API, nem aqui nem em nenhuma outra ferramenta. Se precisar desses recursos, o story tem que ser postado no app.
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStoryConfig()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveStoryConfig()">Salvar configurações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Fonte das mídias -->
+  <div class="card">
+    <div class="card-title">1. Fonte das mídias</div>
+    <div class="card-desc">Escolha de onde vêm os vídeos/imagens desta campanha.</div>
+
+    <div class="format-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px">
+      <div class="format-card selected" data-source="drive" onclick="selectSource('drive')">
+        <div class="format-icon">📁</div>
+        <div class="format-label">Google Drive</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Puxa da pasta</div>
+      </div>
+      <div class="format-card" data-source="upload" onclick="selectSource('upload')">
+        <div class="format-icon">⬆️</div>
+        <div class="format-label">Upload direto</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Do seu computador</div>
+      </div>
+    </div>
+
+    <!-- Painel Drive -->
+    <div id="sourcePanelDrive" class="source-panel">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-weight:600">Google Drive</span>
+        <span id="driveStatus" class="badge b-off">Desconectado</span>
+      </div>
+
+      <div id="driveConnect" class="alert alert-info" style="display:none">
+        Google Drive não está conectado. <a href="#" id="btnConnectDrive" style="color:var(--accent);text-decoration:underline;font-weight:600">Conectar agora</a>
+      </div>
+
+    <!-- Wizard passo-a-passo (uma tela por vez) -->
+    <div class="modal-overlay" id="driveModal">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="wizard-progress">
+          <div class="wizard-progress-bar"><div class="wizard-progress-fill" id="wizardProgress"></div></div>
+          <div class="wizard-progress-text" id="wizardStepLabel">Passo 1 de 13</div>
+        </div>
+
+        <!-- === PASSO 1: Boas vindas === -->
+        <div class="wstep" data-step="1">
+          <h2>👋 Vamos conectar seu Google Drive</h2>
+          <p class="wstep-desc">Você vai fazer isso 1 vez só, dura uns 10 minutos. Vou te guiar em cada tela. Só faça o que eu pedir e não clique em nada diferente.</p>
+          <div class="wstep-tip">
+            <strong>💡 Importante:</strong> Faça tudo no computador (não no celular). E use o mesmo navegador dessa aba (não abre em outro).
+          </div>
+          <p class="wstep-desc" style="margin-top:16px">Nas próximas telas eu vou te dar um botão pra abrir uma página do Google em uma nova aba. Você faz o que eu pedir naquela aba, depois <strong>volta aqui</strong> e clica em "Já fiz, próximo passo".</p>
+        </div>
+
+        <!-- === PASSO 2: Criar projeto === -->
+        <div class="wstep" data-step="2" style="display:none">
+          <h2>Passo 2: Criar um "projeto" no Google Cloud</h2>
+          <p class="wstep-desc">Todo aplicativo no Google Cloud fica dentro de um projeto. Vamos criar um chamado "Zeus Post".</p>
+
+          <a href="https://console.cloud.google.com/projectcreate" target="_blank" class="wbig-btn">🌐 Abrir tela pra criar projeto ↗</a>
+
+          <div class="wstep-tip" style="margin-top:14px">
+            <strong>Se for a primeira vez que você usa Google Cloud:</strong> vai aparecer uma tela pedindo pra você aceitar os termos. Marca a caixinha, escolhe o país "Brasil" e clica em <strong>ACEITAR E CONTINUAR</strong>. Só depois abre a tela de criar projeto.
+          </div>
+
+          <div class="wstep-instructions">
+            <strong>Na tela que abrir, faça:</strong>
+            <ol>
+              <li>Em <strong>"Nome do projeto"</strong>, apaga o que tiver e digita: <code>Zeus Post</code></li>
+              <li>Em <strong>"Organização"</strong>, deixa como está (geralmente "Nenhuma organização")</li>
+              <li>Em <strong>"Local"</strong>, deixa como está</li>
+              <li>Clica no botão azul <strong>CRIAR</strong> lá embaixo</li>
+              <li>Espera uns 10 segundos. Vai aparecer uma notificação em cima escrita "Criando projeto..." e depois "Projeto criado"</li>
+              <li>No canto <strong>superior esquerdo</strong> da página (do lado do logo Google Cloud), tem um seletor de projeto. Clica nele e escolhe <strong>Zeus Post</strong> se já não estiver selecionado</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- === PASSO 3: Ativar Drive API === -->
+        <div class="wstep" data-step="3" style="display:none">
+          <h2>Passo 3: Ativar a API do Google Drive</h2>
+          <p class="wstep-desc">Precisa "ligar" a API do Drive dentro do projeto que você criou.</p>
+
+          <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" class="wbig-btn">🌐 Abrir tela pra ativar Drive API ↗</a>
+
+          <div class="wstep-instructions">
+            <strong>Na tela que abrir, faça:</strong>
+            <ol>
+              <li><strong>Confirma o projeto:</strong> lá no topo, do lado do logo Google Cloud, tem que estar escrito <strong>"Zeus Post"</strong>. Se estiver escrito outro nome, clica ali e troca pra Zeus Post</li>
+              <li>Vai ver um card grande no meio da tela chamado <strong>"Google Drive API"</strong></li>
+              <li>Clica no botão azul <strong>ATIVAR</strong> (fica logo abaixo do nome, ou no canto)</li>
+              <li>Espera 5-10 segundos. A página vai recarregar mostrando estatísticas — sinal que a API foi ativada com sucesso</li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>Se aparecer:</strong> "Você precisa criar um projeto primeiro" — volta pro passo 2.
+          </div>
+        </div>
+
+        <!-- === PASSO 4: Consent screen tipo === -->
+        <div class="wstep" data-step="4" style="display:none">
+          <h2>Passo 4: Configurar quem pode usar o app</h2>
+          <p class="wstep-desc">Aqui você diz pro Google que esse app é seu e quem pode logar nele.</p>
+
+          <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" class="wbig-btn">🌐 Abrir "Tela de Consentimento" ↗</a>
+
+          <div class="wstep-instructions">
+            <strong>Na tela que abrir, faça:</strong>
+            <ol>
+              <li><strong>Confirma o projeto:</strong> no topo tem que estar "Zeus Post"</li>
+              <li>Vai aparecer 2 opções em radio: <strong>"Interno"</strong> e <strong>"Externo"</strong></li>
+              <li>Marca a bolinha em <strong>Externo</strong></li>
+              <li>Clica no botão azul <strong>CRIAR</strong> lá embaixo</li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>Se não aparecer essa tela</strong> (e sim uma dashboard com "Editar App"): significa que você já fez isso antes. Pode pular pro próximo passo direto.
+          </div>
+        </div>
+
+        <!-- === PASSO 5: Preencher app info === -->
+        <div class="wstep" data-step="5" style="display:none">
+          <h2>Passo 5: Preencher informações do app</h2>
+          <p class="wstep-desc">Agora abriu um formulário. Preencha só os 3 campos que eu pedir e ignora o resto.</p>
+
+          <div class="wstep-instructions">
+            <strong>Preenche:</strong>
+            <ol>
+              <li>Em <strong>"Nome do app"</strong> digita: <code>Zeus Post</code></li>
+              <li>Em <strong>"E-mail de suporte do usuário"</strong>: clica no dropdown e escolhe seu e-mail (deve ser o único que aparece)</li>
+              <li>Rola a página até o final</li>
+              <li>Em <strong>"Informações de contato do desenvolvedor"</strong>, campo <strong>"Endereço de e-mail"</strong>: digita seu e-mail (o mesmo do login Google)</li>
+              <li>Clica no botão azul <strong>SALVAR E CONTINUAR</strong> lá embaixo</li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            Ignora tudo mais: logo, domínio, links de privacidade, etc. Deixa em branco.
+          </div>
+        </div>
+
+        <!-- === PASSO 6: Escopos === -->
+        <div class="wstep" data-step="6" style="display:none">
+          <h2>Passo 6: Tela de "Escopos" (só pular)</h2>
+          <p class="wstep-desc">Abriu uma tela chamada "Escopos". Não precisa mexer em nada.</p>
+
+          <div class="wstep-instructions">
+            <strong>Só faça:</strong>
+            <ol>
+              <li>Rola a página até o final</li>
+              <li>Clica no botão azul <strong>SALVAR E CONTINUAR</strong></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- === PASSO 7: Test users === -->
+        <div class="wstep" data-step="7" style="display:none">
+          <h2>Passo 7: Adicionar seu e-mail como "Usuário de teste"</h2>
+          <p class="wstep-desc">Esse passo é <strong>OBRIGATÓRIO</strong>. Sem ele o Google vai bloquear seu login.</p>
+
+          <div class="wstep-instructions">
+            <strong>Na tela "Usuários de teste":</strong>
+            <ol>
+              <li>Clica no botão <strong>+ ADD USERS</strong> (ou "+ ADICIONAR USUÁRIOS")</li>
+              <li>Abre um painel lateral do lado direito</li>
+              <li>Digita seu e-mail do Google (o mesmo do Drive onde estão os vídeos)</li>
+              <li>Aperta <strong>Enter</strong> ou clica em "Adicionar"</li>
+              <li>Fecha o painel clicando em <strong>SALVAR</strong> lá embaixo</li>
+              <li>Agora clica no botão azul <strong>SALVAR E CONTINUAR</strong></li>
+              <li>Na próxima tela ("Resumo"), clica em <strong>VOLTAR AO PAINEL</strong></li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>⚠️ Se esquecer esse passo:</strong> quando você for autorizar (passo 12), vai aparecer "Acesso bloqueado: Zeus Post não concluiu o processo de verificação" e não vai funcionar.
+          </div>
+        </div>
+
+        <!-- === PASSO 8: Criar OAuth Client === -->
+        <div class="wstep" data-step="8" style="display:none">
+          <h2>Passo 8: Criar a "Credencial" que conecta os dois sistemas</h2>
+          <p class="wstep-desc">Agora vamos criar a chave de acesso propriamente dita.</p>
+
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="wbig-btn">🌐 Abrir tela de "Credenciais" ↗</a>
+
+          <div class="wstep-instructions">
+            <strong>Na tela que abrir:</strong>
+            <ol>
+              <li><strong>Confirma o projeto no topo:</strong> "Zeus Post"</li>
+              <li>Bem no topo, do lado do botão azul, tem um botão <strong>+ CRIAR CREDENCIAIS</strong>. Clica nele</li>
+              <li>Vai abrir um menu com opções. Clica em <strong>"ID do cliente OAuth"</strong></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- === PASSO 9: Preencher OAuth Client === -->
+        <div class="wstep" data-step="9" style="display:none">
+          <h2>Passo 9: Preencher a credencial + colar URL de retorno</h2>
+          <p class="wstep-desc">Aqui é o passo mais importante. Faça exatamente na ordem.</p>
+
+          <div class="wstep-instructions">
+            <strong>Preenche o formulário:</strong>
+            <ol>
+              <li>Em <strong>"Tipo de aplicativo"</strong>: escolhe <strong>"Aplicativo da Web"</strong> (Web application)</li>
+              <li>Em <strong>"Nome"</strong>: digita <code>Zeus Post</code></li>
+              <li>Rola a tela até achar a seção <strong>"URIs de redirecionamento autorizados"</strong> (Authorized redirect URIs)</li>
+              <li>Clica em <strong>+ ADICIONAR URI</strong></li>
+              <li><strong>Copia a URL abaixo</strong> e cola no campo que apareceu:</li>
+            </ol>
+            <input type="text" class="step-input" id="redirectUri" readonly value="https://zeus-post.jefersonhenrike.com/oauth/drive/callback">
+            <button class="copy-btn" onclick="copyText('redirectUri')" style="margin-top:6px">📋 Copiar URL</button>
+            <ol start="6">
+              <li>Depois de colar, clica no botão azul <strong>CRIAR</strong> lá embaixo</li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>⚠️ Atenção:</strong> essa URL tem que ser <strong>exatamente igual</strong>. Nem 1 espaço a mais, nem "/" no final, nada. Copia com o botão pra não errar.
+          </div>
+        </div>
+
+        <!-- === PASSO 10: Copiar Client ID e Secret === -->
+        <div class="wstep" data-step="10" style="display:none">
+          <h2>Passo 10: Copiar Client ID e Client Secret</h2>
+          <p class="wstep-desc">Depois que você clicou em CRIAR, abriu um <strong>popup</strong> com 2 códigos. Não fecha esse popup!</p>
+
+          <div class="wstep-instructions">
+            <strong>No popup do Google, você vai ver:</strong>
+            <ol>
+              <li><strong>ID do cliente</strong> (Client ID) — um código longo terminado em <code>.apps.googleusercontent.com</code></li>
+              <li><strong>Segredo do cliente</strong> (Client Secret) — começa com <code>GOCSPX-</code></li>
+            </ol>
+            <p style="margin-top:10px">Em cada um deles, tem um ícone de copiar 📋 do lado direito. Clica pra copiar.</p>
+            <p><strong>➡️ Cola os 2 no próximo passo.</strong></p>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>Se você fechou o popup sem copiar:</strong> não tem problema. Volta em https://console.cloud.google.com/apis/credentials, procura o "Zeus Post" na lista, clica no nome dele e os dois códigos vão estar lá.
+          </div>
+        </div>
+
+        <!-- === PASSO 11: Colar aqui === -->
+        <div class="wstep" data-step="11" style="display:none">
+          <h2>Passo 11: Colar as credenciais aqui no Zeus Post</h2>
+          <p class="wstep-desc">Agora cola os dois códigos que você copiou do Google:</p>
+
+          <label>Client ID (código longo terminado em .apps.googleusercontent.com)</label>
+          <input type="text" class="step-input" id="modalClientId" placeholder="123456789-abc...apps.googleusercontent.com">
+
+          <label style="margin-top:14px">Client Secret (começa com GOCSPX-)</label>
+          <input type="password" class="step-input" id="modalClientSecret" placeholder="GOCSPX-...">
+
+          <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="saveGoogleCreds()">💾 Salvar credenciais</button>
+          <div id="modalSaveResult" style="margin-top:10px"></div>
+        </div>
+
+        <!-- === PASSO 12: Autorizar === -->
+        <div class="wstep" data-step="12" style="display:none">
+          <h2>Passo 12: Autorizar o Zeus Post no seu Drive</h2>
+          <p class="wstep-desc">Última etapa. Clica no botão azul abaixo e siga o que aparecer.</p>
+
+          <button class="btn btn-primary" style="width:100%;padding:16px;font-size:16px" id="modalAuthBtn" onclick="doAuth()">🔓 Abrir login do Google e autorizar</button>
+
+          <div class="wstep-instructions" style="margin-top:16px">
+            <strong>O que vai acontecer:</strong>
+            <ol>
+              <li>Abre uma tela do Google pra escolher a conta. Clica na sua conta (a mesma do Drive)</li>
+              <li>Vai aparecer uma tela vermelha assustadora: <strong>"O Google não verificou este app"</strong></li>
+              <li><strong>Isso é normal!</strong> É o SEU próprio app, o Google só ainda não revisou</li>
+              <li>Clica em <strong>"Avançado"</strong> (canto inferior esquerdo)</li>
+              <li>Depois em <strong>"Acessar Zeus Post (não seguro)"</strong></li>
+              <li>Aparece uma tela pedindo permissões — clica em <strong>"Continuar"</strong> ou "Permitir"</li>
+              <li>Volta pra essa página com uma mensagem verde de sucesso ✅</li>
+            </ol>
+          </div>
+
+          <div class="wstep-tip">
+            <strong>Se aparecer "Acesso bloqueado":</strong> volta pro Passo 7 — provavelmente você não adicionou seu e-mail como "Usuário de teste".
+          </div>
+        </div>
+
+        <!-- === PASSO 13: Pronto === -->
+        <div class="wstep" data-step="13" style="display:none">
+          <h2>🎉 Pronto! Google Drive conectado</h2>
+          <p class="wstep-desc">Agora você pode fechar esse guia e voltar pra tela principal. É só colar a URL da pasta do Drive e clicar em "Testar Conexão".</p>
+          <div class="wstep-tip">
+            <strong>Nunca mais precisa fazer esse processo.</strong> Uma vez conectado, fica conectado pra sempre (a menos que você revogue o acesso no Google).
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="closeModal()">Fechar guia e voltar</button>
+        </div>
+
+        <!-- Navegação -->
+        <div class="modal-footer" id="wizardNav">
+          <button class="btn btn-secondary" id="wizardPrev" onclick="wizardBack()">← Voltar</button>
+          <button class="btn btn-primary" id="wizardNext" onclick="wizardNext()" style="flex:1">Próximo passo →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>URL da pasta (link "qualquer pessoa com o link")</label>
+      <input type="text" id="driveUrl" placeholder="https://drive.google.com/drive/folders/...">
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary" onclick="testDrive()">🔍 Testar Conexão</button>
+      <div></div>
+    </div>
+    <div id="driveTestResult" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Painel Upload — modo simples (vídeo/imagem única) -->
+    <div id="sourcePanelUpload" class="source-panel" style="display:none">
+      <div id="uploadSimpleMode">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('bulkFileInput').click()">
+          <div class="upload-icon">⬆️</div>
+          <div class="upload-text"><strong>Clique aqui</strong> ou arraste arquivos<br>
+            <span style="color:var(--muted)">Selecione vários vídeos/imagens de uma vez</span>
+          </div>
+          <input type="file" id="bulkFileInput" style="display:none" multiple accept="image/*,video/*" onchange="handleBulkUpload(this.files)">
+        </div>
+        <div id="uploadProgress" style="margin-top:12px;display:none">
+          <div class="progress-bar"><div class="progress-fill" id="uploadProgressFill" style="width:0%"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+            <div class="meta-line" id="uploadProgressText">Enviando...</div>
+            <button type="button" class="btn btn-ghost" id="uploadCancelBtn" onclick="cancelBulkUpload()" style="color:#ef4444;padding:4px 10px;font-size:12px;display:none">✕ Cancelar envio</button>
+          </div>
+        </div>
+        <div id="uploadedList" style="margin-top:14px"></div>
+      </div>
+
+      <!-- Painel Carrossel — grupos com reordenação -->
+      <div id="uploadCarouselMode" style="display:none">
+        <div id="carouselGroupsList"></div>
+        <button class="btn btn-secondary" onclick="addCarouselGroup()" style="width:100%">➕ Novo Carrossel</button>
+        <div id="carouselUploadProgress" style="margin-top:12px;display:none">
+          <div class="progress-bar"><div class="progress-fill" id="carouselUploadFill" style="width:0%"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px">
+            <div class="meta-line" id="carouselUploadText">Enviando...</div>
+            <button type="button" class="btn btn-ghost" id="carouselUploadCancelBtn" onclick="cancelCarouselUpload()" style="color:#ef4444;padding:4px 10px;font-size:12px;display:none">✕ Cancelar envio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info" style="margin-top:12px;font-size:12px">
+        ⚡ Arquivos ficam salvos no servidor até a publicação ser confirmada. Só depois disso são apagados.
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Formato (oculto — vem da aba do topo) -->
+  <div class="card" style="display:none">
+    <div class="card-title">2. Formato da Publicação</div>
+    <div class="card-desc">Todas as publicações da campanha usarão este formato.</div>
+    <div class="format-grid">
+      <div class="format-card" data-format="video" onclick="selectFormat('video')">
+        <div class="format-icon">🎬</div>
+        <div class="format-label">Vídeos (Reels)</div>
+      </div>
+      <div class="format-card" data-format="image" onclick="selectFormat('image')">
+        <div class="format-icon">🖼️</div>
+        <div class="format-label">Posts (Imagem única)</div>
+      </div>
+      <div class="format-card" data-format="carousel" onclick="selectFormat('carousel')">
+        <div class="format-icon">🎠</div>
+        <div class="format-label">Carrossel (subpastas)</div>
+      </div>
+    </div>
+    <div class="alert alert-info" id="carouselHint" style="display:none">
+      Para carrossel: cada subpasta dentro da pasta principal vira 1 carrossel. Ordem: nome da subpasta (1, 2, 3...).
+    </div>
+  </div>
+
+  <!-- 3. Contas -->
+  <div class="card">
+    <div class="card-title">3. Contas de destino</div>
+    <div class="card-desc">Selecione os Instagrams que vão receber a campanha.</div>
+    <div id="accountsList"><div class="meta-line">Carregando...</div></div>
+  </div>
+
+  <!-- 4. Volume -->
+  <div class="card">
+    <div class="card-title">4. Volumetria</div>
+    <div class="card-desc">Quantas publicações por dia e por quantos dias.</div>
+    <div class="row">
+      <div>
+        <label>Publicações por dia</label>
+        <input type="number" id="postsPerDay" min="1" max="25" value="10">
+      </div>
+      <div>
+        <label>Quantidade de dias</label>
+        <input type="number" id="totalDays" min="1" max="365" value="30">
+      </div>
+      <div>
+        <label>Data de início</label>
+        <input type="date" id="startDate">
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="stat">
+        <span class="stat-label">Total de publicações a gerar <span id="totalPostsHint" style="color:var(--muted);font-weight:400"></span></span>
+        <span class="stat-value" id="totalPosts">300</span>
+      </div>
+      <div class="stat" id="driveCheck" style="display:none">
+        <span class="stat-label">Arquivos disponíveis no Drive</span>
+        <span class="stat-value" id="driveCount">–</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Horários -->
+  <div class="card">
+    <div class="card-title">5. Horários de publicação</div>
+    <div class="card-desc">Defina os horários diários. Se tiver 10 posts/dia e menos horários, o sistema rotaciona. Cada horário recebe jitter aleatório de ±5min.</div>
+    <div id="timeList" class="time-list"></div>
+    <button class="btn btn-ghost" onclick="addTime()">+ Adicionar Horário</button>
+    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0">
+        <input type="checkbox" id="shuffleOrder" style="width:auto;margin:0">
+        <span style="flex:1">
+          <strong>🎲 Embaralhar ordem das publicações</strong>
+          <div class="meta-line" style="margin-top:2px">Os arquivos vão pra grade em ordem aleatória, em vez da ordem em que você subiu. Útil pra misturar vídeos e não ficar na sequência.</div>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 6. Legenda -->
+  <div class="card" id="captionCard">
+    <div class="card-title">6. Motor de Legendas</div>
+    <div class="card-desc">Escolha como as legendas serão geradas para cada post.</div>
+    <div class="caption-tabs">
+      <div class="format-card" data-caption="fixed" onclick="selectCaption('fixed')">
+        <div class="format-icon">📝</div>
+        <div class="format-label">Legenda Padrão</div>
+      </div>
+      <div class="format-card" data-caption="ai" onclick="selectCaption('ai')">
+        <div class="format-icon">🤖</div>
+        <div class="format-label">Legenda com IA</div>
+      </div>
+      <div class="format-card" data-caption="shuffle" onclick="selectCaption('shuffle')">
+        <div class="format-icon">🎲</div>
+        <div class="format-label">Embaralhar Estrofes</div>
+      </div>
+    </div>
+
+    <div id="captionFixed" class="caption-panel" style="display:none">
+      <label>Texto que será usado em todas as publicações</label>
+      <textarea id="fixedText" rows="6" placeholder="Sua legenda aqui... será a mesma para todos os posts."></textarea>
+    </div>
+
+    <div id="captionAI" class="caption-panel" style="display:none">
+      <div class="row">
+        <div>
+          <label>Provedor de IA</label>
+          <select id="aiProvider">
+            <option value="claude">Claude (Anthropic)</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="gemini">Google Gemini</option>
+          </select>
+        </div>
+        <div>
+          <label>Status da API Key <span id="aiKeyStatus" class="badge b-off">Não configurada</span></label>
+          <input type="password" id="aiKey" placeholder="Cole a API Key aqui e clique em Salvar">
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="saveAiKey()" style="margin-bottom:12px">💾 Salvar API Key</button>
+      <label>Prompt / instrução para a IA gerar cada legenda</label>
+      <textarea id="aiPrompt" rows="4" placeholder="Ex: Escreva uma legenda de Instagram sobre empreendedorismo, motivacional, com 3 hashtags no final."></textarea>
+    </div>
+
+    <div id="captionShuffle" class="caption-panel" style="display:none">
+      <label>Texto base (estrofes separadas por linha em branco)</label>
+      <textarea id="shuffleText" rows="8" placeholder="Estrofe 1: texto...&#10;&#10;Estrofe 2: outro texto...&#10;&#10;Estrofe 3: mais texto..."></textarea>
+      <div class="form-group" style="margin-top:12px">
+        <label>Quantas estrofes por post</label>
+        <input type="number" id="shuffleCount" min="1" max="10" value="2" style="max-width:180px">
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Regras de Suspensão -->
+  <div class="card">
+    <div class="card-title">7. Regras de Suspensão (opcional)</div>
+    <div class="card-desc">Bloqueie dias, datas ou janelas de horário onde a campanha não deve postar.</div>
+
+    <label>Não postar nestes dias da semana</label>
+    <div id="weekdayChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+
+    <label>Intervalos de datas bloqueadas (ex: feriados)</label>
+    <div id="dateRangesList"></div>
+    <button class="btn btn-ghost" onclick="addDateRange()">+ Adicionar intervalo de datas</button>
+
+    <div style="margin-top:16px">
+      <label>Janelas de horário bloqueadas (ex: 22:00 às 06:00 — não posta madrugada)</label>
+      <div id="timeWindowsList"></div>
+      <button class="btn btn-ghost" onclick="addTimeWindow()">+ Adicionar janela de horário</button>
+    </div>
+  </div>
+
+  <!-- 8. Ações -->
+  <div class="card">
+    <div class="card-title">8. Finalizar campanha</div>
+    <div class="form-group">
+      <label>Nome da campanha (opcional)</label>
+      <input type="text" id="campaignName" placeholder="Ex: DNA Empreendedor - Julho">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px">
+      <button class="btn btn-secondary" id="btnSaveDraft" onclick="createCampaign('draft')">💾 Salvar Rascunho</button>
+      <button class="btn btn-secondary" id="btnSchedule" onclick="openScheduleModal()">📅 Agendar Início</button>
+      <button class="btn btn-primary" id="btnStartNow" onclick="createCampaign('active')">🚀 Iniciar Agora</button>
+    </div>
+    <div class="meta-line" style="margin-top:10px">
+      <strong>Rascunho:</strong> guarda sem começar. <strong>Agendar:</strong> começa em data/hora específica. <strong>Iniciar Agora:</strong> começa hoje seguindo os horários definidos no card 5.
+    </div>
+  </div>
+
+  <!-- Modal de agendamento -->
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal" style="max-width:480px">
+      <button class="modal-close" onclick="closeScheduleModal()">✕</button>
+      <h2>📅 Agendar Início da Campanha</h2>
+      <p class="wstep-desc">A campanha fica em "Programada" e só começa a postar automaticamente a partir do momento escolhido.</p>
+      <label>Data e hora de início</label>
+      <input type="datetime-local" id="scheduledStartAt" class="step-input">
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="confirmSchedule()">Confirmar agendamento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de edição de campanha -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width:640px">
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+      <div id="editBody"></div>
+    </div>
+  </div>
+
+  <!-- Modal de debug manual -->
+  <div class="modal-overlay" id="debugModal">
+    <div class="modal" style="max-width:820px">
+      <button class="modal-close" onclick="closeDebugModal()">✕</button>
+      <div id="debugBody"></div>
+    </div>
+  </div>
+
+  <!-- Confirmação antes de iniciar a campanha -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width:760px">
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+      <div id="confirmBody"></div>
+    </div>
+  </div>
+
+  <!-- Galeria de mídias da campanha -->
+  <div class="modal-overlay" id="galleryModal">
+    <div class="modal" style="max-width:1000px">
+      <button class="modal-close" onclick="closeGallery()">✕</button>
+      <div id="galleryBody"></div>
+    </div>
+  </div>
+
+  <!-- Player de mídia (preview em tela cheia) -->
+  <div class="modal-overlay" id="playerModal" style="z-index:200">
+    <div class="modal" style="max-width:720px;padding:20px">
+      <button class="modal-close" onclick="closePlayer()">✕</button>
+      <div id="playerBody"></div>
+    </div>
+  </div>
+
+  <!-- Lista de campanhas -->
+  <div class="card">
+    <div class="card-title">Campanhas em Andamento</div>
+    <div id="campaignsList"><div class="meta-line">Carregando...</div></div>
+  </div>
+</main>
+
+<script src="/js/icons.js"></script>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+const state = { format: null, caption: null, times: [], accounts: [], source: 'drive', uploadedFiles: [], excludedWeekdays: new Set(), carouselGroups: [], editingCampaignId: null,
+  storyConfig: { stories_per_burst: 1, burst_interval_minutes: 3 } };
+
+function switchTab(tab) {
+  state.format = tab;
+  document.querySelectorAll('.ftab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  // ajusta hint drive + modo upload
+  document.getElementById('carouselHint').style.display = tab === 'carousel' ? 'block' : 'none';
+  const isCarousel = tab === 'carousel';
+  const isStory = tab === 'story';
+  document.getElementById('uploadSimpleMode').style.display = isCarousel ? 'none' : 'block';
+  document.getElementById('uploadCarouselMode').style.display = isCarousel ? 'block' : 'none';
+  // ajusta o accept do input file (stories aceitam imagem e vídeo)
+  const inp = document.getElementById('bulkFileInput');
+  if (inp) inp.accept = tab === 'video' ? 'video/*' : tab === 'image' ? 'image/*' : 'image/*,video/*';
+  if (isCarousel && state.carouselGroups.length === 0) addCarouselGroup();
+
+  // barra de Stories (formato story) x barra de espelhamento (formatos de feed)
+  document.getElementById('storyBar').style.display = isStory ? 'flex' : 'none';
+  document.getElementById('mirrorBar').style.display = isStory ? 'none' : 'flex';
+  // Stories não têm legenda na API — esconde o motor de legendas
+  const captionCard = document.getElementById('captionCard');
+  if (captionCard) captionCard.style.display = isStory ? 'none' : '';
+  renderStoryBarSummary();
+  updateTotal();
+}
+
+// ==== Espelhamento feed → stories ====
+function toggleMirror() {
+  state.storyConfig.mirror_to_story = document.getElementById('mirrorToStory').checked;
+  const mm = document.getElementById('mirrorToStoryModal');
+  if (mm) mm.checked = state.storyConfig.mirror_to_story;
+  updateTotal();
+}
+
+// ==== Configurações de Stories ====
+function openStoryConfig() {
+  const isStory = state.format === 'story';
+  document.getElementById('storiesPerBurst').value = state.storyConfig.stories_per_burst;
+  document.getElementById('storyBurstInterval').value = state.storyConfig.burst_interval_minutes;
+  document.getElementById('mirrorToStoryModal').checked = !!state.storyConfig.mirror_to_story;
+  // espelhamento só faz sentido em campanha de feed; sequência só em campanha de story
+  document.getElementById('mirrorConfigSection').style.display = isStory ? 'none' : '';
+  document.getElementById('storiesPerBurst').closest('.form-group').style.display = isStory ? '' : 'none';
+  document.getElementById('storyBurstInterval').closest('.form-group').style.display = isStory ? '' : 'none';
+  updateStoryTotal();
+  document.getElementById('storyConfigModal').classList.add('open');
+}
+function closeStoryConfig() { document.getElementById('storyConfigModal').classList.remove('open'); }
+
+function updateStoryTotal() {
+  const isStory = state.format === 'story';
+  const burst = parseInt(document.getElementById('storiesPerBurst').value, 10) || 1;
+  const pd = parseInt(document.getElementById('postsPerDay').value, 10) || 0;
+  const mirror = document.getElementById('mirrorToStoryModal').checked;
+  // campanha de story: pd × sequência | campanha de feed espelhada: 1 story por post
+  const total = isStory ? pd * burst : (mirror ? pd : 0);
+  document.getElementById('storyTotalPerDay').textContent = total.toLocaleString('pt-BR');
+}
+document.getElementById('storiesPerBurst').addEventListener('input', updateStoryTotal);
+document.getElementById('mirrorToStoryModal').addEventListener('change', updateStoryTotal);
+
+function saveStoryConfig() {
+  const burst = Math.max(1, parseInt(document.getElementById('storiesPerBurst').value, 10) || 1);
+  const interval = Math.max(0, parseInt(document.getElementById('storyBurstInterval').value, 10) || 0);
+  const mirror = document.getElementById('mirrorToStoryModal').checked;
+  state.storyConfig = { stories_per_burst: burst, burst_interval_minutes: interval, mirror_to_story: mirror };
+  document.getElementById('mirrorToStory').checked = mirror;
+  renderStoryBarSummary();
+  updateTotal();
+  closeStoryConfig();
+  alertMsg(state.format === 'story'
+    ? `Configurações salvas: ${burst} story(s) por horário, ${interval} min de intervalo.`
+    : (mirror ? 'Espelhamento no Story ativado — cada post do feed sai também como story.'
+              : 'Espelhamento no Story desativado.'));
+}
+
+function renderStoryBarSummary() {
+  const el = document.getElementById('storyBarSummary');
+  if (!el) return;
+  const { stories_per_burst: b, burst_interval_minutes: i } = state.storyConfig;
+  el.textContent = b > 1
+    ? `Sequência de ${b} stories por horário · ${i} min entre eles`
+    : '1 story por horário · sem sequência';
+}
+
+// ==== Carrossel builder ====
+function addCarouselGroup() {
+  state.carouselGroups.push({ name: `Carrossel ${state.carouselGroups.length + 1}`, files: [] });
+  renderCarouselGroups();
+}
+function removeCarouselGroup(i) {
+  state.carouselGroups.splice(i, 1);
+  renderCarouselGroups();
+}
+function renderCarouselGroups() {
+  const el = document.getElementById('carouselGroupsList');
+  if (!el) return;
+  el.innerHTML = state.carouselGroups.map((g, gi) => `
+    <div class="carousel-group">
+      <div class="carousel-group-header">
+        <div>
+          <div class="carousel-group-name">${g.name} <span style="color:var(--muted);font-weight:400">(${g.files.length}/10)</span></div>
+          <div class="meta-line">Precisa de 2 a 10 imagens</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="document.getElementById('cgInput${gi}').click()">➕ Adicionar imagens</button>
+          <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="removeCarouselGroup(${gi})">🗑️</button>
+        </div>
+        <input type="file" id="cgInput${gi}" style="display:none" multiple accept="image/*,video/*" onchange="handleCarouselUpload(${gi}, this.files)">
+      </div>
+      <div class="carousel-slides">
+        ${g.files.map((f, fi) => `
+          <div class="slide-card">
+            <div class="slide-num">${fi + 1}</div>
+            ${(f.mimetype||'').startsWith('video') ? '🎬' : `<img src="${f.url}" alt="">`}
+            <div class="slide-actions">
+              <button onclick="moveSlide(${gi}, ${fi}, -1)" title="Mover pra esquerda">←</button>
+              <button onclick="removeSlide(${gi}, ${fi})" title="Remover" style="color:#ef4444">✕</button>
+              <button onclick="moveSlide(${gi}, ${fi}, 1)" title="Mover pra direita">→</button>
+            </div>
+          </div>
+        `).join('')}
+        ${g.files.length === 0 ? '<div class="meta-line" style="grid-column:1/-1;text-align:center;padding:20px">Nenhuma lâmina ainda. Clica em "Adicionar imagens".</div>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+function moveSlide(gi, fi, dir) {
+  const g = state.carouselGroups[gi];
+  const j = fi + dir;
+  if (j < 0 || j >= g.files.length) return;
+  const tmp = g.files[fi]; g.files[fi] = g.files[j]; g.files[j] = tmp;
+  renderCarouselGroups();
+}
+function removeSlide(gi, fi) {
+  state.carouselGroups[gi].files.splice(fi, 1);
+  renderCarouselGroups();
+}
+
+let currentCarouselUploadXhr = null;
+async function handleCarouselUpload(groupIdx, fileList) {
+  if (!fileList?.length) return;
+  const group = state.carouselGroups[groupIdx];
+  if (group.files.length + fileList.length > 10) {
+    return alertMsg('Cada carrossel pode ter no máximo 10 lâminas', 'error');
+  }
+  const form = new FormData();
+  Array.from(fileList).forEach(f => form.append('files', f));
+
+  const prog = document.getElementById('carouselUploadProgress');
+  const fill = document.getElementById('carouselUploadFill');
+  const txt = document.getElementById('carouselUploadText');
+  const cancelBtn = document.getElementById('carouselUploadCancelBtn');
+  prog.style.display = 'block';
+  fill.style.width = '0%';
+  txt.textContent = `Enviando ${fileList.length} lâmina(s) pro ${group.name}...`;
+  cancelBtn.style.display = 'inline-block';
+
+  try {
+    const xhr = new XMLHttpRequest();
+    currentCarouselUploadXhr = xhr;
+    const done = new Promise((resolve, reject) => {
+      xhr.open('POST', '/api/bulk/upload-batch');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + API.token());
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = (e.loaded / e.total * 100).toFixed(0);
+          fill.style.width = pct + '%';
+          txt.textContent = `Enviando ${group.name}... ${pct}%`;
+        }
+      };
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300 && data.ok) resolve(data);
+          else reject(new Error(data.error || 'Erro no upload'));
+        } catch (e) { reject(e); }
+      };
+      xhr.onerror = () => reject(new Error('Erro de rede'));
+      xhr.onabort = () => reject(new Error('Envio cancelado'));
+      xhr.send(form);
+    });
+    const data = await done;
+    state.carouselGroups[groupIdx].files.push(...data.files);
+    txt.textContent = `✅ ${data.count} lâmina(s) adicionadas ao ${group.name}`;
+    fill.style.width = '100%';
+    renderCarouselGroups();
+    document.getElementById(`cgInput${groupIdx}`).value = '';
+  } catch (err) {
+    txt.textContent = (err.message === 'Envio cancelado' ? '🚫 ' : '❌ ') + err.message;
+    fill.style.width = '0%';
+  } finally {
+    currentCarouselUploadXhr = null;
+    cancelBtn.style.display = 'none';
+    document.getElementById(`cgInput${groupIdx}`).value = '';
+  }
+}
+
+function cancelCarouselUpload() {
+  if (currentCarouselUploadXhr) currentCarouselUploadXhr.abort();
+}
+
+function alertMsg(msg, type='success') {
+  const el = document.getElementById('alertBox');
+  el.className = 'alert alert-' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+// URL params (drive OAuth callback)
+const p = new URLSearchParams(location.search);
+if (p.get('success') === 'drive') alertMsg('Google Drive conectado com sucesso!');
+if (p.get('error')) alertMsg('Erro: ' + p.get('error'), 'error');
+
+// Init
+document.getElementById('startDate').valueAsDate = new Date();
+['09:00','12:00','15:00'].forEach(addTime);
+switchTab('video');
+selectCaption('fixed');
+
+async function loadDriveStatus() {
+  const r = await API.get('/drive/status');
+  const badge = document.getElementById('driveStatus');
+  const connectBox = document.getElementById('driveConnect');
+  if (r.connected) {
+    badge.textContent = 'Conectado'; badge.className = 'badge b-ok';
+    connectBox.style.display = 'none';
+  } else {
+    badge.textContent = 'Desconectado'; badge.className = 'badge b-off';
+    connectBox.style.display = 'block';
+  }
+}
+document.getElementById('btnConnectDrive').addEventListener('click', e => {
+  e.preventDefault();
+  openModal();
+});
+
+const WIZARD_TOTAL = 13;
+let wizardStep = 1;
+
+async function openModal() {
+  const s = await API.get('/settings');
+  if (s.google_client_id) document.getElementById('modalClientId').value = s.google_client_id;
+  wizardStep = 1;
+  showWizardStep(1);
+  document.getElementById('driveModal').classList.add('open');
+}
+function closeModal() { document.getElementById('driveModal').classList.remove('open'); }
+document.getElementById('driveModal').addEventListener('click', e => {
+  if (e.target.id === 'driveModal') closeModal();
+});
+
+function showWizardStep(n) {
+  wizardStep = Math.max(1, Math.min(n, WIZARD_TOTAL));
+  document.querySelectorAll('.wstep').forEach(el => {
+    el.style.display = parseInt(el.dataset.step, 10) === wizardStep ? 'block' : 'none';
+  });
+  document.getElementById('wizardStepLabel').textContent = `Passo ${wizardStep} de ${WIZARD_TOTAL}`;
+  document.getElementById('wizardProgress').style.width = (wizardStep / WIZARD_TOTAL * 100).toFixed(0) + '%';
+  document.getElementById('wizardPrev').style.visibility = wizardStep === 1 ? 'hidden' : 'visible';
+  const next = document.getElementById('wizardNext');
+  if (wizardStep === WIZARD_TOTAL) {
+    next.style.display = 'none';
+  } else {
+    next.style.display = '';
+    next.textContent = wizardStep === 1 ? 'Começar →' : 'Já fiz, próximo passo →';
+  }
+  // wizard footer hidden on last step (custom close btn inside)
+  document.getElementById('wizardNav').style.display = wizardStep === WIZARD_TOTAL ? 'none' : 'flex';
+  // scroll modal to top
+  document.querySelector('#driveModal .modal').scrollTop = 0;
+}
+
+function wizardNext() { showWizardStep(wizardStep + 1); }
+function wizardBack() { showWizardStep(wizardStep - 1); }
+
+function copyText(id) {
+  const el = document.getElementById(id);
+  el.select();
+  document.execCommand('copy');
+  alertMsg('URL copiada!', 'success');
+}
+
+async function saveGoogleCreds() {
+  const cid = document.getElementById('modalClientId').value.trim();
+  const cs = document.getElementById('modalClientSecret').value.trim();
+  const box = document.getElementById('modalSaveResult');
+  if (!cid || !cs) { box.innerHTML = '<div class="alert alert-error">Preencha Client ID e Client Secret.</div>'; return; }
+  const r = await API.post('/settings', { google_client_id: cid, google_client_secret: cs });
+  if (r.ok) box.innerHTML = '<div class="alert alert-success">✅ Credenciais salvas! Agora clica no passo 5.</div>';
+  else box.innerHTML = '<div class="alert alert-error">Erro: ' + (r.error || 'desconhecido') + '</div>';
+}
+
+function doAuth() {
+  const t = localStorage.getItem('zp_token');
+  location.href = '/oauth/drive/start?token=' + encodeURIComponent(t);
+}
+
+async function loadAccounts() {
+  const list = await API.get('/accounts');
+  const igs = list.filter(a => a.platform === 'instagram');
+  state.accounts = igs;
+  const el = document.getElementById('accountsList');
+  if (!igs.length) { el.innerHTML = '<div class="meta-line">Nenhum Instagram conectado. Conecte em <a href="/connect.html" style="color:var(--accent)">Conectar Perfis</a>.</div>'; return; }
+  el.innerHTML = igs.map(a => `
+    <label class="account-item" data-id="${a.id}">
+      <input type="checkbox" value="${a.id}" onchange="this.parentElement.classList.toggle('selected', this.checked)">
+      <div style="flex:1"><strong>@${esc(a.platform_username)}</strong><div class="meta-line">${esc(a.platform_name)} · ${(a.followers||0).toLocaleString('pt-BR')} seguidores</div></div>
+    </label>`).join('');
+}
+
+function selectFormat(f) {
+  state.format = f;
+  document.querySelectorAll('.format-card[data-format]').forEach(el => el.classList.toggle('selected', el.dataset.format === f));
+  document.getElementById('carouselHint').style.display = f === 'carousel' ? 'block' : 'none';
+}
+
+function selectSource(s) {
+  state.source = s;
+  document.querySelectorAll('.format-card[data-source]').forEach(el => el.classList.toggle('selected', el.dataset.source === s));
+  document.getElementById('sourcePanelDrive').style.display = s === 'drive' ? 'block' : 'none';
+  document.getElementById('sourcePanelUpload').style.display = s === 'upload' ? 'block' : 'none';
+}
+
+let currentBulkUploadXhr = null;
+async function handleBulkUpload(fileList) {
+  if (!fileList?.length) return;
+  const files = Array.from(fileList);
+  const form = new FormData();
+  files.forEach(f => form.append('files', f));
+
+  const prog = document.getElementById('uploadProgress');
+  const fill = document.getElementById('uploadProgressFill');
+  const txt = document.getElementById('uploadProgressText');
+  const cancelBtn = document.getElementById('uploadCancelBtn');
+  prog.style.display = 'block';
+  fill.style.width = '0%';
+  txt.textContent = `Enviando ${files.length} arquivo(s)...`;
+  cancelBtn.style.display = 'inline-block';
+
+  try {
+    const xhr = new XMLHttpRequest();
+    currentBulkUploadXhr = xhr;
+    const done = new Promise((resolve, reject) => {
+      xhr.open('POST', '/api/bulk/upload-batch');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + API.token());
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = (e.loaded / e.total * 100).toFixed(0);
+          fill.style.width = pct + '%';
+          txt.textContent = `Enviando... ${pct}%`;
+        }
+      };
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300 && data.ok) resolve(data);
+          else reject(new Error(data.error || 'Erro no upload'));
+        } catch (e) { reject(e); }
+      };
+      xhr.onerror = () => reject(new Error('Erro de rede'));
+      xhr.onabort = () => reject(new Error('Envio cancelado'));
+      xhr.send(form);
+    });
+    const data = await done;
+    state.uploadedFiles = state.uploadedFiles.concat(data.files);
+    txt.textContent = `✅ ${data.count} arquivo(s) enviado(s). Total: ${state.uploadedFiles.length}`;
+    fill.style.width = '100%';
+    renderUploadedList();
+    document.getElementById('bulkFileInput').value = '';
+  } catch (err) {
+    txt.textContent = (err.message === 'Envio cancelado' ? '🚫 ' : '❌ ') + err.message;
+    fill.style.width = '0%';
+  } finally {
+    currentBulkUploadXhr = null;
+    cancelBtn.style.display = 'none';
+    document.getElementById('bulkFileInput').value = '';
+  }
+}
+
+function cancelBulkUpload() {
+  if (currentBulkUploadXhr) currentBulkUploadXhr.abort();
+}
+
+function renderUploadedList() {
+  const el = document.getElementById('uploadedList');
+  if (!state.uploadedFiles.length) { el.innerHTML = ''; return; }
+  const items = state.uploadedFiles.map((f, i) => `
+      <div class="uploaded-item">
+        <div class="thumb">${(f.mimetype||'').startsWith('video') ? '🎬' : '🖼️'}</div>
+        <div class="name">${f.original_name}</div>
+        <div class="size">${(f.size/1024/1024).toFixed(1)}MB</div>
+        <button class="btn btn-ghost" onclick="removeUploaded(${i})" style="padding:2px 8px">✕</button>
+      </div>`).join('');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-weight:600">${state.uploadedFiles.length} arquivo(s) prontos pra publicar:</div>
+      <button class="btn btn-ghost" onclick="clearUploaded()" style="color:#ef4444;padding:2px 8px;font-size:12px">🗑️ Limpar tudo</button>
+    </div>
+    <div class="uploaded-scroll" style="max-height:280px;min-height:120px;overflow-y:auto;resize:vertical;border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--bg)">
+      ${items}
+    </div>`;
+}
+
+function clearUploaded() {
+  if (!state.uploadedFiles.length) return;
+  if (!confirm(`Remover todos os ${state.uploadedFiles.length} arquivos da lista?`)) return;
+  state.uploadedFiles = [];
+  renderUploadedList();
+}
+
+function removeUploaded(i) {
+  state.uploadedFiles.splice(i, 1);
+  renderUploadedList();
+}
+
+// ==== Suspensão ====
+const WEEKDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+function renderWeekdayChips() {
+  const el = document.getElementById('weekdayChips');
+  el.innerHTML = WEEKDAYS.map((n, i) => `
+    <label class="format-card" style="padding:8px 14px;cursor:pointer;${state.excludedWeekdays.has(i) ? 'border-color:var(--accent);background:rgba(124,58,237,0.08)' : ''}"
+      onclick="toggleWeekday(${i})">${n}</label>
+  `).join('');
+}
+function toggleWeekday(i) {
+  if (state.excludedWeekdays.has(i)) state.excludedWeekdays.delete(i);
+  else state.excludedWeekdays.add(i);
+  renderWeekdayChips();
+}
+function addDateRange() {
+  const wrap = document.createElement('div');
+  wrap.className = 'time-chip';
+  wrap.style.marginBottom = '6px';
+  wrap.innerHTML = `
+    <span style="color:var(--muted);font-size:12px;padding:0 4px">De</span>
+    <input type="date" style="width:150px">
+    <span style="color:var(--muted);font-size:12px;padding:0 4px">até</span>
+    <input type="date" style="width:150px">
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer">✕</button>`;
+  document.getElementById('dateRangesList').appendChild(wrap);
+}
+function addTimeWindow() {
+  const wrap = document.createElement('div');
+  wrap.className = 'time-chip';
+  wrap.style.marginBottom = '6px';
+  wrap.innerHTML = `
+    <span style="color:var(--muted);font-size:12px;padding:0 4px">Das</span>
+    <input type="time" value="22:00" style="width:100px">
+    <span style="color:var(--muted);font-size:12px;padding:0 4px">às</span>
+    <input type="time" value="06:00" style="width:100px">
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer">✕</button>`;
+  document.getElementById('timeWindowsList').appendChild(wrap);
+}
+function collectSuspensions() {
+  const excluded_weekdays = Array.from(state.excludedWeekdays);
+  const date_ranges = Array.from(document.querySelectorAll('#dateRangesList .time-chip')).map(el => {
+    const dates = el.querySelectorAll('input[type=date]');
+    return { from: dates[0].value, to: dates[1].value };
+  }).filter(r => r.from && r.to);
+  const time_windows = Array.from(document.querySelectorAll('#timeWindowsList .time-chip')).map(el => {
+    const times = el.querySelectorAll('input[type=time]');
+    return { from: times[0].value, to: times[1].value };
+  }).filter(w => w.from && w.to);
+  return { excluded_weekdays, date_ranges, time_windows };
+}
+renderWeekdayChips();
+
+// ==== Modal de agendamento ====
+function openScheduleModal() {
+  const dt = new Date(Date.now() + 3600000);
+  dt.setSeconds(0,0);
+  document.getElementById('scheduledStartAt').value = dt.toISOString().slice(0,16);
+  document.getElementById('scheduleModal').classList.add('open');
+}
+function closeScheduleModal() { document.getElementById('scheduleModal').classList.remove('open'); }
+document.getElementById('scheduleModal').addEventListener('click', e => {
+  if (e.target.id === 'scheduleModal') closeScheduleModal();
+});
+// drag & drop na zona de upload
+(function initDragDrop() {
+  const zone = document.getElementById('uploadZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleBulkUpload(e.dataTransfer.files);
+  });
+})();
+function selectCaption(c) {
+  state.caption = c;
+  document.querySelectorAll('.format-card[data-caption]').forEach(el => el.classList.toggle('selected', el.dataset.caption === c));
+  document.getElementById('captionFixed').style.display = c === 'fixed' ? 'block' : 'none';
+  document.getElementById('captionAI').style.display = c === 'ai' ? 'block' : 'none';
+  document.getElementById('captionShuffle').style.display = c === 'shuffle' ? 'block' : 'none';
+  if (c === 'ai') loadAiKeyStatus();
+}
+
+function addTime(val) {
+  const timeVal = typeof val === 'string' ? val : '09:00';
+  const wrap = document.createElement('div');
+  wrap.className = 'time-chip';
+  wrap.innerHTML = `<input type="time" value="${timeVal}"><button onclick="this.parentElement.remove(); updateTotal()">✕</button>`;
+  document.getElementById('timeList').appendChild(wrap);
+  updateTotal();
+}
+
+function getTimes() {
+  return Array.from(document.querySelectorAll('#timeList input[type=time]')).map(i => i.value).filter(Boolean);
+}
+
+function updateTotal() {
+  const pd = parseInt(document.getElementById('postsPerDay').value, 10) || 0;
+  const d = parseInt(document.getElementById('totalDays').value, 10) || 0;
+  // Stories: cada horário rende uma sequência de N stories
+  const burst = state.format === 'story' ? (state.storyConfig.stories_per_burst || 1) : 1;
+  // Espelhamento: cada post do feed rende também 1 story
+  const mirror = state.format !== 'story' && state.storyConfig.mirror_to_story ? 2 : 1;
+  const total = pd * d * burst * mirror;
+  const el = document.getElementById('totalPosts');
+  el.textContent = total.toLocaleString('pt-BR');
+  const hint = document.getElementById('totalPostsHint');
+  if (hint) {
+    hint.textContent = mirror === 2 ? `(${(pd*d).toLocaleString('pt-BR')} no feed + ${(pd*d).toLocaleString('pt-BR')} em stories)` : '';
+  }
+}
+document.getElementById('postsPerDay').addEventListener('input', updateTotal);
+document.getElementById('totalDays').addEventListener('input', updateTotal);
+
+async function testDrive() {
+  const url = document.getElementById('driveUrl').value.trim();
+  const box = document.getElementById('driveTestResult');
+  if (!url) { box.innerHTML = '<div class="alert alert-error">Cole a URL da pasta primeiro.</div>'; return; }
+  box.innerHTML = '<div class="alert alert-info">Testando conexão e baixando arquivo de amostra...</div>';
+  try {
+    const r = await fetch('/api/drive/test', { method: 'POST', headers: API.headers(), body: JSON.stringify({ drive_url: url }) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    const preview = data.test_download ? `
+      <div style="margin-top:10px">
+        <strong>Amostra baixada com sucesso:</strong> ${data.test_download.name} (${(data.test_download.size/1024).toFixed(0)}KB)
+      </div>` : '';
+    box.innerHTML = `<div class="alert alert-success">
+      ✅ Conexão OK!<br>
+      Pasta ID: <code>${data.folder_id}</code><br>
+      Total de arquivos: ${data.total_files} · Mídias: ${data.media_files} · Subpastas: ${data.subfolders}
+      ${preview}
+    </div>`;
+    document.getElementById('driveCount').textContent = state.format === 'carousel'
+      ? data.subfolders + ' subpastas' : data.media_files;
+    document.getElementById('driveCheck').style.display = 'flex';
+  } catch (err) {
+    box.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
+  }
+}
+
+async function loadAiKeyStatus() {
+  const r = await API.get('/settings/ai');
+  const provider = document.getElementById('aiProvider').value;
+  const badge = document.getElementById('aiKeyStatus');
+  if (r[`ai_${provider}_key_set`]) { badge.textContent = 'Configurada'; badge.className = 'badge b-ok'; }
+  else { badge.textContent = 'Não configurada'; badge.className = 'badge b-off'; }
+}
+document.getElementById('aiProvider').addEventListener('change', loadAiKeyStatus);
+
+async function saveAiKey() {
+  const provider = document.getElementById('aiProvider').value;
+  const key = document.getElementById('aiKey').value.trim();
+  if (!key) return alertMsg('Cole a API Key primeiro', 'error');
+  await API.post('/settings/ai', { [`ai_${provider}_key`]: key });
+  document.getElementById('aiKey').value = '';
+  alertMsg('API Key salva com sucesso');
+  loadAiKeyStatus();
+}
+
+// ==== Trava de rate limit (espelha lib/limits.js do servidor) ====
+// Instagram Graph API: máx. 50 posts via API/24h por conta (recomendado ≤25),
+// e intervalo mínimo de segurança entre publicações pra não sinalizar spam.
+const IG_LIMITS = { maxPerDay: 25, minIntervalMin: 0, jitterMin: 5 };
+const IG_STORY_LIMITS = { maxPerDay: 20, minIntervalMin: 0, jitterMin: 5 };
+
+function checkRateLimits() {
+  const isStory = state.format === 'story';
+  const L = isStory ? IG_STORY_LIMITS : IG_LIMITS;
+  const pd = parseInt(document.getElementById('postsPerDay').value, 10) || 0;
+  const burst = isStory ? (state.storyConfig.stories_per_burst || 1) : 1;
+  const gapInBurst = isStory ? (state.storyConfig.burst_interval_minutes || 3) : 0;
+  const times = getTimes();
+  const mirror = !isStory && state.storyConfig.mirror_to_story;
+  const total = pd * burst * (mirror ? 2 : 1);
+  const violations = [];
+
+  if (total > L.maxPerDay) {
+    const conta = mirror ? `${pd} no feed + ${pd} em stories = ${total}` : (burst > 1 ? `${pd} × ${burst} = ${total}` : total);
+    violations.push(`O Instagram permite no máximo <strong>${L.maxPerDay} ${isStory ? 'stories' : 'publicações'} por dia</strong> por conta via API com segurança (você configurou <strong>${conta}</strong>). Acima disso a Meta bloqueia a publicação ou sinaliza a conta como spam.${mirror ? ' <strong>O espelhamento no Story dobra o volume</strong> — reduza os posts/dia pela metade.' : ''}`);
+  }
+  if (pd > times.length) {
+    violations.push(`Você configurou <strong>${pd} ${isStory ? 'sequências' : 'posts'}/dia</strong> mas só definiu <strong>${times.length} horário(s)</strong>. Adicione um horário para cada ${isStory ? 'sequência' : 'post'} do dia — horários repetidos caem no mesmo minuto.`);
+  }
+  // a sequência de stories ocupa (burst-1) × intervalo minutos
+  const burstSpan = isStory ? (burst - 1) * gapInBurst : 0;
+  const needed = L.minIntervalMin + burstSpan;
+  const mins = times.map(t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; }).sort((a, b) => a - b);
+  for (let i = 1; i < mins.length; i++) {
+    const gap = mins[i] - mins[i - 1];
+    if (gap < needed) {
+      violations.push(`Intervalo mínimo entre horários: <strong>${needed} minutos</strong>${burstSpan ? ` (${L.minIntervalMin} de segurança + ${burstSpan} que a sequência de ${burst} stories ocupa)` : ''}. Há horários com apenas <strong>${gap} min</strong> de diferença (e o jitter de ±${L.jitterMin} min pode aproximá-los ainda mais).`);
+      break;
+    }
+  }
+  return violations;
+}
+
+function showLimitsModal(violations) {
+  let overlay = document.getElementById('limitsModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'limitsModal';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:560px">
+        <h2 style="font-size:19px;margin-bottom:8px">🛡️ Limite de segurança da plataforma</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
+          A campanha não foi enviada. Ajuste a configuração abaixo — esses limites protegem
+          suas contas contra bloqueio e sinalização de spam pela API do Instagram.
+        </p>
+        <div id="limitsModalBody" style="display:flex;flex-direction:column;gap:10px"></div>
+        <button class="btn btn-primary" style="margin-top:20px;width:100%" onclick="document.getElementById('limitsModal').classList.remove('open')">Entendi, vou ajustar</button>
+      </div>`;
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('limitsModalBody').innerHTML = violations.map(v =>
+    `<div style="background:#ef444415;border:1px solid #ef444440;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5">${v}</div>`
+  ).join('');
+  overlay.classList.add('open');
+}
+
+async function createCampaign(saveMode = 'active', scheduledStartAt = null) {
+  // trava de rate limit ANTES de qualquer envio
+  const rateViolations = checkRateLimits();
+  if (rateViolations.length) { showLimitsModal(rateViolations); return; }
+
+  const buttons = [document.getElementById('btnSaveDraft'), document.getElementById('btnSchedule'), document.getElementById('btnStartNow')];
+  const accountIds = Array.from(document.querySelectorAll('#accountsList input[type=checkbox]:checked')).map(c => parseInt(c.value, 10));
+  const times = getTimes();
+
+  const body = {
+    name: document.getElementById('campaignName').value.trim() || null,
+    save_mode: saveMode,
+    scheduled_start_at: scheduledStartAt,
+    source_type: state.source,
+    drive_url: state.source === 'drive' ? document.getElementById('driveUrl').value.trim() : null,
+    uploaded_files: (state.source === 'upload' && state.format !== 'carousel') ? state.uploadedFiles : null,
+    uploaded_carousel_groups: (state.source === 'upload' && state.format === 'carousel')
+      ? state.carouselGroups.map(g => ({ name: g.name, files: g.files })) : null,
+    post_format: state.format,
+    account_ids: accountIds,
+    posts_per_day: parseInt(document.getElementById('postsPerDay').value, 10),
+    total_days: parseInt(document.getElementById('totalDays').value, 10),
+    times,
+    start_date: document.getElementById('startDate').value,
+    jitter_minutes: 5,
+    caption_mode: state.caption,
+    caption_config: {},
+    story_config: state.storyConfig, // sequência (formato story) + espelhamento (formatos de feed)
+    suspensions: collectSuspensions(),
+    shuffle_order: document.getElementById('shuffleOrder')?.checked || false
+  };
+  if (state.caption === 'fixed') body.caption_config.text = document.getElementById('fixedText').value;
+  if (state.caption === 'shuffle') {
+    body.caption_config.text = document.getElementById('shuffleText').value;
+    body.caption_config.stanzas_per_post = parseInt(document.getElementById('shuffleCount').value, 10);
+  }
+  if (state.caption === 'ai') {
+    body.caption_config.provider = document.getElementById('aiProvider').value;
+    body.caption_config.prompt = document.getElementById('aiPrompt').value;
+  }
+
+  buttons.forEach(b => b && (b.disabled = true));
+  const modeLabel = saveMode === 'draft' ? 'Salvando rascunho...' : saveMode === 'scheduled' ? 'Programando...' : 'Iniciando...';
+  const stopBtn = saveMode === 'draft' ? buttons[0] : saveMode === 'scheduled' ? buttons[1] : buttons[2];
+  const originalText = stopBtn?.textContent;
+  if (stopBtn) stopBtn.textContent = modeLabel;
+  try {
+    const r = await fetch('/api/bulk/campaigns', { method: 'POST', headers: API.headers(), body: JSON.stringify(body) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    const statusMsg = saveMode === 'draft' ? 'Rascunho salvo' : saveMode === 'scheduled'
+      ? `Campanha programada pra ${new Date(scheduledStartAt).toLocaleString('pt-BR')}`
+      : 'Campanha ativa e em execução';
+    alertMsg(`${statusMsg}! ${data.total_scheduled} publicações agendadas.`);
+    // sobra de mídia sem horário precisa ficar evidente, não passar batido
+    if (data.aviso) {
+      const box = document.getElementById('alertBox');
+      box.innerHTML += `<div class="alert" style="background:#f59e0b18;border:1px solid #f59e0b55;color:#fcd34d;margin-top:10px;font-size:13px;line-height:1.6">
+        ⚠️ <strong>Atenção:</strong> ${data.aviso}</div>`;
+    }
+    state.uploadedFiles = [];
+    state.carouselGroups = [];
+    renderUploadedList();
+    renderCarouselGroups();
+    loadCampaigns();
+  } catch (err) {
+    alertMsg('Erro: ' + err.message, 'error');
+  } finally {
+    buttons.forEach(b => b && (b.disabled = false));
+    if (stopBtn && originalText) stopBtn.textContent = originalText;
+  }
+}
+
+const STATUS_LABELS = {
+  draft: ['Rascunho', 'b-off'],
+  scheduled: ['Programada', 'b-off'],
+  active: ['Ativa', 'b-ok'],
+  paused: ['Pausada', 'b-off']
+};
+
+async function checkWorkerStatus() {
+  try {
+    const s = await API.get('/worker/status');
+    let banner = document.getElementById('workerStatusBanner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'workerStatusBanner';
+      const anchor = document.getElementById('campaignsList');
+      anchor.parentElement.insertBefore(banner, anchor);
+    }
+    if (s.dedicated_worker_alive) {
+      banner.innerHTML = `<div style="background:#10b98115;border:1px solid #10b98140;color:#10b981;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:12px">✅ Scheduler ativo — publicações agendadas disparam automaticamente a cada minuto.</div>`;
+    } else {
+      banner.innerHTML = `<div style="background:#f59e0b15;border:1px solid #f59e0b40;color:#f59e0b;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:12px">⚠️ Worker dedicado inativo — o scheduler embutido do servidor assumiu o processamento automaticamente. As publicações continuam saindo, mas verifique o PM2 (<code>pm2 status jeff-zeus-post-worker</code>).</div>`;
+    }
+  } catch (e) { /* endpoint pode não existir em versão antiga do server */ }
+}
+
+async function loadCampaigns() {
+  checkWorkerStatus();
+  const list = await API.get('/bulk/campaigns');
+  const el = document.getElementById('campaignsList');
+  if (!list.length) { el.innerHTML = '<div class="meta-line">Nenhuma campanha ainda.</div>'; return; }
+  el.innerHTML = list.map(c => {
+    const pct = c.total_items > 0 ? Math.round((c.published_count + c.failed_count) / c.total_items * 100) : 0;
+    const [label, cls] = STATUS_LABELS[c.status] || [c.status, 'b-off'];
+    const scheduledLine = c.scheduled_start_at
+      ? ` · começa em ${new Date(c.scheduled_start_at*1000).toLocaleString('pt-BR')}` : '';
+    let actions = '';
+    actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;background:#7c3aed20;color:#a78bfa;border-color:#7c3aed44" onclick="openGallery(${c.id})">🖼️ Ver mídias</button>`;
+    actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="editCampaign(${c.id})">✏️ Editar</button>`;
+    actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;background:#0891b220;color:#06b6d4;border-color:#06b6d440" onclick="runDebug(${c.id})">🔬 Debug</button>`;
+    actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="rebuildSlots(${c.id})">🔄 Recalcular horários</button>`;
+    if (c.status === 'draft' || c.status === 'paused') {
+      actions += `<button class="btn btn-primary" style="padding:6px 10px;font-size:12px" onclick="activateNow(${c.id})">🚀 Iniciar agora</button>`;
+      actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="scheduleExisting(${c.id})">📅 Agendar</button>`;
+    } else if (c.status === 'scheduled') {
+      actions += `<button class="btn btn-primary" style="padding:6px 10px;font-size:12px" onclick="activateNow(${c.id})">🚀 Iniciar agora</button>`;
+      actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="pause(${c.id})">Pausar</button>`;
+    } else if (c.status === 'active') {
+      actions += `<button class="btn btn-secondary" style="padding:6px 10px;font-size:12px" onclick="pause(${c.id})">Pausar</button>`;
+    }
+    return `
+      <div class="campaign-item">
+        <div class="campaign-header">
+          <div>
+            <strong>${esc(c.name)}</strong>
+            <div class="meta-line">${c.post_format} · ${c.posts_per_day}/dia · ${c.total_days} dias · ${c.times.join(', ')} · início ${c.start_date}${scheduledLine}</div>
+            ${c.story_config?.mirror_to_story ? '<div class="meta-line" style="color:#a78bfa">📲 espelhando no Story</div>' : ''}
+            ${c.post_format === 'story' && c.story_config?.stories_per_burst > 1 ? `<div class="meta-line" style="color:#a78bfa">📲 sequência de ${c.story_config.stories_per_burst} stories · ${c.story_config.burst_interval_minutes} min</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <span class="badge ${cls}">${label}</span>
+            ${actions}
+            <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="del(${c.id})">Excluir</button>
+          </div>
+        </div>
+        <div class="meta-line">
+          ${c.published_count} publicados · ${c.failed_count} falhas · ${c.total_items - c.published_count - c.failed_count} pendentes · Total ${c.total_items}
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+}
+
+async function pause(id) { await API.post(`/bulk/campaigns/${id}/pause`, {}); loadCampaigns(); }
+
+// ==== Confirmação antes de iniciar ====
+// "Iniciar agora" não dispara mais direto: mostra o que exatamente vai ao ar,
+// em quais contas e quando, com as mídias visíveis.
+let _confirmId = null;
+
+async function activateNow(id) {
+  _confirmId = id;
+  document.getElementById('confirmBody').innerHTML = uiLoading('Montando a prévia da campanha...');
+  document.getElementById('confirmModal').classList.add('open');
+  try {
+    const [data, contas] = await Promise.all([
+      API.get(`/bulk/campaigns/${id}`),
+      API.get('/accounts')
+    ]);
+    renderConfirm(data, contas);
+  } catch (e) {
+    document.getElementById('confirmBody').innerHTML = uiError('Não consegui carregar a campanha: ' + e.message);
+  }
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); _confirmId = null; }
+
+function renderConfirm(data, contas) {
+  const c = data.campaign;
+  const itens = (data.items || []).filter(i => i.status === 'pending');
+  const vinculadas = contas.filter(a => (c.account_ids || []).includes(a.id));
+
+  // validações que impedem o início
+  const bloqueios = [];
+  if (!vinculadas.length) bloqueios.push('Nenhuma conta do Instagram vinculada a esta campanha.');
+  if (!itens.length) bloqueios.push('Não há publicação pendente — tudo já foi publicado ou removido.');
+  const expirando = vinculadas.filter(a => a.status === 'expiring');
+  const avisos = [];
+  if (expirando.length) avisos.push(`Token expirando em: ${expirando.map(a => '@' + a.platform_username).join(', ')} — reconecte para não falhar no meio.`);
+  const agora = Math.floor(Date.now() / 1000);
+  const atrasados = itens.filter(i => i.scheduled_at < agora).length;
+  if (atrasados) avisos.push(`${atrasados} horário(s) já passaram — essas publicações saem assim que a campanha iniciar.`);
+
+  const primeiro = itens[0], ultimo = itens[itens.length - 1];
+  const fmt = ts => ts ? new Date(ts * 1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+
+  document.getElementById('confirmBody').innerHTML = `
+    <h2 style="font-size:21px;margin-bottom:4px">🚀 Confirmar início da campanha</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:18px">Revise antes de publicar. Nada vai ao ar até você confirmar.</p>
+
+    <div style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:16px;margin-bottom:10px">${esc(c.name)}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;font-size:13px">
+        <div><div class="stat-label">Publicações</div><div style="font-weight:700;font-size:18px">${itens.length}</div></div>
+        <div><div class="stat-label">Formato</div><div style="font-weight:600">${c.post_format}</div></div>
+        <div><div class="stat-label">Primeira</div><div style="font-weight:600">${fmt(primeiro?.scheduled_at)}</div></div>
+        <div><div class="stat-label">Última</div><div style="font-weight:600">${fmt(ultimo?.scheduled_at)}</div></div>
+      </div>
+      <div style="margin-top:12px" class="meta-line">Horários: ${(c.times||[]).join(', ')} · ${c.posts_per_day}/dia · ${c.total_days} dia(s)
+        ${c.story_config?.mirror_to_story ? ' · 📲 espelhando no Story' : ''}</div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Vai publicar em</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      ${vinculadas.length ? vinculadas.map(a => `
+        <div style="display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--border);border-radius:30px;padding:6px 14px 6px 6px">
+          ${a.profile_picture ? `<img src="${escUrl(a.profile_picture)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : '<div style="width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center">👤</div>'}
+          <div>
+            <div style="font-size:13px;font-weight:600">@${esc(a.platform_username || a.id)}</div>
+            <div style="font-size:11px;color:var(--muted)">${(a.followers||0).toLocaleString('pt-BR')} seguidores</div>
+          </div>
+        </div>`).join('')
+        : '<div style="color:#ef4444;font-size:13px">Nenhuma conta vinculada</div>'}
+    </div>
+
+    ${bloqueios.map(b => `<div class="alert alert-error" style="font-size:13px">🚫 ${b}</div>`).join('')}
+    ${avisos.map(a => `<div class="alert" style="font-size:13px;background:#f59e0b15;border:1px solid #f59e0b40;color:#fcd34d">⚠️ ${a}</div>`).join('')}
+
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px">
+      Mídias que vão ao ar (${itens.length})
+    </div>
+    <div style="max-height:260px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding-right:4px;background:var(--bg);border-radius:10px;padding:10px">
+      ${itens.map(it => {
+        const m = it.media || {};
+        const isVid = (m.mimeType||'').startsWith('video') || /\.(mp4|mov|m4v)$/i.test(m.url||'');
+        return `<div style="background:var(--surface2);border-radius:9px;overflow:hidden">
+          <div style="aspect-ratio:1;background:var(--bg);cursor:${m.url?'pointer':'default'}" ${m.url?`onclick="openPlayer('${escAttr(m.url)}', ${isVid})"`:''}>
+            ${m.url
+              ? (isVid ? `<video src="${escUrl(m.url)}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`
+                       : `<img src="${escUrl(m.url)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`)
+              : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px">${isVid?'🎬':'🖼️'}</div>`}
+          </div>
+          <div style="padding:6px 8px">
+            <div style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escAttr(m.name)}">${esc(m.name) || 'mídia'}</div>
+            <div style="font-size:10px;color:var(--muted)">${new Date(it.scheduled_at*1000).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeConfirm(); editCampaign(${c.id});">✏️ Editar campanha</button>
+      <button class="btn btn-primary" id="btnConfirmStart" style="flex:1" ${bloqueios.length ? 'disabled style="flex:1;opacity:.4;cursor:not-allowed"' : ''}
+        onclick="confirmStart(${c.id})">🚀 Iniciar campanha</button>
+    </div>`;
+}
+
+async function confirmStart(id) {
+  const btn = document.getElementById('btnConfirmStart');
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = 'Iniciando...'; // trava clique duplo
+  try {
+    const r = await API.post(`/bulk/campaigns/${id}/activate`, {});
+    if (r.error) { alertMsg(r.error, 'error'); btn.disabled = false; btn.textContent = '🚀 Iniciar campanha'; return; }
+    closeConfirm();
+    alertMsg('Campanha iniciada — as publicações vão sair nos horários programados.');
+    await loadCampaigns();
+    try { localStorage.setItem('zp_dirty', String(Date.now())); } catch {}
+  } catch (e) {
+    alertMsg('Erro ao iniciar: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = '🚀 Iniciar campanha';
+  }
+}
+document.getElementById('confirmModal').addEventListener('click', e => { if (e.target.id === 'confirmModal') closeConfirm(); });
+let _scheduleTargetId = null;
+function scheduleExisting(id) { _scheduleTargetId = id; openScheduleModal(); }
+async function confirmSchedule() {
+  const dt = document.getElementById('scheduledStartAt').value;
+  if (!dt) return alertMsg('Escolha data e hora', 'error');
+  if (_scheduleTargetId) {
+    await API.post(`/bulk/campaigns/${_scheduleTargetId}/activate`, { start_at: dt });
+    _scheduleTargetId = null;
+    closeScheduleModal();
+    loadCampaigns();
+  } else {
+    await createCampaign('scheduled', dt);
+    closeScheduleModal();
+  }
+}
+async function del(id) {
+  if (!confirm('Excluir esta campanha? Slots não publicados serão perdidos.')) return;
+  await API.del(`/bulk/campaigns/${id}`); loadCampaigns();
+}
+
+// ==== Galeria de mídias da campanha ====
+let _galleryCampaignId = null;
+
+const ITEM_STATUS = {
+  pending:    ['Agendado',   '#7c3aed'],
+  processing: ['Publicando', '#f59e0b'],
+  published:  ['Publicado',  '#10b981'],
+  failed:     ['Falhou',     '#ef4444']
+};
+
+async function openGallery(id) {
+  _galleryCampaignId = id;
+  document.getElementById('galleryBody').innerHTML = '<div class="meta-line" style="padding:40px;text-align:center">Carregando mídias...</div>';
+  document.getElementById('galleryModal').classList.add('open');
+  await renderGallery();
+}
+function closeGallery() { document.getElementById('galleryModal').classList.remove('open'); loadCampaigns(); }
+
+async function renderGallery() {
+  const data = await API.get(`/bulk/campaigns/${_galleryCampaignId}`);
+  const c = data.campaign, items = data.items || [];
+  const pend = items.filter(i => i.status === 'pending').length;
+  const pub = items.filter(i => i.status === 'published').length;
+
+  const cards = items.map(it => {
+    const [label, cor] = ITEM_STATUS[it.status] || [it.status, '#64748b'];
+    const m = it.media || {};
+    const isVideo = (m.mimeType || '').startsWith('video') || /\.(mp4|mov|m4v)$/i.test(m.url || '');
+    const quando = new Date(it.scheduled_at * 1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const podeExcluir = it.status === 'pending' || it.status === 'failed';
+
+    // upload tem URL pública → preview real. Drive só é baixado na hora de publicar.
+    const thumb = m.url
+      ? (isVideo
+          ? `<video src="${escUrl(m.url)}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`
+          : `<img src="${escUrl(m.url)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`)
+      : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px">
+           <div style="font-size:28px">${isVideo ? '🎬' : c.post_format === 'carousel' ? '🎠' : '🖼️'}</div>
+           <div style="font-size:10px;color:var(--muted);text-align:center;padding:0 8px">no Google Drive</div>
+         </div>`;
+
+    return `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="position:relative;aspect-ratio:1;background:var(--bg);cursor:${m.url ? 'pointer' : 'default'}"
+             ${m.url ? `onclick="openPlayer('${escAttr(m.url)}', ${isVideo})"` : ''}>
+          ${thumb}
+          <div style="position:absolute;top:6px;left:6px;background:${cor}dd;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${label}</div>
+          ${m.count > 1 ? `<div style="position:absolute;top:6px;right:6px;background:#000a;color:#fff;font-size:10px;padding:2px 7px;border-radius:20px">🎠 ${m.count}</div>` : ''}
+          ${isVideo && m.url ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;pointer-events:none;text-shadow:0 2px 8px #000">▶️</div>' : ''}
+        </div>
+        <div style="padding:8px 10px;flex:1">
+          <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escAttr(m.name)}">${esc(m.name) || 'sem nome'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">🕒 ${quando}</div>
+          ${it.error_message ? `<div style="font-size:10px;color:#ef4444;margin-top:4px;max-height:32px;overflow:hidden" title="${escAttr(it.error_message)}">${esc(it.error_message.slice(0,60))}</div>` : ''}
+        </div>
+        ${podeExcluir
+          ? `<button class="btn btn-danger" style="border-radius:0;padding:7px;font-size:11px" onclick="removeItem(${it.id})">🗑️ Tirar da programação</button>`
+          : `<div style="padding:7px;text-align:center;font-size:10px;color:var(--muted);border-top:1px solid var(--border)">${it.status === 'published' ? 'já publicado' : 'publicando...'}</div>`}
+      </div>`;
+  }).join('');
+
+  document.getElementById('galleryBody').innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:4px">🖼️ ${esc(c.name)}</h2>
+    <div class="meta-line" style="margin-bottom:6px">
+      ${c.post_format} · ${items.length} item(ns) · ${pend} agendado(s) · ${pub} publicado(s)
+    </div>
+    <div class="alert alert-info" style="font-size:12px;margin-bottom:16px">
+      Clique na miniatura pra ver a mídia. "Tirar da programação" remove só aquele item —
+      o resto da campanha segue normalmente, nos mesmos horários.
+      ${c.source_type === 'drive' ? '<br>Nesta campanha as mídias vêm do Google Drive e só são baixadas na hora de publicar, por isso a miniatura não aparece — mas o nome do arquivo está abaixo de cada card.' : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-height:60vh;overflow-y:auto;padding-right:4px">
+      ${cards || '<div class="meta-line">Nenhum item nesta campanha.</div>'}
+    </div>`;
+}
+
+async function removeItem(itemId) {
+  if (!confirm('Tirar este item da programação?\n\nEle não será publicado. O restante da campanha continua igual.')) return;
+  const r = await API.del(`/bulk/campaigns/${_galleryCampaignId}/items/${itemId}`);
+  if (r.error) { alertMsg(r.error, 'error'); return; }
+  alertMsg('Item removido da programação.');
+  await renderGallery();
+}
+
+function openPlayer(url, isVideo) {
+  document.getElementById('playerBody').innerHTML = isVideo
+    ? `<video src="${url}" controls autoplay style="width:100%;border-radius:10px;max-height:70vh"></video>`
+    : `<img src="${url}" style="width:100%;border-radius:10px;max-height:70vh;object-fit:contain">`;
+  document.getElementById('playerModal').classList.add('open');
+}
+function closePlayer() {
+  document.getElementById('playerBody').innerHTML = ''; // para o vídeo
+  document.getElementById('playerModal').classList.remove('open');
+}
+document.getElementById('playerModal').addEventListener('click', e => { if (e.target.id === 'playerModal') closePlayer(); });
+document.getElementById('galleryModal').addEventListener('click', e => { if (e.target.id === 'galleryModal') closeGallery(); });
+
+async function runDebug(id) {
+  const body = document.getElementById('debugBody');
+  body.innerHTML = '<div style="text-align:center;padding:40px"><div class="progress-bar"><div class="progress-fill" style="width:100%;animation:pulse 1.5s infinite"></div></div><div class="meta-line" style="margin-top:10px">Rodando debug sync... isso pode levar 30s-2min pra vídeo processar no IG.</div></div>';
+  document.getElementById('debugModal').classList.add('open');
+  try {
+    const r = await API.get(`/debug/run-campaign/${id}`);
+    renderDebugResult(r);
+    loadCampaigns();
+  } catch (err) {
+    body.innerHTML = `<div class="alert alert-error">Erro na chamada: ${err.message}</div>`;
+  }
+}
+
+function renderDebugResult(r) {
+  const logs = r.logs || [];
+  const success = r.ok;
+  const body = document.getElementById('debugBody');
+  body.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:10px">🔬 Debug Manual</h2>
+    <div class="alert ${success ? 'alert-success' : 'alert-error'}">
+      ${success
+        ? `✅ Publicado com sucesso! Post ID: ${r.published_id}`
+        : `❌ Falhou: ${r.error || 'erro desconhecido'}`}
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-weight:600;margin-bottom:6px">📋 Log de execução (${logs.length} linhas)</div>
+      <div style="max-height:400px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:monospace;font-size:11px;line-height:1.6">
+        ${logs.map(l => {
+          const cls = l.includes('❌') ? 'color:#ef4444' : l.includes('✅') ? 'color:#10b981' : l.includes('⚠️') ? 'color:#f59e0b' : l.includes('PASSO') ? 'color:#06b6d4;font-weight:600' : '';
+          return `<div style="${cls};padding:2px 0;border-bottom:1px solid #ffffff08">${l.replace(/[<>]/g,c => c==='<'?'&lt;':'&gt;')}</div>`;
+        }).join('')}
+      </div>
+    </div>
+    ${r.full ? `<div style="margin-top:14px"><div style="font-weight:600;margin-bottom:6px">🌐 Resposta bruta da API:</div><pre style="background:var(--bg);padding:10px;border-radius:8px;font-size:11px;overflow-x:auto">${JSON.stringify(r.full,null,2)}</pre></div>` : ''}
+    <button class="btn btn-secondary" style="margin-top:20px;width:100%" onclick="closeDebugModal()">Fechar</button>
+  `;
+}
+function closeDebugModal() { document.getElementById('debugModal').classList.remove('open'); }
+
+async function rebuildSlots(id) {
+  const newStart = prompt('Nova data de início da campanha (YYYY-MM-DD). Deixe vazio pra manter a atual:');
+  const payload = {};
+  if (newStart) payload.start_date = newStart.trim();
+  const r = await API.post(`/bulk/campaigns/${id}/rebuild-slots`, payload);
+  if (r.error) return alertMsg(r.error, 'error');
+  alertMsg(`${r.updated} slots recalculados. Primeiro slot: ${r.first_slot_brt || '-'}`);
+  loadCampaigns();
+}
+
+// ==== Edição de campanha ====
+async function editCampaign(id) {
+  const data = await API.get(`/bulk/campaigns/${id}`);
+  if (data.error) return alertMsg(data.error, 'error');
+  const c = data.campaign;
+  const items = data.items || [];
+  const pubCount = items.filter(i => i.status === 'published').length;
+  const failCount = items.filter(i => i.status === 'failed').length;
+  const pendCount = items.filter(i => i.status === 'pending').length;
+
+  const body = document.getElementById('editBody');
+  const recentItems = items.slice(-15).reverse();
+  body.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:6px">✏️ Editar Campanha</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">${esc(c.name)}</p>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">
+      <div class="stat"><div><div class="stat-label">Publicados</div><div class="stat-value" style="font-size:20px;color:#10b981">${pubCount}</div></div></div>
+      <div class="stat"><div><div class="stat-label">Pendentes</div><div class="stat-value" style="font-size:20px">${pendCount}</div></div></div>
+      <div class="stat"><div><div class="stat-label">Falharam</div><div class="stat-value" style="font-size:20px;color:#ef4444">${failCount}</div></div></div>
+      <div class="stat"><div><div class="stat-label">Total</div><div class="stat-value" style="font-size:20px">${items.length}</div></div></div>
+    </div>
+
+    <div class="form-group">
+      <label>Nome da campanha</label>
+      <input type="text" id="editName" value="${escAttr(c.name)}">
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Posts/dia</label>
+        <input type="number" id="editPostsPerDay" value="${c.posts_per_day}" min="1" max="25">
+      </div>
+      <div class="form-group">
+        <label>Dias de duração</label>
+        <input type="number" id="editTotalDays" value="${c.total_days}" min="1" max="365">
+      </div>
+      <div class="form-group">
+        <label>Data de início</label>
+        <input type="date" id="editStartDate" value="${c.start_date}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Horários (separados por vírgula, ex: 09:00, 12:00, 18:30)</label>
+      <input type="text" id="editTimes" value="${c.times.join(', ')}">
+    </div>
+
+    <div class="form-group">
+      <label>Quantidade de publicações desta campanha</label>
+      <input type="number" id="editTargetCount" value="${items.length}" min="${pubCount + items.filter(i=>i.status==='processing').length}" max="${items.length}">
+      <div class="meta-line" style="margin-top:6px">
+        Hoje: <strong>${items.length}</strong>. Você pode <strong>reduzir</strong> — os agendamentos mais distantes são removidos primeiro.
+        ${pubCount ? `As ${pubCount} já publicadas nunca são apagadas (mínimo: ${pubCount}).` : ''}
+        Para aumentar, envie novas mídias criando outra campanha.
+      </div>
+    </div>
+
+    <div class="alert alert-info" style="font-size:12px">
+      ⚡ Ao salvar, os horários das publicações <strong>ainda não realizadas</strong> são recalculados com a nova configuração.
+      O que já foi publicado não é afetado.
+    </div>
+
+    ${c.caption_mode === 'fixed' ? `
+    <div class="form-group">
+      <label>Legenda padrão</label>
+      <textarea id="editCaptionText" rows="4">${(c.caption_config.text||'').replace(/</g,'&lt;')}</textarea>
+    </div>` : ''}
+    ${c.caption_mode === 'shuffle' ? `
+    <div class="form-group">
+      <label>Estrofes (separadas por linha em branco)</label>
+      <textarea id="editCaptionText" rows="6">${(c.caption_config.text||'').replace(/</g,'&lt;')}</textarea>
+    </div>
+    <div class="form-group">
+      <label>Estrofes por post</label>
+      <input type="number" id="editCaptionN" value="${c.caption_config.stanzas_per_post || 1}" min="1" max="10" style="max-width:100px">
+    </div>` : ''}
+    ${c.caption_mode === 'ai' ? `
+    <div class="form-group">
+      <label>Prompt da IA (${c.caption_config.provider})</label>
+      <textarea id="editCaptionText" rows="4">${(c.caption_config.prompt||'').replace(/</g,'&lt;')}</textarea>
+    </div>` : ''}
+
+    <div style="margin-top:20px">
+      <div style="font-weight:600;margin-bottom:10px">📋 Log das últimas tentativas (mais recentes)</div>
+      <div style="max-height:220px;overflow-y:auto;background:var(--bg);border-radius:10px;padding:10px;font-size:12px;font-family:monospace">
+        ${recentItems.length ? recentItems.map(it => `
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)">
+            <span style="color:${it.status === 'published' ? '#10b981' : it.status === 'failed' ? '#ef4444' : 'var(--muted)'}">
+              [${it.status}]
+            </span>
+            slot ${it.slot_index} · ${new Date(it.scheduled_at*1000).toLocaleString('pt-BR')}
+            ${it.error_message ? `<div style="color:#ef4444;margin-left:16px">${esc(it.error_message.slice(0,120))}</div>` : ''}
+          </div>
+        `).join('') : '<div style="color:var(--muted)">Sem tentativas ainda.</div>'}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveEditCampaign(${c.id}, '${c.caption_mode}')">💾 Salvar alterações</button>
+    </div>
+  `;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+async function saveEditCampaign(id, captionMode) {
+  const btn = event?.target;
+  const payload = {
+    name: document.getElementById('editName').value.trim(),
+    posts_per_day: parseInt(document.getElementById('editPostsPerDay').value, 10),
+    total_days: parseInt(document.getElementById('editTotalDays').value, 10),
+    start_date: document.getElementById('editStartDate').value,
+    times: document.getElementById('editTimes').value.split(',').map(s => s.trim()).filter(Boolean),
+    target_count: parseInt(document.getElementById('editTargetCount').value, 10)
+  };
+  const capText = document.getElementById('editCaptionText')?.value;
+  if (capText !== undefined) {
+    if (captionMode === 'fixed') payload.caption_config = { text: capText };
+    else if (captionMode === 'shuffle') payload.caption_config = { text: capText, stanzas_per_post: parseInt(document.getElementById('editCaptionN').value, 10) };
+    else if (captionMode === 'ai') payload.caption_config = { prompt: capText };
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try {
+    const r = await API.put(`/bulk/campaigns/${id}`, payload);
+    if (r.error) { alertMsg(r.error, 'error'); return; }
+
+    // resumo do que realmente mudou — antes só dizia "atualizada" sem ter mudado nada
+    const partes = [];
+    if (r.horarios_recalculados) partes.push(`${r.horarios_recalculados} horário(s) recalculado(s)`);
+    if (r.itens_removidos) partes.push(`${r.itens_removidos} publicação(ões) removida(s)`);
+    partes.push(`total agora: ${r.total_items}`);
+    if (r.primeiro_horario) partes.push(`próxima em ${r.primeiro_horario}`);
+    alertMsg('Campanha atualizada — ' + partes.join(' · '));
+    if (r.aviso) setTimeout(() => alertMsg(r.aviso, 'error'), 400);
+
+    closeEditModal();
+    await loadCampaigns();
+    try { localStorage.setItem('zp_dirty', String(Date.now())); } catch {} // avisa calendário/dashboard
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar alterações'; }
+  }
+}
+
+loadDriveStatus();
+loadAccounts();
+loadCampaigns();
+setInterval(loadCampaigns, 30000);
+</script>
+<script>
+// Menu lateral em gaveta no celular
+(function () {
+  var b = document.getElementById('menuToggle');
+  var bd = document.getElementById('sidebarBackdrop');
+  var sb = document.querySelector('.sidebar');
+  if (!b || !sb) return;
+  function fechar() { sb.classList.remove('open'); bd.classList.remove('open'); }
+  b.addEventListener('click', function () {
+    sb.classList.toggle('open'); bd.classList.toggle('open');
+  });
+  bd.addEventListener('click', fechar);
+  sb.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', fechar); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+})();
+</script>
+</body>
+</html>

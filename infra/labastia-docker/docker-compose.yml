@@ -61,37 +61,12 @@ services:
     networks:
       - labastia
 
-  evolution:
-    image: atendai/evolution-api:latest
-    restart: always
-    environment:
-      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
-      - DATABASE_PROVIDER=postgresql
-      - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_EVOLUTION}
-      - CACHE_REDIS_ENABLED=true
-      - CACHE_REDIS_URI=redis://redis:6379/1
-      - CACHE_REDIS_PREFIX_KEY=evolution
-      - CACHE_LOCAL_ENABLED=false
-      - DEL_INSTANCE=false
-      - LOG_LEVEL=ERROR
-      - TZ=${TZ}
-    volumes:
-      - evolution_instances:/evolution/instances
-      - evolution_store:/evolution/store
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - labastia
-
 volumes:
   npm_data:
   npm_letsencrypt:
   postgres_data:
   redis_data:
   n8n_data:
-  evolution_instances:
-  evolution_store:
 
 networks:
   labastia:

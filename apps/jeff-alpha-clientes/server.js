@@ -394,11 +394,18 @@ app.post('/reset-password/:token', (req, res) => {
 });
 
 // ================= CADASTRO =================
+// SIGNUP FECHADO por ordem do dono (2026-07-16). Acesso novo somente
+// via convite manual do admin. Deixamos as rotas retornando 403 pra
+// evitar bots (sinal do @immenseignite.info em 2026-07-16).
+const SIGNUP_OPEN = false;
+
 app.get('/signup', (req, res) => {
+  if (!SIGNUP_OPEN) return res.status(403).send('Cadastro fechado. Acesso somente por convite.');
   res.render('signup', { form: {} });
 });
 
 app.post('/signup', (req, res) => {
+  if (!SIGNUP_OPEN) return res.status(403).send('Cadastro fechado. Acesso somente por convite.');
   const email = String(req.body.email || '').trim().toLowerCase();
   const name = String(req.body.name || '').trim();
   const password = String(req.body.password || '');

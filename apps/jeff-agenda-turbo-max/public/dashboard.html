@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Turbo Max - Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #13131f; --surface2: #1a1a2e; --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4; --text: #e2e8f0; --muted: #64748b; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 24px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-weight: 700; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active { color: var(--accent); }
+  .nav-sep { height: 1px; background: var(--border); margin: 8px 0; }
+  .sidebar-bottom { margin-top: auto; }
+  .main { margin-left: 240px; flex: 1; padding: 40px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .stat-label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+  .stat-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  /* Grid */
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title a { color: var(--muted); font-size: 13px; font-weight: 400; text-decoration: none; }
+  .post-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .post-item:last-child { border-bottom: none; }
+  .post-thumb { width: 48px; height: 48px; border-radius: 10px; background: var(--surface2); object-fit: cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .post-info { flex: 1; min-width: 0; }
+  .post-caption { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .post-meta { color: var(--muted); font-size: 11px; }
+  .account-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .account-item:last-child { border-bottom: none; }
+  .account-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--surface2); flex-shrink: 0; object-fit: cover; }
+  .account-info .name { font-size: 14px; font-weight: 500; }
+  .account-info .meta { color: var(--muted); font-size: 12px; }
+  .platform-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pd-instagram { background: #f09433; }
+  .pd-youtube { background: #ff0000; }
+  .pd-tiktok { background: #aaa; }
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 24px; }
+  /* Filtros e avisos */
+  .dash-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .dash-filters .filtro { display: flex; flex-direction: column; gap: 6px; }
+  .dash-filters label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .dash-filters select { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px;
+    color: var(--text); font-size: 13px; outline: none; width: 100%; }
+  .dash-filters select:focus { border-color: var(--accent); }
+  .cal-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 12px;
+    border-radius: 9px; font-size: 13px; cursor: pointer; }
+  .cal-btn:hover { border-color: var(--accent); }
+  .meta-atualizado { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .alerta { border-radius: 12px; padding: 12px 16px; font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
+  .alerta-err { background: #ef444415; border: 1px solid #ef444440; color: #fca5a5; }
+  .alerta-warn { background: #f59e0b15; border: 1px solid #f59e0b40; color: #fcd34d; }
+  .alerta code { background: var(--bg); padding: 2px 6px; border-radius: 4px; }
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+</style>
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12Z"/></svg></div>
+    <div class="logo-text">Agenda Turbo Max</div>
+  </div>
+  <a href="/dashboard.html" class="nav-item active" data-icon="dashboard" data-label="Dashboard"></a>
+  <a href="/calendar.html" class="nav-item" data-icon="calendar" data-label="Calendário"></a>
+  <a href="/editor.html" class="nav-item" data-icon="compose" data-label="Novo Post"></a>
+  <a href="/bulk.html" class="nav-item" data-icon="bulk" data-label="Publicação em Massa"></a>
+  <a href="/analytics.html" class="nav-item" data-icon="analytics" data-label="Analytics"></a>
+  <div class="nav-sep"></div>
+  <a href="/connect.html" class="nav-item" data-icon="link" data-label="Conectar Perfis"></a>
+  <a href="/settings.html" class="nav-item" data-icon="settings" data-label="Configurações"></a>
+  <div class="sidebar-bottom">
+    <a href="#" class="nav-item" id="logoutBtn" data-icon="logout" data-label="Sair"></a>
+  </div>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <div class="sub-head">Ótimo dia, Jeff <span class="live-chip" id="liveChip"><span class="live-dot"></span><span id="liveTxt">verificando…</span></span></div>
+    </div>
+    <a href="/editor.html" class="btn-primary"><span data-icon="plus" data-icon-size="17"></span> Novo Post</a>
+  </div>
+
+  <!-- Filtros -->
+  <div class="dash-filters">
+    <div class="filtro">
+      <label>Conta do Instagram</label>
+      <select id="fConta" onchange="load()">
+        <option value="">Todas as contas</option>
+      </select>
+    </div>
+    <div class="filtro">
+      <label>Período</label>
+      <select id="fPeriodo" onchange="load()">
+        <option value="">Tudo</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="futuro">Só o que está por vir</option>
+      </select>
+    </div>
+    <div class="filtro">
+      <label>Tipo</label>
+      <select id="fTipo" onchange="load()">
+        <option value="">Todos</option>
+        <option value="feed">Feed</option>
+        <option value="reel">Reels</option>
+        <option value="story">Stories</option>
+        <option value="carousel">Carrossel</option>
+      </select>
+    </div>
+    <div class="filtro" style="justify-content:flex-end">
+      <span class="meta-atualizado" id="dashAtualizado"></span>
+      <button class="cal-btn" onclick="load()" title="Atualizar agora"><span data-icon="refresh" data-icon-size="15"></span> Atualizar</button>
+    </div>
+  </div>
+
+  <!-- Avisos que exigem ação -->
+  <div id="alertas"></div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Publicadas</span><span class="ico-box ico-green" data-icon="check" data-icon-size="17"></span></div>
+      <div class="stat-value" id="statPublished">–</div><div class="stat-sub">no filtro atual</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Agendadas</span><span class="ico-box ico-cyan" data-icon="clock" data-icon-size="17"></span></div>
+      <div class="stat-value" id="statScheduled">–</div><div class="stat-sub" id="subScheduled">incluindo campanhas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Falhas</span><span class="ico-box ico-rose" data-icon="alert" data-icon-size="17"></span></div>
+      <div class="stat-value" id="statFailed">–</div><div class="stat-sub">não publicadas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Rascunhos</span><span class="ico-box ico-slate" data-icon="draft" data-icon-size="17"></span></div>
+      <div class="stat-value" id="statDrafts">–</div><div class="stat-sub">não programados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Campanhas ativas</span><span class="ico-box ico-violet" data-icon="zap" data-icon-size="17"></span></div>
+      <div class="stat-value" id="statCampaigns">–</div><div class="stat-sub" id="subCampaigns">de 0 no total</div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <div class="card-title"><span class="ct-l"><span class="ico-box ico-cyan" data-icon="clock" data-icon-size="16"></span>Próximas publicações</span><a href="/calendar.html">Ver calendário</a></div>
+      <div id="proximas">Carregando...</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-l"><span class="ico-box ico-green" data-icon="check" data-icon-size="16"></span>Últimas publicadas</span><a href="/analytics.html">Ver analytics</a></div>
+      <div id="ultimas">Carregando...</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-l"><span class="ico-box ico-rose" data-icon="alert" data-icon-size="16"></span>Falhas recentes</span></div>
+      <div id="falhas">Carregando...</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-l"><span class="ico-box ico-violet" data-icon="users" data-icon-size="16"></span>Contas conectadas</span><a href="/connect.html">Gerenciar</a></div>
+      <div id="accountsList">Carregando...</div>
+    </div>
+  </div>
+</main>
+<script src="/js/icons.js"></script>
+<script src="/js/app.js"></script>
+<script>
+requireAuth();
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href = '/'; });
+
+let contas = [];
+const TIPO_ICONE = { feed: 'image', reel: 'video', story: 'story', carousel: 'carousel' };
+
+async function loadContas() {
+  contas = (await API.get('/accounts')).filter(a => a.platform === 'instagram');
+  const sel = document.getElementById('fConta');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Todas as contas</option>' +
+    contas.map(c => `<option value="${c.id}">@${c.platform_username || c.id}</option>`).join('');
+  sel.value = atual;
+}
+
+function nomeConta(ids) {
+  if (!ids?.length) return '—';
+  const n = ids.map(id => contas.find(c => c.id === id)?.platform_username).filter(Boolean);
+  return n.length ? (n.length > 1 ? `@${n[0]} +${n.length-1}` : `@${n[0]}`) : '—';
+}
+
+function filtrosAtuais() {
+  const q = new URLSearchParams();
+  const conta = document.getElementById('fConta').value;
+  const per = document.getElementById('fPeriodo').value;
+  const tipo = document.getElementById('fTipo').value;
+  if (conta) q.set('account_id', conta);
+  if (tipo) q.set('type', tipo);
+  const agora = Math.floor(Date.now()/1000);
+  if (per === 'futuro') q.set('from', agora);
+  else if (per) { q.set('from', agora - Number(per) * 86400); q.set('to', agora + 365*86400); }
+  return q;
+}
+
+function linhaEvento(e, mostrarErro) {
+  const quando = new Date(e.quando * 1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+  const txt = e.origem === 'campanha' ? (e.media_name || e.titulo || 'mídia da campanha') : (e.caption || e.titulo || '(sem legenda)');
+  return `
+    <div class="post-item">
+      <div class="post-thumb">${icon(TIPO_ICONE[e.tipo] || 'image', { size: 19 })}</div>
+      <div class="post-info">
+        <div class="post-caption">${esc(String(txt).slice(0,70))}</div>
+        <div class="post-meta">${quando} · ${nomeConta(e.account_ids)}${e.origem === 'campanha' ? ' · campanha' : ''}</div>
+        ${mostrarErro && e.error_message ? `<div style="color:#ef4444;font-size:11px;margin-top:3px">${esc(e.error_message.slice(0,90))}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+async function load() {
+  const q = filtrosAtuais();
+  try {
+    const s = await API.get('/summary?' + q.toString());
+    if (s.error) throw new Error(s.error);
+
+    document.getElementById('statPublished').textContent = s.publicadas.toLocaleString('pt-BR');
+    document.getElementById('statScheduled').textContent = s.agendadas.toLocaleString('pt-BR');
+    document.getElementById('statFailed').textContent = s.falhas.toLocaleString('pt-BR');
+    document.getElementById('statDrafts').textContent = s.rascunhos.toLocaleString('pt-BR');
+    document.getElementById('statCampaigns').textContent = s.campanhas_ativas;
+    document.getElementById('subCampaigns').textContent = `de ${s.campanhas_total} no total`;
+    document.getElementById('dashAtualizado').textContent = 'atualizado ' + tempoRelativo(s.atualizado_em);
+    const chip = document.getElementById('liveChip');
+    chip.classList.toggle('off', !s.scheduler.ativo);
+    chip.querySelector('.live-dot').classList.toggle('off', !s.scheduler.ativo);
+    document.getElementById('liveTxt').textContent = s.scheduler.ativo ? 'sistema publicando' : 'fila parada';
+
+    // avisos acionáveis
+    const avisos = [];
+    if (!s.scheduler.ativo) {
+      avisos.push(`<div class="alerta alerta-err">${icon('alert',{size:16})} <strong>Nada está processando a fila.</strong>
+        Último sinal ${s.scheduler.segundos_desde_ultimo_tick === null ? 'nunca' : 'há ' + s.scheduler.segundos_desde_ultimo_tick + 's'}.
+        Verifique o worker na VPS (<code>pm2 status</code>) — publicações agendadas não vão sair.</div>`);
+    }
+    if (s.contas_reconectar.length) {
+      avisos.push(`<div class="alerta alerta-warn">${icon('key',{size:16})} <strong>${s.contas_reconectar.length} conta(s) precisam ser reconectadas:</strong>
+        ${s.contas_reconectar.map(c => '@' + c.username).join(', ')}.
+        <a href="/connect.html" style="color:#f59e0b;font-weight:700">Reconectar →</a></div>`);
+    }
+    if (s.falhas > 0) {
+      avisos.push(`<div class="alerta alerta-warn">${icon('alert',{size:16})} <strong>${s.falhas} publicação(ões) falharam</strong> no período filtrado. Veja o detalhe abaixo.</div>`);
+    }
+    document.getElementById('alertas').innerHTML = avisos.join('');
+
+    document.getElementById('proximas').innerHTML = s.proximas.length
+      ? s.proximas.map(e => linhaEvento(e)).join('')
+      : uiEmpty('Nada agendado à frente.', '<a href="/bulk.html" style="color:var(--accent)">Criar campanha →</a>');
+
+    document.getElementById('ultimas').innerHTML = s.ultimas.length
+      ? s.ultimas.map(e => linhaEvento(e)).join('')
+      : uiEmpty('Nenhuma publicação concluída ainda.');
+
+    document.getElementById('falhas').innerHTML = s.falhas_recentes.length
+      ? s.falhas_recentes.map(e => linhaEvento(e, true)).join('')
+      : uiEmpty('Nenhuma falha por aqui.');
+
+    document.getElementById('accountsList').innerHTML = contas.length
+      ? contas.map(a => `
+        <div class="account-item">
+          ${a.profile_picture ? `<img class="account-avatar" src="${escUrl(a.profile_picture)}" onerror="this.style.display='none'">` : `<div class="account-avatar" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">${icon('users',{size:18})}</div>`}
+          <div class="account-info" style="flex:1">
+            <div class="name">${esc(a.platform_name || a.platform_username)}</div>
+            <div class="meta">${(a.followers || 0).toLocaleString('pt-BR')} seguidores${a.status === 'expiring' ? ' · <span style="color:#f59e0b">token expirando</span>' : ''}</div>
+          </div>
+          <div class="platform-dot pd-${a.platform}"></div>
+        </div>`).join('')
+      : uiEmpty('Nenhuma conta conectada.', '<a href="/connect.html" style="color:var(--accent)">Conectar →</a>');
+    hydrateIcons();
+  } catch (e) {
+    document.getElementById('alertas').innerHTML = uiError('Não consegui carregar o painel: ' + e.message);
+  }
+}
+
+(async () => {
+  await loadContas();
+  await load();
+  Live.start(load, 45000);
+})();
+</script>
+<script>
+// Menu lateral em gaveta no celular
+(function () {
+  var b = document.getElementById('menuToggle');
+  var bd = document.getElementById('sidebarBackdrop');
+  var sb = document.querySelector('.sidebar');
+  if (!b || !sb) return;
+  function fechar() { sb.classList.remove('open'); bd.classList.remove('open'); }
+  b.addEventListener('click', function () {
+    sb.classList.toggle('open'); bd.classList.toggle('open');
+  });
+  bd.addEventListener('click', fechar);
+  sb.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', fechar); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+})();
+</script>
+</body>
+</html>

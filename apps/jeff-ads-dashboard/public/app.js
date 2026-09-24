@@ -21,6 +21,17 @@
   let mdCampFilter = [];
   let mdActiveOnly = false;
 
+  function getDateParams() {
+    const preset = $('#preset-select').value;
+    if (preset === 'custom') {
+      const since = $('#date-since').value;
+      const until = $('#date-until').value;
+      if (since && until) return { qs: `since=${since}&until=${until}`, key: `custom:${since}:${until}`, body: { since, until } };
+      return { qs: 'date_preset=last_7d', key: 'last_7d', body: { date_preset: 'last_7d' } };
+    }
+    return { qs: `date_preset=${preset}`, key: preset, body: { date_preset: preset } };
+  }
+
   const fmtBRL = (v) => {
     const n = Number(v || 0);
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
@@ -50,9 +61,9 @@
     $$('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
     const accountId = $('#account-select').value;
     if (!accountId) return;
-    const preset = $('#preset-select').value;
+    const dp = getDateParams();
     const showInactive = $('#show-inactive').checked;
-    const key = `${accountId}|${preset}|${showInactive}`;
+    const key = `${accountId}|${dp.key}|${showInactive}`;
     if (tab === 'creatives' && state.loadedFor.creatives !== key) {
       loadCreatives();
     }
@@ -125,15 +136,15 @@
       $('#camps-count').textContent = '0';
       return;
     }
-    const preset = $('#preset-select').value;
+    const dp = getDateParams();
     const showInactive = $('#show-inactive').checked;
-    const key = `${accountId}|${preset}|${showInactive}`;
+    const key = `${accountId}|${dp.key}|${showInactive}`;
 
     showLoading('Buscando campanhas…');
     try {
       const [campR, sumR] = await Promise.all([
-        fetch(`/api/campaigns?account_id=${accountId}&date_preset=${preset}&show_inactive=${showInactive ? 1 : 0}`).then(r => r.json()),
-        fetch(`/api/account-summary?account_id=${accountId}&date_preset=${preset}`).then(r => r.json())
+        fetch(`/api/campaigns?account_id=${accountId}&${dp.qs}&show_inactive=${showInactive ? 1 : 0}`).then(r => r.json()),
+        fetch(`/api/account-summary?account_id=${accountId}&${dp.qs}`).then(r => r.json())
       ]);
       if (campR.error) throw new Error(campR.error);
       renderKpis(sumR.summary);
@@ -250,14 +261,14 @@
       $('#creatives-grid').innerHTML = '<div class="empty">Selecione uma conta e clique em Aplicar.</div>';
       return;
     }
-    const preset = $('#preset-select').value;
+    const dp = getDateParams();
     showLoading('Buscando criativos…');
     try {
-      const r = await fetch(`/api/creatives?account_id=${accountId}&date_preset=${preset}`);
+      const r = await fetch(`/api/creatives?account_id=${accountId}&${dp.qs}`);
       const data = await r.json();
       if (data.error) throw new Error(data.error);
       renderCreatives(data.creatives || []);
-      state.loadedFor.creatives = `${accountId}|${preset}|${$('#show-inactive').checked}`;
+      state.loadedFor.creatives = `${accountId}|${dp.key}|${$('#show-inactive').checked}`;
     } catch (e) {
       showError($('#creatives-grid'), `Erro: ${e.message}`);
     } finally {
@@ -307,14 +318,14 @@
       $('#ai-result').innerHTML = `<div class="error-banner">Escreva uma pergunta pra IA.</div>`;
       return;
     }
-    const preset = $('#preset-select').value;
+    const dp = getDateParams();
     showLoading('IA analisando dados (pode levar até 30s)…');
     $('#ai-go').disabled = true;
     try {
       const r = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ account_id: accountId, query, date_preset: preset })
+        body: JSON.stringify({ account_id: accountId, query, ...dp.body })
       });
       const data = await r.json();
       if (data.error) throw new Error(data.error);
@@ -381,6 +392,17 @@
   function bind() {
     $$('.tab').forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
     $('#bm-select').addEventListener('change', renderAccountSelect);
+    $('#preset-select').addEventListener('change', () => {
+      const isCustom = $('#preset-select').value === 'custom';
+      $('#custom-range').classList.toggle('hidden', !isCustom);
+      if (isCustom && !$('#date-since').value) {
+        const today = new Date();
+        const past = new Date(); past.setDate(past.getDate() - 7);
+        const iso = (d) => d.toISOString().slice(0, 10);
+        $('#date-since').value = iso(past);
+        $('#date-until').value = iso(today);
+      }
+    });
     $('#apply-btn').addEventListener('click', () => {
       if (state.activeTab === 'creatives') loadCreatives();
       else if (state.activeTab === 'metadash') { state.loadedFor.metadash = null; loadMetaDash(); }
@@ -517,14 +539,14 @@
       $('#md-empty').classList.remove('hidden');
       return;
     }
-    const preset = $('#preset-select').value;
-    const key = `${accountId}|${preset}`;
+    const dp = getDateParams();
+    const key = `${accountId}|${dp.key}`;
     if (state.loadedFor.metadash === key) return;
 
     showLoading('Carregando Meta Dashboard…');
     $('#md-empty').classList.add('hidden');
     try {
-      const r = await fetch(`/api/meta-dashboard?account_id=${accountId}&date_preset=${preset}`);
+      const r = await fetch(`/api/meta-dashboard?account_id=${accountId}&${dp.qs}`);
       const data = await r.json();
       if (data.error) throw new Error(data.error);
       mdData = data;

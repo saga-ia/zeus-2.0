@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SDRs — Jeff</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0d13;
+    --panel: #14171f;
+    --panel-2: #1b1f2a;
+    --border: #262b38;
+    --accent: #d4a24a;
+    --accent-2: #f3c467;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --blue: #4f8ef7;
+    --text: #e8eaf0;
+    --subtext: #8b94a7;
+    --sidebar-w: 240px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button, input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+  input, textarea, select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; outline: none; transition: border .15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  label { display: block; font-size: 11px; color: var(--subtext); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; background: transparent; color: var(--text);
+  }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn-primary { background: var(--accent); color: #17140a; }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-ghost { border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--panel-2); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-success { background: var(--green); color: #04180b; }
+  .btn-success:hover { background: #16a34a; color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* Login */
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .login-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 40px;
+    width: 380px; box-shadow: 0 20px 60px #00000060;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-weight: 800; color: #17140a; font-size: 18px;
+  }
+  .brand-text { font-weight: 800; font-size: 17px; letter-spacing: -.2px; }
+  .brand-text small { display: block; font-size: 11px; color: var(--subtext); font-weight: 500; letter-spacing: 0; }
+  .form-group { margin-bottom: 14px; }
+  .error-msg { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 18px; }
+
+  /* App shell with sidebar */
+  #app-screen { display: none; min-height: 100vh; }
+  .layout { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+  aside {
+    background: #0a0c11; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px 14px; gap: 4px; position: sticky; top: 0; height: 100vh;
+  }
+  aside .brand { margin-bottom: 28px; padding-left: 6px; }
+  .side-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+    cursor: pointer; color: var(--subtext); font-weight: 600; font-size: 14px; transition: all .15s;
+  }
+  .side-item:hover { color: var(--text); background: var(--panel-2); }
+  .side-item.active { background: var(--panel-2); color: var(--accent); }
+  .side-item .ico { width: 20px; height: 20px; display: grid; place-items: center; opacity: .9; }
+  aside .spacer { flex: 1; }
+  .side-user { padding: 12px 14px; border-top: 1px solid var(--border); margin-top: 8px; color: var(--subtext); font-size: 12px; }
+  .side-user b { color: var(--text); display: block; font-size: 13px; margin-bottom: 2px; }
+  .side-logout { margin-top: 8px; font-size: 12px; color: var(--subtext); cursor: pointer; }
+  .side-logout:hover { color: var(--red); }
+
+  main { padding: 32px 40px 60px; max-width: 1400px; width: 100%; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h1 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+  .page-header p { color: var(--subtext); font-size: 13px; margin-top: 4px; }
+
+  /* Cards */
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .card + .card { margin-top: 16px; }
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+  .badge-idle { background: #2a2f3d; color: var(--subtext); }
+  .badge-connecting { background: #4a3410; color: #fbd08a; }
+  .badge-qr { background: #17385d; color: #8fbfff; }
+  .badge-ready { background: #0f3a24; color: #7ee7a4; }
+  .badge-disconnected { background: #421414; color: #fca5a5; }
+
+  /* SDR grid */
+  .sdr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .sdr-card {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px; min-height: 180px; transition: border .15s;
+  }
+  .sdr-card.status-ready { border-color: #1f5a3a; }
+  .sdr-card.status-qr { border-color: #234a7a; }
+  .sdr-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .toggle-active { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .toggle-active .sw { position: relative; width: 36px; height: 20px; background: #3a2a2a; border-radius: 999px; transition: background .15s; border: 1px solid #4a1c1c; }
+  .toggle-active .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #d95555; border-radius: 50%; transition: transform .15s, background .15s; }
+  .toggle-active.on .sw { background: #0f3a24; border-color: #1f5a3a; }
+  .toggle-active.on .sw::after { transform: translateX(16px); background: #7ee7a4; }
+  .toggle-active .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fca5a5; }
+  .toggle-active.on .lbl { color: #7ee7a4; }
+  .sdr-slot { font-weight: 800; font-size: 12px; color: var(--subtext); }
+  .sdr-name-row { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+  .sdr-name-row input { font-size: 14px; font-weight: 700; padding: 6px 10px; background: var(--bg); }
+  .sdr-name-row input.role { font-size: 12px; color: var(--subtext); font-weight: 500; }
+  .sdr-phone { font-size: 11px; color: var(--subtext); font-family: 'JetBrains Mono', monospace; }
+  .sdr-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+  .qr-box { background: #fff; padding: 10px; border-radius: 10px; display: grid; place-items: center; }
+  .qr-hint { font-size: 11px; color: var(--subtext); text-align: center; margin-top: 6px; }
+
+  /* Conversations */
+  .conv-layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; height: calc(100vh - 180px); min-height: 500px; }
+  .conv-list { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .conv-list-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  .conv-list-header select { padding: 6px 10px; font-size: 12px; }
+  .conv-items { flex: 1; overflow-y: auto; }
+  .conv-item {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .conv-item:hover { background: var(--panel-2); }
+  .conv-item.active { background: var(--panel-2); border-left: 3px solid var(--accent); padding-left: 13px; }
+  .conv-row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .conv-name { font-weight: 700; font-size: 13px; }
+  .conv-time { font-size: 10px; color: var(--subtext); }
+  .conv-preview { font-size: 12px; color: var(--subtext); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+  .conv-sdr { font-size: 10px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+  .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  .conv-pane { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .conv-pane-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .conv-pane-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .msg-bubble {
+    max-width: 65%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word;
+  }
+  .msg-them { background: var(--panel-2); align-self: flex-start; border-bottom-left-radius: 3px; }
+  .msg-me { background: linear-gradient(135deg, #4a3610, #7a5820); color: #f7e6c2; align-self: flex-end; border-bottom-right-radius: 3px; }
+  .msg-meta { font-size: 10px; color: var(--subtext); margin-top: 3px; }
+  .conv-pane-input { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .conv-pane-input textarea { resize: none; height: 44px; padding: 12px 14px; }
+  .conv-empty { flex: 1; display: grid; place-items: center; color: var(--subtext); font-size: 13px; }
+
+  /* Maturation */
+  .maturation-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .maturation-grid { grid-template-columns: 1fr; } }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--panel-2); border-radius: 10px; margin-bottom: 8px; }
+  .switch {
+    position: relative; width: 40px; height: 22px; background: var(--border); border-radius: 999px;
+    cursor: pointer; transition: background .15s;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: transform .15s;
+  }
+  .switch.on::after { transform: translateX(18px); }
+
+  .log-list { font-size: 12px; color: var(--subtext); max-height: 400px; overflow-y: auto; }
+  .log-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .log-item:last-child { border: none; }
+  .log-slot { color: var(--accent); font-weight: 700; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: #000000cc; display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(4px); }
+  .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 520px; padding: 28px; max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px #00000080; }
+  .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .modal-title { font-weight: 800; font-size: 18px; }
+  .modal-close { background: transparent; border: none; color: var(--subtext); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 8px; }
+  .modal-close:hover { background: var(--panel-2); color: var(--text); }
+  .modal-sub { color: var(--subtext); font-size: 13px; margin-bottom: 20px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; background: var(--panel-2); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 9px 14px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--subtext); transition: all .15s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--panel); color: var(--accent); box-shadow: 0 2px 8px #00000040; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .qr-canvas-wrap { background: #fff; padding: 16px; border-radius: 12px; display: grid; place-items: center; margin: 0 auto 12px; width: fit-content; }
+  .qr-canvas-wrap canvas { display: block; }
+  .qr-steps { font-size: 12px; color: var(--subtext); line-height: 1.7; padding: 12px 14px; background: var(--panel-2); border-radius: 10px; }
+  .qr-steps b { color: var(--text); }
+
+  .pair-code-box {
+    text-align: center; padding: 20px; background: linear-gradient(135deg, #1a1e2b, #14171f);
+    border: 1px solid var(--accent); border-radius: 12px; margin: 16px 0;
+    font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 32px; font-weight: 800;
+    color: var(--accent-2); letter-spacing: 8px;
+  }
+  .pair-code-loading { text-align: center; padding: 30px; color: var(--subtext); font-size: 13px; }
+
+  .instructions-textarea { min-height: 300px; resize: vertical; font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+  .instructions-meta { font-size: 11px; color: var(--subtext); margin-top: 8px; }
+
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 6px; min-height: 32px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .chip .rm { cursor: pointer; color: var(--subtext); font-weight: 700; }
+  .chip .rm:hover { color: var(--red); }
+  .chip-input-row { display: flex; gap: 6px; }
+  .chip-input-row input { flex: 1; }
+  .config-hint { font-size: 11px; color: var(--subtext); margin-top: 4px; line-height: 1.5; }
+  .upload-summary { display: flex; gap: 14px; margin: 10px 0 6px; font-size: 12px; color: var(--subtext); }
+  .upload-summary b { color: var(--text); font-size: 14px; display: block; }
+  .upload-jobs-list { max-height: 220px; overflow-y: auto; font-size: 12px; }
+  .upload-job-item { padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+  .upload-job-item:last-child { border: none; }
+  .st-pill { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .st-pill.pending { background: #2a2f3d; color: var(--subtext); }
+  .st-pill.sent { background: #0f3a24; color: #7ee7a4; }
+  .st-pill.error { background: #421414; color: #fca5a5; }
+  .select-mode { display: flex; gap: 6px; background: var(--panel-2); padding: 4px; border-radius: 8px; }
+  .select-mode > div { flex: 1; text-align: center; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--subtext); }
+  .select-mode > div.on { background: var(--accent); color: #17140a; }
+
+  .sdr-card .btn-full-w { flex: 1; }
+  .sdr-actions-row { display: flex; gap: 6px; }
+
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--subtext); }
+  .empty-state h3 { color: var(--text); margin-bottom: 8px; font-size: 16px; }
+
+  @media (max-width: 720px) {
+    aside { position: fixed; z-index: 10; transform: translateX(-100%); transition: transform .2s; }
+    aside.open { transform: translateX(0); }
+    .layout { grid-template-columns: 1fr; }
+    main { padding: 20px 16px 40px; }
+    .conv-layout { grid-template-columns: 1fr; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div class="brand-text">SDRs<small>Pré-atendimento Jeff</small></div>
+    </div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input id="login-user" type="text" autocomplete="username" value="jeff" />
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input id="login-pass" type="password" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Entrar</button>
+    <div id="login-error" class="error-msg"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <a href="#" id="forgot-link" onclick="doForgot();return false;" style="color:#94a3b8;font-size:13px;text-decoration:none;">Esqueci a senha</a>
+    </div>
+    <div id="forgot-msg" style="text-align:center;margin-top:10px;font-size:13px;color:#22c55e;"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div class="brand-text">SDRs<small>Pré-atendimento</small></div>
+      </div>
+      <div class="side-item active" data-view="sdrs" onclick="showView('sdrs')">
+        <span class="ico">👥</span> Cadastrar SDR
+      </div>
+      <div class="side-item" data-view="conversations" onclick="showView('conversations')">
+        <span class="ico">💬</span> Acompanhar Conversas
+      </div>
+      <div class="side-item" data-view="maturation" onclick="showView('maturation')">
+        <span class="ico">🌱</span> Maturar Chips
+      </div>
+      <div class="side-item" onclick="window.open('/api/auth/crm-sso','_blank')">
+        <span class="ico">📇</span> CRM
+      </div>
+      <div class="side-item" onclick="window.open('/api/auth/crm-sso?target=/tags','_blank')">
+        <span class="ico">🏷️</span> Tags
+      </div>
+      <div class="side-item" id="side-system" style="display:none" onclick="openSystemModal()">
+        <span class="ico">⚙️</span> Configurações do Sistema
+      </div>
+      <div class="spacer"></div>
+      <div class="side-user">
+        <b id="user-name">—</b>
+        <div id="user-role">admin</div>
+        <div class="side-logout" onclick="doLogout()">Sair</div>
+      </div>
+    </aside>
+    <main>
+      <div id="view-sdrs" class="view">
+        <div class="page-header">
+          <div>
+            <h1>Cadastrar SDR</h1>
+            <p>Conecte um chip WhatsApp por SDR e coloque o nome. Cada slot vira um agente de pré-atendimento.</p>
+          </div>
+          <button class="btn btn-ghost" onclick="loadSdrs()">↻ Atualizar</button>
+        </div>
+        <div class="card">
+          <div class="sdr-grid" id="sdr-grid"></div>
+        </div>
+      </div>
+
+      <div id="view-conversations" class="view" style="display:none">
+        <div class="page-header">
+          <div>
+            <h1>Acompanhar Conversas</h1>
+            <p>Todas as conversas que os SDRs estão tendo. Clique numa pra ver o histórico e responder.</p>
+          </div>
+          <button class="btn btn-ghost" onclick="loadConversations()">↻ Atualizar</button>
+        </div>
+        <div class="conv-layout">
+          <div class="conv-list">
+            <div class="conv-list-header">
+              <select id="conv-filter" onchange="loadConversations()">
+                <option value="">Todos os SDRs</option>
+              </select>
+            </div>
+            <div class="conv-items" id="conv-items">
+              <div class="empty-state"><h3>Carregando…</h3></div>
+            </div>
+          </div>
+          <div class="conv-pane" id="conv-pane">
+            <div class="conv-empty">Selecione uma conversa</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-maturation" class="view" style="display:none">
+        <div class="page-header">
+          <div>
+            <h1>Maturar Chips</h1>
+            <p>Aquecimento entre chips conectados. Envia mensagens casuais entre eles pra amadurecer o número.</p>
+          </div>
+        </div>
+        <div class="maturation-grid">
+          <div>
+            <div class="card">
+              <div class="card-title">Configuração</div>
+              <div class="switch-row">
+                <div>
+                  <div style="font-weight:700">Aquecimento ativo</div>
+                  <div style="font-size:12px;color:var(--subtext)">Roda em loop, respeitando limites por chip</div>
+                </div>
+                <div class="switch" id="mat-enabled" onclick="toggleMatEnabled()"></div>
+              </div>
+              <div class="form-row">
+                <div><label>Turnos mín</label><input id="mat-min-turns" type="number" min="1" /></div>
+                <div><label>Turnos máx</label><input id="mat-max-turns" type="number" min="1" /></div>
+              </div>
+              <div class="form-row">
+                <div><label>Delay mín (s)</label><input id="mat-min-delay" type="number" min="10" /></div>
+                <div><label>Delay máx (s)</label><input id="mat-max-delay" type="number" min="10" /></div>
+              </div>
+              <div class="form-group">
+                <label>Máx sessões por chip/dia</label>
+                <input id="mat-daily-max" type="number" min="1" />
+              </div>
+              <button class="btn btn-primary btn-full" onclick="saveMatConfig()">Salvar configuração</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Chips habilitados</div>
+              <div id="mat-slots"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Histórico recente</div>
+            <div class="log-list" id="mat-log"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL: Ativar SDR (escolha Zeus / outro número) -->
+<div id="modal-activate" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Ativar SDR <span id="activate-slot-label" style="color:var(--subtext);font-weight:500"></span></div>
+        <div class="modal-sub">Escolha quem vai atender por esse SDR.</div>
+      </div>
+      <button class="modal-close" onclick="closeActivateModal()">×</button>
+    </div>
+    <div style="display:grid;gap:12px;margin-top:6px">
+      <button class="btn btn-primary btn-full" style="padding:16px;text-align:left" onclick="chooseActivateZeus()">
+        <div style="font-size:16px;font-weight:700">⚡ Usar o Zeus nesse atendimento</div>
+        <div style="font-size:12px;opacity:.85;margin-top:4px;font-weight:400">O Zeus assume a personalidade configurada nas instruções deste SDR e responde direto pelo número principal quando o gatilho bater. Não precisa de chip.</div>
+      </button>
+      <button class="btn btn-ghost btn-full" style="padding:16px;text-align:left" onclick="chooseActivateChip()">
+        <div style="font-size:16px;font-weight:700">📱 Usar outro número (chip próprio)</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px;font-weight:400">Parear um chip dedicado por QR Code ou código de 8 dígitos. O SDR responde pelo próprio número.</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Conectar chip -->
+<div id="modal-connect" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Conectar chip <span id="connect-slot-label" style="color:var(--subtext);font-weight:500"></span></div>
+        <div class="modal-sub" id="connect-sdr-name">Escolha como quer parear o número.</div>
+      </div>
+      <button class="modal-close" onclick="closeConnectModal()">×</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="qr" onclick="switchConnectTab('qr')">QR Code</div>
+      <div class="tab" data-tab="token" onclick="switchConnectTab('token')">Código de 8 dígitos</div>
+    </div>
+
+    <div id="tab-qr" class="tab-panel active">
+      <div id="qr-canvas-wrap-modal" class="qr-canvas-wrap"><img id="qr-img-modal" alt="QR code" style="display:none;width:240px;height:240px"><canvas id="qr-canvas-modal"></canvas></div>
+      <div id="qr-status" class="pair-code-loading" style="display:none">Gerando QR code, aguarde…</div>
+      <div class="qr-steps">
+        <b>Como escanear:</b><br>
+        1. Abra o WhatsApp no celular do chip<br>
+        2. Toque em <b>Configurações → Aparelhos conectados</b><br>
+        3. Toque em <b>Conectar aparelho</b> e aponte pra tela
+      </div>
+      <button class="btn btn-ghost btn-full" style="margin-top:12px" onclick="regenerateQr()">🔄 Gerar novo QR code</button>
+    </div>
+
+    <div id="tab-token" class="tab-panel">
+      <div class="form-group">
+        <label>Número com DDI e DDD (só dígitos)</label>
+        <input id="pair-phone" type="tel" placeholder="5511999999999" />
+      </div>
+      <button id="pair-code-btn" class="btn btn-primary btn-full" onclick="requestPairCode(false)">Gerar código</button>
+      <div id="pair-code-display" style="display:none">
+        <div class="pair-code-box" id="pair-code-value">--------</div>
+        <div class="qr-steps">
+          <b>Como usar o código:</b><br>
+          1. Abra o WhatsApp no celular<br>
+          2. Toque em <b>Aparelhos conectados → Conectar aparelho</b><br>
+          3. Toque em <b>Conectar com número de telefone</b><br>
+          4. Digite o código acima
+        </div>
+        <button class="btn btn-ghost btn-full" style="margin-top:12px" onclick="requestPairCode(true)">🔄 Gerar novo código</button>
+      </div>
+      <div id="pair-code-loading" class="pair-code-loading" style="display:none">Gerando código, aguarde…</div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+      <button class="btn btn-danger btn-full" onclick="disconnectFromConnectModal()">🔌 Desconectar WhatsApp desse slot</button>
+      <div style="font-size:11px;color:var(--subtext);text-align:center;margin-top:6px">
+        Desassocia o chip no celular. Vai precisar parear de novo pra reconectar.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Instruções do SDR -->
+<div id="modal-instructions" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Instruções do SDR <span id="instr-slot-label" style="color:var(--subtext);font-weight:500"></span></div>
+        <div class="modal-sub">O que esse SDR deve fazer, tom de voz, roteiro de qualificação, links pra passar. O agente lê isso quando for responder.</div>
+      </div>
+      <button class="modal-close" onclick="closeInstructionsModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Instruções</label>
+      <textarea id="instructions-body" class="instructions-textarea" placeholder="Ex:&#10;&#10;Você é o SDR de pré-vendas da Alpha Digital.&#10;&#10;Objetivo: qualificar o lead que veio do anúncio e agendar reunião de diagnóstico.&#10;&#10;Perguntas chave:&#10;1. Qual o faturamento atual?&#10;2. Já investe em tráfego?&#10;3. Quando pretende começar?&#10;&#10;Se qualificar, envie o link: https://..."></textarea>
+      <div id="instructions-meta" class="instructions-meta"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeInstructionsModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInstructions()">Salvar instruções</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Configurações do SDR -->
+<div id="modal-config" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Configurações do SDR <span id="cfg-slot-label" style="color:var(--subtext);font-weight:500"></span></div>
+        <div class="modal-sub">Escolha se o SDR é ativo (dispara contato) ou receptivo (responde quando chega palavra-gatilho).</div>
+      </div>
+      <button class="modal-close" onclick="closeConfigModal()">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>Modo de operação</label>
+      <div class="select-mode" id="cfg-sdr-mode">
+        <div data-sdrmode="ativo" onclick="setSdrMode('ativo')">🚀 Ativo (dispara contato)</div>
+        <div data-sdrmode="receptivo" onclick="setSdrMode('receptivo')">📥 Receptivo (responde gatilho)</div>
+      </div>
+      <div class="config-hint">
+        <b>Ativo</b>: você sobe uma lista de contatos e o SDR inicia a conversa disparando as mensagens gatilho em rodízio.
+        <b>Receptivo</b>: o SDR fica esperando; assim que uma palavra-gatilho aparecer numa mensagem recebida, ele assume a conversa.
+      </div>
+    </div>
+
+    <div class="tabs" id="cfg-tabs-container"></div>
+
+    <!-- ATIVO: Instruções de disparo (mensagem inicial em rodízio) -->
+    <div id="cfgtab-disparo" class="tab-panel">
+      <label>Instruções pra iniciar a conversa</label>
+      <textarea id="cfg-init-instructions" style="min-height:100px" placeholder="Ex: Ao iniciar contato, apresente-se como Ana da Alpha, mencione o motivo do contato, seja calorosa."></textarea>
+      <div class="config-hint">Diretriz de tom / abordagem que o SDR usa nesse primeiro contato.</div>
+
+      <label style="margin-top:16px">Mensagens de disparo (rodízio pra evitar bloqueio)</label>
+      <div id="cfg-dispatch-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDispatchMessage('')" style="margin-top:6px">+ adicionar variação</button>
+      <div class="config-hint">
+        Cada envio usa uma variação diferente em rodízio. Use <b>{nome}</b> pra puxar o nome do contato da lista. Recomendado: 3 a 5 variações bem diferentes.
+      </div>
+
+      <label style="margin-top:16px">Delay entre disparos (segundos)</label>
+      <div class="form-row" style="margin-bottom:6px">
+        <div><label>Mínimo</label><input id="cfg-dispatch-min" type="number" min="3" max="3600" value="30" /></div>
+        <div><label>Máximo</label><input id="cfg-dispatch-max" type="number" min="3" max="3600" value="60" /></div>
+      </div>
+      <div class="config-hint">Entre um envio e o próximo o sistema espera um tempo aleatório entre mínimo e máximo.</div>
+
+      <label style="margin-top:16px">Pausa a cada N envios</label>
+      <div class="form-row" style="margin-bottom:6px">
+        <div><label>A cada N mensagens</label><input id="cfg-pause-every" type="number" min="1" max="1000" value="10" /></div>
+        <div><label>Pausa (segundos)</label><input id="cfg-pause-secs" type="number" min="0" max="86400" value="300" /></div>
+      </div>
+      <div class="config-hint">Depois de N envios, o SDR pausa X segundos. Coloque 0 nos segundos pra desativar a pausa.</div>
+    </div>
+
+    <!-- ATIVO: Lista de contatos -->
+    <div id="cfgtab-lista" class="tab-panel">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Contatos cadastrados</span>
+        <span id="cfg-saved-count" style="font-size:12px;color:var(--subtext);font-weight:400"></span>
+      </label>
+      <div class="upload-summary" id="cfg-upload-summary"></div>
+      <div class="upload-jobs-list" id="cfg-upload-jobs" style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-height:60px;max-height:240px"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="clearPendingJobs()">Cancelar pendentes</button>
+      </div>
+
+      <label style="margin-top:18px">+ Cadastrar contato manual</label>
+      <div class="chip-input-row" style="gap:6px;flex-wrap:wrap">
+        <input id="cfg-manual-phone" type="text" placeholder="Numero com DDI+DDD (ex: 5511999998888)" style="flex:2 1 200px" onkeydown="if(event.key==='Enter'){event.preventDefault();onManualEnter('phone')}" />
+        <input id="cfg-manual-name" type="text" placeholder="Nome (opcional)" style="flex:1 1 140px" onkeydown="if(event.key==='Enter'){event.preventDefault();onManualEnter('name')}" />
+        <button class="btn btn-primary btn-sm" onclick="addManualContact()">+ Adicionar</button>
+      </div>
+      <div class="config-hint">Cada contato adicionado é salvo na hora e aparece na lista de cadastrados acima.</div>
+
+      <label style="margin-top:18px">Ou colar lista inteira (um por linha: número,nome)</label>
+      <textarea id="cfg-list-input" style="min-height:120px" placeholder="55119XXXXXXXX,Fulano&#10;55119YYYYYYYY,Beltrano&#10;5562988887777,Maria"></textarea>
+      <div class="config-hint">
+        Aceita colar direto do Excel / CSV (número, nome). Aceita também nome vindo antes do número. Todo telefone precisa ter <b>DDI+DDD</b>. Número curto é ignorado.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="submitContactList()">Salvar lista</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+          📎 Enviar arquivo txt / csv / xlsx
+          <input type="file" accept=".txt,.csv,.tsv,.xlsx,.xls" style="display:none" onchange="uploadFile(event)" />
+        </label>
+        <button class="btn btn-ghost btn-sm" onclick="clearListInput()">Limpar caixa</button>
+      </div>
+
+      <label style="margin-top:18px">Ou link de Google Sheets (planilha pública ou "qualquer pessoa com link")</label>
+      <div class="chip-input-row">
+        <input id="cfg-sheet-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+        <button class="btn btn-primary btn-sm" onclick="submitSheetUrl()">Puxar da planilha</button>
+      </div>
+      <div class="config-hint">
+        A planilha precisa ter colunas: <b>número</b> na primeira e <b>nome</b> (opcional) na segunda. Compartilhamento tem que estar liberado pra "qualquer pessoa com link".
+      </div>
+    </div>
+
+    <!-- RECEPTIVO: Palavras gatilho -->
+    <div id="cfgtab-gatilhos" class="tab-panel">
+      <label>Palavras ou frases que ativam este SDR</label>
+      <div class="chip-row" id="cfg-triggers-chips"></div>
+      <div class="chip-input-row">
+        <input id="cfg-trigger-input" type="text" placeholder="ex: quero saber mais, kit congresso, comprar" onkeydown="if(event.key==='Enter'){event.preventDefault();addTriggerFromInput()}" />
+        <button class="btn btn-primary btn-sm" onclick="addTriggerFromInput()">+ Adicionar</button>
+      </div>
+      <div class="config-hint">
+        Quando qualquer palavra dessa lista aparecer em uma mensagem recebida, o SDR assume a conversa e ela fica isolada nele. Case-insensitive.
+      </div>
+
+      <label style="margin-top:16px">Mensagem inicial ao ativar (opcional)</label>
+      <textarea id="cfg-welcome" style="min-height:100px" placeholder="Ex: Oi {nome}, vi que você mostrou interesse. Posso te passar mais detalhes?"></textarea>
+      <div class="config-hint">Enviada uma vez quando o gatilho é detectado. Deixe vazio pra ele não mandar nada e só continuar a conversa.</div>
+    </div>
+
+    <!-- Conversa (comum aos dois modos) -->
+    <div id="cfgtab-conversa" class="tab-panel">
+      <label>Instruções da conversa</label>
+      <textarea id="cfg-conversation-instructions" style="min-height:220px" placeholder="Como o SDR deve conduzir a conversa. Objetivo, perguntas de qualificação, o que oferecer, o que evitar, quando encaminhar pra humano, links pra passar."></textarea>
+      <div class="config-hint">
+        O agente lê essas instruções ao responder cada mensagem. Seja específico: script, tom de voz, tabu, ordem das perguntas.
+      </div>
+
+      <label style="margin-top:16px">Personalidade (0 = ao pé da letra · 10 = criatividade máxima)</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <input id="cfg-personality" type="range" min="0" max="10" step="1" value="5" oninput="document.getElementById('cfg-personality-val').textContent = this.value" style="flex:1" />
+        <div id="cfg-personality-val" style="width:32px;text-align:center;font-weight:800;color:var(--accent);font-size:18px">5</div>
+      </div>
+      <div class="config-hint">
+        Baixo (0-3): rígido, respostas quase idênticas ao script. Médio (4-6): equilibra script e naturalidade. Alto (7-10): mais espontâneo, adapta ao cliente.
+      </div>
+
+      <label style="margin-top:16px">Link de referência (site do cliente / material)</label>
+      <input id="cfg-reference-url" type="url" placeholder="https://empresadocliente.com.br" />
+      <div class="config-hint">O SDR consulta esse link (e sub-páginas) pra responder dúvidas do cliente sobre a empresa / produto.</div>
+
+      <div style="margin-top:22px;border-top:1px solid var(--border);padding-top:16px">
+        <label style="font-weight:700;font-size:14px">🤖 Inteligência Artificial (SDR receptivo)</label>
+        <div class="config-hint">
+          Escolha a chave / modelo que este SDR usa pra responder no modo receptivo. Se nenhuma chave for escolhida, o SDR NÃO responde por IA (o fluxo antigo do Zeus continua funcionando pra ele).
+        </div>
+
+        <label style="margin-top:12px">Chave de API</label>
+        <select id="cfg-ai-key" style="width:100%">
+          <option value="">— não usar IA (deixa Zeus / manual) —</option>
+        </select>
+        <div class="config-hint">Chaves cadastradas em "Configurações do Sistema". Só admin cadastra chaves novas.</div>
+
+        <div class="form-row" style="margin-top:12px">
+          <div>
+            <label>Provider</label>
+            <select id="cfg-ai-provider" onchange="onProviderChange()">
+              <option value="">— usar o do cadastro da chave —</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="openai">OpenAI</option>
+              <option value="gemini">Gemini</option>
+            </select>
+          </div>
+          <div>
+            <label>Modelo</label>
+            <select id="cfg-ai-model"></select>
+          </div>
+        </div>
+
+        <label style="margin-top:12px">Limite diário de respostas por IA</label>
+        <input id="cfg-ai-daily-limit" type="number" min="0" max="10000" value="20" />
+        <div class="config-hint">Depois desse limite no dia, o SDR para de responder por IA até o dia seguinte (BRT). Use 0 pra desativar o limite.</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="pauseAI(10)">⏸ Pausar IA por 10 min</button>
+          <button class="btn btn-ghost btn-sm" onclick="resumeAI()">▶ Retomar agora</button>
+          <span id="cfg-ai-paused-info" style="font-size:12px;color:var(--subtext)"></span>
+        </div>
+        <div id="cfg-ai-stats" style="font-size:12px;color:var(--subtext);margin-top:8px"></div>
+      </div>
+
+      <!-- Recursos de envio -->
+      <div style="margin-top:22px;border-top:1px solid var(--border);padding-top:16px">
+        <label style="font-weight:700;font-size:14px">📎 Recursos de envio (link / arquivo / imagem)</label>
+        <div class="config-hint">
+          Quando ligados, o SDR pode enviar esses itens durante a conversa. Descreva no "quando enviar" o momento certo (ex: "após qualificar o lead", "quando pedir o material", "quando pedir foto do produto").
+        </div>
+
+        <!-- Link -->
+        <div style="margin-top:14px;padding:10px;border:1px solid var(--border);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input id="cfg-send-link-enabled" type="checkbox" onchange="toggleMediaBlock('link')" />
+            <span style="font-weight:600">Enviar link</span>
+          </label>
+          <div id="cfg-send-link-body" style="display:none;margin-top:10px">
+            <label>URL</label>
+            <input id="cfg-send-link-url" type="url" placeholder="https://..." />
+            <label style="margin-top:8px">Quando enviar (descreva o gatilho)</label>
+            <input id="cfg-send-link-trigger" type="text" placeholder="ex: após o lead confirmar interesse" />
+          </div>
+        </div>
+
+        <!-- Arquivo / audio / video / documento -->
+        <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input id="cfg-send-file-enabled" type="checkbox" onchange="toggleMediaBlock('file')" />
+            <span style="font-weight:600">Enviar arquivo (PDF, áudio, vídeo, docx...)</span>
+          </label>
+          <div id="cfg-send-file-body" style="display:none;margin-top:10px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer" id="cfg-send-file-btn">
+                📎 Escolher arquivo
+                <input type="file" style="display:none"
+                       accept="application/pdf,audio/*,video/*,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                       onchange="uploadMedia(event,'file')" />
+              </label>
+              <span id="cfg-send-file-name" style="font-size:12px;color:var(--subtext)">(nenhum arquivo enviado)</span>
+            </div>
+            <div style="font-size:11px;color:var(--subtext);margin-top:4px">
+              Limite 64MB. Aceita PDF, áudio (mp3/ogg/wav), vídeo (mp4/mov/webm), imagem, docx, xlsx, txt e zip.
+            </div>
+            <label style="margin-top:8px">Quando enviar (descreva o gatilho)</label>
+            <input id="cfg-send-file-trigger" type="text" placeholder="ex: quando o cliente pedir o material" />
+          </div>
+        </div>
+
+        <!-- Imagem -->
+        <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input id="cfg-send-image-enabled" type="checkbox" onchange="toggleMediaBlock('image')" />
+            <span style="font-weight:600">Enviar imagem</span>
+          </label>
+          <div id="cfg-send-image-body" style="display:none;margin-top:10px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer" id="cfg-send-image-btn">
+                🖼 Escolher imagem
+                <input type="file" accept="image/*" style="display:none" onchange="uploadMedia(event,'image')" />
+              </label>
+              <span id="cfg-send-image-name" style="font-size:12px;color:var(--subtext)">(nenhuma imagem enviada)</span>
+            </div>
+            <label style="margin-top:8px">Quando enviar (descreva o gatilho)</label>
+            <input id="cfg-send-image-trigger" type="text" placeholder="ex: quando o cliente pedir foto" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avançado -->
+    <div id="cfgtab-avancado" class="tab-panel">
+      <div class="form-group">
+        <label>Modo de gatilho (só p/ receptivo)</label>
+        <div class="select-mode" id="cfg-trigger-mode">
+          <div data-mode="any" onclick="setTriggerMode('any')">Padrão</div>
+          <div data-mode="strict" onclick="setTriggerMode('strict')">Estrito</div>
+        </div>
+        <div class="config-hint">
+          <b>Padrão</b>: se não bater gatilho de nenhum slot deste chip, este SDR pega a conversa mesmo assim (fallback).<br>
+          <b>Estrito</b>: só assume conversa quando o gatilho for detectado.
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Slot master (compartilhar chip com outro slot)</label>
+        <select id="cfg-master-slot">
+          <option value="">— este slot usa seu próprio chip —</option>
+        </select>
+        <div class="config-hint">
+          Se você quer que este SDR use o MESMO WhatsApp de outro slot, aponte pra ele aqui.
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:24px;padding:14px;border:1px dashed var(--red);border-radius:10px;background:rgba(220,38,38,0.04)">
+        <label style="color:var(--red);font-weight:700">Zona de perigo</label>
+        <div class="config-hint" style="margin-bottom:10px">
+          <b>Resetar memória de conversas</b>: apaga histórico interno, bindings, log de IA e jobs já disparados <b>só deste slot</b>.
+          Serve pra testar do zero ou reusar a mesma lista de leads como se fosse a primeira vez.
+          <br><b>Não afeta</b>: WhatsApp do cliente, configurações (instruções, chip, mensagens de disparo), sessão pareada, mídias.
+        </div>
+        <button class="btn btn-danger btn-full" onclick="resetSlotMemory()">🧹 Resetar memória de conversas</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfigModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveConfig()">Salvar configurações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Configurações do Sistema (admin) -->
+<div id="modal-system" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Configurações do Sistema</div>
+        <div class="modal-sub">Chaves globais de API usadas pelos SDRs. Só admin vê essa tela.</div>
+      </div>
+      <button class="modal-close" onclick="closeSystemModal()">×</button>
+    </div>
+
+    <div class="form-group">
+      <label style="font-weight:700;font-size:14px">Chaves de API</label>
+      <div class="config-hint">
+        Cadastre chaves de provedores de IA (Anthropic, OpenAI, Gemini). Cada SDR escolhe qual usar na sua tela de configuração.
+        A chave só aparece pelos últimos 4 dígitos depois de salva — a versão completa fica criptografada no servidor (AES-256-GCM).
+      </div>
+
+      <div id="sys-keys-list" style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-height:60px;margin-top:10px"></div>
+
+      <div style="margin-top:16px;padding:12px;border:1px dashed var(--border);border-radius:10px">
+        <label>Nova chave</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <select id="sys-key-provider" style="flex:1 1 140px">
+            <option value="anthropic">Anthropic</option>
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Gemini</option>
+          </select>
+          <input id="sys-key-label" type="text" placeholder="Apelido (ex: anthropic-prod)" style="flex:2 1 200px" />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <input id="sys-key-value" type="password" placeholder="Cole a chave aqui (ex: sk-ant-... / sk-... / AIza...)" style="flex:2 1 300px" autocomplete="new-password" />
+          <button class="btn btn-primary btn-sm" onclick="submitNewKey()">+ Cadastrar</button>
+        </div>
+        <div class="config-hint" style="margin-top:4px">Cheque o console do provedor pra pegar a chave. Depois de salvar, a chave completa não é mais exibida.</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSystemModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+// Escape HTML pra evitar XSS armazenado quando um campo do backend cai em innerHTML.
+const esc = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+const api = async (method, path, body) => {
+  const r = await fetch('/api' + path, {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${r.status}`);
+  }
+  return r.json();
+};
+
+let currentView = 'sdrs';
+let currentUser = null;
+let sdrsCache = [];
+let currentChat = null;
+let pollInterval = null;
+
+async function doLogin() {
+  $('#login-error').textContent = '';
+  const username = $('#login-user').value.trim();
+  const password = $('#login-pass').value;
+  if (!username || !password) { $('#login-error').textContent = 'preencha usuário e senha'; return; }
+  try {
+    const res = await api('POST', '/auth/login', { username, password });
+    currentUser = res.user;
+    enterApp();
+  } catch (e) {
+    $('#login-error').textContent = 'usuário ou senha inválidos';
+  }
+}
+
+async function doForgot() {
+  const username = ($('#login-user').value || '').trim();
+  if (!username) { $('#login-error').textContent = 'informa o usuario primeiro'; return; }
+  $('#login-error').textContent = '';
+  $('#forgot-msg').textContent = 'enviando...';
+  try {
+    await api('POST', '/auth/forgot', { username });
+    $('#forgot-msg').textContent = 'senha nova enviada no WhatsApp do Jeff';
+  } catch {
+    $('#forgot-msg').textContent = '';
+    $('#login-error').textContent = 'falha ao enviar, chama o Zeus';
+  }
+}
+
+async function doLogout() {
+  try { await api('POST', '/auth/logout'); } catch {}
+  location.reload();
+}
+
+async function enterApp() {
+  $('#login-screen').style.display = 'none';
+  $('#app-screen').style.display = 'block';
+  $('#user-name').textContent = currentUser.display_name || currentUser.username;
+  $('#user-role').textContent = currentUser.role;
+  if (currentUser.role === 'admin') {
+    const el = document.getElementById('side-system');
+    if (el) el.style.display = '';
+  }
+  await loadSdrs();
+  startPolling();
+}
+
+/* ====== Configurações do Sistema (chaves de API) ====== */
+let sysModelsCache = null;
+
+async function openSystemModal() {
+  document.getElementById('modal-system').style.display = 'flex';
+  await refreshKeys();
+}
+function closeSystemModal() {
+  document.getElementById('modal-system').style.display = 'none';
+}
+async function refreshKeys() {
+  try {
+    const res = await api('GET', '/system/keys');
+    sysModelsCache = res.models;
+    const box = document.getElementById('sys-keys-list');
+    if (!res.keys.length) {
+      box.innerHTML = '<div style="color:var(--subtext);padding:8px 0">nenhuma chave cadastrada.</div>';
+      return;
+    }
+    box.innerHTML = res.keys.map(k => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)">
+        <div>
+          <b>${esc(k.label)}</b>
+          <span style="color:var(--subtext);margin-left:8px;font-size:12px">${esc(k.provider)} · ****${esc(k.key_last4)}</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="deleteKey(${k.id})" title="Excluir chave">🗑</button>
+      </div>
+    `).join('');
+  } catch (e) { alert('Erro carregando chaves: ' + e.message); }
+}
+async function submitNewKey() {
+  const provider = document.getElementById('sys-key-provider').value;
+  const label = document.getElementById('sys-key-label').value.trim();
+  const key = document.getElementById('sys-key-value').value.trim();
+  if (!key) return alert('Cole a chave.');
+  try {
+    await api('POST', '/system/keys', { provider, label, key });
+    document.getElementById('sys-key-label').value = '';
+    document.getElementById('sys-key-value').value = '';
+    await refreshKeys();
+    alert('Chave cadastrada.');
+  } catch (e) { alert('Erro ao salvar: ' + e.message); }
+}
+async function deleteKey(id) {
+  if (!confirm('Excluir esta chave? SDRs que usam ela pararão de responder por IA.')) return;
+  try {
+    await api('DELETE', '/system/keys/' + id);
+    await refreshKeys();
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+
+/* ====== IA na tela do SDR ====== */
+let cfgAvailableKeys = [];
+let cfgAiProviderSelected = '';
+function providerModels(provider) {
+  const map = sysModelsCache || {
+    anthropic: { default: 'claude-sonnet-4-6', options: ['claude-sonnet-4-6', 'claude-opus-4-7', 'claude-haiku-4-5-20251001'] },
+    openai:    { default: 'gpt-4o-mini',      options: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo'] },
+    gemini:    { default: 'gemini-2.0-flash-exp', options: ['gemini-2.0-flash-exp', 'gemini-1.5-pro'] },
+  };
+  return map[provider] || null;
+}
+function onProviderChange() {
+  const provSel = document.getElementById('cfg-ai-provider');
+  const modelSel = document.getElementById('cfg-ai-model');
+  const prov = provSel.value || inferProviderFromSelectedKey();
+  const m = providerModels(prov);
+  if (!m) { modelSel.innerHTML = '<option value="">—</option>'; return; }
+  modelSel.innerHTML = m.options.map(o => `<option value="${o}">${o}</option>`).join('');
+  modelSel.value = m.default;
+}
+function inferProviderFromSelectedKey() {
+  const sel = document.getElementById('cfg-ai-key');
+  const id = sel.value ? parseInt(sel.value, 10) : null;
+  const k = cfgAvailableKeys.find(k => k.id === id);
+  return k ? k.provider : '';
+}
+async function pauseAI(minutes) {
+  if (currentCfgSlot == null) return;
+  try {
+    await api('POST', '/sdrs/' + currentCfgSlot + '/ai-pause', { minutes });
+    alert(`IA pausada por ${minutes} min.`);
+    await refreshAiInfo();
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+async function resumeAI() {
+  if (currentCfgSlot == null) return;
+  try {
+    await api('POST', '/sdrs/' + currentCfgSlot + '/ai-resume');
+    await refreshAiInfo();
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+async function refreshAiInfo() {
+  if (currentCfgSlot == null) return;
+  try {
+    const { sdr } = await api('GET', '/sdrs/' + currentCfgSlot + '/config');
+    const el = document.getElementById('cfg-ai-paused-info');
+    if (sdr.ai_paused_until && new Date(sdr.ai_paused_until).getTime() > Date.now()) {
+      el.textContent = 'pausado até ' + new Date(sdr.ai_paused_until).toLocaleString('pt-BR');
+    } else {
+      el.textContent = '';
+    }
+    const stats = await api('GET', '/sdrs/' + currentCfgSlot + '/ai-stats');
+    document.getElementById('cfg-ai-stats').textContent = `Usadas hoje: ${stats.used_today} de ${sdr.ai_daily_limit || 20}`;
+  } catch {}
+}
+
+function showView(name) {
+  currentView = name;
+  $$('.view').forEach(el => el.style.display = 'none');
+  $('#view-' + name).style.display = 'block';
+  $$('.side-item').forEach(el => el.classList.toggle('active', el.dataset.view === name));
+  if (name === 'sdrs') loadSdrs();
+  if (name === 'conversations') { loadConversations(); populateConvFilter(); }
+  if (name === 'maturation') { loadMaturation(); }
+}
+
+function statusBadge(status) {
+  const label = { idle: 'desligado', connecting: 'conectando', qr: 'escaneie', ready: 'ativo', disconnected: 'off' }[status] || status;
+  return `<span class="badge badge-${status}">${label}</span>`;
+}
+
+async function loadSdrs() {
+  const { sdrs } = await api('GET', '/sdrs');
+  sdrsCache = sdrs;
+  const grid = $('#sdr-grid');
+  grid.innerHTML = '';
+  sdrs.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sdr-card status-' + s.status;
+    const zeusOn = !!s.zeus_mode;
+    let primaryBtn;
+    let secondaryBtn = '';
+    const disconnectBtn = `<button class="btn btn-danger btn-sm btn-full-w" onclick="disconnectSlot(${s.slot})">🔌 Desconectar WhatsApp</button>`;
+    if (zeusOn) {
+      primaryBtn = `<button class="btn btn-danger btn-sm btn-full-w" onclick="disableZeusMode(${s.slot})">Desativar Zeus</button>`;
+      if (s.status === 'ready' || s.status === 'qr' || s.status === 'connecting') {
+        secondaryBtn = disconnectBtn;
+      } else {
+        secondaryBtn = `<button class="btn btn-primary btn-sm btn-full-w" onclick="openConnectModalFromZeus(${s.slot})">🔌 Conectar chip via QR/Token</button>`;
+      }
+    } else if (s.status === 'idle' || s.status === 'disconnected') {
+      // Botao principal VERDE: conecta WhatsApp direto (abre modal QR/Token).
+      // Secundario ghost: fluxo antigo "Ativar SDR" (escolha Zeus ou chip).
+      primaryBtn = `<button class="btn btn-success btn-sm btn-full-w" onclick="openConnectModal(${s.slot})">🔌 Conectar WhatsApp</button>`;
+      secondaryBtn = `<button class="btn btn-ghost btn-sm btn-full-w" onclick="openActivateModal(${s.slot})">⚡ Ativar SDR (Zeus ou chip)</button>`;
+    } else if (s.status === 'connecting') {
+      primaryBtn = `<button class="btn btn-ghost btn-sm btn-full-w" disabled>conectando…</button>`;
+      // Botao secundario: desconectar cancela a tentativa e libera o slot.
+      secondaryBtn = disconnectBtn;
+    } else if (s.status === 'qr') {
+      // Quando ja tem QR ativo, botao principal reabre o modal de conectar chip direto (nao volta pra escolha).
+      primaryBtn = `<button class="btn btn-success btn-sm btn-full-w" onclick="openConnectModal(${s.slot})">🔌 Conectar WhatsApp (ver QR / Token)</button>`;
+      secondaryBtn = disconnectBtn;
+    } else {
+      primaryBtn = disconnectBtn;
+    }
+    const hasInstructions = !!(s.instructions && s.instructions.trim());
+    const activeOn = !!s.ai_active;
+    const isAtivoMode = s.sdr_mode === 'ativo';
+    const dispatchRunning = !!s.dispatch_running;
+    const pending = s.upload_pending || 0;
+    const sent = s.upload_sent || 0;
+    const errored = s.upload_error || 0;
+    let dispatchBlock = '';
+    if (isAtivoMode) {
+      const hasHistory = (sent + errored) > 0;
+      const btn = dispatchRunning
+        ? `<button class="btn btn-danger btn-sm btn-full-w" onclick="pauseDispatch(${s.slot})">⏸ Pausar atendimento</button>`
+        : (pending > 0
+            ? `<button class="btn btn-primary btn-sm btn-full-w" onclick="startDispatch(${s.slot})">▶ Iniciar atendimento</button>`
+            : (hasHistory
+                ? `<button class="btn btn-primary btn-sm btn-full-w" onclick="resetAndStart(${s.slot}, ${sent + errored})">🔄 Reiniciar atendimento</button>`
+                : `<button class="btn btn-primary btn-sm btn-full-w" disabled title="Sem contatos na fila">▶ Iniciar atendimento</button>`));
+      const statusLine = dispatchRunning
+        ? `<span style="color:var(--green);font-weight:600">rodando</span> · ${sent} enviados · ${pending} na fila${errored ? ' · ' + errored + ' erro' : ''}`
+        : `parado · ${sent} enviados · ${pending} na fila${errored ? ' · ' + errored + ' erro' : ''}`;
+      dispatchBlock = `
+        <div class="sdr-actions-row" style="width:100%">${btn}</div>
+        <div style="font-size:11px;color:var(--subtext);text-align:center;margin-top:-4px">${statusLine}</div>
+      `;
+    } else {
+      // Modo receptivo: botao "Iniciar atendimento" liga o SDR (ai_active=1).
+      // Nao ha fila de disparo, mas o botao serve pra Jeff sinalizar "esta operando".
+      const btn = dispatchRunning
+        ? `<button class="btn btn-danger btn-sm btn-full-w" onclick="pauseDispatch(${s.slot})">⏸ Pausar atendimento</button>`
+        : `<button class="btn btn-primary btn-sm btn-full-w" onclick="startDispatch(${s.slot})">▶ Iniciar atendimento</button>`;
+      const statusLine = dispatchRunning
+        ? `<span style="color:var(--green);font-weight:600">atendendo</span> · aguardando mensagens de leads`
+        : `pausado · botao inicia atendimento receptivo`;
+      dispatchBlock = `
+        <div class="sdr-actions-row" style="width:100%">${btn}</div>
+        <div style="font-size:11px;color:var(--subtext);text-align:center;margin-top:-4px">${statusLine}</div>
+      `;
+    }
+    card.innerHTML = `
+      <div class="sdr-header">
+        <div class="sdr-slot">SLOT ${s.slot}</div>
+        ${statusBadge(s.status)}
+      </div>
+      <div class="toggle-active ${activeOn ? 'on' : ''}" onclick="toggleSlotActive(${s.slot})" title="Ligar/pausar agente deste SDR">
+        <div class="sw"></div>
+        <div class="lbl">${activeOn ? 'ATIVO' : 'PAUSADO'}</div>
+      </div>
+      <div class="sdr-name-row">
+        <input value="${esc(s.name)}" placeholder="Nome do SDR" data-slot="${s.slot}" data-field="name" />
+        <input class="role" value="${esc(s.role_label)}" placeholder="Cargo / função (ex: Pré-vendas)" data-slot="${s.slot}" data-field="role_label" />
+      </div>
+      <div class="sdr-phone">${zeusOn ? '⚡ Atendendo via Zeus' : (s.phone ? '+' + esc(s.phone) : (s.status === 'qr' ? 'aguardando pareamento' : 'sem chip'))}</div>
+      <div class="sdr-actions">
+        <div class="sdr-actions-row" style="width:100%">${primaryBtn}</div>
+        ${secondaryBtn ? `<div class="sdr-actions-row" style="width:100%">${secondaryBtn}</div>` : ''}
+        ${dispatchBlock}
+        <div class="sdr-actions-row" style="width:100%">
+          <button class="btn btn-ghost btn-sm btn-full-w" onclick="openInstructionsModal(${s.slot})">
+            📝 Instruções${hasInstructions ? ' ✓' : ''}
+          </button>
+        </div>
+        <div class="sdr-actions-row" style="width:100%">
+          <button class="btn btn-ghost btn-sm btn-full-w" onclick="openConfigModal(${s.slot})">
+            ⚙️ Configurações
+          </button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('blur', async () => {
+      const slot = parseInt(inp.dataset.slot, 10);
+      const field = inp.dataset.field;
+      try { await api('PATCH', '/sdrs/' + slot, { [field]: inp.value }); } catch (e) { console.error(e); }
+    });
+  });
+
+  if (currentConnectSlot) refreshConnectModal();
+}
+
+async function toggleSlotActive(slot) {
+  try {
+    const res = await api('POST', '/sdrs/' + slot + '/toggle-active');
+    const s = sdrsCache.find(x => x.slot === slot);
+    if (s) s.ai_active = res.ai_active;
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao alternar: ' + e.message);
+  }
+}
+
+const dispatchDebounce = new Map();
+async function startDispatch(slot) {
+  if (dispatchDebounce.has(slot)) {
+    alert('Aguarde um momento, já está processando o clique anterior...');
+    return;
+  }
+  dispatchDebounce.set(slot, true);
+  setTimeout(() => dispatchDebounce.delete(slot), 3000);
+  try {
+    await api('POST', '/sdrs/' + slot + '/dispatch/start');
+    loadSdrs();
+  } catch (e) {
+    const msg = e.message.includes('sem_mensagem_disparo')
+      ? 'Configure uma mensagem de disparo para este slot antes de iniciar.'
+      : e.message;
+    alert('Erro ao iniciar: ' + msg);
+  }
+}
+
+async function resetAndStart(slot, count) {
+  if (!confirm('Reiniciar o atendimento do Slot ' + slot + '?\n\nIsso vai reenviar a mensagem inicial pros ' + count + ' contato(s) que já foram disparados.')) return;
+  try {
+    await api('POST', '/sdrs/' + slot + '/dispatch/reset-queue');
+    await api('POST', '/sdrs/' + slot + '/dispatch/start');
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao reiniciar: ' + e.message);
+  }
+}
+
+async function resetSlotMemory() {
+  const slot = currentCfgSlot;
+  if (!slot) { alert('Nenhum slot selecionado.'); return; }
+  const msg =
+    'Isso apaga TODO o histórico interno do agente do Slot ' + slot + ':\n' +
+    ' • mensagens salvas internamente\n' +
+    ' • vínculo contato→slot (bindings)\n' +
+    ' • log de interações com a IA\n' +
+    ' • jobs de disparo já enviados/duplicados/erro\n\n' +
+    'NÃO afeta: WhatsApp do cliente, configurações (instruções, chip, mensagens de disparo), sessão pareada, mídias.\n\n' +
+    'Você tem certeza?';
+  if (!confirm(msg)) return;
+  try {
+    const res = await api('POST', '/sdrs/' + slot + '/reset-memory');
+    const d = res.deleted || {};
+    alert(
+      '✅ Memória do Slot ' + slot + ' resetada.\n\n' +
+      'Mensagens: ' + (d.messages || 0) + '\n' +
+      'Conversas: ' + (d.conversations || 0) + '\n' +
+      'Bindings: ' + (d.bindings || 0) + '\n' +
+      'Interações IA: ' + (d.interactions || 0) + '\n' +
+      'Jobs antigos: ' + (d.jobs || 0) + '\n' +
+      'Cache welcome: ' + (d.welcome_cache || 0)
+    );
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao resetar: ' + e.message);
+  }
+}
+
+async function pauseDispatch(slot) {
+  if (!confirm('Pausar o atendimento do Slot ' + slot + '? A fila continua salva e você pode retomar quando quiser.')) return;
+  try {
+    await api('POST', '/sdrs/' + slot + '/dispatch/pause');
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao pausar: ' + e.message);
+  }
+}
+
+/* ===== Modal Ativar SDR ===== */
+let currentActivateSlot = null;
+
+function openActivateModal(slot) {
+  currentActivateSlot = slot;
+  $('#activate-slot-label').textContent = '· Slot ' + slot;
+  $('#modal-activate').style.display = 'flex';
+}
+function closeActivateModal() {
+  currentActivateSlot = null;
+  $('#modal-activate').style.display = 'none';
+}
+async function chooseActivateZeus() {
+  if (currentActivateSlot == null) return;
+  const slot = currentActivateSlot;
+  try {
+    await api('POST', '/sdrs/' + slot + '/zeus-mode', { enabled: true });
+    closeActivateModal();
+    await loadSdrs();
+    alert('Zeus ativado no Slot ' + slot + '. Ele vai responder por esse SDR quando o gatilho bater.');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+function chooseActivateChip() {
+  const slot = currentActivateSlot;
+  closeActivateModal();
+  if (slot != null) openConnectModal(slot);
+}
+async function disableZeusMode(slot) {
+  if (!confirm('Desativar o Zeus no Slot ' + slot + '?')) return;
+  try {
+    await api('POST', '/sdrs/' + slot + '/zeus-mode', { enabled: false });
+    await loadSdrs();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+/* ===== Modal Conectar Chip ===== */
+let currentConnectSlot = null;
+let currentConnectTab = 'qr';
+let lastQrRendered = null;
+
+async function openConnectModalFromZeus(slot) {
+  if (!confirm('Vou desativar o Zeus deste slot e abrir o pareamento do chip por QR Code / Token. Confirma?')) return;
+  try {
+    await api('POST', '/sdrs/' + slot + '/zeus-mode', { enabled: false });
+    await loadSdrs();
+    await openConnectModal(slot);
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+async function openConnectModal(slot) {
+  currentConnectSlot = slot;
+  currentConnectTab = 'qr';
+  lastQrRendered = null;
+  $('#connect-slot-label').textContent = '· Slot ' + slot;
+  const s = sdrsCache.find(x => x.slot === slot);
+  $('#connect-sdr-name').textContent = s && s.name ? s.name : 'Escolha como quer parear o número.';
+  switchConnectTab('qr');
+  $('#pair-phone').value = '';
+  $('#pair-code-display').style.display = 'none';
+  $('#pair-code-loading').style.display = 'none';
+  $('#modal-connect').style.display = 'flex';
+
+  // Se ainda não conectou (ou QR está velho/sem processo vivo), dispara connect/reconnect
+  if (s && s.status !== 'ready' && s.status !== 'connecting') {
+    try { await api('POST', '/sdrs/' + slot + '/reconnect'); } catch {}
+  }
+  await refreshConnectModal();
+}
+
+function closeConnectModal() {
+  currentConnectSlot = null;
+  lastQrRendered = null;
+  $('#modal-connect').style.display = 'none';
+}
+
+function switchConnectTab(tab) {
+  currentConnectTab = tab;
+  $$('#modal-connect .tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  $$('#modal-connect .tab-panel').forEach(el => el.classList.remove('active'));
+  $('#tab-' + tab).classList.add('active');
+}
+
+async function refreshConnectModal() {
+  if (currentConnectSlot == null) return;
+  try {
+    const { sdr } = await api('GET', '/sdrs/' + currentConnectSlot);
+    // se já conectou, fecha
+    if (sdr.status === 'ready') {
+      closeConnectModal();
+      await loadSdrs();
+      alert('Chip ' + (sdr.name || 'Slot ' + sdr.slot) + ' conectado! ' + (sdr.phone ? '+' + sdr.phone : ''));
+      return;
+    }
+    // Se status voltou pra idle sozinho (Chrome crashou), avisa usuario que precisa clicar de novo.
+    if (sdr.status === 'idle') {
+      $('#qr-canvas-wrap-modal').style.display = 'none';
+      $('#qr-status').style.display = 'block';
+      $('#qr-status').textContent = 'Sessao caiu. Clique em "Gerar novo QR code" pra tentar de novo.';
+    }
+    // QR tab
+    if (sdr.last_qr) {
+      $('#qr-canvas-wrap-modal').style.display = 'grid';
+      $('#qr-status').style.display = 'none';
+      if (lastQrRendered !== sdr.last_qr) {
+        lastQrRendered = sdr.last_qr;
+        const imgEl = document.getElementById('qr-img-modal');
+        const canvasEl = document.getElementById('qr-canvas-modal');
+        if (typeof sdr.last_qr === 'string' && sdr.last_qr.startsWith('data:image')) {
+          // Backend ja entregou data URL PNG pronta — usa <img>.
+          imgEl.src = sdr.last_qr;
+          imgEl.style.display = 'block';
+          canvasEl.style.display = 'none';
+        } else {
+          // Fallback: string bruta do WA, renderiza client-side.
+          imgEl.style.display = 'none';
+          canvasEl.style.display = 'block';
+          try { await QRCode.toCanvas(canvasEl, sdr.last_qr, { width: 240, margin: 1, color: { dark: '#000000', light: '#ffffff' } }); } catch (e) { console.error(e); }
+        }
+      }
+    } else if (sdr.status !== 'idle') {
+      $('#qr-canvas-wrap-modal').style.display = 'none';
+      $('#qr-status').style.display = 'block';
+      $('#qr-status').textContent = 'Gerando QR code, aguarde…';
+    }
+    // Token tab: se veio pairing_code do backend, mostra
+    if (sdr.pairing_code) {
+      $('#pair-code-display').style.display = 'block';
+      $('#pair-code-loading').style.display = 'none';
+      $('#pair-code-value').textContent = sdr.pairing_code;
+    } else if ($('#pair-code-loading').style.display === 'block' && sdr.status === 'idle') {
+      // Session caiu enquanto esperava codigo — para o spinner.
+      $('#pair-code-loading').style.display = 'none';
+      $('#pair-code-loading').textContent = 'Nao foi possivel gerar o codigo. Tente de novo.';
+    }
+  } catch (e) {
+    console.error('refreshConnectModal', e);
+  }
+}
+
+async function requestPairCode(force) {
+  if (currentConnectSlot == null) return;
+  const phone = $('#pair-phone').value.replace(/\D/g, '');
+  if (phone.length < 10 || phone.length > 15) { alert('Numero invalido. Use DDI+DDD+numero, so digitos (ex: 5511999999999).'); return; }
+  $('#pair-code-loading').style.display = 'block';
+  $('#pair-code-loading').textContent = 'Gerando codigo, aguarde ate 20s…';
+  $('#pair-code-display').style.display = 'none';
+  lastQrRendered = null;
+  try {
+    const res = await api('POST', '/sdrs/' + currentConnectSlot + '/pair-code', { phone, force: !!force });
+    if (res.code) {
+      $('#pair-code-display').style.display = 'block';
+      $('#pair-code-loading').style.display = 'none';
+      $('#pair-code-value').textContent = res.code;
+    }
+    // Se res.code veio null (starting_session), o poll de refreshConnectModal
+    // vai capturar o pairing_code do backend em poucos segundos.
+  } catch (e) {
+    $('#pair-code-loading').style.display = 'none';
+    alert('Erro ao gerar codigo: ' + e.message);
+  }
+}
+
+async function regenerateQr() {
+  if (currentConnectSlot == null) return;
+  lastQrRendered = null;
+  $('#qr-canvas-wrap-modal').style.display = 'none';
+  $('#qr-status').style.display = 'block';
+  $('#qr-status').textContent = 'Reiniciando sessão e gerando novo QR code…';
+  try {
+    await api('POST', '/sdrs/' + currentConnectSlot + '/reconnect');
+  } catch (e) {
+    alert('Erro ao reiniciar sessão: ' + e.message);
+  }
+}
+
+async function disconnectFromConnectModal() {
+  if (currentConnectSlot == null) return;
+  await disconnectSlot(currentConnectSlot);
+}
+
+async function disconnectSlot(slot) {
+  const s = (sdrsCache || []).find(x => x.slot === slot) || {};
+  const nome = s.name ? ' (' + s.name + ')' : '';
+  const msg = 'Desconectar o WhatsApp do slot ' + slot + nome + '?\n\n'
+    + 'O chip vai ser desassociado no celular do cliente (some de "Aparelhos conectados").\n'
+    + 'Pra usar de novo vai precisar parear com QR ou codigo.';
+  if (!confirm(msg)) return;
+  try {
+    await api('POST', '/sdrs/' + slot + '/disconnect');
+  } catch (e) {
+    alert('Erro ao desconectar: ' + (e && e.message ? e.message : e));
+    return;
+  }
+  // Fecha modal de conectar se estiver aberto no slot desconectado.
+  if (currentConnectSlot === slot) {
+    currentConnectSlot = null;
+    const m = document.getElementById('modal-connect');
+    if (m) m.style.display = 'none';
+  }
+  loadSdrs();
+}
+
+/* ===== Modal Instruções ===== */
+let currentInstrSlot = null;
+
+async function openInstructionsModal(slot) {
+  currentInstrSlot = slot;
+  const s = sdrsCache.find(x => x.slot === slot);
+  $('#instr-slot-label').textContent = '· Slot ' + slot + (s && s.name ? ' · ' + s.name : '');
+  $('#instructions-body').value = '';
+  $('#instructions-meta').textContent = 'Carregando…';
+  $('#modal-instructions').style.display = 'flex';
+  try {
+    const { sdr } = await api('GET', '/sdrs/' + slot + '/instructions');
+    $('#instructions-body').value = sdr.instructions || '';
+    $('#instructions-meta').textContent = sdr.instructions_updated_at
+      ? 'Última atualização: ' + new Date(sdr.instructions_updated_at).toLocaleString('pt-BR')
+      : 'Sem instruções cadastradas ainda.';
+  } catch (e) {
+    $('#instructions-meta').textContent = 'Erro ao carregar: ' + e.message;
+  }
+}
+
+function closeInstructionsModal() {
+  currentInstrSlot = null;
+  $('#modal-instructions').style.display = 'none';
+}
+
+async function saveInstructions() {
+  if (currentInstrSlot == null) return;
+  const instructions = $('#instructions-body').value;
+  try {
+    await api('PUT', '/sdrs/' + currentInstrSlot + '/instructions', { instructions });
+    closeInstructionsModal();
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+function populateConvFilter() {
+  const sel = $('#conv-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos os SDRs</option>' + sdrsCache
+    .filter(s => s.name || s.phone)
+    .map(s => `<option value="${s.slot}">${s.name || 'Slot ' + s.slot}${s.phone ? ' (+' + s.phone + ')' : ''}</option>`)
+    .join('');
+  sel.value = current;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('pt-BR');
+}
+
+async function loadConversations() {
+  const slot = $('#conv-filter').value;
+  const path = '/conversations' + (slot ? '?slot=' + slot : '');
+  const { conversations } = await api('GET', path);
+  const list = $('#conv-items');
+  if (!conversations.length) {
+    list.innerHTML = '<div class="empty-state"><h3>Sem conversas ainda</h3><div>Conecte um SDR e receba mensagens.</div></div>';
+    return;
+  }
+  list.innerHTML = conversations.map(c => `
+    <div class="conv-item ${currentChat && currentChat.slot === c.slot && currentChat.chat_id === c.chat_id ? 'active' : ''}"
+         onclick="openChat(${c.slot}, '${c.chat_id.replace(/'/g, "\\'")}', '${(c.contact_name || c.contact_phone || '').replace(/'/g, "\\'")}')">
+      <div class="conv-row1">
+        <div class="conv-name">${c.contact_name || '+' + (c.contact_phone || '?')}</div>
+        <div class="conv-time">${fmtTime(c.last_ts)}</div>
+      </div>
+      <div class="conv-preview">${c.last_from_me ? '➜ ' : ''}${(c.last_message || '').slice(0, 50)}</div>
+      <div class="conv-row1">
+        <div class="conv-sdr">${c.sdr_name || 'Slot ' + c.slot}</div>
+        ${c.unread > 0 ? '<div class="unread-dot"></div>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function openChat(slot, chatId, title) {
+  currentChat = { slot, chat_id: chatId, title };
+  const pane = $('#conv-pane');
+  pane.innerHTML = `
+    <div class="conv-pane-header">
+      <div>
+        <div style="font-weight:700">${title || chatId}</div>
+        <div style="font-size:11px;color:var(--subtext)">SDR: ${(sdrsCache.find(s=>s.slot===slot)||{}).name || 'Slot ' + slot}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadMessages()">↻</button>
+    </div>
+    <div class="conv-pane-body" id="msg-body"></div>
+    <div class="conv-pane-input">
+      <textarea id="reply-body" placeholder="Escreva uma resposta…"></textarea>
+      <button class="btn btn-primary" onclick="sendReply()">Enviar</button>
+    </div>
+  `;
+  await api('POST', '/conversations/mark-read', { slot, chat_id: chatId });
+  await loadMessages();
+  loadConversations();
+}
+
+async function loadMessages() {
+  if (!currentChat) return;
+  const { messages } = await api('GET', `/conversations/messages?slot=${currentChat.slot}&chat_id=${encodeURIComponent(currentChat.chat_id)}`);
+  const body = $('#msg-body');
+  if (!body) return;
+  body.innerHTML = messages.map(m => `
+    <div class="msg-bubble ${m.from_me ? 'msg-me' : 'msg-them'}">
+      ${(m.body || '').replace(/</g,'&lt;').replace(/\n/g,'<br>')}
+      <div class="msg-meta">${fmtTime(m.ts)}</div>
+    </div>
+  `).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendReply() {
+  const body = $('#reply-body').value.trim();
+  if (!body || !currentChat) return;
+  try {
+    await api('POST', '/conversations/reply', { slot: currentChat.slot, chat_id: currentChat.chat_id, body });
+    $('#reply-body').value = '';
+    setTimeout(loadMessages, 800);
+  } catch (e) {
+    alert('Erro ao enviar: ' + e.message);
+  }
+}
+
+async function loadMaturation() {
+  const { config, statuses } = await api('GET', '/maturation/config');
+  $('#mat-enabled').classList.toggle('on', !!config.enabled);
+  $('#mat-min-turns').value = config.min_turns;
+  $('#mat-max-turns').value = config.max_turns;
+  $('#mat-min-delay').value = config.min_delay_seconds;
+  $('#mat-max-delay').value = config.max_delay_seconds;
+  $('#mat-daily-max').value = config.daily_max_sessions;
+
+  const statusMap = {};
+  statuses.forEach(s => statusMap[s.slot] = s);
+  const slotsDiv = $('#mat-slots');
+  const eligible = sdrsCache.filter(s => s.status === 'ready');
+  if (!eligible.length) {
+    slotsDiv.innerHTML = '<div class="empty-state" style="padding:20px"><h3>Sem chips conectados</h3><div>Conecte pelo menos 2 chips na aba Cadastrar SDR.</div></div>';
+  } else {
+    slotsDiv.innerHTML = eligible.map(s => {
+      const st = statusMap[s.slot] || {};
+      return `
+        <div class="switch-row">
+          <div>
+            <div style="font-weight:700">${s.name || 'Slot ' + s.slot}</div>
+            <div style="font-size:11px;color:var(--subtext)">+${s.phone} · hoje: ${st.sessions_today || 0}</div>
+          </div>
+          <div class="switch ${st.enabled ? 'on' : ''}" onclick="toggleMatSlot(${s.slot}, ${st.enabled ? 0 : 1})"></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const { log } = await api('GET', '/maturation/log');
+  $('#mat-log').innerHTML = log.length
+    ? log.map(l => `<div class="log-item"><span class="log-slot">Slot ${l.from_slot} → ${l.to_slot}</span> · ${l.body} <span style="float:right">${l.ts.slice(11,16)}</span></div>`).join('')
+    : '<div class="empty-state" style="padding:20px">Ainda sem histórico.</div>';
+}
+
+async function toggleMatEnabled() {
+  const on = $('#mat-enabled').classList.contains('on');
+  await api('PUT', '/maturation/config', { enabled: !on });
+  loadMaturation();
+}
+async function toggleMatSlot(slot, enabled) {
+  await api('POST', '/maturation/slot/' + slot, { enabled: !!enabled });
+  loadMaturation();
+}
+async function saveMatConfig() {
+  await api('PUT', '/maturation/config', {
+    min_turns: parseInt($('#mat-min-turns').value, 10),
+    max_turns: parseInt($('#mat-max-turns').value, 10),
+    min_delay_seconds: parseInt($('#mat-min-delay').value, 10),
+    max_delay_seconds: parseInt($('#mat-max-delay').value, 10),
+    daily_max_sessions: parseInt($('#mat-daily-max').value, 10),
+  });
+  alert('Configuração salva');
+}
+
+/* ===== Modal Configurações ===== */
+let currentCfgSlot = null;
+let cfgTriggers = [];
+let cfgTriggerMode = 'any';
+let cfgSdrMode = 'receptivo';
+let cfgUploadPollTimer = null;
+let cfgDispatchMessages = [];
+
+const CFG_TABS_ATIVO = [
+  { key: 'disparo', label: 'Disparo' },
+  { key: 'lista', label: 'Lista de contatos' },
+  { key: 'conversa', label: 'Conversa' },
+  { key: 'avancado', label: 'Avançado' },
+];
+const CFG_TABS_RECEPTIVO = [
+  { key: 'gatilhos', label: 'Gatilhos' },
+  { key: 'conversa', label: 'Conversa' },
+  { key: 'avancado', label: 'Avançado' },
+];
+
+function renderCfgTabs() {
+  const tabs = cfgSdrMode === 'ativo' ? CFG_TABS_ATIVO : CFG_TABS_RECEPTIVO;
+  const box = $('#cfg-tabs-container');
+  box.innerHTML = tabs.map((t, i) => `<div class="tab ${i===0?'active':''}" data-cfgtab="${t.key}" onclick="switchCfgTab('${t.key}')">${t.label}</div>`).join('');
+  document.querySelectorAll('#modal-config .tab-panel').forEach(el => el.classList.remove('active'));
+  $('#cfgtab-' + tabs[0].key).classList.add('active');
+}
+
+async function openConfigModal(slot) {
+  currentCfgSlot = slot;
+  const s = sdrsCache.find(x => x.slot === slot);
+  $('#cfg-slot-label').textContent = '· Slot ' + slot + (s && s.name ? ' · ' + s.name : '');
+  $('#cfg-welcome').value = '';
+  $('#cfg-init-instructions').value = '';
+  $('#cfg-conversation-instructions').value = '';
+  $('#cfg-reference-url').value = '';
+  $('#cfg-list-input').value = '';
+  $('#cfg-sheet-url').value = '';
+  // reset campos de midia
+  ['link','file','image'].forEach(k => {
+    const en = document.getElementById('cfg-send-' + k + '-enabled'); if (en) en.checked = false;
+    const trig = document.getElementById('cfg-send-' + k + '-trigger'); if (trig) trig.value = '';
+    const body = document.getElementById('cfg-send-' + k + '-body'); if (body) body.style.display = 'none';
+  });
+  const lu = document.getElementById('cfg-send-link-url'); if (lu) lu.value = '';
+  const fn = document.getElementById('cfg-send-file-name'); if (fn) fn.textContent = '(nenhum arquivo enviado)';
+  const iN = document.getElementById('cfg-send-image-name'); if (iN) iN.textContent = '(nenhuma imagem enviada)';
+  cfgTriggers = [];
+  cfgDispatchMessages = [];
+  renderTriggers();
+  renderDispatchList();
+  cfgSdrMode = 'receptivo';
+  setSdrMode(cfgSdrMode);
+  populateMasterSelect(slot);
+  $('#modal-config').style.display = 'flex';
+  try {
+    const { sdr, triggers, dispatch_messages, available_keys } = await api('GET', '/sdrs/' + slot + '/config');
+    $('#cfg-welcome').value = sdr.welcome_message || '';
+    $('#cfg-init-instructions').value = sdr.instructions || '';
+    $('#cfg-conversation-instructions').value = sdr.conversation_instructions || '';
+    $('#cfg-reference-url').value = sdr.reference_url || '';
+    // === IA ===
+    cfgAvailableKeys = available_keys || [];
+    const keySel = document.getElementById('cfg-ai-key');
+    keySel.innerHTML = '<option value="">— não usar IA (deixa Zeus / manual) —</option>' +
+      cfgAvailableKeys.map(k => `<option value="${k.id}">${esc(k.label)} · ${esc(k.provider)} · ****${esc(k.key_last4)}</option>`).join('');
+    keySel.value = sdr.ai_key_id != null ? String(sdr.ai_key_id) : '';
+    document.getElementById('cfg-ai-provider').value = sdr.ai_provider || '';
+    onProviderChange();
+    if (sdr.ai_model) document.getElementById('cfg-ai-model').value = sdr.ai_model;
+    document.getElementById('cfg-ai-daily-limit').value = sdr.ai_daily_limit != null ? sdr.ai_daily_limit : 20;
+    // === Recursos de envio ===
+    document.getElementById('cfg-send-link-enabled').checked = !!sdr.send_link_enabled;
+    document.getElementById('cfg-send-link-url').value = sdr.send_link_url || '';
+    document.getElementById('cfg-send-link-trigger').value = sdr.send_link_trigger || '';
+    toggleMediaBlock('link');
+    document.getElementById('cfg-send-file-enabled').checked = !!sdr.send_file_enabled;
+    document.getElementById('cfg-send-file-trigger').value = sdr.send_file_trigger || '';
+    document.getElementById('cfg-send-file-name').textContent = sdr.send_file_path ? (sdr.send_file_path.split('/').pop()) : '(nenhum arquivo enviado)';
+    toggleMediaBlock('file');
+    document.getElementById('cfg-send-image-enabled').checked = !!sdr.send_image_enabled;
+    document.getElementById('cfg-send-image-trigger').value = sdr.send_image_trigger || '';
+    document.getElementById('cfg-send-image-name').textContent = sdr.send_image_path ? (sdr.send_image_path.split('/').pop()) : '(nenhuma imagem enviada)';
+    toggleMediaBlock('image');
+    keySel.onchange = () => {
+      // se selecionar chave sem provider setado, herda o provider da chave
+      if (!document.getElementById('cfg-ai-provider').value) onProviderChange();
+    };
+    refreshAiInfo();
+    $('#cfg-dispatch-min').value = sdr.dispatch_min_delay || 30;
+    $('#cfg-dispatch-max').value = sdr.dispatch_max_delay || 60;
+    $('#cfg-pause-every').value = sdr.dispatch_pause_every || 10;
+    $('#cfg-pause-secs').value = sdr.dispatch_pause_seconds != null ? sdr.dispatch_pause_seconds : 300;
+    $('#cfg-personality').value = sdr.personality_level != null ? sdr.personality_level : 5;
+    $('#cfg-personality-val').textContent = String(sdr.personality_level != null ? sdr.personality_level : 5);
+    cfgTriggers = triggers || [];
+    cfgDispatchMessages = (dispatch_messages || []).map(m => m.body);
+    cfgTriggerMode = sdr.trigger_mode || 'any';
+    cfgSdrMode = sdr.sdr_mode === 'ativo' ? 'ativo' : 'receptivo';
+    setTriggerMode(cfgTriggerMode);
+    setSdrMode(cfgSdrMode);
+    $('#cfg-master-slot').value = sdr.master_slot != null ? String(sdr.master_slot) : '';
+    renderTriggers();
+    renderDispatchList();
+    refreshUploadJobs();
+    if (cfgUploadPollTimer) clearInterval(cfgUploadPollTimer);
+    cfgUploadPollTimer = setInterval(refreshUploadJobs, 4000);
+  } catch (e) {
+    alert('Erro ao carregar config: ' + e.message);
+  }
+}
+
+function closeConfigModal() {
+  currentCfgSlot = null;
+  if (cfgUploadPollTimer) { clearInterval(cfgUploadPollTimer); cfgUploadPollTimer = null; }
+  $('#modal-config').style.display = 'none';
+}
+
+function switchCfgTab(tab) {
+  document.querySelectorAll('#modal-config .tab').forEach(el => el.classList.toggle('active', el.dataset.cfgtab === tab));
+  document.querySelectorAll('#modal-config .tab-panel').forEach(el => el.classList.remove('active'));
+  $('#cfgtab-' + tab).classList.add('active');
+}
+
+function setSdrMode(mode) {
+  cfgSdrMode = mode === 'ativo' ? 'ativo' : 'receptivo';
+  document.querySelectorAll('#cfg-sdr-mode > div').forEach(el => el.classList.toggle('on', el.dataset.sdrmode === cfgSdrMode));
+  renderCfgTabs();
+}
+
+function renderDispatchList() {
+  const box = $('#cfg-dispatch-list');
+  if (!cfgDispatchMessages.length) {
+    box.innerHTML = '<div style="color:var(--subtext);font-size:12px;padding:8px 0">nenhuma mensagem de disparo cadastrada. clique em + adicionar variação abaixo.</div>';
+    return;
+  }
+  box.innerHTML = cfgDispatchMessages.map((m, i) => `
+    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
+      <div style="width:24px;height:32px;display:grid;place-items:center;color:var(--subtext);font-weight:700">${i+1}</div>
+      <textarea data-di="${i}" style="min-height:60px" oninput="cfgDispatchMessages[${i}] = this.value">${m.replace(/</g,'&lt;')}</textarea>
+      <button class="btn btn-ghost btn-sm" onclick="removeDispatchMessage(${i})" title="remover">×</button>
+    </div>
+  `).join('');
+}
+
+function addDispatchMessage(body) {
+  cfgDispatchMessages.push(body || '');
+  renderDispatchList();
+}
+
+function removeDispatchMessage(i) {
+  cfgDispatchMessages.splice(i, 1);
+  renderDispatchList();
+}
+
+// Fix Smith 2026-07-21: feedback claro apos upload. Antes: alert generico "Salvos X, Ignorados Y"
+// deixava Jeff no escuro sobre PORQUE ignorou. Agora quebra por formato invalido, duplicado ja
+// enviado, duplicado dentro do proprio arquivo, e mostra amostras (com botao Ver detalhes).
+function _reasonLabel(r) {
+  if (r === 'invalid_format' || r === 'ambiguous_no_ddi' || r === 'too_short' || r === 'too_long' || r === 'empty') return 'formato invalido';
+  if (r === 'dedupe_batch') return 'duplicado no proprio arquivo';
+  if (r === 'dedupe_pending_or_sent') return 'ja esta na fila ou ja foi enviado';
+  return r || 'motivo desconhecido';
+}
+function showUploadResult(res, origin) {
+  const added = res.added || 0;
+  const skipped = res.skipped || 0;
+  const duplicated = res.duplicated || 0;
+  const rejected = skipped + duplicated;
+  const samples = Array.isArray(res.rejected_samples) ? res.rejected_samples : [];
+  let msg = origin + ':\n\n';
+  msg += 'Adicionados: ' + added + '\n';
+  if (rejected > 0) {
+    msg += 'Rejeitados: ' + rejected + '\n';
+    if (skipped > 0)    msg += '  - Formato invalido: ' + skipped + '\n';
+    if (duplicated > 0) msg += '  - Duplicados/ja enviados: ' + duplicated + '\n';
+  } else {
+    msg += 'Rejeitados: 0\n';
+  }
+  if (added === 0 && rejected > 0) {
+    msg += '\nATENCAO: nada entrou. Todos os ' + rejected + ' contato(s) foram rejeitados.\n';
+  }
+  if (samples.length) {
+    msg += '\nPrimeiros ' + samples.length + ' rejeitados:\n';
+    for (const s of samples) {
+      msg += '  * ' + s.phone + ' -> ' + _reasonLabel(s.reason) + '\n';
+    }
+  }
+  alert(msg);
+}
+
+async function submitSheetUrl() {
+  if (currentCfgSlot == null) return;
+  const url = $('#cfg-sheet-url').value.trim();
+  if (!url) return alert('Cole o link do Google Sheets primeiro.');
+  try {
+    const res = await api('POST', '/sdrs/' + currentCfgSlot + '/upload-sheet', { url });
+    showUploadResult(res, 'Planilha');
+    $('#cfg-sheet-url').value = '';
+    refreshUploadJobs();
+  } catch (e) {
+    alert('Erro ao ler a planilha: ' + e.message);
+  }
+}
+
+function toggleMediaBlock(kind) {
+  const en = document.getElementById('cfg-send-' + kind + '-enabled');
+  const body = document.getElementById('cfg-send-' + kind + '-body');
+  if (!en || !body) return;
+  body.style.display = en.checked ? 'block' : 'none';
+}
+
+async function uploadMedia(evt, kind) {
+  const file = evt.target.files[0];
+  if (!file || currentCfgSlot == null) return;
+  // Fix Smith 2026-07-21: feedback visual claro (spinner, tag verde ao salvar) + auto-liga
+  // o toggle no cliente (backend ja liga tambem). Bug antigo: usuario subia PDF, nao via
+  // feedback obvio, achava que travou. Agora: botao vira "Enviando..." e desabilita.
+  const btnLabel = document.getElementById('cfg-send-' + kind + '-btn');
+  const nameEl = document.getElementById('cfg-send-' + kind + '-name');
+  const enChk = document.getElementById('cfg-send-' + kind + '-enabled');
+  const origLabelHtml = btnLabel ? btnLabel.innerHTML : null;
+  const sizeKb = Math.round((file.size || 0) / 1024);
+  if (nameEl) {
+    nameEl.style.color = 'var(--subtext)';
+    nameEl.textContent = 'Enviando ' + file.name + ' (' + sizeKb + ' KB)...';
+  }
+  if (btnLabel) {
+    btnLabel.style.pointerEvents = 'none';
+    btnLabel.style.opacity = '0.6';
+    btnLabel.innerHTML = '⏳ Enviando...';
+  }
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('kind', kind);
+  try {
+    const r = await fetch('/api/sdrs/' + currentCfgSlot + '/media-upload', {
+      method: 'POST', credentials: 'include', body: fd,
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const detail = j.detail ? ' — ' + j.detail : '';
+      throw new Error((j.error || ('HTTP ' + r.status)) + detail);
+    }
+    if (nameEl) {
+      nameEl.style.color = '#16a34a'; // verde
+      const kb = Math.round((j.size || 0) / 1024);
+      const mimeShort = (j.mime || '').split('/')[1] || '';
+      nameEl.textContent = '✓ ' + (j.name || 'arquivo salvo') + ' (' + kb + ' KB' + (mimeShort ? ' · ' + mimeShort : '') + ')';
+    }
+    // Backend auto-liga; refletir no cliente
+    if (enChk && j.auto_enabled) {
+      enChk.checked = true;
+      toggleMediaBlock(kind);
+    }
+  } catch (e) {
+    if (nameEl) {
+      nameEl.style.color = '#dc2626'; // vermelho
+      nameEl.textContent = '✗ falhou: ' + e.message;
+    }
+    alert('Erro ao subir ' + kind + ': ' + e.message);
+  } finally {
+    if (btnLabel && origLabelHtml != null) {
+      btnLabel.style.pointerEvents = '';
+      btnLabel.style.opacity = '';
+      btnLabel.innerHTML = origLabelHtml;
+    }
+  }
+  evt.target.value = '';
+}
+
+async function uploadFile(evt) {
+  const file = evt.target.files[0];
+  if (!file || currentCfgSlot == null) return;
+  const nameLower = (file.name || '').toLowerCase();
+  const isXlsx = /\.(xlsx|xls)$/i.test(nameLower);
+  if (isXlsx) {
+    // Envia direto pro backend via multipart
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch('/api/sdrs/' + currentCfgSlot + '/upload-xlsx', {
+        method: 'POST', credentials: 'include', body: fd,
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      showUploadResult(j, 'XLSX');
+      refreshUploadJobs();
+    } catch (e) {
+      alert('Erro ao processar xlsx: ' + e.message);
+    }
+    evt.target.value = '';
+    return;
+  }
+  // CSV/TXT: mantem fluxo antigo
+  const text = await file.text();
+  $('#cfg-list-input').value = text;
+  evt.target.value = '';
+  submitContactList();
+}
+
+function populateMasterSelect(currentSlot) {
+  const sel = $('#cfg-master-slot');
+  sel.innerHTML = '<option value="">— este slot usa seu próprio chip —</option>';
+  sdrsCache.filter(s => s.slot !== currentSlot && (s.status === 'ready' || s.phone)).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.slot;
+    opt.textContent = 'Slot ' + s.slot + (s.name ? ' · ' + s.name : '') + (s.phone ? ' (+' + s.phone + ')' : '');
+    sel.appendChild(opt);
+  });
+}
+
+function renderTriggers() {
+  const box = $('#cfg-triggers-chips');
+  if (!cfgTriggers.length) {
+    box.innerHTML = '<div style="color:var(--subtext);font-size:12px">nenhuma palavra-gatilho cadastrada</div>';
+    return;
+  }
+  box.innerHTML = cfgTriggers.map((t, i) => `
+    <div class="chip">${t.replace(/</g,'&lt;')}<span class="rm" onclick="removeTrigger(${i})">×</span></div>
+  `).join('');
+}
+
+function addTriggerFromInput() {
+  const inp = $('#cfg-trigger-input');
+  const raw = inp.value.trim().toLowerCase();
+  if (!raw) return;
+  raw.split(',').map(x => x.trim()).filter(Boolean).forEach(k => {
+    if (!cfgTriggers.includes(k)) cfgTriggers.push(k);
+  });
+  inp.value = '';
+  renderTriggers();
+}
+
+function removeTrigger(i) {
+  cfgTriggers.splice(i, 1);
+  renderTriggers();
+}
+
+function setTriggerMode(mode) {
+  cfgTriggerMode = mode;
+  document.querySelectorAll('#cfg-trigger-mode > div').forEach(el => el.classList.toggle('on', el.dataset.mode === mode));
+}
+
+async function saveConfig() {
+  if (currentCfgSlot == null) return;
+  try {
+    // se sobrou lista colada sem clicar em Salvar lista, salva agora antes de fechar
+    const pendingText = ($('#cfg-list-input').value || '').trim();
+    if (pendingText) {
+      const pending = parseContactList(pendingText);
+      if (pending.length && confirm(`Salvar também ${pending.length} contato(s) que estão na caixa de lista?`)) {
+        try {
+          await api('POST', '/sdrs/' + currentCfgSlot + '/upload-contacts', { contacts: pending });
+          $('#cfg-list-input').value = '';
+        } catch (e) { alert('Aviso: erro ao salvar lista pendente: ' + e.message); }
+      }
+    }
+    const master = $('#cfg-master-slot').value;
+    await api('PUT', '/sdrs/' + currentCfgSlot + '/config', {
+      welcome_message: $('#cfg-welcome').value,
+      triggers: cfgTriggers,
+      trigger_mode: cfgTriggerMode,
+      master_slot: master === '' ? null : parseInt(master, 10),
+      ai_active: (sdrsCache.find(x => x.slot === currentCfgSlot) || {}).ai_active ? 1 : 0,
+      sdr_mode: cfgSdrMode,
+      personality_level: parseInt($('#cfg-personality').value, 10),
+      reference_url: $('#cfg-reference-url').value.trim() || null,
+      conversation_instructions: $('#cfg-conversation-instructions').value,
+      instructions: $('#cfg-init-instructions').value,
+      dispatch_min_delay: parseInt($('#cfg-dispatch-min').value, 10),
+      dispatch_max_delay: parseInt($('#cfg-dispatch-max').value, 10),
+      dispatch_pause_every: parseInt($('#cfg-pause-every').value, 10),
+      dispatch_pause_seconds: parseInt($('#cfg-pause-secs').value, 10),
+      dispatch_messages: cfgDispatchMessages.map(body => ({ body })).filter(m => m.body && m.body.trim()),
+      ai_key_id: document.getElementById('cfg-ai-key').value || null,
+      ai_provider: document.getElementById('cfg-ai-provider').value || null,
+      ai_model: document.getElementById('cfg-ai-model').value || null,
+      ai_daily_limit: parseInt(document.getElementById('cfg-ai-daily-limit').value, 10),
+      send_link_enabled: document.getElementById('cfg-send-link-enabled').checked ? 1 : 0,
+      send_link_url: document.getElementById('cfg-send-link-url').value.trim() || null,
+      send_link_trigger: document.getElementById('cfg-send-link-trigger').value.trim() || null,
+      send_file_enabled: document.getElementById('cfg-send-file-enabled').checked ? 1 : 0,
+      send_file_trigger: document.getElementById('cfg-send-file-trigger').value.trim() || null,
+      send_image_enabled: document.getElementById('cfg-send-image-enabled').checked ? 1 : 0,
+      send_image_trigger: document.getElementById('cfg-send-image-trigger').value.trim() || null,
+    });
+    closeConfigModal();
+    loadSdrs();
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+function parseContactList(text) {
+  return text.split(/\r?\n/).map(line => {
+    const t = line.trim();
+    if (!t) return null;
+    const parts = t.split(/[,;\t|]/).map(x => x.trim().replace(/^"|"$/g, '')).filter(Boolean);
+    if (!parts.length) return null;
+    let phone = '', name = null;
+    for (const p of parts) {
+      const digits = p.replace(/\D/g, '');
+      if (!phone && digits.length >= 10) { phone = digits; }
+      else if (!name && p.replace(/\d/g, '').trim().length > 1) { name = p; }
+    }
+    if (!phone && parts.length === 1) {
+      const digits = parts[0].replace(/\D/g, '');
+      if (digits.length >= 10) phone = digits;
+    }
+    // Fix Smith 2026-07-21: aceita 10+ digitos aqui (fixo BR sem 9 tem 10, celular BR sem
+    // DDI tem 11). Backend normaliza pra 55+DDD+numero via normalizePhoneExplain e retorna
+    // motivo em rejected_samples se ainda assim nao passar.
+    if (!phone || phone.length < 10) return null;
+    return { phone, name };
+  }).filter(Boolean);
+}
+
+function onManualEnter(fromField) {
+  const phoneEl = $('#cfg-manual-phone');
+  const nameEl = $('#cfg-manual-name');
+  const rawPhone = (phoneEl.value || '').replace(/\D/g, '');
+  // Se o usuario apertou Enter no campo Nome mas o telefone ainda esta vazio,
+  // NAO submete: apenas move foco pro telefone. Evita mensagem de erro confusa
+  // quando ele digitou o nome primeiro esperando pular pro proximo campo.
+  if (fromField === 'name' && (!rawPhone || rawPhone.length < 10)) {
+    phoneEl.focus();
+    return;
+  }
+  addManualContact();
+}
+
+async function addManualContact() {
+  if (currentCfgSlot == null) return;
+  const phoneEl = $('#cfg-manual-phone');
+  const nameEl = $('#cfg-manual-name');
+  const rawPhone = (phoneEl.value || '').replace(/\D/g, '');
+  const nm = (nameEl.value || '').trim();
+  if (!rawPhone) {
+    alert('Preencha o numero (DDI+DDD+numero, ex: 5511999998888).');
+    phoneEl.focus();
+    return;
+  }
+  // Fix Smith 2026-07-21: aceita a partir de 10 digitos. Backend normaliza pra E.164 (55+DDD+numero).
+  // Se DDD nao for BR conhecido e nao tiver DDI, backend rejeita com motivo "ambiguous_no_ddi".
+  if (rawPhone.length < 10) {
+    alert('Numero curto. Precisa ter no minimo DDD+numero (ex: 11987654321) ou DDI+DDD+numero (ex: 5511987654321).');
+    phoneEl.focus();
+    return;
+  }
+  try {
+    const r = await api('POST', '/sdrs/' + currentCfgSlot + '/upload-contacts', { contacts: [{ phone: rawPhone, name: nm || null }] });
+    if (r && !r.added) {
+      // 0 adicionados: mostra o motivo exato vindo do backend
+      const s = (r.rejected_samples && r.rejected_samples[0]) || {};
+      const reason = _reasonLabel(s.reason);
+      alert('Numero nao entrou. Motivo: ' + reason + '.');
+    }
+    phoneEl.value = '';
+    nameEl.value = '';
+    phoneEl.focus();
+    refreshUploadJobs();
+  } catch (e) {
+    alert('Erro ao salvar contato: ' + e.message);
+  }
+}
+
+function clearListInput() {
+  $('#cfg-list-input').value = '';
+}
+
+async function submitContactList() {
+  if (currentCfgSlot == null) return;
+  const text = $('#cfg-list-input').value;
+  const contacts = parseContactList(text);
+  if (!contacts.length) { alert('Nenhum contato válido detectado. Um número por linha, opcional: número,nome'); return; }
+  if (!confirm(`Salvar ${contacts.length} contato(s) na lista deste SDR?`)) return;
+  try {
+    const res = await api('POST', '/sdrs/' + currentCfgSlot + '/upload-contacts', { contacts });
+    $('#cfg-list-input').value = '';
+    showUploadResult(res, 'Lista colada');
+    refreshUploadJobs();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+async function refreshUploadJobs() {
+  if (currentCfgSlot == null) return;
+  try {
+    const { jobs, counts } = await api('GET', '/sdrs/' + currentCfgSlot + '/upload-jobs');
+    const map = { pending: 0, sent: 0, error: 0 };
+    counts.forEach(c => map[c.status] = c.n);
+    $('#cfg-upload-summary').innerHTML = `
+      <div><b>${map.pending}</b>Pendentes</div>
+      <div><b>${map.sent}</b>Enviados</div>
+      <div><b>${map.error}</b>Erros</div>
+    `;
+    const total = (map.pending || 0) + (map.sent || 0) + (map.error || 0);
+    const savedCountEl = $('#cfg-saved-count');
+    if (savedCountEl) savedCountEl.textContent = total ? `${total} salvo${total > 1 ? 's' : ''}` : '';
+    $('#cfg-upload-jobs').innerHTML = jobs.map(j => `
+      <div class="upload-job-item">
+        <div>+${j.target_phone}${j.target_name ? ' · ' + j.target_name : ''}<br><span style="font-size:10px;color:var(--subtext)">${j.error || ''}</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="st-pill ${j.status}">${j.status}</div>
+          <button onclick="deleteUploadJob(${j.id})" title="Excluir contato" style="background:none;border:none;cursor:pointer;color:var(--subtext);font-size:14px;padding:2px 4px;line-height:1;border-radius:4px" onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='var(--subtext)'">✕</button>
+        </div>
+      </div>
+    `).join('') || '<div style="color:var(--subtext);padding:12px 0">nenhum contato cadastrado ainda. use "+ Adicionar" ou cole uma lista abaixo.</div>';
+  } catch (e) {
+    console.error('refreshUploadJobs', e);
+  }
+}
+
+async function deleteUploadJob(id) {
+  if (currentCfgSlot == null) return;
+  try { await api('DELETE', '/sdrs/' + currentCfgSlot + '/upload-jobs/' + id); refreshUploadJobs(); } catch (e) { alert(e.message); }
+}
+
+async function clearPendingJobs() {
+  if (currentCfgSlot == null) return;
+  if (!confirm('Cancelar todos os pendentes deste SDR?')) return;
+  try { await api('DELETE', '/sdrs/' + currentCfgSlot + '/upload-jobs'); refreshUploadJobs(); } catch (e) { alert(e.message); }
+}
+
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(() => {
+    if (currentConnectSlot != null) refreshConnectModal();
+    if (currentView === 'sdrs') {
+      const ae = document.activeElement;
+      const editingCard = ae && ae.tagName === 'INPUT' && ae.closest && ae.closest('#sdr-grid');
+      if (!editingCard) loadSdrs();
+    }
+    else if (currentView === 'conversations') {
+      loadConversations();
+      if (currentChat) loadMessages();
+    }
+    else if (currentView === 'maturation') loadMaturation();
+  }, 3000);
+}
+
+// Boot
+(async () => {
+  try {
+    const res = await api('GET', '/auth/whoami');
+    currentUser = res.user;
+    enterApp();
+  } catch {
+    $('#login-pass').focus();
+  }
+})();
+$('#login-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "jeff-conselho-do-dono",
+  "version": "1.0.0",
+  "description": "Formulario de confirmacao de presenca — O Conselho do Dono (Farias)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.18.2" }
+}

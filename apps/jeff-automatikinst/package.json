@@ -1,0 +1,20 @@
+{
+  "name": "jeff-automatikinst",
+  "version": "1.0.0",
+  "description": "Automatik Inst - Agendador de conteudo (instancia automatikinst.jefersonhenrike.com)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "worker": "node worker.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "express": "^5.2.1",
+    "multer": "^2.0.1",
+    "node-cron": "^3.0.3",
+    "axios": "^1.7.9",
+    "form-data": "^4.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
+  }
+}

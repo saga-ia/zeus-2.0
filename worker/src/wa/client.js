@@ -34,6 +34,16 @@ function killZombieChrome() {
   } catch {
     /* ignore */
   }
+  try {
+    const sessionPath = path.join(config.authPath, 'session-whatsapp-worker');
+    fs.rmSync(path.join(sessionPath, 'SingletonLock'), { force: true });
+    fs.rmSync(path.join(sessionPath, 'SingletonCookie'), { force: true });
+    fs.rmSync(path.join(sessionPath, 'SingletonSocket'), { force: true });
+    const devToolsPort = path.join(sessionPath, 'DevToolsActivePort');
+    if (fs.existsSync(devToolsPort)) fs.unlinkSync(devToolsPort);
+  } catch {
+    /* ignore */
+  }
 }
 
 const insertMessage = db.prepare(`
@@ -104,7 +114,7 @@ function isoFromUnix(ts) {
 async function handleInboundMedia(msg, { fromJid, phone, whitelisted, queue }) {
   const messageId = msg.id?._serialized;
   try {
-    const media = await msg.downloadMedia();
+    const media = await downloadAudioWithRetry(msg, { maxRetries: 3, baseDelayMs: 500 });
     if (!media || !media.data) throw new Error('media download returned empty');
     const mime = media.mimetype || '';
     let ext = 'bin';
@@ -131,20 +141,38 @@ async function handleInboundMedia(msg, { fromJid, phone, whitelisted, queue }) {
       messageId
     );
   } catch (err) {
-    logger.error({ err: String(err.message || err), messageId }, 'inbound media download failed');
+    logger.error({ err: String(err.message || err), messageId }, 'inbound media download failed (after retries)');
     db.prepare(`UPDATE messages SET processed_by_agent = 1 WHERE message_id = ?`).run(messageId);
   }
 }
 
-async function handleInboundAudio(msg, { fromJid, phone, whitelisted, queue }) {
+async function downloadAudioWithRetry(msg, { maxRetries = 7, baseDelayMs = 3000 } = {}) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const media = await msg.downloadMedia();
+      if (!media || !media.data) throw new Error('media download returned empty');
+      return media;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries) {
+        const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+        logger.warn({ attempt, maxRetries, delayMs, err: String(err.message || err) }, 'audio download failed, retrying');
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function handleInboundAudio(msg, { fromJid, phone, whitelisted, queue, voiceKeywords }) {
   const messageId = msg.id?._serialized;
   // Forwarded audio da whitelist = pedido de transcrição pura. Auto-reply com texto e fim.
   const isForwarded = msg.isForwarded === true || (msg.forwardingScore || 0) > 0;
   const forwardTranscriptionMode = isForwarded && whitelisted;
   let transcribedText = null;
   try {
-    const media = await msg.downloadMedia();
-    if (!media || !media.data) throw new Error('media download returned empty');
+    const media = await downloadAudioWithRetry(msg, { maxRetries: 3, baseDelayMs: 500 });
     const ext = (media.mimetype || '').includes('ogg') ? 'ogg' : 'bin';
     const filePath = path.join(config.mediaPath, `${messageId}.${ext}`);
     fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
@@ -155,16 +183,26 @@ async function handleInboundAudio(msg, { fromJid, phone, whitelisted, queue }) {
     } catch (err) {
       logger.warn({ err, messageId }, 'transcription failed');
     }
+    // Voice mention: se a transcrição contiver alguma keyword (ex: "Zeus"/"Zews"),
+    // aciono o agente mesmo que o autor não seja whitelist e não tenha havido @mention.
+    const voiceHit = !!(
+      voiceKeywords && transcribedText &&
+      voiceKeywords.some((k) => transcribedText.toLowerCase().includes(String(k).toLowerCase()))
+    );
+    const triggerAgent = whitelisted || voiceHit;
+    if (voiceHit) {
+      logger.info({ messageId, phone, keywords: voiceKeywords }, 'voice mention detected in group audio');
+    }
     updateTranscription.run({
       message_id: messageId,
       transcription: transcribedText,
       status,
       media_path: filePath,
       // Auto-transcrição de forward = já tratada, não re-trigger o agente.
-      processed_by_agent: forwardTranscriptionMode ? 1 : (whitelisted ? 0 : 1),
+      processed_by_agent: forwardTranscriptionMode ? 1 : (triggerAgent ? 0 : 1),
     });
   } catch (err) {
-    logger.error({ err, messageId }, 'inbound audio download failed');
+    logger.error({ err, messageId }, 'inbound audio download failed (after retries)');
     updateTranscription.run({
       message_id: messageId,
       transcription: null,
@@ -211,15 +249,28 @@ async function handleInboundAudio(msg, { fromJid, phone, whitelisted, queue }) {
   }
 }
 
+function toStr(v) {
+  if (v == null) return null;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'bigint') return String(v);
+  if (typeof v === 'object') {
+    if (typeof v._serialized === 'string') return v._serialized;
+    try { return JSON.stringify(v); } catch { return null; }
+  }
+  return null;
+}
+
 function persistMessage(msg, direction, extra = {}) {
   try {
+    const fromStr = toStr(msg.from);
+    const toStrId = toStr(msg.to);
     // chat_id = o "outro lado" da conversa. Para outbound, msg.from é a conta do worker;
     // precisamos usar msg.to. Para inbound, msg.from é o remetente = chat_id.
-    const chatId = (msg.fromMe ? msg.to : msg.from) || msg.from || msg.to || '';
+    const chatId = (msg.fromMe ? toStrId : fromStr) || fromStr || toStrId || '';
     const isGroup = typeof chatId === 'string' && chatId.endsWith('@g.us') ? 1 : 0;
     const rawBody = typeof msg.body === 'string' ? msg.body : '';
     const mediaPath = extra.media_path || null;
-    const type = msg.type || 'chat';
+    const type = typeof msg.type === 'string' ? msg.type : 'chat';
     const isAudio = type === 'ptt' || type === 'audio';
     const isDM = typeof chatId === 'string' && (chatId.endsWith('@c.us') || chatId.endsWith('@lid'));
     const phone = extra.phone || null;
@@ -229,17 +280,17 @@ function persistMessage(msg, direction, extra = {}) {
     // Mensagem de áudio começa com 1 (processada) e só volta a 0 depois que a transcrição terminar.
     const processed = whitelistedDM && !isAudio ? 0 : 1;
     const payload = {
-      message_id: msg.id?._serialized || msg.id || `${Date.now()}-${Math.random()}`,
+      message_id: toStr(msg.id?._serialized) || toStr(msg.id) || `${Date.now()}-${Math.random()}`,
       chat_id: chatId,
-      from_id: msg.from || null,
-      to_id: msg.to || null,
+      from_id: fromStr,
+      to_id: toStrId,
       direction,
       type,
       body: rawBody || null,
       has_media: msg.hasMedia ? 1 : 0,
       media_path: mediaPath,
       from_me: msg.fromMe ? 1 : 0,
-      author_name: msg._data?.notifyName || msg.author || null,
+      author_name: toStr(msg._data?.notifyName) || toStr(msg.author) || null,
       ack: typeof msg.ack === 'number' ? msg.ack : 0,
       is_group: isGroup,
       timestamp: isoFromUnix(msg.timestamp),
@@ -346,23 +397,29 @@ function createWAManager({ onMessage, onStateChange }) {
         const myNumber = c.info?.wid?.user || '';
         // Busca minha LID (@lid) dos meus próprios outbound recentes — algumas menções em grupo
         // usam LID, não @c.us. Cache simples em app_settings.
-        let myLidUser = getAppSettingStmt.get('worker_lid_user')?.value || '';
-        if (!myLidUser) {
-          try {
-            const row = db.prepare(
-              `SELECT from_id FROM messages WHERE from_me=1 AND from_id LIKE '%@lid' ORDER BY id DESC LIMIT 1`
-            ).get();
-            if (row && row.from_id) {
-              myLidUser = row.from_id.replace('@lid', '');
-              setAppSettingStmt.run('worker_lid_user', myLidUser);
-            }
-          } catch (err) { /* ignore */ }
+        let myLidUser = '';
+        try {
+          const row = db.prepare(
+            `SELECT from_id FROM messages WHERE from_me=1 AND from_id LIKE '%@lid' ORDER BY id DESC LIMIT 1`
+          ).get();
+          if (row && row.from_id) {
+            myLidUser = row.from_id.replace('@lid', '');
+            setAppSettingStmt.run('worker_lid_user', myLidUser);
+          } else {
+            myLidUser = getAppSettingStmt.get('worker_lid_user')?.value || '';
+          }
+        } catch (err) {
+          myLidUser = getAppSettingStmt.get('worker_lid_user')?.value || '';
         }
         const mentionedIds = Array.isArray(msg.mentionedIds) ? msg.mentionedIds : [];
+        const bodyStr = typeof msg.body === 'string' ? msg.body : '';
+        // Fallback: wweb.js retorna mentionedIds=[] quando Zeus é admin do grupo.
+        // Detecta menção pelo texto do body (@número ou @lid) quando mentionedIds falha.
         const mentionedMe =
-          (!!myNumber && mentionedIds.some((id) => String(id).includes(myNumber))) ||
-          (!!myLidUser && mentionedIds.some((id) => String(id).includes(myLidUser)));
-        const mentionedJefferson = mentionedIds.some((id) => String(id).includes('5511910075450'));
+          (!!myNumber && (mentionedIds.some((id) => String(id).includes(myNumber)) || bodyStr.includes(`@${myNumber}`))) ||
+          (!!myLidUser && (mentionedIds.some((id) => String(id).includes(myLidUser)) || bodyStr.includes(`@${myLidUser}`)));
+        const mentionedJefferson = mentionedIds.some((id) => String(id).includes('5511910075450')) ||
+          bodyStr.includes('@5511910075450');
         let isReplyToMe = false;
         if (msg.hasQuotedMsg) {
           try {
@@ -386,16 +443,52 @@ function createWAManager({ onMessage, onStateChange }) {
           }
         } catch { /* ignore */ }
 
-        if (!mentionedMe && !mentionedJefferson && !isReplyToMe && !isThreadContinuation) return;
+        const isGroupAudioMsg = msg.type === 'ptt' || msg.type === 'audio';
+        // Voice mention (transcrever áudio pra checar "Zeus/Zews") só nos grupos permitidos.
+        // Jefferson 2026-08-14: restringir ao grupo da Janaína (Tráfego Farias - Janaína).
+        let voiceMentionAllowed = false;
+        try {
+          const raw = getAppSettingStmt.get('voice_mention_allowed_groups')?.value || '';
+          const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
+          voiceMentionAllowed = list.includes(chatId);
+        } catch { /* ignore */ }
+        const voiceMentionActive = isGroupAudioMsg && voiceMentionAllowed;
+        // Áudio de grupo passa (mesmo sem menção) SÓ se estiver no grupo autorizado a voice mention.
+        // Demais tipos só passam com menção/reply/thread.
+        if (!mentionedMe && !mentionedJefferson && !isReplyToMe && !isThreadContinuation && !voiceMentionActive) return;
+        const hasTextTrigger = mentionedMe || mentionedJefferson || isReplyToMe || isThreadContinuation;
 
         const authorJid = msg.author || null;
         let authorPhone = null;
         if (authorJid) authorPhone = await resolvePhone(c, authorJid).catch(() => null);
 
-        try {
-          db.prepare(`UPDATE messages SET processed_by_agent = 0 WHERE message_id = ?`).run(key);
-        } catch (err) {
-          logger.warn({ err, key }, 'failed to mark group msg unprocessed');
+        // Salva contact_phone do autor no registro (estava null para grupos)
+        if (authorPhone) {
+          try {
+            db.prepare(`UPDATE messages SET contact_phone = ? WHERE message_id = ?`).run(authorPhone, key);
+          } catch (err) {
+            logger.warn({ err, key }, 'failed to update contact_phone for group msg');
+          }
+        }
+
+        if (!isGroupAudioMsg) {
+          try {
+            db.prepare(`UPDATE messages SET processed_by_agent = 0 WHERE message_id = ?`).run(key);
+          } catch (err) {
+            logger.warn({ err, key }, 'failed to mark group msg unprocessed');
+          }
+        } else {
+          // Áudio de grupo: sempre transcrever. Aciona por @mention/reply/thread OU, se o grupo
+          // estiver na allowlist de voice mention, também por "zeus"/"zews" na transcrição.
+          const authorWhitelisted = isWhitelistedPhone(authorPhone) || isTeamAuthorizedPhone(authorPhone);
+          const triggerByText = hasTextTrigger && authorWhitelisted;
+          handleInboundAudio(msg, {
+            fromJid,
+            phone: authorPhone,
+            whitelisted: triggerByText,
+            queue: externalQueue,
+            voiceKeywords: voiceMentionAllowed ? ['zeus', 'zews'] : [],
+          }).catch((err) => logger.error({ err, messageId: key }, 'group audio pipeline failed'));
         }
 
         return;

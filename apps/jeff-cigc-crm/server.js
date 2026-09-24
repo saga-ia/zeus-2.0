@@ -12,6 +12,13 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3027;
 const PASSWORD = process.env.CRM_PASSWORD || 'cigc2026';
+// Senha redefinida pelo "Esqueci minha senha" fica em data/auth-override.json e vale no lugar da CRM_PASSWORD.
+const pwdReset = require('/opt/jeff-apps/jeff-shared/password-reset');
+const pwdOverride = pwdReset.overrideStore(require('path').join(__dirname, 'data'));
+function checkPassword(pwd) {
+  const viaOverride = pwdOverride.check(pwd || '');
+  return viaOverride !== null ? viaOverride : pwd === PASSWORD;
+}
 const SHEET_ID = '1I2uandximvso0o4bZ2tpy1m-c-ogSds24PwBjYbb-R0';
 const SHEET_RANGE = 'Respostas!A:P';
 const GOOGLE_USER = 'jefersonhenrike1@gmail.com';
@@ -143,6 +150,12 @@ async function fetchSheetData() {
   });
 }
 
+
+pwdReset.mount(app, {
+  appName: 'CRM CIGC (senha de Admin)',
+  setPassword: (newPass) => { pwdOverride.write(newPass); return true; }
+});
+
 app.get('/login', (req, res) => {
   const error = req.query.error ? '<p class="error">Senha incorreta</p>' : '';
   res.send(loginPage(error));
@@ -162,7 +175,7 @@ app.post('/login', (req, res) => {
       return res.redirect('/login?error=1');
     }
   }
-  if (password === PASSWORD) {
+  if (checkPassword(password)) {
     req.session.auth = true;
     req.session.userName = 'Admin';
     return res.redirect('/');
@@ -295,6 +308,7 @@ button:hover{opacity:.9;transform:translateY(-1px)}
     <input type="password" name="password" placeholder="Senha de acesso" required autocomplete="current-password">
     <button type="submit">Entrar</button>
   </form>
+  <a href="/redefinir-senha" style="display:block;text-align:center;margin-top:16px;font-size:13px;opacity:.75;color:inherit">Esqueci minha senha</a>
   <div class="footer-link">Nao tem acesso? <a href="/register">Cadastrar</a></div>
 </div>
 </body>
