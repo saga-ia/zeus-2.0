@@ -309,6 +309,10 @@ Há dois componentes distintos neste item.
 
 ## Tela 5: Edição de Vídeo
 
+![Edição de Vídeo com um projeto aberto](prints/edicao-de-video.png)
+
+*Conteúdo do vídeo do cliente e nomes dos projetos desfocados; aparecem a lista de projetos, a barra de ações sob as respostas e o composer "Diga o que fazer com o vídeo".*
+
 - **Rota e menu:** `/edicaoVideo` (`state.screen = "edicaoVideo"`). Item "Edição de Vídeo" (ícone `ICONS.video`) no grupo **EXECUTAR E COMUNICAR** do menu, depois de TikTok (index.html ~1079).
 - **Objetivo:** conversar com o agente `editor-video` para cortar, legendar e montar vídeos no servidor (upload até 2 GB, cortes, legenda, Remotion), com o vídeo pronto tocando na conversa e link para baixar.
 - **Origem:** `renderEdicaoVideo()` index.html ~3113 (chama `renderChat()` com opções). `public/video-previa.js` (script auxiliar, 3 KB). Escopo do chat: em `render()` (~7934) `state.screen === "edicaoVideo"` usa `agentId = "editor-video"`, e a tela entra em `TELAS_CHAT` (~7854), repintando durante o streaming.

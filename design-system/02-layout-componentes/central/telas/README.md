@@ -10,7 +10,7 @@ Documentação de todas as telas de `central.jefersonhenrike.com`, lida direto d
 | [04-canais-whatsapp-instagram-linkedin-tiktok.md](04-canais-whatsapp-instagram-linkedin-tiktok.md) | WhatsApp (e conector WhatsApp/Zeus bot), Instagram, Agente Posts, Agente de Design (Criar post, Criações, Estilos, Brand Kit), LinkedIn (com aba Estratégia), TikTok |
 | [05-organograma-ferramentas-biblioteca-conectores-config.md](05-organograma-ferramentas-biblioteca-conectores-config.md) | Organograma, Ferramentas (catálogo, ferramenta, SWOT), Biblioteca, Conectores (WhatsApp Business, Planilha/CRM), Configurações (14 seções), estrutura geral (menu aberto e recolhido, empresa, sino, menu do usuário e tema, celular, roteamento e permissão, toasts e confirmações, login e convite) |
 
-Prints de referência em [prints/](prints/), tirados da tela real (dados pessoais desfocados): Início, voz do ZEUS (2), Conversas, Agentes ZEUS, Rotinas, WhatsApp e Instagram.
+Prints de referência em [prints/](prints/), tirados da tela real (dados pessoais desfocados): Início, voz do ZEUS (2), Conversas, Agentes ZEUS, Rotinas, Gestão Inteligente, Motor de Vendas, Atividades, WhatsApp, Instagram, LinkedIn, Ferramentas e Edição de Vídeo. Configurações fica sem print (decisão do Jeff).
 
 ## Como a Central é montada (resumo)
 
@@ -22,7 +22,7 @@ Prints de referência em [prints/](prints/), tirados da tela real (dados pessoai
 
 - **Fora do menu lateral:** Conversas (`/chat`, abre pelo botão da Início), Memória (pelo menu do usuário). Agente Posts e Agente de Design ficam em Agentes ZEUS (e o Design também em Ferramentas).
 - **Nome:** o menu diz "Jarvis" e a tela de voz se chama "ZEUS".
-- **Dados de demonstração:** Gestão Comercial e Qualidade do Motor de Vendas usam ~1.500 negócios fictícios gerados no navegador (só "Leads por canal" é real; "Sincronizar" é simulado). SWOT é maquete com dados fixos.
+- **Dados de demonstração:** Gestão Comercial e Qualidade do Motor de Vendas usam ~1.500 negócios fictícios gerados no navegador, com faixa "Conexão direta com o CRM · CONECTADO" que também é ilustrativa (só "Leads por canal" é real; "Sincronizar" é simulado). SWOT é maquete com dados fixos.
 - **Visual sem ação:** em Conectores, "Quero integrar meus sistemas", "Adicionar nova conexão", busca, chips de categoria e o "3 conectados" fixo não têm ação. O seletor "ZEUS 2.3 MAX" do chat é só rótulo.
 - **Código que não aparece:** chat flutuante "Copiloto ZEUS" (nada abre ele), `auditoria.js` (não é carregado), seções de Configurações `seguranca`, `motores` e `okrs` (fora do menu), ramo de Aplicações em Ferramentas, `renderHabilidades` antiga do `index.html`, aba "Compartilhados" de Meus agentes (filtro sempre vazio).
 - **Celular:** Organograma só tem pan/zoom de mouse; o título da barra do celular (`#mob-titulo`) nunca recebe texto.

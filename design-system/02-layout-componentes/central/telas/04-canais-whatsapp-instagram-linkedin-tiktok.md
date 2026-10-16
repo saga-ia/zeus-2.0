@@ -256,6 +256,8 @@ Carregando (`ui.loading`, spinner roxo), vazio (`ui.empty`: ícone, título, tex
 
 ## LinkedIn
 
+![LinkedIn, aba Posts com editor de novo post](prints/linkedin.png)
+
 **Rota e menu:** `/linkedin`, EXECUTAR E COMUNICAR › LinkedIn.
 **Objetivo:** escrever, gerar com IA, agendar e publicar posts no perfil conectado do LinkedIn, com estratégia semanal.
 **Origem:** `index.html`: `LI_STATUS` linha 10327, `liCarregar` 10348, `liConexaoHTML` 10469, `liEngajamentoHTML` 10508, `liListaHTML` 10536, `liEditorHTML` 10554, `renderLinkedin` 10615. `public/linkedin-estrategia.js` (212 linhas; `liEstrategiaHTML`, `liIrAba`). Estado: `state.li` (conexão), `state.liPosts`, `state.liFiltro`, `state.liEd` (post aberto), `state.liIA`, `state.liArtes`, `state.liEng`, `state.liEst`, `state.liAba`. O editor guarda o texto sem repintar; `liRender()` marca a tela como "suja" antes de `render()`.

@@ -53,6 +53,8 @@ Convenções usadas neste documento:
 
 ## 2. Ferramentas (catálogo)
 
+![Ferramentas com IA, catálogo](prints/ferramentas.png)
+
 **Rota e menu:** `/ferramentas`. Menu, grupo PREPARAR E ESTRUTURAR, item "Ferramentas" (entre os itens bloqueados "Formações" e "Trilhas"). O item fica ativo também em `swot`, `ferramenta` e `aplicacao`.
 
 **Objetivo:** catálogo de ferramentas com IA por etapa do funil; cada cartão abre uma página da ferramenta.

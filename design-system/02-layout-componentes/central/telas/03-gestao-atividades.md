@@ -38,6 +38,8 @@ Documentação de leitura do código da Central (`/opt/jeff-apps/jeff-central/pu
 
 ## Gestão Inteligente (hub de motores)
 
+![Gestão Inteligente, escolha um motor](prints/gestao-inteligente.png)
+
 - **Rota e menu:** `/motores` (também `/motor`), item "Gestão Inteligente" (ícone `ICONS.motores`).
 - **Objetivo:** escolher entre o Motor de Vendas e o Motor de Growth e ver as habilidades de IA de cada um.
 - **Origem:** `renderMotores()` em `index.html` linha 2569; dados em `DATA.engines` (linha 576); rotas dos motores em `MOTOR_ROTAS` (linha 320).
@@ -66,6 +68,10 @@ Aparece no topo das telas `motorVendas`, `motorAuditor`, `motorQualidade`, `moto
 - Não existe aba para "Execução" nem "Leads": essas rotas redirecionam (ver seção "Rotas redirecionadas").
 
 ## Motor de Vendas: Gestão Comercial (Dashboard)
+
+![Motor de Vendas, Gestão Comercial](prints/motor-vendas-gestao-comercial.png)
+
+*Atenção ao ler o print: a faixa "Conexão direta com o CRM · CONECTADO" e os números do topo (1.318 negócios, funil, "Onde agir") vêm da base ilustrativa do `vendas-demo.js`, não de um CRM. Só o bloco "Leads por canal" (selo DADOS REAIS · CRM) é real. Últimos leads desfocados.*
 
 - **Rota e menu:** `/motor/vendas`; entra pelo hub ("Dashboard" do Motor de Vendas ou "Abrir motor"); aba "Gestão Comercial".
 - **Objetivo:** painel de indicadores do funil comercial com filtros e ficha de negócio.
@@ -188,6 +194,10 @@ Aparece no topo das telas `motorVendas`, `motorAuditor`, `motorQualidade`, `moto
 Fora do design system: as telas existem no código (`pdi.js`, `okrs.js`), mas não são usadas (decisão do Jeff em 16/10/2026).
 
 ## Atividades (Gestão de atividades)
+
+![Atividades, todas as ações](prints/atividades.png)
+
+*Dados de terceiros desfocados no print.*
 
 - **Rota e menu:** `/acoes`; item "Atividades" (grupo EXECUTAR E COMUNICAR, ícone `ICONS.acoes`).
 - **Objetivo:** gerenciar as tarefas do ClickUp (ver, filtrar, criar, concluir, comentar) e acompanhar entregas da equipe.
