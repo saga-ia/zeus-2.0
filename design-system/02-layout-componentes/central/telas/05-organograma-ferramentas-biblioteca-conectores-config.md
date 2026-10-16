@@ -182,6 +182,10 @@ Rota legada. `screenFromHash()` mapeia `ferramentas/app/<id>` para a tela `ferra
 
 ## 4. Conectores
 
+![Conectores: destaques WhatsApp Business, Instagram e Facebook e o catálogo com selos Ativo/Disponível](prints/escuro-conectores.png)
+
+*Tema escuro.*
+
 **Rota e menu:** `/conectores`. Menu, grupo CONTEXTO, item "Conectores".
 
 **Objetivo:** catálogo das integrações do ZEUS, com os canais nativos (WhatsApp Business, Instagram, Facebook) em destaque e o estado real de cada um.
