@@ -2,7 +2,7 @@
 
 Tudo o que é visual do Zeus e da Alpha num lugar só: identidade, tokens, layout, componentes, templates de post e minisite, regras de arte e as ferramentas que geram as peças.
 
-**Estado em 16/10/2026: inventário organizado, identidade oficial ainda não escolhida.** Hoje existem cinco identidades que se contradizem. Ver [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md) antes de criar qualquer tela ou peça nova.
+**Cor oficial do Zeus: roxo `#673DE6`** (decisão do Jeff em 16/10/2026). Toda tela, app ou peça nova usa [`01-identidade/tokens/zeus-central.css`](01-identidade/tokens/zeus-central.css). As outras identidades que existiam ficaram como legado, e a lista do que falta migrar está em [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md).
 
 > Esta pasta é uma **cópia de referência**. Os arquivos que rodam em produção continuam em `/opt/jeff-apps`, `/opt/jeff-worker`, `/opt/jeff-sites` e `/root/.claude` (endereços na tabela no fim). Se mudar algo lá, atualize aqui.
 > Material de cliente (Farias, CIGC, EBC etc.) **não entra aqui**: fica no projeto de cada cliente.
@@ -16,8 +16,8 @@ design-system/
 │   ├── estetica-e-voz-alpha.md   # doc oficial de paletas SAGA/VPS
 │   ├── logo/                     # zeus-favicon.svg (raio roxo, único logo do Zeus), myig-favicon.svg
 │   ├── tokens/
-│   │   ├── zeus-central.css      # tokens do tema roxo da Central (--zeus-*), com aliases antigos
-│   │   └── outras-identidades.css# SAGA, VPS, Gustavo, Marca Jeff, Apps de post
+│   │   ├── zeus-central.css      # OFICIAL: tokens do roxo da Central (--zeus-*), com aliases antigos
+│   │   └── outras-identidades.css# legado: SAGA, VPS, Gustavo, Marca Jeff, Apps de post
 │   └── marca-jeff/               # @jeffhenrike: gosto.md (o que o Jeff aprova), contexto, avatares, estilo salvo
 │
 ├── 02-layout-componentes/
@@ -72,7 +72,7 @@ design-system/
 
 ## O que ainda falta
 
-- Escolher a identidade oficial do Zeus e da Alpha (proposta em `IDENTIDADES.md`).
+- Migrar pro roxo os apps e documentos que ainda usam outra cor (lista em `IDENTIDADES.md`).
 - Logo em PNG e logotipo com o nome "ZEUS".
 - Brand kit do Zeus/Alpha na Central (hoje só existem de clientes e da marca Jeff).
 - Templates de e-mail e de proposta visual: não existem.
