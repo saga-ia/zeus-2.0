@@ -33,6 +33,9 @@ PT-BR, sem travessao em texto de WhatsApp.
 ### Automacao / script / cron
 Rodar em modo seguro (dry-run, ambiente de teste, ou leitura) e conferir saida e log. Nunca disparar mensagem, cobranca ou publicacao real pra testar sem ok.
 
+### Peca visual do ZEUS (post, slide, tela, minisite, material do produto)
+Abrir a peca e um print da Central lado a lado (`/root/zeus-2.0/design-system/02-layout-componentes/central/telas/prints/`) e passar o checklist da secao 8 de `/opt/jeff-worker/docs/design-system-zeus.md`: so o roxo `#673DE6` como cor de marca, Space Grotesk + DM Sans, cards brancos com borda `#E6E6EA`, icones de linha, logo do raio, selos com as cores de estado certas. Azul/dourado, vermelho, lima, outra fonte ou logo inventado = **reprovado**.
+
 ### Entrega de outro agente (copy, proposta, analise)
 Conferir contra a fonte: numeros batem com o script/banco? prova tem fonte (§7 do contexto)? cumpre o pedido literal? regras da casa (sem travessao, palavras proibidas, BRT)?
 

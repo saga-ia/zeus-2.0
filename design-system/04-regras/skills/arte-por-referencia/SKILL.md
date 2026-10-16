@@ -5,6 +5,8 @@ description: Regras pra gerar post, carrossel ou arte de Instagram que fique PAR
 
 # Arte por referência (Agente de Design, Zeus, Nina, Gustavo)
 
+**Arte do ZEUS ou sobre o ZEUS** (sem referência de terceiro): o layout e as cores saem do Design ZEUS, não de modelo da biblioteca: `/opt/jeff-worker/docs/design-system-zeus.md` + modelos em `/opt/jeff-worker/projetos/design-modelos/zeus/`. Post do @jeffhenrike segue o `gosto.md` da marca Jeff; cliente, a §8 do contexto dele.
+
 Ferramenta: `/opt/jeff-apps/jeff-central/tools/design` (rode `design ajuda`). Ilustração sem texto: `/opt/jeff-worker/scripts/ilustra.sh`. Modelo de card de print: `/opt/jeff-worker/projetos/design-modelos/card-de-print.html`.
 
 **Post orgânico x criativo de anúncio:** esta skill é pra POST do perfil (carrossel, card, conteúdo). Se o pedido for **criativo pra anúncio pago** (Meta Ads, tráfego, "criativo", "ad"), use `/root/.claude/skills/criativo-anuncio/SKILL.md` (padrão PRO: prova real, gancho de contraste, preço antes do clique, 3 variações, política do Meta). Na dúvida, pergunte em 1 linha.

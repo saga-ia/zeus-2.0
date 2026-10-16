@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<!-- Modelo de post no Design ZEUS (1080 x 1350). Guia: /opt/jeff-worker/docs/design-system-zeus.md
+     Troque só os textos marcados; mantenha cores, fontes, raios e estrutura. -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{--roxo:#673DE6;--roxo-2:#5429C9;--roxo-bg:rgba(103,61,230,0.10);--fundo:#F6F6F7;--card:#FFFFFF;--linha:#E6E6EA;--ink:#17171A;--ink-2:#3C3C44;--mute:#66666F;--ok:#0F7A68;--ok-bg:rgba(15,122,104,0.10)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1080px;height:1350px;overflow:hidden;background:var(--fundo);font-family:'DM Sans',sans-serif;color:var(--ink);position:relative}
+  /* textura de pontos da Início, bem clara */
+  body::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#D9D9DE 1.6px,transparent 1.6px);background-size:34px 34px;opacity:.55}
+  .pag{position:relative;height:100%;padding:88px 84px 76px;display:flex;flex-direction:column}
+  .topo{display:flex;align-items:center;gap:18px}
+  .logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--roxo),var(--roxo-2));display:flex;align-items:center;justify-content:center}
+  .marca{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;letter-spacing:.08em}
+  .eyebrow{margin-top:96px;font-weight:700;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:var(--roxo)}
+  h1{margin-top:22px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:88px;line-height:1.04;letter-spacing:-0.015em}
+  h1 em{font-style:normal;color:var(--roxo)}
+  .sub{margin-top:28px;font-size:33px;line-height:1.45;color:var(--ink-2);max-width:880px}
+  .cards{margin-top:64px;display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--card);border:2px solid var(--linha);border-radius:28px;padding:30px 34px;display:flex;align-items:center;gap:26px}
+  .ico{width:72px;height:72px;flex:0 0 72px;border-radius:18px;background:var(--roxo-bg);display:flex;align-items:center;justify-content:center;color:var(--roxo)}
+  .card b{display:block;font-size:32px;font-weight:700}
+  .rodape{margin-top:auto;padding-top:40px;display:flex;align-items:center;justify-content:space-between}
+  .selo{display:inline-flex;align-items:center;gap:12px;padding:12px 22px;border-radius:40px;background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:23px}
+  .selo i{width:14px;height:14px;border-radius:50%;background:var(--ok)}
+</style></head>
+<body><div class="pag">
+  <div class="topo">
+    <div class="logo"><svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+    <div class="marca">ZEUS</div>
+  </div>
+  <div class="eyebrow">Rotinas do ZEUS</div><!-- TEXTO: rótulo curto -->
+  <h1>Seu relatório chega <em>sozinho</em>, todo dia às 18h.</h1><!-- TEXTO: título, destaque em <em> -->
+  <p class="sub">Você pede uma vez. O ZEUS roda no horário e entrega no seu WhatsApp.</p><!-- TEXTO -->
+  <div class="cards">
+    <div class="card"><div class="ico"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b>No horário que você marcar</b></div></div>
+    <div class="card"><div class="ico"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20v-6M12 20V8M18 20v-9"/></svg></div><div><b>Com dados reais das suas contas</b></div></div>
+    <div class="card"><div class="ico"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/></svg></div><div><b>No WhatsApp, chat ou e-mail</b></div></div>
+  </div>
+  <div class="rodape">
+    <span class="selo"><i></i>Ativo na Central</span><!-- TEXTO: selo de status -->
+  </div>
+</div></body></html>

@@ -34,14 +34,16 @@ design-system/
 │   ├── card-de-print/            # card estilo tweet usado nos carrosséis
 │   ├── referencias-anuncio/      # "noob vs pro" da skill criativo-anuncio
 │   ├── minisites/                # modelos testados: links (linktree) e diagnostico (quiz)
-│   ├── pecas-gustavo/            # carrossel e frase de impacto no padrão azul+dourado
+│   ├── zeus/                     # MODELOS NO DESIGN ZEUS: post 1080x1350 e slide 1920x1080 (+ prévias e exemplo do Gustavo)
+│   ├── pecas-gustavo/            # carrossel e frase de impacto no padrão azul+dourado (legado Alpha)
 │   └── sites/                    # log de paletas do site-premium + DESIGN.md de exemplo
 │
 ├── 04-regras/
 │   ├── skills/                   # site-premium, arte-por-referencia, analise-design-post, criativo-anuncio,
 │   │                             # minisite, social-peca, maicom-visual, time-gustavo, time-eduardo
 │   ├── agentes/                  # gustavo-designer, eduardo-minisites, tome-revisor (QA visual)
-│   └── docs/                     # regras de arte do time, fluxo de entrega do Gustavo
+│   └── docs/                     # regras de arte do time, fluxo de entrega do Gustavo e design-system-zeus-para-agentes.md
+│                                 # (o guia que Gustavo, Eduardo, Tomé, site-premium e arte-por-referencia seguem em peça do ZEUS)
 │
 └── 05-ferramentas/
     ├── central/                  # motor de arte da Central (design.js, estilos.js) e tools design/estilo/marca/apresentacao
@@ -76,6 +78,8 @@ design-system/
 | `04-regras/docs/regras-de-arte-do-time.md` | `/opt/jeff-apps/jeff-central/zeus-time.md` |
 | `05-ferramentas/central/` | `/opt/jeff-apps/jeff-central/` (`design.js`, `estilos.js`, `tools/`) |
 | `05-ferramentas/scripts/` | `/opt/jeff-worker/scripts/` |
+| `04-regras/docs/design-system-zeus-para-agentes.md` | `/opt/jeff-worker/docs/design-system-zeus.md` |
+| `03-templates/zeus/` | `/opt/jeff-worker/projetos/design-modelos/zeus/` (contexto da marca em `/opt/jeff-worker/projetos/clientes/zeus/contexto.md`) |
 
 ## O que ainda falta
 
