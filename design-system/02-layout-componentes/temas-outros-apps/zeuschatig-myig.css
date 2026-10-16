@@ -1,0 +1,13 @@
+/* Extraído de /opt/jeff-apps/zeuschatig/public/index.html */
+
+html,body,#app{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:#f7f7fb;color:#1e2939}
+  [v-cloak]{display:none}
+  .scrollbar-thin::-webkit-scrollbar{width:6px;height:6px}
+  .scrollbar-thin::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:8px}
+  .scrollbar-thin::-webkit-scrollbar-track{background:transparent}
+  .bubble-in{background:#fff;border:1px solid #e6e8ee;border-radius:16px 16px 16px 4px}
+  .bubble-out{background:#7c3aed;color:#fff;border-radius:16px 16px 4px 16px}
+  .bubble-op{background:#0ea5e9;color:#fff;border-radius:16px 16px 4px 16px}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.6s infinite;display:inline-block}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}

@@ -1,0 +1,7 @@
+/* Extraído de /opt/jeff-worker/public/index.html */
+
+html { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+      body { background: #0F0F0F; }
+      .tab-active { background-color: #1A1A1A; border-color: #C4FF0E; color: #C4FF0E; }
+      .saga-glow { box-shadow: 0 0 16px rgba(196, 255, 14, 0.35); }
+      #stateBadge, .saga-accent { color: #C4FF0E; }

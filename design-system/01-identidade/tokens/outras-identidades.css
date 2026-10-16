@@ -1,0 +1,72 @@
+/* As outras identidades visuais que existem hoje no Zeus/Alpha, em tokens.
+   Cada uma num seletor [data-identidade="..."] pra comparar lado a lado.
+   Ver ../IDENTIDADES.md pra saber onde cada uma é usada. */
+
+/* SAGA: painel do worker, site Alpha, reset de senha. Origem: worker/zeus/06_estetica_voz.md */
+[data-identidade="saga"] {
+  --primary: #C4FF0E;
+  --primary-alt: #A3FF33;
+  --primary-hover: #A5FE29;
+  --success: #00C758;
+  --danger: #FB2C36;
+  --warning: #EDB200;
+  --orange: #FF8A00;
+  --bg-sidebar: #090A05;
+  --bg-dark: #0A0A0A;
+  --bg-page: #0F0F0F;
+  --bg-card: #1A1A1A;
+  --bg-input: #161616;
+  --bg-surface: #282828;
+  --border: #313131;
+  --ink: #FFFFFF;
+  --placeholder: #717680;
+  --mute: #6A7282;
+  --font: system-ui, 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --radius: 10px;
+}
+
+/* VPS: vps-monitor e painel de clientes Alpha. Origem: worker/zeus/06_estetica_voz.md */
+[data-identidade="vps"] {
+  --primary: #C8FA4D;
+  --primary-hover: #B3EB38;
+  --bg-body: #0A0E14;
+  --bg-page: #0D1117;
+  --bg-card: #151B24;
+  --ink: #FFFFFF;
+  --font: system-ui, 'Inter', sans-serif;
+}
+
+/* GUSTAVO: posts premium (carrossel, frase de impacto) do agente designer. Origem: agents/gustavo-designer.md */
+[data-identidade="gustavo"] {
+  --bg: #05070B;
+  --bg-2: #0B1118;
+  --primary: #007BFF;
+  --primary-deep: #004AAD;
+  --primary-glow: #00A3FF;
+  --ink: #F3F6FA;
+  --mute: #B8C2CC;
+  --mute-2: #4B5563;
+  --gold: #F4B942;
+  --gold-dark: #D89A28;
+  --font-head: 'Bebas Neue', 'Anton', 'Oswald', sans-serif;
+  --font-body: 'Inter', 'Montserrat', 'Helvetica Neue', sans-serif;
+}
+
+/* MARCA JEFF (@jeffhenrike): posts do Instagram aprovados. Origem: marca-jeff/gosto.md */
+[data-identidade="marca-jeff"] {
+  --bg-dark: #000000;
+  --bg-light: #FFFFFF;
+  --accent: #FF0000;
+  --ink: #000000;
+  --ink-on-dark: #FFFFFF;
+  --mute: #6B6B6B;
+  --font-head: 'Anton', sans-serif;      /* caixa alta, palavra-chave em vermelho */
+  --font-body: 'DM Sans', sans-serif;
+}
+
+/* VIOLETA DOS APPS DE POST: jeff-zeus-post, zeuschatig (myIG), zeus-platform */
+[data-identidade="apps-post"] {
+  --primary: #7C3AED;
+  --primary-platform: #6C63FF; /* zeus-platform */
+  --accent: #06B6D4;
+}

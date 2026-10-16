@@ -1,0 +1,211 @@
+<!doctype html>
+<!-- MODELO EDUARDO · MINISITE DE DIAGNÓSTICO PRA CALL (funil curto: capa → 3 a 5 perguntas → contato → resultado → agendar)
+     Tudo que muda fica no bloco CONFIG (JSON) logo abaixo do <body>: textos, perguntas, pontos, resultados, WhatsApp, webhook.
+     Cores e fontes em :root. Não precisa mexer no JavaScript.
+     O lead chega no WhatsApp do cliente com as respostas escritas (sem backend). Webhook opcional recebe o JSON das respostas.
+     Rode: node /opt/jeff-worker/scripts/site-check.js /opt/jeff-sites/<slug>/index.html /tmp/site-check/<slug>
+     e o teste do fluxo: node /opt/jeff-worker/scripts/minisite-check.js /opt/jeff-sites/<slug>/index.html -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagnóstico de eventos · Alpha Digital</title><!-- ✎ -->
+<meta name="description" content="Responda 4 perguntas e descubra o que está travando as vendas do seu evento. Leva 2 minutos."><!-- ✎ -->
+<meta property="og:title" content="Diagnóstico de eventos em 2 minutos">
+<meta property="og:description" content="4 perguntas e você recebe o próximo passo pro seu evento lotar.">
+<meta property="og:image" content="og.png">
+<meta name="theme-color" content="#F3EEE6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23A8380A'/%3E%3Ctext x='32' y='45' font-family='Impact' font-size='38' fill='%23F3EEE6' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#F3EEE6; --card:#FFFFFF; --texto:#1A1612; --suave:#5E554B; --linha:#1A1612;
+  --cor:#A8380A; --cor-texto:#FFFFFF; --cor-suave:#F6E3D7;
+  --titulo:'Anton',Impact,sans-serif; --corpo:'Instrument Sans',system-ui,sans-serif; --mono:'Space Mono',ui-monospace,monospace;
+  --raio:18px; --sombra:7px 7px 0 var(--cor);
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--fundo)}
+body{min-height:100dvh;background:var(--fundo);color:var(--texto);font-family:var(--corpo);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.topo{display:flex;align-items:center;justify-content:space-between;max-width:620px;margin:0 auto;padding:18px 22px;border-bottom:1px solid rgba(26,22,18,.12)}
+.marca{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.18em;color:var(--cor);text-transform:uppercase}
+.passo{font-family:var(--mono);font-size:14px;letter-spacing:.12em;color:var(--suave)}
+.voltar{background:none;border:0;font:inherit;font-family:var(--mono);font-size:14px;letter-spacing:.12em;color:var(--suave);cursor:pointer;padding:6px 0;text-transform:uppercase}
+.barra{height:3px;background:rgba(26,22,18,.08)} .barra i{display:block;height:100%;width:0;background:var(--cor);transition:width .35s ease}
+main{max-width:620px;margin:0 auto;padding:34px 22px calc(48px + env(safe-area-inset-bottom))}
+.olho{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:14px;letter-spacing:.16em;color:var(--suave);text-transform:uppercase;margin-bottom:16px}
+.olho::before{content:"";width:44px;height:2px;background:var(--cor)}
+h1,h2{font-family:var(--titulo);font-weight:400;text-transform:uppercase;line-height:.98;letter-spacing:.005em}
+h1{font-size:clamp(44px,12vw,72px)} h2{font-size:clamp(34px,9vw,52px)}
+h1 em,h2 em{font-style:normal;color:var(--cor);display:block}
+.card{margin-top:28px;background:var(--card);border:2px solid var(--linha);border-radius:var(--raio);box-shadow:var(--sombra);padding:26px 24px}
+.card p{color:var(--suave);font-size:17.5px}
+.lista{list-style:none;padding:20px 0 0;margin-top:20px;border-top:2px solid var(--linha);display:grid;gap:14px}
+.lista li{display:flex;gap:12px;align-items:flex-start;font-weight:600}
+.lista svg{flex:none;width:22px;height:22px;color:var(--cor);margin-top:2px}
+.btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;margin-top:24px;padding:19px 22px;border:2px solid var(--linha);border-radius:14px;background:var(--cor);color:var(--cor-texto);font:700 16px/1.2 var(--corpo);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;box-shadow:4px 5px 0 var(--linha);text-decoration:none;transition:transform .12s ease,box-shadow .12s ease}
+.btn:active{transform:translate(3px,4px);box-shadow:1px 1px 0 var(--linha)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.nota{margin-top:12px;text-align:center;font-family:var(--mono);font-size:14px;letter-spacing:.06em;color:var(--suave);text-transform:uppercase}
+.provas{display:grid;grid-template-columns:repeat(3,1fr);margin-top:30px;border:2px solid var(--linha);border-radius:var(--raio);overflow:hidden;background:var(--card)}
+.provas div{padding:16px 14px} .provas div+div{border-left:2px solid var(--linha)}
+.provas span{display:block;font-family:var(--mono);font-size:14px;letter-spacing:.12em;color:var(--suave);text-transform:uppercase}
+.provas b{display:block;font-family:var(--titulo);font-weight:400;font-size:clamp(30px,8vw,40px);line-height:1.1}
+.ajuda{margin-top:12px;color:var(--suave)}
+.opcoes{display:grid;gap:12px;margin-top:26px}
+.opcao{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:17px 18px;border:2px solid var(--linha);border-radius:14px;background:var(--card);font:600 17px/1.35 var(--corpo);color:var(--texto);cursor:pointer;transition:background .15s,box-shadow .15s}
+.opcao::before{content:"";flex:none;width:20px;height:20px;border:2px solid var(--linha);border-radius:50%}
+.opcao[aria-pressed=true]{background:var(--cor-suave);box-shadow:4px 4px 0 var(--cor)}
+.opcao[aria-pressed=true]::before{background:var(--cor);border-color:var(--cor);box-shadow:inset 0 0 0 3px var(--card)}
+label.campo{display:block;margin-top:20px;font-weight:600}
+.campo input,.campo textarea{display:block;width:100%;margin-top:8px;padding:16px;border:2px solid var(--linha);border-radius:14px;background:var(--card);font:400 17px/1.4 var(--corpo);color:var(--texto)}
+.campo textarea{min-height:120px;resize:vertical}
+.campo input:focus,.campo textarea:focus,.opcao:focus-visible,.btn:focus-visible{outline:3px solid var(--cor);outline-offset:2px}
+.erro{margin-top:10px;color:#B42318;font-weight:600;min-height:1.4em}
+.resultado .selo{display:inline-block;margin-top:22px;padding:7px 12px;border:2px solid var(--linha);border-radius:999px;font-family:var(--mono);font-size:14px;letter-spacing:.12em;text-transform:uppercase;background:var(--cor-suave)}
+.resultado h3{font-family:var(--titulo);font-weight:400;text-transform:uppercase;font-size:30px;line-height:1.05;margin-top:12px}
+.passos{counter-reset:p;list-style:none;padding:0;margin-top:18px;display:grid;gap:12px}
+.passos li{counter-increment:p;display:flex;gap:12px;color:var(--texto)}
+.passos li::before{content:counter(p);flex:none;width:28px;height:28px;border-radius:50%;background:var(--texto);color:var(--fundo);display:grid;place-items:center;font:700 14px/1 var(--mono)}
+.resumo{margin-top:22px;padding:18px;border:2px dashed rgba(26,22,18,.35);border-radius:14px;font-size:15.5px;color:var(--suave)}
+.resumo b{color:var(--texto)}
+.tela{animation:entra .35s ease both} @keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.tela{animation:none}.barra i{transition:none}}
+::selection{background:var(--cor);color:var(--cor-texto)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<script type="application/json" id="config">
+{
+  "marca": "Alpha Digital",
+  "capa": {
+    "olho": "Diagnóstico em 2 minutos",
+    "titulo": "Seu evento vende pouco?",
+    "destaque": "Descubra o porquê.",
+    "texto": "Responda 4 perguntas rápidas sobre o seu evento. No fim, você recebe o diagnóstico com o ponto que mais trava as vendas e o próximo passo pra resolver.",
+    "itens": ["Mostra onde o funil do evento está vazando", "Aponta o próximo passo, em ordem", "Libera uma call de 30 min com o time"],
+    "botao": "Começar meu diagnóstico",
+    "nota": "Sem cadastro pra começar",
+    "provas": [["Eventos", "40+"], ["Empresários", "3 mil"], ["Anos", "8"]]
+  },
+  "perguntas": [
+    {"id": "fase", "titulo": "Em que fase está o seu evento?", "ajuda": "Escolha a mais próxima.", "opcoes": [
+      {"txt": "Ainda é uma ideia", "pontos": 1}, {"txt": "Data marcada, vendas começando", "pontos": 2},
+      {"txt": "Vendendo, mas abaixo da meta", "pontos": 3}, {"txt": "Já fiz edições e quero escalar", "pontos": 3}]},
+    {"id": "publico", "titulo": "Quantas pessoas você quer na sala?", "opcoes": [
+      {"txt": "Até 100", "pontos": 1}, {"txt": "De 100 a 300", "pontos": 2}, {"txt": "De 300 a 1.000", "pontos": 3}, {"txt": "Mais de 1.000", "pontos": 3}]},
+    {"id": "trava", "titulo": "O que mais trava hoje?", "opcoes": [
+      {"txt": "Pouca gente conhece o evento", "pontos": 2, "tag": "alcance"}, {"txt": "Muita gente se interessa e não compra", "pontos": 3, "tag": "conversao"},
+      {"txt": "Ingresso caro pro meu público", "pontos": 2, "tag": "oferta"}, {"txt": "Não sei medir o que funciona", "pontos": 2, "tag": "dados"}]},
+    {"id": "detalhe", "tipo": "texto", "titulo": "Conte em uma frase o seu evento", "ajuda": "Tema, cidade e data. Pode ser do seu jeito.", "placeholder": "Ex.: encontro de empresários em SP, 15 e 16/10", "obrigatoria": false}
+  ],
+  "contato": {"titulo": "Pra onde mando o diagnóstico?", "ajuda": "Seu WhatsApp só é usado pra marcar a call. Nada de spam.", "botao": "Ver meu diagnóstico"},
+  "resultados": [
+    {"min": 0, "selo": "Fase de base", "titulo": "Antes de anunciar, acerte a oferta", "texto": "Seu evento ainda está ganhando forma. Investir em anúncio agora queima verba.", "passos": ["Definir a promessa em uma frase", "Montar a página de vendas com prova real", "Testar o preço com 20 pessoas da sua lista"]},
+    {"min": 6, "selo": "Fase de tração", "titulo": "Seu funil vaza no meio", "texto": "Gente interessada existe. O que falta é transformar interesse em ingresso vendido.", "passos": ["Revisar a página e o checkout", "Criar a sequência de WhatsApp pra quem não comprou", "Medir custo por ingresso por canal"]},
+    {"min": 9, "selo": "Fase de escala", "titulo": "Hora de escalar com dados", "texto": "Você já vende. Agora o ganho está em escalar o que funciona e cortar o que não paga.", "passos": ["Separar campanhas por público quente e frio", "Montar o painel de vendas por dia", "Abrir lote e oferta de grupo"]}
+  ],
+  "tagsTexto": {"alcance": "Ponto de atenção: alcance.", "conversao": "Ponto de atenção: conversão.", "oferta": "Ponto de atenção: oferta e preço.", "dados": "Ponto de atenção: medição."},
+  "cta": {"botao": "Agendar minha call de 30 min", "nota": "Você cai direto no nosso WhatsApp", "whatsapp": "55XXXXXXXXXXX", "mensagem": "Olá! Fiz o diagnóstico no site e quero agendar a call."},
+  "webhook": ""
+}
+</script>
+
+<header>
+  <div class="topo"><span class="marca" id="marca"></span><span id="topo-dir"></span></div>
+  <div class="barra" aria-hidden="true"><i id="barra"></i></div>
+</header>
+<main id="app" aria-live="polite"></main>
+
+<script>
+(function(){
+  var C = JSON.parse(document.getElementById('config').textContent);
+  var P = C.perguntas, total = P.length + 1;   // perguntas + contato
+  var resp = {}, contato = {nome: '', whats: ''}, i = -1;
+  var app = document.getElementById('app'), dir = document.getElementById('topo-dir'), barra = document.getElementById('barra');
+  document.getElementById('marca').textContent = C.marca;
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+  var seta = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  function topo(){
+    barra.style.width = i < 0 ? '0' : Math.min(100, Math.round((i + 1) / (total + 1) * 100)) + '%';
+    dir.innerHTML = i < 0 ? '' : i >= total ? '<span class="passo">Pronto</span>' : '<span class="passo">' + (i + 1) + ' de ' + total + '</span>';
+    var t = document.querySelector('.topo'), v = t.querySelector('.voltar');
+    if (i >= 0 && !v){ v = document.createElement('button'); v.className = 'voltar'; v.type = 'button'; v.textContent = '← Voltar'; v.onclick = function(){ i = Math.max(-1, i - 1); mostrar(); }; t.insertBefore(v, t.firstChild); document.getElementById('marca').hidden = true; }
+    if (i < 0 && v){ v.remove(); document.getElementById('marca').hidden = false; }
+  }
+  function capa(){
+    var c = C.capa;
+    app.innerHTML = '<section class="tela"><div class="olho">' + esc(c.olho) + '</div><h1>' + esc(c.titulo) + '<em>' + esc(c.destaque) + '</em></h1>' +
+      '<div class="card"><p>' + esc(c.texto) + '</p><ul class="lista">' + c.itens.map(function(x){ return '<li>' + check + '<span>' + esc(x) + '</span></li>'; }).join('') + '</ul>' +
+      '<button class="btn" id="ir" type="button">' + esc(c.botao) + seta + '</button><p class="nota">' + esc(c.nota) + '</p></div>' +
+      (c.provas && c.provas.length ? '<div class="provas">' + c.provas.map(function(p){ return '<div><span>' + esc(p[0]) + '</span><b>' + esc(p[1]) + '</b></div>'; }).join('') + '</div>' : '') + '</section>';
+    document.getElementById('ir').onclick = function(){ i = 0; mostrar(); };
+  }
+  function pergunta(q){
+    var h = '<section class="tela"><h2>' + esc(q.titulo) + '</h2>' + (q.ajuda ? '<p class="ajuda">' + esc(q.ajuda) + '</p>' : '');
+    if (q.tipo === 'texto') h += '<label class="campo"><textarea id="txt" aria-label="' + esc(q.titulo) + '" placeholder="' + esc(q.placeholder || '') + '">' + esc(resp[q.id] || '') + '</textarea></label><button class="btn" id="seg" type="button">Continuar' + seta + '</button>';
+    else h += '<div class="opcoes" role="group">' + q.opcoes.map(function(o, k){ return '<button class="opcao" type="button" data-k="' + k + '" aria-pressed="' + (resp[q.id] && resp[q.id].k === k) + '">' + esc(o.txt) + '</button>'; }).join('') + '</div>';
+    app.innerHTML = h + '<p class="erro" id="erro"></p></section>';
+    if (q.tipo === 'texto') document.getElementById('seg').onclick = function(){
+      var v = document.getElementById('txt').value.trim();
+      if (!v && q.obrigatoria) { document.getElementById('erro').textContent = 'Escreva uma frase pra continuar.'; return; }
+      resp[q.id] = {txt: v, pontos: 0}; i++; mostrar(); };
+    else app.querySelectorAll('.opcao').forEach(function(b){ b.onclick = function(){
+      var o = q.opcoes[+b.dataset.k]; resp[q.id] = {k: +b.dataset.k, txt: o.txt, pontos: o.pontos || 0, tag: o.tag};
+      app.querySelectorAll('.opcao').forEach(function(x){ x.setAttribute('aria-pressed', x === b); });
+      setTimeout(function(){ i++; mostrar(); }, 220); }; });
+  }
+  function telaContato(){
+    var c = C.contato;
+    app.innerHTML = '<section class="tela"><h2>' + esc(c.titulo) + '</h2><p class="ajuda">' + esc(c.ajuda) + '</p>' +
+      '<label class="campo">Seu nome<input id="nome" autocomplete="name" value="' + esc(contato.nome) + '"></label>' +
+      '<label class="campo">WhatsApp com DDD<input id="whats" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 91234-5678" value="' + esc(contato.whats) + '"></label>' +
+      '<p class="erro" id="erro"></p><button class="btn" id="seg" type="button">' + esc(c.botao) + seta + '</button></section>';
+    app.querySelectorAll('input').forEach(function(x){ x.oninput = function(){ document.getElementById('erro').textContent = ''; }; });
+    document.getElementById('seg').onclick = function(){
+      var n = document.getElementById('nome').value.trim(), w = document.getElementById('whats').value.replace(/\D/g, '');
+      if (n.length < 2) return document.getElementById('erro').textContent = 'Coloque seu nome.';
+      if (w.length < 10 || w.length > 13) return document.getElementById('erro').textContent = 'Confira o WhatsApp com DDD.';
+      contato = {nome: n, whats: w}; i++; mostrar(); enviar();
+    };
+  }
+  function calcular(){
+    var pts = 0, tags = [];
+    P.forEach(function(q){ var r = resp[q.id]; if (r){ pts += r.pontos || 0; if (r.tag) tags.push(r.tag); } });
+    var res = C.resultados.slice().sort(function(a, b){ return b.min - a.min; }).find(function(r){ return pts >= r.min; }) || C.resultados[0];
+    return {pts: pts, res: res, tags: tags};
+  }
+  function textoWhats(r){
+    var linhas = [C.cta.mensagem, '', 'Nome: ' + contato.nome, 'Resultado: ' + r.res.selo + ' (' + r.res.titulo + ')'];
+    P.forEach(function(q){ if (resp[q.id] && resp[q.id].txt) linhas.push(q.titulo + ' ' + resp[q.id].txt); });
+    return linhas.join('\n');
+  }
+  function resultado(){
+    var r = calcular(), x = r.res, cta = C.cta;
+    var atencao = r.tags.map(function(t){ return C.tagsTexto && C.tagsTexto[t]; }).filter(Boolean);
+    var url = 'https://wa.me/' + cta.whatsapp + '?text=' + encodeURIComponent(textoWhats(r));
+    app.innerHTML = '<section class="tela resultado"><div class="olho">Seu diagnóstico</div><h2>' + esc(contato.nome.split(' ')[0]) + ',<em>' + esc(x.titulo) + '</em></h2>' +
+      '<div class="card"><span class="selo">' + esc(x.selo) + '</span><p style="margin-top:14px">' + esc(x.texto) + (atencao.length ? ' <b>' + esc(atencao.join(' ')) + '</b>' : '') + '</p>' +
+      '<h3>Próximos passos</h3><ol class="passos">' + x.passos.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ol>' +
+      '<a class="btn" id="cta" href="' + url + '" target="_blank" rel="noopener">' + esc(cta.botao) + seta + '</a><p class="nota">' + esc(cta.nota) + '</p></div>' +
+      '<div class="resumo"><b>Suas respostas</b><br>' + P.map(function(q){ return resp[q.id] && resp[q.id].txt ? esc(q.titulo) + ' <b>' + esc(resp[q.id].txt) + '</b>' : ''; }).filter(Boolean).join('<br>') + '</div></section>';
+  }
+  function enviar(){
+    if (!C.webhook) return;
+    var r = calcular();
+    try { fetch(C.webhook, {method: 'POST', keepalive: true, headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({origem: location.href, nome: contato.nome, whatsapp: contato.whats, pontos: r.pts, resultado: r.res.selo, respostas: resp, utm: Object.fromEntries(new URLSearchParams(location.search)), em: new Date().toISOString()})}); } catch (e) {}
+  }
+  function mostrar(){
+    topo(); window.scrollTo({top: 0});
+    if (i < 0) capa(); else if (i < P.length) pergunta(P[i]); else if (i === P.length) telaContato(); else resultado();
+    var h = app.querySelector('h1,h2'); if (h && i >= 0){ h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); }
+  }
+  mostrar();
+})();
+</script>
+</body>
+</html>

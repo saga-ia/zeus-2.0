@@ -1,0 +1,59 @@
+/* ZEUS Central: tokens do tema roxo (o visual que roda hoje em central.jefersonhenrike.com).
+   Origem: jeff-apps/jeff-central/public/posts/posts.css (:root) + fontes do index.html.
+   Os nomes --amber* são herança do tema dourado antigo; aqui ganham alias semântico (--zeus-*).
+   Para usar: <link rel="stylesheet" href="zeus-central.css"> e só var(--zeus-...). */
+
+:root {
+  /* Superfícies */
+  --zeus-bg: #F6F6F7;
+  --zeus-card: #FFFFFF;
+  --zeus-soft: #F1F1F3;
+  --zeus-softer: #FAFAFA;
+  --zeus-line: #E6E6EA;
+  --zeus-line-2: #DADADF;
+
+  /* Texto */
+  --zeus-ink: #17171A;
+  --zeus-ink-2: #3C3C44;
+  --zeus-mute: #66666F;
+  --zeus-faint: #9A9AA3;
+
+  /* Marca */
+  --zeus-primary: #673DE6;
+  --zeus-primary-hover: #5429C9;
+  --zeus-primary-bg: rgba(103, 61, 230, 0.10);
+  --zeus-primary-line: rgba(103, 61, 230, 0.55);
+  --zeus-gradient: linear-gradient(135deg, #673DE6, #5429C9); /* fundo do logo (raio) */
+
+  /* Estados */
+  --zeus-success: #0F7A68;
+  --zeus-success-bg: rgba(15, 122, 104, 0.10);
+  --zeus-danger: #C0341C;
+  --zeus-danger-bg: rgba(192, 52, 28, 0.08);
+  --zeus-info: #4A6CF7;
+  --zeus-info-bg: rgba(74, 108, 247, 0.09);
+  --zeus-violet: #6D3FC4;
+  --zeus-violet-bg: rgba(109, 63, 196, 0.09);
+
+  /* Tipografia (Google Fonts: Space Grotesk 500-700, DM Sans 400-700, Inter 400-700) */
+  --zeus-font-head: 'Space Grotesk', sans-serif;
+  --zeus-font-body: 'DM Sans', system-ui, sans-serif;
+  --zeus-font-ui: 'Inter', system-ui, sans-serif;
+
+  /* Movimento (index.html) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Breakpoint de referência: sidebar vira gaveta abaixo de 820px */
+
+  /* Aliases com os nomes antigos, pra colar CSS da Central sem quebrar */
+  --bg: var(--zeus-bg); --card: var(--zeus-card); --line: var(--zeus-line); --line-2: var(--zeus-line-2);
+  --soft: var(--zeus-soft); --softer: var(--zeus-softer);
+  --ink: var(--zeus-ink); --ink-2: var(--zeus-ink-2); --mute: var(--zeus-mute); --faint: var(--zeus-faint);
+  --amber: var(--zeus-primary); --amber-h: var(--zeus-primary-hover); --amber-bg: var(--zeus-primary-bg); --amber-line: var(--zeus-primary-line);
+  --green: var(--zeus-success); --green-bg: var(--zeus-success-bg);
+  --red: var(--zeus-danger); --red-bg: var(--zeus-danger-bg);
+  --blue: var(--zeus-info); --blue-bg: var(--zeus-info-bg);
+  --violet: var(--zeus-violet); --violet-bg: var(--zeus-violet-bg);
+  --head: var(--zeus-font-head);
+}

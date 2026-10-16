@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+// CLI do Brand Kit (Ferramentas > Social Media): o agente de design e os demais agentes leem aqui
+// objetivo, público, tom de voz, cores, logo, descrição de estilo e referências de cada marca antes de criar posts.
+// Só leitura: quem edita é a tela /ferramentas/social-media.
+// Uso: marca <comando> [args]   (rode "marca ajuda")
+const path = require('path');
+const Database = require('better-sqlite3');
+const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, '..', 'data');
+const FILES_DIR = path.join(DATA_DIR, 'social');
+const db = new Database(path.join(DATA_DIR, 'central.db'), { readonly: true, fileMustExist: true });
+const [cmd, ...rest] = process.argv.slice(2);
+
+const AJUDA = `Comandos:
+  listar              marcas cadastradas (id, nome, tag, @, se o kit está completo)
+  ver <id|nome|tag>   Brand Kit completo em texto, com o caminho da logo e das referências visuais
+  json <id|nome|tag>  o mesmo em JSON
+Antes de criar um post de imagem para uma marca, rode "marca ver <marca>", abra a logo e as referências com Read
+e siga cores, tom de voz, descrição do estilo visual e o nível de fidelidade às referências.`;
+
+const OBJ = { vender: 'Vender mais produtos/serviços', autoridade: 'Construir autoridade', engajamento: 'Aumentar engajamento', leads: 'Gerar leads qualificados' };
+const FID = { fiel: 'Cópia fiel: seguir o layout das referências exatamente, só trocando o conteúdo', forte: 'Inspiração forte: mesmos estilos e elementos das referências, com layouts variados', livre: 'Referência livre: pegar a vibe geral das referências, com liberdade criativa' };
+const parse = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+function todas() {
+  try { return db.prepare(`SELECT * FROM social_marcas ORDER BY updated_at DESC`).all(); }
+  catch (_) { return []; }
+}
+function achar(q) {
+  const l = todas(), n = norm(q).replace(/^@/, '');
+  if (!n) return null;
+  return l.find(r => r.id === q) || l.find(r => norm(r.nome) === n) || l.find(r => { const d = parse(r.dados, {}); return norm(d.tag) === n || norm(d.instagram) === n; })
+    || l.find(r => norm(r.nome).includes(n) || norm(parse(r.dados, {}).tag).includes(n));
+}
+function kit(r) {
+  const d = parse(r.dados, {}), c = d.cores || {};
+  const dir = path.join(FILES_DIR, r.id);
+  return {
+    id: r.id, nome: r.nome, completo: !!r.completo, atualizado: new Date(r.updated_at).toISOString(),
+    objetivo: OBJ[d.objetivo] || null, pais: d.pais || null, oQueFaz: d.oQueFaz || null, tag: d.tag || null,
+    instagram: d.instagram ? '@' + d.instagram : null, website: d.website || null, diferencial: d.diferencial || null, produtos: d.produtos || null,
+    publico: { clienteIdeal: d.clienteIdeal || null, dores: d.dores || null, desejos: d.desejos || null, objecoes: d.objecoes || null },
+    identidade: { tons: d.tons || [], persona: d.persona || null, formalidade: d.formalidade === undefined ? null : d.formalidade, usa: d.palavrasUsa || null, naoUsa: d.palavrasEvita || null },
+    estilo: { cores: { primaria: c.primaria || null, secundaria: c.secundaria || null, destaque: c.destaque || null }, coresLogo: d.coresLogo || [],
+      descricao: d.descricaoEstilo || null, logo: r.logo ? path.join(dir, r.logo) : null,
+      referencias: parse(r.refs, []).map(x => path.join(dir, x.arquivo)), fidelidade: FID[d.fidelidade] || null },
+  };
+}
+function texto(k) {
+  const L = [`# Brand Kit: ${k.nome}${k.completo ? '' : ' (INCOMPLETO)'}`, `id ${k.id} · atualizado ${k.atualizado}`, ''];
+  const add = (rot, v) => { if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) L.push(`- ${rot}: ${Array.isArray(v) ? v.join(', ') : v}`); };
+  L.push('## Marca'); add('Objetivo principal', k.objetivo); add('O que faz', k.oQueFaz); add('Onde atua', k.pais); add('Tag', k.tag); add('Instagram', k.instagram);
+  add('Website', k.website); add('Diferencial', k.diferencial); add('Produtos/serviços', k.produtos); L.push('');
+  L.push('## Público'); add('Cliente ideal', k.publico.clienteIdeal); add('Dores', k.publico.dores); add('Desejos', k.publico.desejos); add('Objeções', k.publico.objecoes); L.push('');
+  const f = k.identidade.formalidade;
+  L.push('## Identidade e tom de voz'); add('Tons', k.identidade.tons); add('Personalidade', k.identidade.persona);
+  add('Formalidade', f === null ? null : `${f}/100 (${f < 34 ? 'informal' : f > 66 ? 'formal' : 'equilibrado'})`); add('Palavras que USA', k.identidade.usa); add('Palavras que NÃO USA', k.identidade.naoUsa); L.push('');
+  const c = k.estilo.cores;
+  L.push('## Estilo visual'); add('Cor primária', c.primaria); add('Cor secundária', c.secundaria); add('Cor de destaque', c.destaque); add('Cores detectadas na logo', k.estilo.coresLogo);
+  add('Descrição do estilo (siga nos prompts de imagem)', k.estilo.descricao); add('Logo (abra com Read)', k.estilo.logo);
+  if (k.estilo.referencias.length) { L.push('- Referências visuais (abra com Read):'); k.estilo.referencias.forEach(p => L.push(`  - ${p}`)); add('Fidelidade às referências', k.estilo.fidelidade); }
+  return L.join('\n');
+}
+
+if (!cmd || cmd === 'ajuda' || cmd === 'help') { console.log(AJUDA); process.exit(0); }
+if (cmd === 'listar') {
+  const l = todas();
+  if (!l.length) { console.log('Nenhuma marca cadastrada. Cadastre em /ferramentas/social-media (Ferramentas > Social Media: Brand Kit).'); process.exit(0); }
+  l.forEach(r => { const d = parse(r.dados, {}); console.log(`${r.id}  ${r.nome}${d.tag ? ' [' + d.tag + ']' : ''}${d.instagram ? ' @' + d.instagram : ''}  ${r.completo ? 'completo' : 'INCOMPLETO'}`); });
+  process.exit(0);
+}
+if (cmd === 'ver' || cmd === 'json') {
+  const r = achar(rest.join(' '));
+  if (!r) { console.error(`Marca não encontrada: "${rest.join(' ')}". Rode "marca listar".`); process.exit(1); }
+  const k = kit(r);
+  console.log(cmd === 'json' ? JSON.stringify(k, null, 2) : texto(k));
+  process.exit(0);
+}
+console.error('Comando desconhecido. ' + AJUDA);
+process.exit(1);
