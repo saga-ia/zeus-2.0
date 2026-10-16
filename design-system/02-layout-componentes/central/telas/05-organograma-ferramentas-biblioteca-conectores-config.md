@@ -134,6 +134,10 @@ Rota legada. `screenFromHash()` mapeia `ferramentas/app/<id>` para a tela `ferra
 
 ## 3. Biblioteca
 
+![Biblioteca, Todos os arquivos em lista](prints/escuro-biblioteca.png)
+
+*Tema escuro.*
+
 **Rota e menu:** `/biblioteca`. Menu, grupo CONTEXTO, primeiro item "Biblioteca".
 
 **Objetivo:** guardar arquivos, links e textos da empresa em pastas; tudo que tem texto é indexado e vira contexto do ZEUS e dos agentes nas conversas.
@@ -298,6 +302,10 @@ Funções existentes no arquivo mas sem entrada em `CFG_MENU`/`CFG_TITULOS`, por
 ---
 
 ## 6. Estrutura geral do app
+
+![Menu do usuário aberto: Minha Conta, Memória, Certificados, Assinatura, Suporte, Tema e Sair](prints/escuro-menu-do-usuario.png) ![Painel de notificações (sino) com Marcar todas como lidas](prints/escuro-notificacoes.png)
+
+*Tema escuro; e-mail desfocado.*
 
 **Origem:** `sidebar()` (`index.html` ~904), `render()` (~7930), `mountShell()` (~7870), `notifPanelHTML()` (~10245), tema (~10634), `cfgToast` (~4520), `zAlert`/`zPrompt`/`zConfirm` (~1455 a 1540), `pdiModal` (~1545), `fab()`/`widget()` (~7516 e ~7695), `login.html`, `convite.html`.
 

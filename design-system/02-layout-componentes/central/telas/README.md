@@ -10,7 +10,7 @@ Documentação de todas as telas de `central.jefersonhenrike.com`, lida direto d
 | [04-canais-whatsapp-instagram-linkedin-tiktok.md](04-canais-whatsapp-instagram-linkedin-tiktok.md) | WhatsApp (e conector WhatsApp/Zeus bot), Instagram, Agente Posts, Agente de Design (Criar post, Criações, Estilos, Brand Kit), LinkedIn (com aba Estratégia), TikTok |
 | [05-organograma-ferramentas-biblioteca-conectores-config.md](05-organograma-ferramentas-biblioteca-conectores-config.md) | Organograma, Ferramentas (catálogo, ferramenta, SWOT), Biblioteca, Conectores (WhatsApp Business, Planilha/CRM), Configurações (14 seções), estrutura geral (menu aberto e recolhido, empresa, sino, menu do usuário e tema, celular, roteamento e permissão, toasts e confirmações, login e convite) |
 
-Prints de referência em [prints/](prints/), tirados da tela real (dados pessoais desfocados): Início, voz do ZEUS (2), Conversas, Agentes ZEUS, Rotinas, Gestão Inteligente, Motor de Vendas, Atividades, WhatsApp, Instagram, LinkedIn, Ferramentas e Edição de Vídeo. Configurações fica sem print (decisão do Jeff).
+Prints de referência em [prints/](prints/), tirados da tela real (dados pessoais desfocados): Início, voz do ZEUS (2), Conversas, Agentes ZEUS, Rotinas, Gestão Inteligente, Motor de Vendas, Atividades, WhatsApp, Instagram, LinkedIn, Ferramentas e Edição de Vídeo. Configurações fica sem print (decisão do Jeff). No tema escuro: Agentes ZEUS, Equipes de agentes, Equipe (vazia e com entrega para aprovar), Biblioteca, menu do usuário e notificações (arquivos `escuro-*`).
 
 ## Como a Central é montada (resumo)
 

@@ -97,6 +97,10 @@ Carregando: "Carregando agentes..." (ou `agentsError`). Vazio por aba: caixa tra
 
 ![Agentes ZEUS (catálogo)](prints/agentes-zeus-catalogo.png)
 
+![Agentes ZEUS no tema escuro](prints/escuro-agentes-zeus.png)
+
+*Tema escuro.*
+
 - **Rota e menu**: `/catalogo`; Agentes > "Agentes ZEUS".
 - **Objetivo**: explorar agentes oficiais, filtrar e adicionar ao workspace.
 - **Origem**: `renderCatalogo()` ~6139, `catListHTML()` ~6109, `catCardHTML()` ~6082, `catRefresh()` ~6130, filtros `catFiltro()` ~6075.
@@ -117,6 +121,10 @@ Carregando: "Carregando catálogo..." (ou erro). Filtro sem resultado: caixa tra
 
 ## 4. Equipes de agentes (lista)
 
+![Equipes de agentes](prints/escuro-equipes-de-agentes.png)
+
+*Tema escuro.*
+
 - **Rota e menu**: `/equipes`; Agentes > "Equipes de agentes".
 - **Objetivo**: listar equipes (orquestrador + 2 a 8 agentes) e abrir ou criar.
 - **Origem**: `renderEquipes()` index.html ~5169; `teamCardHTML()` ~5147; `teamMenuHTML()` ~5136.
@@ -136,6 +144,12 @@ Carregando "Carregando equipes..." (ou erro); vazio: caixa tracejada "Nenhuma eq
 ---
 
 ## 5. Equipe (execução com o orquestrador)
+
+![Equipe sem conversa: elenco, composer do orquestrador e sugestões](prints/escuro-equipe-orquestrador.png)
+
+![Equipe com entrega: partes "Para revisar" com Aprovar, Ajustar e Descartar, e a barra "0 de 5 partes aprovadas" com Transformar em plano](prints/escuro-equipe-entrega-aprovacao.png)
+
+*Tema escuro.*
 
 - **Rota e menu**: `/equipe/<id>`; mantém o item "Equipes de agentes" ativo. Link antigo `/equipe` sem id cai em `/equipes`.
 - **Objetivo**: conversar com o orquestrador, acompanhar etapas dos agentes e aprovar a entrega por partes.
