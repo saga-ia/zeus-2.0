@@ -2,7 +2,7 @@
 
 Tudo o que é visual do Zeus e da Alpha num lugar só: identidade, tokens, layout, componentes, templates de post e minisite, regras de arte e as ferramentas que geram as peças.
 
-**Cor oficial do Zeus: roxo `#673DE6`** (decisão do Jeff em 16/10/2026). Última conferência com a produção: 16/10/2026, 12:30 BRT. Toda tela, app ou peça nova usa [`01-identidade/tokens/zeus-central.css`](01-identidade/tokens/zeus-central.css). As outras identidades que existiam ficaram como legado, e a lista do que falta migrar está em [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md).
+**Cor oficial do Zeus: roxo `#673DE6`** (decisão do Jeff em 16/10/2026). Última conferência com a produção: 16/10/2026, 14:45 BRT (todas as telas em `02-layout-componentes/central/telas/`). Toda tela, app ou peça nova usa [`01-identidade/tokens/zeus-central.css`](01-identidade/tokens/zeus-central.css). As outras identidades que existiam ficaram como legado, e a lista do que falta migrar está em [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md).
 
 > Esta pasta é uma **cópia de referência**. Os arquivos que rodam em produção continuam em `/opt/jeff-apps`, `/opt/jeff-worker`, `/opt/jeff-sites` e `/root/.claude` (endereços na tabela no fim). Se mudar algo lá, atualize aqui.
 > Material de cliente (Farias, CIGC, EBC etc.) **não entra aqui**: fica no projeto de cada cliente.
@@ -25,6 +25,8 @@ design-system/
 │   ├── central/                  # central-base.css (sidebar, cards, chips, gaveta mobile), posts.css, login, convite,
 │   │                             # voz-zeus.css (tela de voz /jarvis) e componentes-e-telas.md (estilos dos componentes,
 │   │                             # selos de status, menu atual, padrão das telas LinkedIn/TikTok)
+│   │   └── telas/                # TODAS as telas da Central, uma por seção: layout, abas, componentes, estados,
+│   │                             # botões, APIs e arquivo de origem (README.md é o índice) + prints/
 │   └── temas-outros-apps/        # CSS extraído dos outros apps do Zeus (SAGA, VPS, zeus-post, myIG, platform...)
 │
 ├── 03-templates/
