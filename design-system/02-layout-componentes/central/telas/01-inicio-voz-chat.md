@@ -73,6 +73,10 @@ Fundo `#FAFAFA`, duas seções empilhadas dentro de um único contêiner:
 
 ![Tela de voz no desktop](prints/voz-zeus-desktop.png)
 
+Falando, com entrega para aprovar (menu recolhido): legenda grande em caixa alta no rodapé, selo "ZEUS TRABALHANDO", cartão do agente à direita (Gustavo · Designer) com título, tipo, descrição, prévia em janela de navegador com alternância desktop/celular e os botões Aprovar, Pedir ajuste e abrir em nova aba.
+
+![Tela de voz falando, com cartão de aprovação](prints/voz-zeus-falando-aprovacao.png)
+
 - **Rota e menu:** `/jarvis` (`state.screen = "jarvis"`). Item do menu lateral com o rótulo **"Jarvis"** (logo abaixo de "Início", ícone `ICONS.jarvis`: círculo central, anel pontilhado e quatro marcas). O título dentro da tela é **"ZEUS"**.
 - **Objetivo:** conversar por voz com o ZEUS e ver o time trabalhando ao vivo (cartões acendem, resultados viram painéis, ajustes são marcados na própria entrega).
 - **Origem:** `public/jarvis.js` (923 linhas, módulo autônomo carregado depois do index: `<script src="/jarvis.js?v=12">`, index.html ~10696). Registra `RENDERERS.jarvis` (jarvis.js ~915). Funções principais: `pagina()` ~829, `cenaHTML()` ~232, `cartao()` ~218, `ilustracao()` ~201, `orbHTML()` ~244, `painelHTML()` ~379, `controlesHTML()` ~606, `statusTxt()` ~595, `abrirRevisao()` ~445, `animar()` ~883, CSS na constante `CSS` (~636 a 827; cópia em `../voz-zeus.css`). Servidor: `jeff-central/jarvis.js` (router montado em `/api/jarvis`).
