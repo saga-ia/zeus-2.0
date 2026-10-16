@@ -2,7 +2,7 @@
 
 Tudo o que é visual do Zeus e da Alpha num lugar só: identidade, tokens, layout, componentes, templates de post e minisite, regras de arte e as ferramentas que geram as peças.
 
-**Cor oficial do Zeus: roxo `#673DE6`** (decisão do Jeff em 16/10/2026). Toda tela, app ou peça nova usa [`01-identidade/tokens/zeus-central.css`](01-identidade/tokens/zeus-central.css). As outras identidades que existiam ficaram como legado, e a lista do que falta migrar está em [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md).
+**Cor oficial do Zeus: roxo `#673DE6`** (decisão do Jeff em 16/10/2026). Última conferência com a produção: 16/10/2026, 12:30 BRT. Toda tela, app ou peça nova usa [`01-identidade/tokens/zeus-central.css`](01-identidade/tokens/zeus-central.css). As outras identidades que existiam ficaram como legado, e a lista do que falta migrar está em [`01-identidade/IDENTIDADES.md`](01-identidade/IDENTIDADES.md).
 
 > Esta pasta é uma **cópia de referência**. Os arquivos que rodam em produção continuam em `/opt/jeff-apps`, `/opt/jeff-worker`, `/opt/jeff-sites` e `/root/.claude` (endereços na tabela no fim). Se mudar algo lá, atualize aqui.
 > Material de cliente (Farias, CIGC, EBC etc.) **não entra aqui**: fica no projeto de cada cliente.
@@ -15,13 +15,16 @@ design-system/
 │   ├── IDENTIDADES.md            # as 5 identidades, contradições e proposta
 │   ├── estetica-e-voz-alpha.md   # doc oficial de paletas SAGA/VPS
 │   ├── logo/                     # zeus-favicon.svg (raio roxo, único logo do Zeus), myig-favicon.svg
+│   ├── icones/                   # os 76 ícones da Central (zeus-icones.json + index.html pra ver todos)
 │   ├── tokens/
-│   │   ├── zeus-central.css      # OFICIAL: tokens do roxo da Central (--zeus-*), com aliases antigos
+│   │   ├── zeus-central.css      # OFICIAL: tokens do roxo da Central (--zeus-*), tela de voz e tema escuro
 │   │   └── outras-identidades.css# legado: SAGA, VPS, Gustavo, Marca Jeff, Apps de post
 │   └── marca-jeff/               # @jeffhenrike: gosto.md (o que o Jeff aprova), contexto, avatares, estilo salvo
 │
 ├── 02-layout-componentes/
-│   ├── central/                  # central-base.css (sidebar, cards, chips, gaveta mobile), posts.css, login, convite
+│   ├── central/                  # central-base.css (sidebar, cards, chips, gaveta mobile), posts.css, login, convite,
+│   │                             # voz-zeus.css (tela de voz /jarvis) e componentes-e-telas.md (estilos dos componentes,
+│   │                             # selos de status, menu atual, padrão das telas LinkedIn/TikTok)
 │   └── temas-outros-apps/        # CSS extraído dos outros apps do Zeus (SAGA, VPS, zeus-post, myIG, platform...)
 │
 ├── 03-templates/
@@ -61,6 +64,8 @@ design-system/
 | `01-identidade/marca-jeff/` | `/opt/jeff-worker/projetos/design-modelos/marcas/g2Tg5oqEoqg/` + `/opt/jeff-worker/projetos/clientes/jeffhenrike/` |
 | `02-layout-componentes/central/central-base.css` | blocos `<style>` de `/opt/jeff-apps/jeff-central/public/index.html` |
 | `02-layout-componentes/central/posts.css` | `/opt/jeff-apps/jeff-central/public/posts/posts.css` |
+| `02-layout-componentes/central/voz-zeus.css` | `const CSS` de `/opt/jeff-apps/jeff-central/public/jarvis.js` |
+| `02-layout-componentes/central/componentes-e-telas.md`, `01-identidade/icones/` | constantes de estilo e objeto `ICONS` de `/opt/jeff-apps/jeff-central/public/index.html` |
 | `03-templates/biblioteca-posts/` | `/opt/jeff-worker/projetos/design-modelos/estruturas/` (sem `_coleta/`) |
 | `03-templates/card-de-print/`, `referencias-anuncio/` | `/opt/jeff-worker/projetos/design-modelos/` |
 | `03-templates/minisites/` | `/opt/jeff-worker/projetos/minisites/_modelos/` |

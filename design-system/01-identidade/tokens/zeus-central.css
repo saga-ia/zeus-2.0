@@ -57,3 +57,22 @@
   --violet: var(--zeus-violet); --violet-bg: var(--zeus-violet-bg);
   --head: var(--zeus-font-head);
 }
+
+/* Tela de voz do ZEUS (/jarvis): mesma paleta, com lilás de apoio e fundo radial.
+   Origem: jeff-central/public/jarvis.js (#jv-root). CSS completo em 02-layout-componentes/central/voz-zeus.css */
+:root {
+  --zeus-voz-roxo-2: #8B6CF0;            /* --jv-roxo2: brilho do orbe e partículas */
+  --zeus-voz-roxo-30: rgba(103, 61, 230, 0.3);
+  --zeus-voz-lilas: #F0ECFD;             /* --jv-lilas: fundo de chip e cartão ativo */
+  --zeus-voz-linha: rgba(103, 61, 230, 0.16);
+  --zeus-voz-fundo: radial-gradient(ellipse at 50% 45%, #FFFFFF 0%, #F8F6FF 50%, #EFEBFC 100%);
+  --zeus-voz-sombra: 0 6px 18px rgba(23, 23, 26, 0.07);
+}
+
+/* Tema escuro (Configurações > tema claro/escuro/sistema): não há paleta escura própria.
+   A Central liga html.tema-escuro, que inverte a área de trabalho e desfaz a inversão em mídia: */
+html.tema-escuro, html.tema-escuro body { background: #111114; }
+/* html.tema-escuro #sidebar-slot>*, #main-slot, ... { filter: invert(0.93) hue-rotate(180deg) }
+   html.tema-escuro img, video, iframe, canvas, [data-no-invert] { filter: invert(1) hue-rotate(180deg) }
+   Efeito: o invert troca claro por escuro e o hue-rotate de 180° devolve o matiz, então o roxo continua roxo
+   (mais claro) e os cinzas/brancos viram escuros. Regra para cor nova: confira a tela com o tema escuro ligado. */
