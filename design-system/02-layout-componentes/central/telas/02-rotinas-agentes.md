@@ -16,6 +16,10 @@ Documentação de leitura do front da Central (`/opt/jeff-apps/jeff-central/publ
 
 ## 1. Rotinas
 
+![Rotinas](prints/rotinas.png)
+
+*Dados pessoais (nomes, telefones, mensagens) desfocados no print.*
+
 - **Rota e menu**: `/rotinas`; "OPERAR E AUTOMATIZAR > Rotinas" (item de primeiro nível, ícone `ICONS.rotinas`).
 - **Objetivo**: agendar pedidos que o ZEUS executa sozinho (diário, semanal, mensal, a cada X horas, uma vez) e entrega em Conversas, WhatsApp ou e-mail.
 - **Origem**: `public/rotinas.js` (404 linhas), IIFE que sobrescreve `RENDERERS.rotinas` (~392). Em index.html há só um placeholder "Carregando rotinas..." (~7507). Funções: `page()` ~102, `vazio()` ~121, `modelos()` ~128, `card()` ~150, `historico()` ~187, `modal()` ~215, `salvar()` ~284, `rodar()` ~294, `abrirConversa()` ~315, `bind()` ~327. Constantes próprias (não usa `CFG_*`): `IN`, `LBL` (rótulo em caixa alta 11.5px), `BTN_PRI`, `BTN_SEC`, `BTN_MINI`, `CHIP`; cores locais ROXO, VERM, VERDE, CINZA.
@@ -90,6 +94,8 @@ Carregando: "Carregando agentes..." (ou `agentsError`). Vazio por aba: caixa tra
 ---
 
 ## 3. Agentes ZEUS (catálogo)
+
+![Agentes ZEUS (catálogo)](prints/agentes-zeus-catalogo.png)
 
 - **Rota e menu**: `/catalogo`; Agentes > "Agentes ZEUS".
 - **Objetivo**: explorar agentes oficiais, filtrar e adicionar ao workspace.

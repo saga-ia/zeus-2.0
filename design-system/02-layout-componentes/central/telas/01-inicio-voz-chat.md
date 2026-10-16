@@ -13,6 +13,8 @@ Convenções usadas abaixo:
 
 ## Tela 1: Início
 
+![Início](prints/inicio.png)
+
 - **Rota e menu:** `/` (`state.screen = "home"`). Item "Início" no topo do menu lateral (`navItem("home", ICONS.home, "Início", ...)`, index.html ~1058). O mesmo item existe na lista curta do menu recolhido (~911).
 - **Objetivo:** ponto de partida do dia: saudação, caixa de conversa com o ZEUS, atalhos de pedidos prontos e cartões "Seu dia" com o que exige atenção.
 - **Origem:** `renderHome()` index.html ~2500. Auxiliares: `HOME_CATS` ~1109, `homeCatsHTML()` ~1261, `homeFxStart()` ~1281, `HOME_CARDS` ~2243, `homeCardsHTML()` ~2374, `hcManagerOpen()` ~2444, `diaLoad()` ~2210, `startChatFromHome()` ~10007.
@@ -213,6 +215,8 @@ Além das regras globais do `#main-slot` (barra de topo, gaveta; o raiz de altur
 ---
 
 ## Tela 3: Conversas
+
+![Conversas, sem conversa aberta](prints/conversas.png)
 
 - **Rota e menu:** `/chat` (`state.screen = "chat"`). **Não tem item no menu lateral** (o texto da lista vazia diz "As conversas que você começa pela tela de Início aparecem aqui"). Entradas: botão "Conversas" no canto superior direito da Início, envio de mensagem pela caixa da Início e retomada de rotinas (rotinas.js).
 - **Objetivo:** histórico e continuação das conversas com o ZEUS (modelo geral, sem agente específico).

@@ -30,6 +30,10 @@ Registro em `RENDERERS` (`index.html` linha 7504): `whatsapp: renderWhatsapp` (p
 
 ## WhatsApp
 
+![WhatsApp, aba Conversas](prints/whatsapp-conversas.png)
+
+*Dados pessoais (nomes, telefones, mensagens) desfocados no print.*
+
 **Rota e menu:** `/whatsapp`, EXECUTAR E COMUNICAR › WhatsApp.
 **Objetivo:** operar SDRs de pré-atendimento no WhatsApp (chips ou ZEUS), com conversas, funil de leads, resultados e configuração.
 **Origem:** `public/whatsapp.js` (939 linhas, `RENDERERS.whatsapp` na linha 924, `page()` 132, `topo()` 138, `main()` 168). Estado em `state.waSdr` (função `W()`, linha 30; `state.wa` é do conector, outro formato).
@@ -117,6 +121,10 @@ Instâncias: `GET/POST /api/wa/instances`, `GET /api/wa/instances/:nome/qr`, `..
 ---
 
 ## Instagram
+
+![Instagram, aba Direct](prints/instagram-direct.png)
+
+*Dados pessoais (nomes, telefones, mensagens) desfocados no print.*
 
 **Rota e menu:** `/instagram`, EXECUTAR E COMUNICAR › Instagram.
 **Objetivo:** responder DMs com agentes de IA (myIG), montar fluxos de conversa, agendar posts e acompanhar desempenho.

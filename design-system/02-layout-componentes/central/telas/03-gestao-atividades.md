@@ -52,7 +52,7 @@ Documentação de leitura do código da Central (`/opt/jeff-apps/jeff-central/pu
 - **Habilidades:** Vendas: "Dashboard" (RECOMENDADO, abre `motorVendas`) e "Auditoria de Vendas" (ATIVO, abre `motorAuditor`, rodapé "Requer Dashboard"). Growth: "Dashboard" (RECOMENDADO, abre `growthDash`) e "Estrategista de Growth IA" (ATIVO, abre `growthAgente`, rodapé "Dados reais de Meta Ads").
 - **Interações:** clique em qualquer `data-go` navega (`setState({screen})`). Sem API própria.
 - **Estados:** estático, sem carregando nem erro.
-- **Observação:** a tela de motores não mostra PDI nem OKRs (ver seções próprias).
+- **Observação:** a tela de motores não mostra PDI nem OKRs (não são usados; ver "PDI e OKRs").
 
 ---
 
@@ -183,97 +183,9 @@ Aparece no topo das telas `motorVendas`, `motorAuditor`, `motorQualidade`, `moto
 
 ---
 
-## PDI: visão geral e entrada
+## PDI e OKRs
 
-- **Rotas:** `/pdi` (Meu PDI), `/pdi/equipe`, `/pdi/evolucao`, `/pdi/templates`, `/pdi/novo`, `/pdi/ia`, `/pdi/ver/<id>` (`MOTOR_ROTAS`, `index.html` linha 329; `pdiVer` tratado em `screenFromHash`).
-- **Menu:** **não há item de menu**. Entradas: o anel de progresso no rodapé do menu lateral (`pdiSideRing()`, `index.html` linha 893; clique abre `pdi`; sem PDI aparece anel tracejado com a dica "Você ainda não tem um PDI. Clique para criar"); links internos ("Analisar evolução →", "PDIs da equipe", cartões do cockpit); URL direta. O item "Gestão Inteligente" não fica ativo em telas de PDI. Não está listado no hub `/motores`. (a confirmar se há outra entrada, por exemplo pela Home ou Organograma)
-- **Componentes compartilhados** (definidos no `index.html`, linhas 1374 a 1450 e 1546 a 1604): `PDI_BOX`, `PDI_H3`, `PDI_EYE` (eyebrow roxo "PDI · ..."), `PDI_IN`, `AG_TAG`, `AG_KIND`, `AG_MENU_ITEM` (menu de três pontos). Selos de saúde `PDI_HEALTH` (Em dia verde, Atenção `#9A6700`, Atrasado vermelho, Concluído verde, Rascunho cinza, Solicitado `#4A6CF7`); status de meta `PDI_GOAL_ST`; paleta de séries `PDI_SERIES`; helpers `pdiBar` (barra de 8px com marca escura do "esperado pelo tempo"), `pdiRing` (anel SVG), `pdiHealthBadge`, `pdiMoodDots`. Modal padrão `pdiModal(opts)` (linha 1546): overlay `rgba(23,23,26,0.32)`, formulário de até 560px (largura configurável), raio 18px, cabeçalho, corpo rolável, rodapé com Cancelar e botão roxo.
-- **Estados comuns:** "Carregando seu PDI..." / "Carregando PDIs..." / "Carregando templates..."; erro "Não foi possível carregar os PDIs: <msg>"; ações com erro mostram `alert()` (que abre o modal `zAlert`).
-- **APIs (base `/api/pdi`):** `GET ""` (lista e cockpit), `GET /<id>`, `GET /templates`, `GET /analytics`, `POST ""`, `PATCH /<id>`, `DELETE /<id>`, `POST /generate`, `POST /<id>/goals`, `PATCH|DELETE /goals/<id>`, `POST /goals/<id>/actions`, `PATCH|DELETE /actions/<id>`, `POST /<id>/checkins`, `DELETE /checkins/<id>`, `POST /<id>/progress`, `POST /<id>/evidences`, `PATCH|DELETE /evidences/<id>`, `POST /<id>/feedback`, `PATCH|DELETE /feedback/<id>`, `POST /<id>/competencies`, `PATCH|DELETE /competencies/<id>`, `POST /templates/from-pdi/<id>`, `POST /templates/<id>/duplicate`, `DELETE /templates/<id>`.
-
-## PDI: Meu PDI e PDI de uma pessoa (detalhe)
-
-- **Rotas:** `/pdi` (o PDI de quem está logado: ativo, senão rascunho, senão concluído) e `/pdi/ver/<id>` (de qualquer pessoa, a partir da equipe).
-- **Objetivo:** acompanhar metas, ações, evidências, competências, check-ins e feedback de um plano.
-- **Origem:** `detalhe(p, mine)` em `pdi.js` linha 109; `RENDERERS.pdi` linha 403; `RENDERERS.pdiVer` linha 412; helpers `acaoLinha` 35, `metaBloco` 56, `evidLinha` 84, `compBarra` 102. (Versão antiga `pdiDetailHTML`, `index.html` 1622, não é usada.)
-- **Layout:** `padding:30px 40px 70px; max-width:1240px`. Eyebrow ("PDI · MEU PDI" ou "PDI · PDIS DA EQUIPE"); em `pdiVer` botão "PDIs da equipe" (borda `#DADADF`, raio 9px). Cabeçalho: avatar de iniciais 46px (só para outra pessoa), título 25px/600, selo de status (Ativo/Pausado/etc.) e selo de saúde, linha de cargo → cargo alvo, time. À direita, botões: para o dono, "Atualizar progresso" (primário roxo), "Adicionar evidência", "Solicitar feedback" e menu de três pontos; para o gestor, "Pausar/Retomar", "Concluir PDI", "Registrar check-in" (primário) e menu. Menu de três pontos (`AG_MENU_ITEM`, 230px): Editar dados do PDI, Analisar com o ZEUS, Ativar/Reabrir/Retomar PDI (conforme status), Salvar como template, Excluir PDI (vermelho).
-- **Faixa de status "Solicitado":** caixa azul `rgba(74,108,247,0.05)` com a mensagem do pedido (a confirmar o texto exato).
-- **Seis cartões de KPI** (`tile`, `PDI_BOX` com padding 16px 18px; ícone em quadrado 30px): Progresso geral (%), Dias restantes (vermelho se menos de 15 e progresso abaixo de 100), Objetivos em curso, Ações atrasadas (vermelho), Aguard. validação (`#9A6700`), Concluídas (verde). Grade `minmax(150px,1fr)`.
-- **Corpo em duas colunas** (flex com `flex:1 1 560px` e coluna lateral `flex:1 1 300px; max-width:380px`; empilha no celular):
-  - Coluna principal: "Objetivos" (contador, link "Expandir/Recolher todos", botão "Novo objetivo"). Cada meta é um `PDI_BOX` sem padding com cabeçalho clicável: seta que gira 90°, título, tag de competência (`AG_TAG` em caixa alta), selo "Atrasada", prazo, "N de M ações", barra de progresso 110px e ícones de editar e excluir. Expandida: indicador de sucesso (ícone de bandeira roxo), descrição, controle de progresso manual (range, passo 5) quando não há ações, lista de ações e formulário "Nova ação" (título, formato, tipo 70/20/10, prazo, botão "Adicionar"). Linha de ação: círculo de 20px para concluir/reabrir, título (riscado se concluída), selo de status (`AST`: Pendente cinza, Em andamento azul, Aguardando validação `#9A6700`, Concluída verde, Atrasada vermelho), chip de formato (Projeto prático, Curso, Leitura, ...), prazo, e links Iniciar, Concluir, Validar, Devolver, Reabrir, anexar evidência e excluir. Depois "Evidências" (contador, botão "Adicionar evidência"; linha com ícone colorido por status Validada verde, Recusada vermelha, Aguardando `#9A6700`, botões Validar, Recusar, Reabrir).
-  - Coluna lateral (caixas `PDI_BOX`): resumo (selo, anel de progresso 118px, Período, Dias restantes, Cargo, Gestor, Cadência), "Competências" (barras de 5 segmentos de 6px: nível de origem em roxo, ganho `#A78BFA`, meta `rgba(103,61,230,0.22)`; "+ Adicionar"; clicar edita), "Check-ins" (linha do tempo com pontos, humor em 5 bolinhas, até 6), "Feedback" (pedidos e respostas, "+ Solicitar"), "Histórico" (recolhível).
-- **Modais (`pdiModal`):** Atualizar progresso (640px), Adicionar evidência, Solicitar feedback, Responder feedback, Competência (nova ou editar, níveis 1 a 5), Registrar check-in (data, autor, humor 1 a 5, nota), Nova meta / Editar meta, Editar PDI, Salvar como template (nome).
-- **Regras de interação:** concluir ação com gestor definido envia para "Aguardando validação"; só gestor (ou dono sem gestor) valida; "Analisar com o ZEUS" abre o chat da Home com um resumo do PDI (`pdiResumoPessoa`, `startChatFromHome`).
-- **Estados:** carregando, erro (`#C0341C`; em `pdiVer` com botão de voltar), meta sem ações ("Progresso manual"), "Nenhum objetivo ainda. Adicione o primeiro ou crie o PDI a partir de um template.", "Nenhuma evidência. ...", "Sem competências. ...", "Nenhum pedido de feedback."
-- **Estado vazio de Meu PDI** (`pdiVazioHTML`, `index.html` linha 2056): cartão central de 620px (raio 22px, padding 44px 34px) com ícone, título "Você ainda não tem um PDI ativo" (ou "PDI solicitado para <gestor>"), botões "Criar PDI com IA" (primário, vai para `pdiIA`), "Criar manualmente", "Solicitar ao gestor" (modal que cria PDI com status "solicitado") ou "Cancelar solicitação", e nota abaixo em caixa branca.
-- **Celular:** duas colunas empilham; KPIs em 2 a 3 colunas conforme `minmax(150px`; linhas de meta mantêm barra e ícones (quebra por `flex-wrap`).
-
-## PDI: PDIs da equipe (cockpit)
-
-- **Rota:** `/pdi/equipe`.
-- **Objetivo:** cockpit do gestor: o que precisa de ação e a lista de todos os PDIs.
-- **Origem:** `equipe()` em `pdi.js` linha 207; linhas da tabela em `pdiEquipeLinhasHTML()` (`index.html` linha 1774).
-- **Layout:** `padding:30px 40px 60px; max-width:1240px`. Eyebrow "PDI · PDIS DA EQUIPE", título "PDIs da equipe" (26px/600), texto, botão primário "Criar PDI" (vai para `pdiNovo`).
-- **Caixa "Precisa da sua ação"** (`PDI_BOX` sem padding): título, contador (vermelho ou verde), linhas com ícone colorido por tipo (validação, feedback, solicitado, rascunho, atraso, check-in, sem PDI), pessoa · cargo, texto e botão mini (abre o PDI, ou "criar" para quem não tem). Vazio: "Nada pendente: validações, feedbacks e prazos estão em dia."
-- **"Todos os PDIs":** contador, link "Analisar evolução →" (`pdiEvolucao`), chips de saúde clicáveis com contagem (Em dia, Atenção, Atrasado, Solicitado, Rascunho, Concluído; cor do estado quando ativo), campo "Buscar pessoa ou cargo" (máx. 340px, ícone de lupa) e tabela (`min-width:900px`, raio 16px, `overflow-x:auto`): colunas PESSOA, CICLO, PROGRESSO · ESPERADO, METAS, ÚLTIMO CHECK-IN (vermelho se mais de 30 dias), SAÚDE. Linha com avatar 34px, nome e selo "Você". Clicar abre `/pdi/ver/<id>`.
-- **Estados:** "Carregando PDIs...", erro, "Nenhum PDI encontrado."
-- **Celular:** tabela rola no horizontal.
-
-## PDI: Evolução (análise do time)
-
-- **Rota:** `/pdi/evolucao`.
-- **Objetivo:** ritmo, competências, equilíbrio 70-20-10 e pendências do time.
-- **Origem:** `renderPdiEvolucao()` em `index.html` linha 1982; gráfico `pdiLinhaTempoSVG()` linha 1955; prompt para o ZEUS `pdiResumoParaZeus()`.
-- **Layout:** `padding:30px 40px 60px; max-width:1240px`. Eyebrow "PDI · EVOLUÇÃO", título "Analisar evolução", botão primário "Analisar com o ZEUS" (abre o chat da Home com o resumo). Linha de 5 cartões (`PDI_BOX`, `flex:1 1 170px`, número Space Grotesk 28px/700): Progresso médio, Em dia (verde), Atenção (`#9A6700`), Atrasados (vermelho), Humor médio. Duas colunas: esquerda "Progresso ao longo do ciclo" (linha do tempo SVG) e "Progresso por pessoa" (grade `150px 1fr 44px 100px` com `pdiBar` e selo de saúde, clicável); direita "Por tipo de competência" (Técnica, Comportamental, Liderança, Carreira), "Equilíbrio 70-20-10" (barras empilhadas de 14px com `PDI_SERIES` e texto de recomendação) e "Pendências atrasadas" (até 10, cartões com fundo `rgba(192,52,28,0.03)`).
-- **Estados:** "Carregando análise...", erro, "Nenhuma pendência atrasada." (verde).
-- **API:** `GET /api/pdi/analytics`.
-
-## PDI: Templates
-
-- **Rota:** `/pdi/templates`. Sem link visível a partir de outras telas; chega-se por URL ou pelo aviso "Template criado. Abrir Templates de PDI?" ao salvar um PDI como template. (a confirmar se há outro link)
-- **Origem:** `templates()` em `pdi.js` linha 243 (versão antiga `renderPdiTemplates`, `index.html` 1861).
-- **Layout:** `padding:30px 40px 60px; max-width:1240px`. Link "PDIs da equipe", eyebrow "PDI · TEMPLATES DE PDI", título "Templates de PDI", botão primário "Novo template". Grade `repeat(auto-fill,minmax(310px,1fr))` gap 16px de cartões (`class="cat-card"`, raio 16px, padding 20px): ícone de tabela em quadrado 34px, menu de três pontos (Ver metas e ações, Duplicar, Editar e Excluir só para não nativos), nome, descrição, chips de cargo e tags, contagem de competências e ações, trilha, "Usado em N PDIs", botão primário "Usar template".
-- **Modais:** "Novo/Editar template" (680px; metas com prazo em semanas e ações uma por linha com 70, 20 ou 10 na frente), "Ver" (640px, botão "Usar este template").
-- **Estados:** "Carregando templates..."
-
-## PDI: Novo PDI
-
-- **Rota:** `/pdi/novo`.
-- **Origem:** `novo()` em `pdi.js` linha 280 (versão antiga `renderPdiNovo`, `index.html` 1817).
-- **Layout:** `padding:30px 40px 60px; max-width:1000px`. Botão "PDIs da equipe", eyebrow "PDI · NOVO", título "Novo Plano de Desenvolvimento". Formulário em dois `PDI_BOX`: "Pessoa e plano" (pessoa com `datalist`, cargo atual, cargo alvo, nome do plano, gestor, time, início e fim do ciclo (padrão hoje e +180 dias), cadência semanal/quinzenal/mensal, status ativo/rascunho, resumo; rótulos via `pdiLbl`, campos `PDI_IN`) e "Começar a partir de" (grade `minmax(280px,1fr)` de cartões de rádio: "Em branco" + templates; selecionado com borda `rgba(103,61,230,0.55)` e fundo `rgba(103,61,230,0.06)`). Rodapé: "Cancelar" e botão primário "Criar PDI".
-- **Fluxo:** o "criar" do cockpit já preenche pessoa e cargo. Enviar chama `POST /api/pdi` e abre o PDI criado.
-- **Estados:** "Carregando..."
-
-## PDI: Criar com IA
-
-- **Rota:** `/pdi/ia`. Entra pelo botão "Criar PDI com IA" do estado vazio de Meu PDI.
-- **Origem:** `renderPdiIA()` em `index.html` linha 2083; `pdiIaGerar()` e `pdiIaSalvar()` logo depois.
-- **Layout:** `padding:30px 40px 60px; max-width:1240px`. Botão "Meu PDI", eyebrow "MEU PDI · CRIAR COM IA", título "Criar PDI com IA". Duas colunas: formulário à esquerda (`flex:1 1 380px`, `PDI_BOX`: cargo atual, gestor, objetivo de carreira, o que quer desenvolver, contexto, duração 3/6/12 meses em seletor segmentado, botão primário "Gerar PDI") e resultado à direita (`flex:1 1 480px`).
-- **Resultado:** caixa roxa "ESTRUTURA SUGERIDA · N MESES" com resumo; uma caixa por meta (número, `AG_KIND` do tipo, `AG_TAG` da competência, semanas, título, critério de sucesso, ações com selo 70/20/10 colorido por `PDI_SERIES`, botão x para remover meta); caixa final com campo "Pedir ajuste", "Gerar de novo", "Descartar" (`zConfirm`), "Salvar como rascunho" e "Ativar PDI" (primário).
-- **Estados:** carregando (ícone pulsante, "O ZEUS está montando seu PDI", ~30s), vazio (caixa tracejada "A estrutura sugerida aparece aqui"), erro (caixa vermelha), validação (alert se faltar objetivo e foco; mínimo de uma meta).
-- **APIs:** `POST /api/pdi/generate`, `POST /api/pdi` (salvar, e apaga a solicitação pendente se existir).
-
----
-
-## OKRs
-
-- **Rota e menu:** `/okrs`. **Sem item no menu lateral.** Entradas: cartão "OKRs" da Home ("Abrir OKRs", "Criar o primeiro", botão de check-in), ferramenta "Estruturador de OKR" (Ferramentas, botão "Ver OKR →"), Configurações (seção OKRs, botão de execução), URL. Não aparece em Gestão Inteligente. (a confirmar se há outra entrada)
-- **Objetivo:** objetivos e resultados-chave (KRs) por ciclo, com cockpit, árvore, cards e tabela.
-- **Origem:** `okrs.js`: `RENDERERS.okrs` linha 737; `page()` 424; `cicloBarra()` 144; `abas()` 163; `cockpit()` 206; `grafico()` 176; `arvore()` 272; `cardHTML()` 363; `tabela()` 392; `detalheHTML()` 450; `abrirForm()` 515; `abrirKrForm()` 564; `abrirCheckin()` 589; `abrirIA()` 648. Constantes locais `IN`, `BOX` (igual a `PDI_BOX`), `BTN_PRI`, `BTN_SEC`, `BTN_MINI`; `ST` para os selos de estado.
-- **Layout:** `padding:34px 40px 60px; max-width:1240px`. Título "OKRs" (25px/600) e texto. Em seguida: barra do ciclo, abas, corpo (`#okr-view`).
-- **Barra do ciclo:** cartão branco (`border:1px solid #E6E6EA;border-radius:14px;padding:14px 18px`) com ícone, nome do ciclo, período, selo de status (Ativo verde, Planejado roxo, Encerrado cinza), "N dias restantes · N% do tempo", seletor de ciclo, "Novo ciclo", "Encerrar ciclo" (ou "Reativar ciclo"). Sem ciclo: "Sem ciclo ativo".
-- **Abas:** seletor segmentado (fundo `#F2F2F4`, borda `#E6E6EA`, raio 10px; ativa em branco com borda) com **Cockpit**, **Árvore**, **Cards**, **Tabela**; à direita "Criar com IA" (secundário, ícone de brilho roxo) e "Novo objetivo" (primário).
-- **Selos de estado (`ST`):** Não iniciado cinza `#66666F`, Em andamento roxo, Em risco rosa `#C2378F` (fundo `rgba(194,55,143,0.10)`), Atrasado vermelho, Concluído verde; pílula com ponto de 5px, 11.5px/600. Cor de progresso: verde se 80 ou mais, roxo se 45 ou mais, vermelho abaixo.
-- **Cockpit:** 4 cartões (`BOX`, número Space Grotesk 26px): Objetivos ativos, % médio real (vermelho se atrás do esperado em mais de 10 pontos), Em risco e atrasados, KRs sem update. Caixa "Precisa da sua atenção" (borda `rgba(192,52,28,0.3)` e fundo `#FFFCFB` quando há itens; "Tudo em dia" quando não), linhas clicáveis com título, responsável, barra, %, gap em pp e selo. Caixa "Fazer check-in" com botão primário. Grade `minmax(0,2fr) minmax(260px,1fr)`: gráfico SVG "Progresso do ciclo" (real roxo com área contra linha tracejada "esperado pelo tempo" e marca vermelha "hoje") e cartão "Por área" (barras + chips de status clicáveis que levam aos Cards filtrados).
-- **Árvore:** quadro de 600px de altura (raio 16px, fundo com pontilhado `radial-gradient(#DADADF 1px, transparent 1px)` 18px) com nós de 200x108px ligados por linhas tracejadas `#B4B4BC`, pan e zoom (botões +, -, ajustar; zoom por roda), busca no canto (220px), legenda de status à direita; nó com ponto de status, título, área, responsável, % e barra de 4px.
-- **Cards:** filtros (busca, status, área, dono, chip "Precisa de atenção", ordenação: risco, menor progresso, mais tempo sem update, título A a Z) e grade `repeat(auto-fill,minmax(290px,1fr))` de cartões (`class="cat-card"`, raio 16px, padding 18px): "sob <pai>" ou "OBJETIVO DA EMPRESA", anel de progresso 46px, título, selos (status, área), lista de KRs com ponto de status, rodapé com avatar de iniciais 22px, responsável, "Atualizado há Nd" e gap.
-- **Tabela:** grade `minmax(260px,2.4fr) minmax(110px,1fr) minmax(130px,1.1fr) minmax(150px,1.4fr) 70px 110px 110px`, `min-width:1000px`, cabeçalho 11px com tracking; seta expande os KRs (fundo `#FAFAFA`, "de → para", atual, barra, botão mini "Atualizar").
-- **Modais (`modal()` local, id `okr-modal`, overlay `rgba(23,23,26,0.32)`, raio 18px):** detalhe do objetivo (720px: anel 74px, selos, responsável, datas, descrição, "Resultados-chave" com check-in rápido por KR, histórico, editar e excluir, "Objetivos desdobrados"), Novo/Editar objetivo (640px: título, descrição, ciclo, área, equipe, responsável, objetivo pai, KRs, botão de gerar KRs com IA), Novo/Editar resultado-chave (560px), Fazer check-in (640px, uma linha por KR com valor e observação), Novo ciclo (520px), Encerrar ciclo (500px), Criar OKRs com IA (680px; gerar, revisar e salvar em lote).
-- **Estados:** "Carregando OKRs...", erro "Não consegui carregar os OKRs: <msg>", lista vazia ("Nenhum objetivo com esses filtros." ou convite a criar o primeiro, caixa tracejada), árvore vazia, "Sem resultados-chave.".
-- **Celular:** abas e filtros quebram linha; cockpit em uma coluna (o `minmax(260px` colapsa, o par `2fr 1fr` com `minmax(0,2fr)` no desktop empilha pela regra de `minmax(2`); árvore usa pan e zoom por toque (a confirmar); tabela rola no horizontal.
-- **APIs (base `/api/okrs`):** `GET ""` (opcional `?cycle=`), `GET /resumo` (cartão da Home), `POST|PATCH|DELETE /objectives[...]`, `POST /objectives/bulk`, `POST /krs`, `PATCH|DELETE /krs/<id>`, `GET /krs/<id>/...` (histórico), `POST /checkins`, `DELETE /checkins/<id>`, `POST /cycles`, `PATCH /cycles/<id>`, `POST /generate`, `POST /generate-krs`. Rotas exatas de KR e histórico: a confirmar no backend.
-
----
+Fora do design system: as telas existem no código (`pdi.js`, `okrs.js`), mas não são usadas (decisão do Jeff em 16/10/2026).
 
 ## Atividades (Gestão de atividades)
 
