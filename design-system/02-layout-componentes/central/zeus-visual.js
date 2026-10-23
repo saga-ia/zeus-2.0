@@ -414,10 +414,10 @@
     });
   }
   // telas que se redesenham sozinhas (dados chegando, rotinas.js, organograma.js...) reaplicam a faixa
-  let _obsT = null;
-  // não descarta mudança que chega enquanto a faixa está sendo montada: a tela pode se redesenhar logo em seguida (dados chegando).
-  // A volta extra é barata: com a faixa já aplicada, aplicarFaixa só confere alinhamento e aba ativa.
-  const obs = new MutationObserver(() => { clearTimeout(_obsT); _obsT = setTimeout(() => { aplicarFaixa(); decorarMotores(); }, 30); });
+  // Reaplica na hora (o observador roda antes da tela ser pintada): com espera, o cabeçalho antigo aparecia por um instante
+  // a cada redesenho. As mudanças feitas aqui mesmo são descartadas com takeRecords; com a faixa já aplicada, aplicarFaixa
+  // só confere alinhamento e aba ativa.
+  const obs = new MutationObserver(() => { aplicarFaixa(); decorarMotores(); obs.takeRecords(); });
   function observar(){ const m = document.getElementById("main-slot"); if(m && !m._zvObs){ m._zvObs = 1; obs.observe(m, { childList: true, subtree: true }); } }
 
   // ─── fase 4: foto real de cada agente do time na tela de voz ─────────────────
