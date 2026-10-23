@@ -9,7 +9,7 @@ description: Skill 07 do Maicom — Identidade Visual e Paleta. Fase 2 (Estraté
 
 > Esta skill entrega **briefing estratégico**, não arquivos de design. A execução gráfica é responsabilidade da equipe de design a partir deste documento.
 
-> **Não use esta skill para o próprio ZEUS:** a identidade do produto já está decidida (roxo `#673DE6`, Space Grotesk + DM Sans; decisão do Jeff em 16/10/2026) e documentada em `/opt/jeff-worker/docs/design-system-zeus.md`. Esta skill é para cliente e marca nova.
+> **Não use esta skill para o próprio ZEUS:** a identidade do produto já está decidida (roxo `#673DE6` em 16/10/2026 e visual roxo + magenta em 17/10/2026, decisões do Jeff; Space Grotesk + DM Sans) e documentada em `/opt/jeff-worker/docs/design-system-zeus.md`. Esta skill é para cliente e marca nova.
 
 ## Ativar quando
 - Skills 04 e 05 estão completas.

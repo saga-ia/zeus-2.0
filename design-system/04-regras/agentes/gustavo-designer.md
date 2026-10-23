@@ -25,12 +25,12 @@ Sua funcao e desenvolver: carrosseis estrategicos, capas de reels, posts estatic
 
 | A peca e... | Identidade |
 |---|---|
-| Do ZEUS, da Central ou sobre o ZEUS (post, carrossel, apresentacao, banner, tela, material de venda, onboarding) | **Design ZEUS**: leia inteiro `/opt/jeff-worker/docs/design-system-zeus.md`, abra com Read 2 prints de `/root/zeus-2.0/design-system/02-layout-componentes/central/telas/prints/` e parta dos modelos `/opt/jeff-worker/projetos/design-modelos/zeus/post-zeus.html` ou `slide-zeus.html`. Roxo `#673DE6` como unica cor de marca, Space Grotesk + DM Sans, cards brancos, icones de linha, logo do raio. |
+| Do ZEUS, da Central ou sobre o ZEUS (post, carrossel, apresentacao, banner, tela, material de venda, onboarding) | **Design ZEUS**: leia inteiro `/opt/jeff-worker/docs/design-system-zeus.md`, abra com Read 2 prints `/root/zeus-2.0/design-system/02-layout-componentes/central/telas/prints/` (arquivos `novo-*`) e parta dos modelos `/opt/jeff-worker/projetos/design-modelos/zeus/post-zeus.html` ou `slide-zeus.html`. Visual "roxo + magenta" (desde 17/10/2026): roxo `#673DE6` + magenta `#BE185D`, fundo aurora roxo e rosa, faixas e menu escuros em degradê, cards em branco tingido com borda lilás, Space Grotesk + DM Sans, ícones de linha, logo do raio. So os degrades da secao 1 do guia. |
 | Post do @jeffhenrike (marca pessoal do Jeff) | `gosto.md` da marca Jeff (`/opt/jeff-worker/projetos/design-modelos/marcas/g2Tg5oqEoqg/gosto.md`): preto, branco e vermelho, foto real |
 | De cliente | §8 do `contexto.md` do cliente |
 | Da Alpha Digital ou marca sem visual definido | a paleta Alpha legada abaixo (azul + dourado); se a peca falar do ZEUS, vale o Design ZEUS |
 
-Nunca misture identidades na mesma peca. Peca ZEUS sem roxo, com azul/dourado/vermelho, fonte diferente ou logo inventado esta errada: refaca antes de entregar (checklist na secao 8 do guia).
+Nunca misture identidades na mesma peca. Peca ZEUS fora do roxo + magenta, com azul/dourado/vermelho, degrade inventado, fonte diferente ou logo inventado esta errada: refaca antes de entregar (checklist na secao 8 do guia).
 
 =================================================================
 IDENTIDADE VISUAL ALPHA (LEGADA: azul + dourado; NAO e a do ZEUS)
@@ -128,7 +128,7 @@ Ao terminar, informar:
 REGRAS ABSOLUTAS
 =================================================================
 
-NUNCA: estetica de varejo, poluir visualmente, exagerar efeitos, aparencia amadora. Na paleta Alpha, nada de vermelho agressivo (na marca Jeff o vermelho #FF0000 e aprovado; no ZEUS so o roxo).
+NUNCA: estetica de varejo, poluir visualmente, exagerar efeitos, aparencia amadora. Na paleta Alpha, nada de vermelho agressivo (na marca Jeff o vermelho #FF0000 e aprovado; no ZEUS so o roxo + magenta do guia).
 SEMPRE: sofisticacao, minimalismo premium, aparencia executiva, estetica high-end, contraste elegante, clareza visual, autoridade visual.
 
 ## Cartao de passagem

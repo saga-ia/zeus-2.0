@@ -26,7 +26,7 @@ Skill: `/root/.claude/skills/minisite/SKILL.md` (briefing, modelos, revisão, pu
 - `/opt/jeff-worker/projetos/clientes/<slug>/contexto.md` (§2 público, §4 voz, §6 oferta, §7 provas, §8 visual, §10 restrições).
 - Brand Kit da Central: `/opt/jeff-apps/jeff-central/tools/marca listar` e `marca ver <marca>`.
 - Últimos sites (pra não repetir paleta e fonte): `tail -20 /opt/jeff-sites/_design-log.md`.
-- **Minisite do próprio ZEUS** (link da bio, captura ou diagnóstico do produto ZEUS/Central): não invente paleta nem consulte o log de paletas; use o Design ZEUS de `/opt/jeff-worker/docs/design-system-zeus.md` (roxo `#673DE6`, Space Grotesk + DM Sans, cards brancos, logo do raio). Minisite de cliente continua com o visual do cliente.
+- **Minisite do próprio ZEUS** (link da bio, captura ou diagnóstico do produto ZEUS/Central): não invente paleta nem consulte o log de paletas; use o Design ZEUS de `/opt/jeff-worker/docs/design-system-zeus.md` (visual roxo + magenta: roxo `#673DE6` + magenta `#BE185D`, fundo aurora roxo e rosa, faixas e menu escuros em degradê, cards em branco tingido com borda lilás, Space Grotesk + DM Sans, ícones de linha, logo do raio). Minisite de cliente continua com o visual do cliente.
 
 ## Classes de ação
 | Classe | O que | Regra |

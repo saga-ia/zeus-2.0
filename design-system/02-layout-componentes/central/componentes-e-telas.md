@@ -1,6 +1,8 @@
 # Componentes e telas da Central (ZEUS 2.0)
 
-Estado em 16/10/2026. A Central não usa classes CSS para os componentes: cada tela monta o HTML com estilos inline a partir destas constantes, definidas em `jeff-central/public/index.html`. Para tela nova, reaproveite as constantes `CFG_*` e `LI_BTN*` (é o padrão mais recente).
+> **Visual roxo + magenta (desde 17/10/2026):** estas constantes continuam sendo a base de toda tela, mas a moldura (fundo aurora, card tingido, menu flutuante, faixa de cabeçalho por seção, abas, celular) vem da camada `zeus-visual.css` + `zeus-visual.js`, descrita em [`visual-roxo-magenta.md`](visual-roxo-magenta.md). Card com `background:#FFFFFF` e borda `#E6E6EA` vira card tingido sozinho.
+
+Estado das constantes em 16/10/2026. A Central não usa classes CSS para os componentes: cada tela monta o HTML com estilos inline a partir destas constantes, definidas em `jeff-central/public/index.html`. Para tela nova, reaproveite as constantes `CFG_*` e `LI_BTN*` (é o padrão mais recente).
 
 ## Cores de estado (selos)
 
@@ -80,20 +82,20 @@ Selo: `font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px`.
 |---|---|
 | `VIZ_FRAME` | `border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;margin:4px 0 12px;overflow:hidden` |
 
-## Menu lateral (ordem atual)
+## Menu lateral (ordem atual, visual roxo + magenta)
 
 - Início · Jarvis (tela de voz do ZEUS, título "ZEUS")
-- **OPERAR E AUTOMATIZAR:** Rotinas · Agentes (Meus agentes, Agentes ZEUS, Equipes de agentes, Habilidades, Conhecimento) · Gestão Inteligente
-- **EXECUTAR E COMUNICAR:** Atividades · WhatsApp · Instagram · LinkedIn · TikTok · Edição de Vídeo
-- **ORGANIZAÇÃO E PESSOAS:** Organograma
-- **PREPARAR E ESTRUTURAR:** Formações (bloqueado) · Ferramentas · Trilhas (bloqueado)
-- **CONTEXTO:** Biblioteca · Conectores · Configurações
+- **OPERAR:** Rotinas · Agentes (Meus agentes, Agentes ZEUS, Equipes, Habilidades, Conhecimento) · Gestão Inteligente · Atividades
+- **CANAIS:** WhatsApp · Instagram · LinkedIn · TikTok (ponto âmbar, em configuração) · Edição de Vídeo
+- **ORGANIZAR:** Organograma · Ferramentas · Formações (bloqueado) · Trilhas (bloqueado)
+- **CONTEXTO:** Biblioteca · Conectores
+- Rodapé: usuário, sino e Configurações.
 
-Título de seção: `font-size:10px;letter-spacing:0.14em;color:#66666F;font-weight:700`. Item ativo: fundo `rgba(103,61,230,0.10)`, texto e ícone `#673DE6`. Menu recolhido mostra só os ícones, na mesma ordem.
+Menu flutuante escuro (`--z-sb`), itens brancos 82%, item ativo em pílula branca translúcida que desliza, rótulo de seção com ponto na cor da seção. Medidas em [`visual-roxo-magenta.md`](visual-roxo-magenta.md). O menu antigo (fundo claro, seções "Operar e automatizar", "Executar e comunicar"...) foi substituído em 17/10/2026.
 
 ## Telas e padrões recentes
 
-- **Cabeçalho de tela:** linha "Conta <empresa>" (12px, `#66666F`), título em Space Grotesk 28px/600 com ícone roxo de 24px, parágrafo de 1 a 2 linhas em `#66666F`.
+- **Cabeçalho de tela:** o HTML continua com linha "Conta <empresa>", `h1` e parágrafo; na tela ele vira a **faixa em degradê da seção** (ver `visual-roxo-magenta.md`). Escreva o cabeçalho assim para a faixa encontrar título, descrição e botões.
 - **LinkedIn (/linkedin):** barra de conexão (ponto verde, ou âmbar quando faltam 7 dias), grade lista de posts (340px) + editor; prévia que imita o card do feed com corte em "… ver mais" (210 caracteres); miniaturas em JPG 240/720 px.
 - **TikTok (/tiktok):** tela "Integração em configuração" (selo âmbar + passos numerados), padrão para integração ainda não ligada.
 - **Chat:** barra de ações sob cada resposta (copiar, 👍, 👎, compartilhar, LinkedIn, gerar de novo, mais) com `CHAT_ICO_BTN`; blocos `zeus-opcoes` viram cartões clicáveis.

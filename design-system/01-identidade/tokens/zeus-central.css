@@ -1,11 +1,66 @@
-/* ZEUS Central: tokens do tema roxo (o visual que roda hoje em central.jefersonhenrike.com).
-   Origem: jeff-apps/jeff-central/public/posts/posts.css (:root) + fontes do index.html.
-   Os nomes --amber* são herança do tema dourado antigo; aqui ganham alias semântico (--zeus-*).
-   Para usar: <link rel="stylesheet" href="zeus-central.css"> e só var(--zeus-...). */
+/* ZEUS Central: tokens oficiais. Visual "roxo + magenta" desde 17/10/2026 (cor roxa decidida em 16/10/2026).
+   Duas camadas, como na produção:
+   1. Base (--zeus-*): cores, texto, estados e fontes que as telas usam inline (origem: posts.css e index.html).
+   2. Visual roxo + magenta (--zeus-mg-* e os aliases --z-* da produção): fundo aurora, menu escuro, card tingido,
+      faixas por seção e esfera. Origem: jeff-central/public/zeus-visual.css e zeus-visual.js
+      (cópia em 02-layout-componentes/central/). Detalhes em 02-layout-componentes/central/visual-roxo-magenta.md.
+   Para usar: <link rel="stylesheet" href="zeus-central.css"> e só var(--zeus-...). Degradê fora desta lista não existe no ZEUS. */
 
+/* ─── Visual roxo + magenta ─── */
+:root {
+  /* Roxo e noite */
+  --zeus-mg-roxo: #673DE6;
+  --zeus-mg-roxo-forte: #5429C9;
+  --zeus-mg-roxo-profundo: #4B26C2;
+  --zeus-mg-noite: #230C3F;
+  --zeus-mg-noite-2: #3F1690;
+  --zeus-mg-noite-3: #5B2BD6;
+  /* Magenta (acento, seção Canais, brilhos) */
+  --zeus-mg-magenta: #BE185D;
+  --zeus-mg-rosa: #EC4899;
+  --zeus-mg-rosa-claro: #F9A8D4;
+  /* Lilás de apoio */
+  --zeus-mg-lilas: #F0ECFD;
+  --zeus-mg-lilas-2: #8B6CF0;
+  --zeus-mg-lilas-3: #D9CCFF;
+  --zeus-mg-borda: rgba(103, 61, 230, 0.13);       /* borda de card sobre o fundo aurora */
+
+  /* Superfícies (os únicos degradês permitidos) */
+  --zeus-mg-fundo: radial-gradient(1100px 650px at 8% -5%, rgba(139,108,240,0.36), transparent 60%), radial-gradient(900px 600px at 98% 8%, rgba(236,72,153,0.26), transparent 60%), radial-gradient(900px 700px at 75% 105%, rgba(249,168,212,0.32), transparent 60%), #F1E8F8;
+  --zeus-mg-card: linear-gradient(155deg, rgba(255,255,255,0.95) 0%, rgba(252,243,250,0.88) 45%, rgba(242,229,250,0.82) 100%);
+  --zeus-mg-menu: radial-gradient(circle at 0% 100%, rgba(236,72,153,0.38), transparent 55%), radial-gradient(circle at 100% 0%, rgba(139,108,240,0.38), transparent 50%), linear-gradient(180deg, #230C3F 0%, #3F1690 55%, #5B2BD6 100%);
+  --zeus-mg-voz: radial-gradient(ellipse at 50% 48%, rgba(255,255,255,0.95) 0%, rgba(252,240,250,0.6) 30%, transparent 60%), radial-gradient(700px 500px at 12% 15%, rgba(139,108,240,0.34), transparent 60%), radial-gradient(700px 500px at 92% 20%, rgba(236,72,153,0.28), transparent 60%), #EFE3F6;
+  --zeus-mg-brilho: radial-gradient(circle, rgba(249,168,212,0.55) 0%, rgba(236,72,153,0.28) 38%, transparent 70%);
+  --zeus-mg-esfera: radial-gradient(circle at 32% 28%, #FFFFFF 0%, #D9CCFF 14%, #8B6CF0 40%, #673DE6 66%, #BE185D 100%);
+  --zeus-mg-fio: linear-gradient(90deg, #673DE6, #A43CC4, #D16BE0);  /* faixa fina de 4 px no topo de painel */
+
+  /* Faixa de cabeçalho por seção (120°) e cor da seção (texto / ícone) */
+  --zeus-faixa-operar: linear-gradient(120deg, #230C3F 0%, #4B26C2 50%, #7C5CF0 100%);
+  --zeus-faixa-canais: linear-gradient(120deg, #230C3F 0%, #7E1D6E 45%, #BE185D 80%, #EC4899 110%);
+  --zeus-faixa-organizar: linear-gradient(120deg, #230C3F 0%, #5B21B6 50%, #8B5CF6 100%);
+  --zeus-faixa-contexto: linear-gradient(120deg, #230C3F 0%, #134E4A 50%, #4B26C2 100%);
+  --zeus-faixa-base: linear-gradient(120deg, #230C3F 0%, #4B26C2 50%, #673DE6 100%);
+  --zeus-cor-operar: #673DE6;    --zeus-cor-operar-bg: rgba(103, 61, 230, 0.10);
+  --zeus-cor-canais: #BE185D;    --zeus-cor-canais-bg: rgba(190, 24, 93, 0.09);
+  --zeus-cor-organizar: #7C3AED; --zeus-cor-organizar-bg: rgba(124, 58, 237, 0.10);
+  --zeus-cor-contexto: #0F7A68;  --zeus-cor-contexto-bg: rgba(15, 122, 104, 0.10);
+
+  /* Sombras e movimento */
+  --zeus-mg-sombra-menu: 0 18px 44px rgba(52, 26, 134, 0.35);
+  --zeus-mg-sombra-faixa: 0 18px 44px rgba(52, 26, 134, 0.22);
+  --zeus-mg-sombra-painel: 0 24px 60px rgba(23, 23, 26, 0.14);
+  --zeus-mg-sombra-botao: 0 12px 30px rgba(103, 61, 230, 0.35);
+  --zeus-mg-ease: cubic-bezier(.22, 1, .36, 1);
+
+  /* Aliases com os nomes da produção (zeus-visual.css) */
+  --z-sb: var(--zeus-mg-menu); --z-main: var(--zeus-mg-fundo); --z-card: var(--zeus-mg-card); --z-jv: var(--zeus-mg-voz);
+  --z-glow: var(--zeus-mg-brilho); --z-orb: var(--zeus-mg-esfera); --z-borda: var(--zeus-mg-borda); --z-ease: var(--zeus-mg-ease);
+}
+
+/* ─── Base ─── */
 :root {
   /* Superfícies */
-  --zeus-bg: #F6F6F7;
+  --zeus-bg: #F6F6F7;          /* fundo liso antigo; no visual novo o fundo é --zeus-mg-fundo */
   --zeus-card: #FFFFFF;
   --zeus-soft: #F1F1F3;
   --zeus-softer: #FAFAFA;

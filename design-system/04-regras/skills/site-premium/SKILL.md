@@ -7,7 +7,7 @@ description: Pipeline do Zeus pra criar ou redesenhar site, landing page, pagina
 
 Problema que esta skill resolve: o modelo escreve a media da internet e nunca olha o que fez. Resultado: Inter, gradiente roxo, 3 cards iguais, rotulo em caixa alta em cima de todo titulo, painel falso feito de div. Aqui o site so sai depois de **decidir** a direcao, **construir** com piso de qualidade e **olhar** o print.
 
-**Exceção: site ou página do próprio ZEUS** (produto, Central, material do ZEUS). Aí a identidade é a oficial do produto e não se inventa direção de arte: siga `/opt/jeff-worker/docs/design-system-zeus.md` (roxo `#673DE6`, Space Grotesk + DM Sans, cards brancos, logo do raio). As proibições desta skill (gradiente roxo, Inter etc.) valem para site de cliente, não para o ZEUS.
+**Exceção: site ou página do próprio ZEUS** (produto, Central, material do ZEUS). Aí a identidade é a oficial do produto e não se inventa direção de arte: siga `/opt/jeff-worker/docs/design-system-zeus.md` (visual roxo + magenta: roxo `#673DE6` + magenta `#BE185D`, fundo aurora roxo e rosa, faixas e menu escuros em degradê, cards em branco tingido com borda lilás, Space Grotesk + DM Sans, ícones de linha, logo do raio). As proibições desta skill (gradiente roxo, vidro, Inter etc.) valem para site de cliente, não para o ZEUS, que usa só os degradês listados no guia.
 
 Página de UMA tela pro celular (link da bio estilo Linktree, quiz/diagnóstico pra call): skill `minisite` (Eduardo), não esta.
 

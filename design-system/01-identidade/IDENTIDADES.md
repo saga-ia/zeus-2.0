@@ -1,5 +1,12 @@
 # Identidades visuais do Zeus
 
+## Decisão (17/10/2026, Jeff): visual "roxo + magenta" na Central
+
+- O roxo `#673DE6` continua sendo a cor do ZEUS. Entra o **magenta** `#BE185D` (rosa `#EC4899`, rosa claro `#F9A8D4`) como acento, e a moldura muda: fundo aurora roxo e rosa, menu flutuante escuro em degradê, faixa de cabeçalho em degradê por seção, cards em branco tingido.
+- Origem: handoff em [`../novo-visual/design_handoff_zeus_central_magenta/`](../novo-visual/design_handoff_zeus_central_magenta/). Na Central desde 17/10/2026 (`zeus-visual.css` + `zeus-visual.js`).
+- Tokens: bloco `--zeus-mg-*` e faixas `--zeus-faixa-*` em [`tokens/zeus-central.css`](tokens/zeus-central.css). Como a Central aplica: [`visual-roxo-magenta.md`](../02-layout-componentes/central/visual-roxo-magenta.md).
+- Só valem os degradês listados nos tokens. Texto nunca em degradê.
+
 ## Decisão (16/10/2026, Jeff): a cor do Zeus é o ROXO da Central
 
 - **Oficial:** tema roxo da Central, `#673DE6` (hover `#5429C9`), com Space Grotesk nos títulos e DM Sans no texto. Os tokens estão em [`tokens/zeus-central.css`](tokens/zeus-central.css).
@@ -42,3 +49,4 @@ Esses lugares ainda não estão no roxo e precisam ser migrados um por um, com o
 - **Apps SAGA/VPS:** painel do worker, site Alpha, reset de senha (jeff-shared), vps-monitor, painel de clientes Alpha.
 - **Landing ZEUS Central** (`public-sites/zeus-central`): hoje em vermelho `#FF5757`.
 - **Logo:** falta a versão em PNG e o logotipo com o nome "ZEUS" no roxo oficial.
+- **Peças e modelos do ZEUS:** `post-zeus.html` e `slide-zeus.html` já estão no visual roxo + magenta (17/10/2026); o guia dos agentes (`design-system-zeus.md`), Gustavo, Eduardo, Tomé, site-premium, arte-por-referencia, time-gustavo e maicom-visual foram atualizados em 23/10/2026.
