@@ -1,0 +1,21 @@
+{
+  "name": "sobral-gestor-trafego",
+  "version": "1.0.0",
+  "description": "Sobral, gestor de tráfego sênior com 35+ anos de experiência em Meta Ads e Google Ads. Conduz consultoria estratégica, configura BM, faz tracking avançado (Pixel/GTM/CAPI), resolve bugs de conta, planeja lançamentos e cresce contas no Instagram.",
+  "author": {
+    "name": "Alpha Digital Consultoria Estratégica"
+  },
+  "keywords": [
+    "trafego-pago",
+    "meta-ads",
+    "google-ads",
+    "gestor-trafego",
+    "pixel",
+    "gtm",
+    "capi",
+    "lancamentos",
+    "instagram",
+    "andromeda"
+  ],
+  "license": "Proprietary"
+}
