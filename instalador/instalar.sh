@@ -67,9 +67,10 @@ perguntar() {
   local f_whats; f_whats="$(form whats | tr -cd '0-9')"; [ ${#f_whats} -ge 10 ] && [ ${#f_whats} -le 11 ] && f_whats="55$f_whats"
   while :; do read -erp "  Nome da empresa do cliente: " -i "$(form empresa)" cliente; [ -n "$cliente" ] && break; done
   local sugestao; sugestao="$(echo "$cliente" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9')"
-  while :; do read -erp "  Domínio do Zeus do cliente: " -i "${sugestao:+$sugestao.}$DOMINIO_BASE" dominio
+  while :; do read -erp "  Nome do cliente no domínio (fica NOME.$DOMINIO_BASE): " -i "$sugestao" dominio
     dominio="$(echo "$dominio" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#^www\.##; s#/.*##')"
-    [[ "$dominio" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] && break; echo "  domínio inválido"; done
+    [[ "$dominio" == *.* ]] || dominio="$dominio.$DOMINIO_BASE"   # só o nome: completa com .zeusia.cloud
+    [[ "$dominio" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9-]+)+$ ]] && { echo "  domínio: $dominio"; break; }; echo "  nome inválido (use letras, números e hífen)"; done
   while :; do read -erp "  Nome do dono (quem manda no Zeus): " -i "$(form nome)" dono; [ -n "$dono" ] && break; done
   while :; do read -erp "  WhatsApp do dono, com 55 e DDD (ex: 5511999998888): " -i "$f_whats" whats
     whats="$(echo "$whats" | tr -cd '0-9')"; [[ "$whats" =~ ^55[0-9]{10,11}$ ]] && break; echo "  número inválido"; done
