@@ -45,3 +45,6 @@ sites/**/data.json
 # core dumps (memória de processo, pode ter segredo)
 core
 core.[0-9]*
+
+# token da Cloudflare: vai pro cliente por scp, nunca pro GitHub
+instalador/cloudflare.token

@@ -24,8 +24,9 @@ RESP="$ESTADO/respostas.json"
 LOG=/var/log/zeus-instalador.log
 NODE_VER=20.20.2                      # caminhos /root/.nvm/versions/node/v20.20.2 estão fixos no código
 SUPORTE_WHATS="5511910075450,5585991143501"
+DOMINIO_BASE="zeusia.cloud"           # padrão: <nomecliente>.zeusia.cloud (DNS criado com dns-cliente.sh no servidor do Jeff)
 COMPOSE_APPS="jeff-evolution jeff-omniroute jeff-presenton jeff-moneyprinter"
-ETAPAS="sistema docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab"
+ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab"
 FORM="$ESTADO/formulario.json"
 
 mkdir -p "$ESTADO"; chmod 700 "$ESTADO"
@@ -64,10 +65,11 @@ perguntar() {
   [ -f "$FORM" ] && echo "  (sugestões vindas do formulário; Enter confirma)"
   local dominio cliente dono whats email senha senha2 autorizados
   local f_whats; f_whats="$(form whats | tr -cd '0-9')"; [ ${#f_whats} -ge 10 ] && [ ${#f_whats} -le 11 ] && f_whats="55$f_whats"
-  while :; do read -erp "  Domínio do cliente (ex: empresa.com.br): " -i "$(form dominio)" dominio
+  while :; do read -erp "  Nome da empresa do cliente: " -i "$(form empresa)" cliente; [ -n "$cliente" ] && break; done
+  local sugestao; sugestao="$(echo "$cliente" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9')"
+  while :; do read -erp "  Domínio do Zeus do cliente: " -i "${sugestao:+$sugestao.}$DOMINIO_BASE" dominio
     dominio="$(echo "$dominio" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#^www\.##; s#/.*##')"
     [[ "$dominio" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] && break; echo "  domínio inválido"; done
-  while :; do read -erp "  Nome da empresa do cliente: " -i "$(form empresa)" cliente; [ -n "$cliente" ] && break; done
   while :; do read -erp "  Nome do dono (quem manda no Zeus): " -i "$(form nome)" dono; [ -n "$dono" ] && break; done
   while :; do read -erp "  WhatsApp do dono, com 55 e DDD (ex: 5511999998888): " -i "$f_whats" whats
     whats="$(echo "$whats" | tr -cd '0-9')"; [[ "$whats" =~ ^55[0-9]{10,11}$ ]] && break; echo "  número inválido"; done
@@ -130,6 +132,28 @@ if etapa sistema; then
     ok "swap de 4G criado"
   fi
   marca sistema; ok "pacotes do sistema"
+fi
+
+IP_PUB() { curl -4fsS https://api.ipify.org 2>/dev/null || curl -4fsS ifconfig.me; }
+if etapa dns; then
+  # Token só em memória: não vai pro disco, pro log nem pra linha de comando (ps)
+  CF_API_TOKEN="${CF_API_TOKEN:-}"
+  for arq in "$INST/cloudflare.token" /root/cloudflare.token; do
+    [ -z "$CF_API_TOKEN" ] && [ -s "$arq" ] && CF_API_TOKEN="$(tr -d ' \r\n' < "$arq")"
+  done
+  if [ -z "$CF_API_TOKEN" ] && [ -t 0 ]; then
+    read -rsp "  Token da API da Cloudflare (DNS:Edit em ${DOMINIO#*.}; Enter pula): " CF_API_TOKEN; echo
+  fi
+  if [ -n "$CF_API_TOKEN" ]; then
+    if CF_API_TOKEN="$CF_API_TOKEN" python3 -I "$INST/lib/cloudflare_dns.py" "$DOMINIO" "$(IP_PUB)"; then
+      marca dns
+    else
+      aviso "DNS na Cloudflare não foi criado (motivo acima). Rode de novo com outro token ou: --refazer dns"
+    fi
+  else
+    aviso "DNS pulado: crie $DOMINIO e *.$DOMINIO apontando pra $(IP_PUB) (ou rode o instalador de novo e informe o token da Cloudflare)"
+  fi
+  unset CF_API_TOKEN
 fi
 
 if etapa docker; then
@@ -213,7 +237,6 @@ if etapa bancos; then
   marca bancos
 fi
 
-IP_PUB() { curl -4fsS https://api.ipify.org 2>/dev/null || curl -4fsS ifconfig.me; }
 if etapa chaves; then
   python3 -I "$INST/lib/chaves.py" "$RESP" "$INST/modelos/chaves.tsv" "$( [ -f "$FORM" ] && echo "$FORM" || echo -)" "$(IP_PUB)"
   marca chaves
@@ -308,7 +331,11 @@ if etapa proxy; then
   if python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP"; then
     marca proxy
   else
-    aviso "SSL incompleto: crie no DNS de $DOMINIO um registro A curinga  *  ->  $IP  (ou um A por subdomínio) e rode o instalador de novo"
+    if [[ "$DOMINIO" == *".$DOMINIO_BASE" ]]; then
+      aviso "SSL incompleto: o DNS de $DOMINIO ainda não aponta pra $IP. Rode  --refazer dns  (token da Cloudflare) ou, no servidor do Jeff,  dns-cliente.sh ${DOMINIO%%.*} $IP ; depois rode o instalador de novo"
+    else
+      aviso "SSL incompleto: crie no DNS de $DOMINIO um registro A curinga  *  ->  $IP  (ou um A por subdomínio) e rode o instalador de novo"
+    fi
   fi
 fi
 

@@ -5,7 +5,12 @@ Copia o Zeus 2.0 inteiro (worker, todos os apps, sites, agentes e skills) pra VP
 ## Antes da chamada
 
 1. **VPS do cliente**: Debian 12 (recomendado) ou Ubuntu 22/24, mínimo 4 vCPU e 8 GB, acesso root por SSH.
-2. **DNS do domínio do cliente**: um registro **A curinga** `*` apontando pro IP da VPS. Se o painel não aceitar curinga, crie um A por subdomínio. A lista está em `instalador/modelos/hosts.tsv`, e o principal é `central`.
+2. **DNS**: o domínio do cliente é `<nomecliente>.zeusia.cloud`, e o **instalador cria o DNS sozinho** pela API da Cloudflare: `<nomecliente>.zeusia.cloud` e `*.<nomecliente>.zeusia.cloud`, sem proxy. Ele pede o token escondido e usa só em memória, sem gravar em disco nem no log.
+   Crie um token só pra isso: Cloudflare > My Profile > API Tokens > Create Token > *Edit zone DNS*. Em Permissions, deixe **Zone > DNS > Edit** e adicione **Zone > Zone > Read**. Em Zone Resources, escolha **Include > Specific zone > zeusia.cloud**.
+   Esse token mexe em todo `*.zeusia.cloud` (inclusive nos outros clientes), então não use o token geral da conta e troque esse se desconfiar de vazamento.
+   O token fica salvo em `instalador/cloudflare.token`: o instalador usa sozinho, sem perguntar. Pra trocar, faça *Roll* na Cloudflare e substitua o conteúdo desse arquivo.
+   Alternativa sem levar token pro cliente: no servidor do Jeff, `bash /root/zeus-2.0/instalador/dns-cliente.sh <nomecliente> <IP_DO_CLIENTE>`.
+   Se o cliente usar um domínio próprio, crie no DNS dele um **A curinga** `*` apontando pro IP da VPS.
 3. **Token do GitHub** só de leitura e só deste repo: GitHub > Settings > Developer settings > Fine-grained tokens, repositório `saga-ia/zeus-2.0`, permissão *Contents: Read*, validade de 7 dias.
 
 ## Na VPS do cliente (como root)
