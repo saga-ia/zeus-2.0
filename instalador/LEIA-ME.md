@@ -2,6 +2,15 @@
 
 Copia o Zeus 2.0 inteiro (worker, todos os apps, sites, agentes e skills) pra VPS do cliente, troca o domínio, gera chaves novas e deixa tudo no ar com HTTPS.
 
+## Jeito mais fácil: um comando
+
+1. No **servidor do Jeff**: `bash /root/zeus-2.0/instalador/gerar-link.sh`. Escolha o cliente na lista.
+2. Ele devolve uma linha `curl -fsSL https://zeus-instalacao.jefersonhenrike.com/i/<código> | bash`. Cole essa linha no **servidor do cliente**, como root.
+
+O link leva o Zeus, a resposta do formulário e o token da Cloudflare, funciona uma vez e expira em 24 horas. O cliente não precisa de token do GitHub. O instalador abre dentro do `tmux`: se a conexão cair, entre de novo e rode `tmux attach -t zeus`.
+
+O jeito manual, passo a passo, está abaixo.
+
 ## Antes da chamada
 
 1. **VPS do cliente**: Debian 12 (recomendado) ou Ubuntu 22/24, mínimo 4 vCPU e 8 GB, acesso root por SSH.

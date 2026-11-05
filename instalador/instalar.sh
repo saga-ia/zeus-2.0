@@ -177,7 +177,9 @@ carrega_node
 
 if etapa codigo; then
   # remove token do remote, se o clone foi feito com ele
-  git -C "$REPO" remote set-url origin "$(git -C "$REPO" remote get-url origin | sed -E 's#https://[^@]+@#https://#')" || true
+  if [ -d "$REPO/.git" ]; then
+    git -C "$REPO" remote set-url origin "$(git -C "$REPO" remote get-url origin | sed -E 's#https://[^@]+@#https://#')" || true
+  fi
   copia() { mkdir -p "$2"; rsync -a "$1/" "$2/"; }
   copia "$REPO/worker"            /opt/jeff-worker
   copia "$REPO/apps"              /opt/jeff-apps
