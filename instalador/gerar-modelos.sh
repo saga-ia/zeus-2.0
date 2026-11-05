@@ -11,6 +11,7 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 /opt/jeff-worker/scripts/npm.sh hosts > "$TMP/hosts.json"
 pm2 jlist > "$TMP/pm2.json"
 python3 -I instalador/lib/gerar_modelos.py "$REPO" "$ZONA" "$TMP/hosts.json" "$TMP/pm2.json"
+python3 -I instalador/lib/gerar_extras.py "$REPO"
 
 # Agentes e skills do Claude Code (sem memória, sem credenciais, sem histórico)
 mkdir -p instalador/claude

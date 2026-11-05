@@ -1,0 +1,7 @@
+# chave	valor (configuração de comportamento, sem segredo)
+api_replies_panic	1
+api_reply_debounce_ms	3000
+api_reply_history_limit	20
+api_reply_max_tokens	512
+api_reply_model	claude-sonnet-4-6
+linkedin_api_version	202609

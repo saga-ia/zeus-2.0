@@ -1,0 +1,21 @@
+# Chaves do CLIENTE que o instalador pede (ou lê do formulário de instalação).
+# rótulo	campo no formulário (- = só pergunta)	chaves em app_settings do worker	.env (pasta:CHAVE)
+OpenAI, chave de API	k_openai_chave	openai_api_key	jeff-apps/jeff-presenton:CUSTOM_LLM_API_KEY
+Google Gemini, chave de API	k_gemini_chave	gemini_api_key	-
+Groq, chave de API	k_groq_chave	groq_api_key	jeff-worker:GROQ_API_KEY
+ElevenLabs, chave de API	k_eleven_chave	elevenlabs_api_key	-
+ElevenLabs, ID da voz (opcional)	-	elevenlabs_voice_id,elevenlabs_voice_zeus	-
+Anthropic API (opcional: resposta automática pra quem não está autorizado)	-	-	jeff-worker:ANTHROPIC_API_KEY,jeff-apps/jeff-mapadocloser:ANTHROPIC_API_KEY
+Meta, App ID	meta_app_id	meta_app_id,jeff_meta_app_id_zeus	-
+Meta, App Secret	meta_app_secret	meta_app_secret,jeff_meta_app_secret_zeus	-
+Meta, token de acesso (usuário ou sistema)	meta_token	jeff_meta_user_token,meta_user_token,jeff_meta_system_token	-
+Meta Ads, ID da conta de anúncios	ads_conta	jeff_ads_account_id	-
+Instagram, App ID	ig_app_id	jeff_meta_app_id_ig	-
+Instagram, App Secret	ig_app_secret	jeff_meta_app_secret_ig	-
+Instagram, token (IGAA...)	ig_token	jeff_instagram_login_token,jeff_meta_ig_user_token	-
+Google OAuth, Client ID	-	google_oauth_client_id	-
+Google OAuth, Client Secret	-	google_oauth_client_secret	-
+Asaas, chave de API	-	asaas_api_key	-
+ClickUp, token de API	-	clickup_api_token	-
+ZapSign, token de API	-	zapsign_api_token	-
+Apify, token (opcional)	-	apify_api_token,apify_api_key	-

@@ -11,7 +11,8 @@
 #  Pode rodar de novo quantas vezes precisar: etapas prontas são puladas
 #  (ex: rodar de novo depois que o DNS propagar pra emitir o SSL).
 #
-#  Opções:  --refazer <etapa>   roda uma etapa de novo (ver lista em ETAPAS)
+#  Opções:  --formulario <arq>  resposta do formulário de instalação (preenche dados e chaves do cliente)
+#           --refazer <etapa>   roda uma etapa de novo (ver lista em ETAPAS)
 #           --respostas         pergunta tudo de novo
 # =====================================================================================
 set -Eeuo pipefail
@@ -24,7 +25,8 @@ LOG=/var/log/zeus-instalador.log
 NODE_VER=20.20.2                      # caminhos /root/.nvm/versions/node/v20.20.2 estão fixos no código
 SUPORTE_WHATS="5511910075450,5585991143501"
 COMPOSE_APPS="jeff-evolution jeff-omniroute jeff-presenton jeff-moneyprinter"
-ETAPAS="sistema docker node codigo claude personalizar dependencias containers firewall pm2 central proxy crontab"
+ETAPAS="sistema docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab"
+FORM="$ESTADO/formulario.json"
 
 mkdir -p "$ESTADO"; chmod 700 "$ESTADO"
 exec > >(tee -a "$LOG") 2>&1
@@ -43,6 +45,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --refazer) REFAZER="$2"; rm -f "$ESTADO/feito.$2"; shift 2 ;;
     --respostas) PERGUNTAR=1; shift ;;
+    --formulario) [ -f "$2" ] || erro "arquivo não encontrado: $2"; install -m 600 "$2" "$FORM"; shift 2 ;;
     *) erro "opção desconhecida: $1" ;;
   esac
 done
@@ -55,17 +58,22 @@ campo()  { python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))[sy
 # ------------------------------------------------------------------------------------
 # Perguntas
 # ------------------------------------------------------------------------------------
+form() { [ -f "$FORM" ] && python3 -I -c 'import json,sys; d=json.load(open(sys.argv[1])); d=d.get("dados",d); print(str(d.get(sys.argv[2],"") or "").strip())' "$FORM" "$1" || true; }
 perguntar() {
   azul "Dados da instalação"
-  local dominio cliente dono whats email senha senha2
-  while :; do read -rp "  Domínio do cliente (ex: empresa.com.br): " dominio
+  [ -f "$FORM" ] && echo "  (sugestões vindas do formulário; Enter confirma)"
+  local dominio cliente dono whats email senha senha2 autorizados
+  local f_whats; f_whats="$(form whats | tr -cd '0-9')"; [ ${#f_whats} -ge 10 ] && [ ${#f_whats} -le 11 ] && f_whats="55$f_whats"
+  while :; do read -erp "  Domínio do cliente (ex: empresa.com.br): " -i "$(form dominio)" dominio
     dominio="$(echo "$dominio" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#^www\.##; s#/.*##')"
     [[ "$dominio" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] && break; echo "  domínio inválido"; done
-  while :; do read -rp "  Nome da empresa do cliente: " cliente; [ -n "$cliente" ] && break; done
-  while :; do read -rp "  Nome do dono (quem manda no Zeus): " dono; [ -n "$dono" ] && break; done
-  while :; do read -rp "  WhatsApp do dono, com 55 e DDD (ex: 5511999998888): " whats
+  while :; do read -erp "  Nome da empresa do cliente: " -i "$(form empresa)" cliente; [ -n "$cliente" ] && break; done
+  while :; do read -erp "  Nome do dono (quem manda no Zeus): " -i "$(form nome)" dono; [ -n "$dono" ] && break; done
+  while :; do read -erp "  WhatsApp do dono, com 55 e DDD (ex: 5511999998888): " -i "$f_whats" whats
     whats="$(echo "$whats" | tr -cd '0-9')"; [[ "$whats" =~ ^55[0-9]{10,11}$ ]] && break; echo "  número inválido"; done
-  while :; do read -rp "  E-mail de acesso (Central, painel do proxy e SSL): " email
+  read -erp "  Outros números autorizados a falar com o Zeus (vírgula; Enter = nenhum): " -i "$(form autorizados)" autorizados
+  autorizados="$(echo "$autorizados" | tr -c '0-9\n' ' ' | xargs -n1 2>/dev/null | awk 'length>=10{ if(length<=11) $0="55"$0; print }' | paste -sd, -)"
+  while :; do read -erp "  E-mail de acesso (Central, painel do proxy e SSL): " -i "$(form email)" email
     [[ "$email" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]] && break; echo "  e-mail inválido"; done
   while :; do read -rsp "  Senha de acesso (mín. 8; Enter = gerar uma): " senha; echo
     if [ -z "$senha" ]; then senha="$(python3 -I -c 'import secrets;print(secrets.token_urlsafe(12))')"; echo "  senha gerada (aparece no final)"; break; fi
@@ -75,12 +83,13 @@ perguntar() {
   echo; echo "  Domínio: $dominio | Cliente: $cliente | Dono: $dono ($whats) | Acesso: $email"
   read -rp "  Confere? [S/n] " c; [[ "${c:-S}" =~ ^[Ss]$ ]] || { perguntar; return; }
 
-  DOMINIO="$dominio" CLIENTE="$cliente" DONO="$dono" WHATS="$whats" EMAIL="$email" SENHA="$senha" \
+  DOMINIO="$dominio" CLIENTE="$cliente" DONO="$dono" WHATS="$whats" EMAIL="$email" SENHA="$senha" AUTORIZADOS="$autorizados" \
   SUPORTE="$SUPORTE_WHATS" ESTADO="$ESTADO" MODELOS="$INST/modelos" python3 -I - "$RESP" <<'PY'
 import json,os,sys
 e=os.environ
+wl=[x for x in [e['WHATS']]+e['AUTORIZADOS'].split(',')+e['SUPORTE'].split(',') if x]
 d={'dominio':e['DOMINIO'],'cliente':e['CLIENTE'],'dono_nome':e['DONO'],'dono_whats':e['WHATS'],
-   'email':e['EMAIL'],'senha':e['SENHA'],'whitelist':e['WHATS']+','+e['SUPORTE'],
+   'email':e['EMAIL'],'senha':e['SENHA'],'whitelist':','.join(dict.fromkeys(wl)),
    'estado':e['ESTADO'],'modelos':e['MODELOS']}
 fd=os.open(sys.argv[1],os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
 with os.fdopen(fd,'w') as f: json.dump(d,f,ensure_ascii=False,indent=1)
@@ -163,7 +172,9 @@ if etapa claude; then
   rsync -a "$INST/claude/agents/" /root/.claude/agents/
   rsync -a "$INST/claude/skills/" /root/.claude/skills/
   [ -f /root/.claude/CLAUDE.md ] || cp "$INST/claude/CLAUDE.md" /root/.claude/CLAUDE.md
-  marca claude; ok "$(ls /root/.claude/agents | wc -l) agentes e $(ls /root/.claude/skills | wc -l) skills do Claude Code"
+  MEMDIR=/root/.claude/projects/-opt-jeff-worker/memory   # memória do Zeus (claude roda em /opt/jeff-worker)
+  mkdir -p "$MEMDIR"; rsync -a --ignore-existing "$INST/claude/memoria/" "$MEMDIR/"
+  marca claude; ok "$(ls /root/.claude/agents | wc -l) agentes, $(ls /root/.claude/skills | wc -l) skills e $(($(ls "$MEMDIR" | wc -l) - 1)) memórias de regras do Zeus"
 fi
 
 if etapa personalizar; then
@@ -195,6 +206,17 @@ if etapa dependencias; then
   done
   [ ${#falhas[@]} -eq 0 ] || aviso "dependências que falharam (ver $LOG): ${falhas[*]}"
   marca dependencias
+fi
+
+if etapa bancos; then
+  python3 -I "$INST/lib/bancos.py" "$INST/modelos"
+  marca bancos
+fi
+
+IP_PUB() { curl -4fsS https://api.ipify.org 2>/dev/null || curl -4fsS ifconfig.me; }
+if etapa chaves; then
+  python3 -I "$INST/lib/chaves.py" "$RESP" "$INST/modelos/chaves.tsv" "$( [ -f "$FORM" ] && echo "$FORM" || echo -)" "$(IP_PUB)"
+  marca chaves
 fi
 
 if etapa containers; then
@@ -281,13 +303,18 @@ if etapa central; then
 fi
 
 if etapa proxy; then
-  IP="$(curl -4fsS https://api.ipify.org || curl -4fsS ifconfig.me)"
+  IP="$(IP_PUB)"
   echo "  IP público deste servidor: $IP"
   if python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP"; then
     marca proxy
   else
     aviso "SSL incompleto: crie no DNS de $DOMINIO um registro A curinga  *  ->  $IP  (ou um A por subdomínio) e rode o instalador de novo"
   fi
+fi
+
+if feito proxy && etapa apis; then
+  if python3 -I "$INST/lib/apis.py" "$RESP"; then marca apis
+  else aviso "alguma API não configurou sozinha (detalhe acima). Corrija a chave e rode: --refazer chaves e depois --refazer apis"; fi
 fi
 
 if etapa crontab; then
@@ -314,7 +341,8 @@ cat <<EOF
 Falta fazer na chamada com o cliente:
   1. Claude:   rode  claude  neste servidor e faça /login com a conta (assinatura) do cliente
   2. WhatsApp: abra https://sagazeus.$DOMINIO, entre e leia o QR com o celular do número do Zeus
-  3. Chaves:   cole as chaves do formulário (OpenAI, Gemini, Groq, ElevenLabs, Meta) nos .env/app_settings
+  3. Painéis:  os itens "Configure no painel" da etapa apis (Meta, Google, ZapSign)
+  Chave nova ou trocada depois:  bash $INST/instalar.sh --refazer chaves && bash $INST/instalar.sh --refazer apis
 EOF
 [ -f "$ESTADO/avisos.txt" ] && { echo; echo "Atenções desta instalação:"; sort -u "$ESTADO/avisos.txt" | sed 's/^/  - /'; }
 true
