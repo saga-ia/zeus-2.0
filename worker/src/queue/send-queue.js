@@ -265,6 +265,20 @@ function createQueue({ wa }) {
           if (retry > MAX_RETRY) {
             stmt.markDead.run({ id: item.id, error: String(err && err.message || err) });
             logger.error({ id: item.id, err }, 'queue: giving up');
+            // Áudio que não saiu: manda o mesmo conteúdo em texto, avisando, em vez de sumir em silêncio
+            if (item.kind === 'audio') {
+              let fb = null;
+              try { fb = JSON.parse(item.payload || '{}').fallbackText; } catch (_) {}
+              if (fb) {
+                await enqueue({
+                  chat_id: item.chat_id,
+                  kind: 'text',
+                  payload: { body: 'Não consegui enviar o áudio, segue em texto:\n\n' + fb },
+                  priority: 5,
+                  dedupe: false,
+                }).catch(e => logger.error({ id: item.id, err: e }, 'queue: audio text fallback failed'));
+              }
+            }
           } else {
             const backoff = Math.min(30000 * Math.pow(2, retry - 1), 300000);
             stmt.markError.run({

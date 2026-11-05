@@ -1,0 +1,266 @@
+{
+ "slug": "profissional-e-empresarial",
+ "nome": "Profissional e Empresarial",
+ "marcaId": "g2Tg5oqEoqg",
+ "criado": "2026-10-09 09:43",
+ "usos": 0,
+ "ultimoUso": null,
+ "referencias": [
+  {
+   "id": "printmv0yhw4k0",
+   "tipo": "print",
+   "origem": "1791483347780_eb5a9ab8.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhw4k0/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhw8o1",
+   "tipo": "print",
+   "origem": "1791483347784_67b8a526.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhw8o1/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwca2",
+   "tipo": "print",
+   "origem": "1791483347785_995463ae.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwca2/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwg03",
+   "tipo": "print",
+   "origem": "1791483347787_06669af4.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwg03/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwih4",
+   "tipo": "print",
+   "origem": "1791483347790_77c92d9c.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwih4/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwlf5",
+   "tipo": "print",
+   "origem": "1791483347789_bab4ea64.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwlf5/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwod6",
+   "tipo": "print",
+   "origem": "1791472472602_a6d461d7.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwod6/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0yhwrn7",
+   "tipo": "print",
+   "origem": "1791472472611_233f97ac.jpeg",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0yhwrn7/01.jpg"
+   ],
+   "em": "2026-10-09 09:43"
+  },
+  {
+   "id": "printmv0ypb930",
+   "tipo": "print",
+   "origem": "v1-s1-mv02d0m6.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ypb930/01.jpg"
+   ],
+   "em": "2026-10-09 09:49"
+  },
+  {
+   "id": "printmv0ypbe11",
+   "tipo": "print",
+   "origem": "v1-s1-mv01zshr.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ypbe11/01.jpg"
+   ],
+   "em": "2026-10-09 09:49"
+  },
+  {
+   "id": "printmv0ypbie2",
+   "tipo": "print",
+   "origem": "v1-s1-mv01zcyj.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ypbie2/01.jpg"
+   ],
+   "em": "2026-10-09 09:49"
+  },
+  {
+   "id": "printmv0ypbnl3",
+   "tipo": "print",
+   "origem": "v1-s1-mv01zd7r.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ypbnl3/01.jpg"
+   ],
+   "em": "2026-10-09 09:49"
+  },
+  {
+   "id": "printmv0ytk1m0",
+   "tipo": "print",
+   "origem": "v1-s1-muzoqj2v.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytk1m0/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytk5s1",
+   "tipo": "print",
+   "origem": "v1-s1-muzosc4a.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytk5s1/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytka52",
+   "tipo": "print",
+   "origem": "v1-s1-muzot46p.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytka52/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytkdd3",
+   "tipo": "print",
+   "origem": "v1-s1-muzvc3bg.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytkdd3/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytkgw4",
+   "tipo": "print",
+   "origem": "v1-s1-muzvc17k.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytkgw4/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytkk95",
+   "tipo": "print",
+   "origem": "v1-s1-muzpzhav.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytkk95/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytkny6",
+   "tipo": "print",
+   "origem": "v2-s1-muzoxn40.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytkny6/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytlkk0",
+   "tipo": "print",
+   "origem": "v1-s1-muzoqj2v.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytlkk0/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytlnu1",
+   "tipo": "print",
+   "origem": "v1-s1-muzosc4a.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytlnu1/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytlrq2",
+   "tipo": "print",
+   "origem": "v1-s1-muzot46p.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytlrq2/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytlvk3",
+   "tipo": "print",
+   "origem": "v1-s1-muzvc3bg.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytlvk3/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytlyo4",
+   "tipo": "print",
+   "origem": "v1-s1-muzvc17k.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytlyo4/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  },
+  {
+   "id": "printmv0ytm255",
+   "tipo": "print",
+   "origem": "v1-s1-muzpzhav.png",
+   "perfil": null,
+   "imagens": [
+    "refs/printmv0ytm255/01.jpg"
+   ],
+   "em": "2026-10-09 09:52"
+  }
+ ],
+ "exemplos": [],
+ "correcoes": [],
+ "biblioteca": {
+  "folderId": "XWAPrGmN"
+ },
+ "atualizado": "2026-10-09 09:52"
+}

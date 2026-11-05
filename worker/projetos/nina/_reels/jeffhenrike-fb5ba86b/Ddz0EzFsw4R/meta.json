@@ -1,0 +1,27 @@
+{
+ "id": "Ddz0EzFsw4R",
+ "url": "https://www.instagram.com/p/Ddz0EzFsw4R/",
+ "plays": 744,
+ "curtidas": 9,
+ "comentarios": 0,
+ "data": "2026-09-27",
+ "duracao_s": 119.8,
+ "cortes": 6,
+ "cortes_por_min": 3.0,
+ "primeiro_corte_s": 19.3,
+ "palavras_por_min": 134,
+ "fala": true,
+ "abertura_falada": "Hoje é dia de corrida e olha só, já começou aqui a todo vapor, bateria antes da nossa, já tá indo aqui a galera já.",
+ "jev": {
+  "topic": "other",
+  "opening": "claim",
+  "mechanism": "story",
+  "structure": "story",
+  "evidence": "personal",
+  "emotion": "aspiration",
+  "specificity": "none",
+  "cta": "none"
+ },
+ "legenda": "Dia de corrida em Interlagos!",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/jeffhenrike-fb5ba86b/Ddz0EzFsw4R/folha.jpg"
+}

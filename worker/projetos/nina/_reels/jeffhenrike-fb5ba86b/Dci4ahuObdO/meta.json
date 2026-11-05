@@ -1,0 +1,27 @@
+{
+ "id": "Dci4ahuObdO",
+ "url": "https://www.instagram.com/p/Dci4ahuObdO/",
+ "plays": 721,
+ "curtidas": 19,
+ "comentarios": 1,
+ "data": "2026-08-27",
+ "duracao_s": 66.6,
+ "cortes": 6,
+ "cortes_por_min": 5.4,
+ "primeiro_corte_s": 5.6,
+ "palavras_por_min": 188,
+ "fala": true,
+ "abertura_falada": "Bom, nós fizemos aqui ontem as edições, agora eu vou mostrar pra você como é que eu vou subir os vídeos lá na minha conta Dark, olha só.",
+ "jev": {
+  "topic": "marketing",
+  "opening": "claim",
+  "mechanism": "direct",
+  "structure": "steps",
+  "evidence": "personal",
+  "emotion": "aspiration",
+  "specificity": "sequence",
+  "cta": "none"
+ },
+ "legenda": "Como postar mais de 100 vídeos por dia",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/jeffhenrike-fb5ba86b/Dci4ahuObdO/folha.jpg"
+}

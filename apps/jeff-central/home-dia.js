@@ -79,7 +79,7 @@ function lerClickup(agora) {
       const criada = t.date_created && t.date_updated && (t.date_updated - t.date_created) < 60000;
       const quem = parse(t.assignees_json, []).map(primeiroNome)[0];
       return { kind: fechada ? 'Tarefa concluída' : criada ? 'Tarefa criada' : 'Tarefa atualizada',
-        text: `${t.name}${quem ? ' · ' + quem : ''}${t.list_name ? ' · ' + t.list_name : ''}`, when: quando(t.date_updated, agora), url: t.url };
+        text: `${t.name}${quem ? ' · ' + quem : ''}${t.list_name ? ' · ' + t.list_name : ''}`, when: quando(t.date_updated, agora), url: t.url, id: t.task_id };
     });
     // Hora da última sincronização: o log do clickup-sync.py é tocado a cada rodada (*/5 min); fallback: cached_at (UTC) do item mais recente
     let syncMs = null;

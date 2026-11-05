@@ -1,0 +1,719 @@
+{
+  "destaque": "#1757FF",
+  "clipes": [
+    {
+      "video": "clip1.mp4",
+      "duracao": 5.96,
+      "zoom": "in-slow",
+      "frases": [
+        {
+          "inicio": 0.02,
+          "fim": 1.08,
+          "palavras": [
+            {
+              "palavra": "O",
+              "inicio": 0.02,
+              "fim": 0.16,
+              "destaque": false
+            },
+            {
+              "palavra": "boi",
+              "inicio": 0.16,
+              "fim": 0.3,
+              "destaque": true
+            },
+            {
+              "palavra": "se",
+              "inicio": 0.3,
+              "fim": 0.46,
+              "destaque": false
+            },
+            {
+              "palavra": "vende",
+              "inicio": 0.46,
+              "fim": 0.62,
+              "destaque": false
+            },
+            {
+              "palavra": "tudo,",
+              "inicio": 0.62,
+              "fim": 1.08,
+              "destaque": true
+            }
+          ]
+        },
+        {
+          "inicio": 1.08,
+          "fim": 1.12,
+          "palavras": [
+            {
+              "palavra": "né?",
+              "inicio": 1.08,
+              "fim": 1.12,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 1.08,
+          "fim": 2.06,
+          "palavras": [
+            {
+              "palavra": "né?",
+              "inicio": 1.08,
+              "fim": 1.12,
+              "destaque": false
+            },
+            {
+              "palavra": "você",
+              "inicio": 1.24,
+              "fim": 1.32,
+              "destaque": false
+            },
+            {
+              "palavra": "cria",
+              "inicio": 1.32,
+              "fim": 1.52,
+              "destaque": false
+            },
+            {
+              "palavra": "boi,",
+              "inicio": 1.52,
+              "fim": 2.06,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 2.6,
+          "fim": 4.84,
+          "palavras": [
+            {
+              "palavra": "O",
+              "inicio": 2.6,
+              "fim": 2.8,
+              "destaque": false
+            },
+            {
+              "palavra": "couro,",
+              "inicio": 2.8,
+              "fim": 3.54,
+              "destaque": false
+            },
+            {
+              "palavra": "o",
+              "inicio": 3.54,
+              "fim": 3.66,
+              "destaque": false
+            },
+            {
+              "palavra": "mocotó,",
+              "inicio": 3.66,
+              "fim": 4.52,
+              "destaque": true
+            },
+            {
+              "palavra": "tudo,",
+              "inicio": 4.52,
+              "fim": 4.84,
+              "destaque": true
+            }
+          ]
+        },
+        {
+          "inicio": 5.18,
+          "fim": 5.76,
+          "palavras": [
+            {
+              "palavra": "vende",
+              "inicio": 5.18,
+              "fim": 5.36,
+              "destaque": false
+            },
+            {
+              "palavra": "tudo,",
+              "inicio": 5.36,
+              "fim": 5.76,
+              "destaque": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "video": "clip2.mp4",
+      "duracao": 6.959,
+      "zoom": "out",
+      "frases": [
+        {
+          "inicio": 0.2,
+          "fim": 0.88,
+          "palavras": [
+            {
+              "palavra": "Esses",
+              "inicio": 0.2,
+              "fim": 0.4,
+              "destaque": false
+            },
+            {
+              "palavra": "dias",
+              "inicio": 0.4,
+              "fim": 0.58,
+              "destaque": false
+            },
+            {
+              "palavra": "eu",
+              "inicio": 0.58,
+              "fim": 0.68,
+              "destaque": false
+            },
+            {
+              "palavra": "fui",
+              "inicio": 0.68,
+              "fim": 0.78,
+              "destaque": false
+            },
+            {
+              "palavra": "na",
+              "inicio": 0.78,
+              "fim": 0.88,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 0.88,
+          "fim": 1.14,
+          "palavras": [
+            {
+              "palavra": "lojas",
+              "inicio": 0.88,
+              "fim": 1.14,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 2.36,
+          "fim": 3.66,
+          "palavras": [
+            {
+              "palavra": "A",
+              "inicio": 2.36,
+              "fim": 2.48,
+              "destaque": false
+            },
+            {
+              "palavra": "menina",
+              "inicio": 2.48,
+              "fim": 2.76,
+              "destaque": false
+            },
+            {
+              "palavra": "do",
+              "inicio": 2.76,
+              "fim": 2.9,
+              "destaque": false
+            },
+            {
+              "palavra": "caixa",
+              "inicio": 2.9,
+              "fim": 3.08,
+              "destaque": false
+            },
+            {
+              "palavra": "perguntou,",
+              "inicio": 3.08,
+              "fim": 3.66,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 3.66,
+          "fim": 4.5,
+          "palavras": [
+            {
+              "palavra": "o",
+              "inicio": 3.66,
+              "fim": 3.9,
+              "destaque": false
+            },
+            {
+              "palavra": "senhor",
+              "inicio": 3.9,
+              "fim": 4.04,
+              "destaque": false
+            },
+            {
+              "palavra": "vai",
+              "inicio": 4.04,
+              "fim": 4.2,
+              "destaque": false
+            },
+            {
+              "palavra": "querer",
+              "inicio": 4.2,
+              "fim": 4.36,
+              "destaque": false
+            },
+            {
+              "palavra": "um",
+              "inicio": 4.36,
+              "fim": 4.5,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 4.5,
+          "fim": 4.66,
+          "palavras": [
+            {
+              "palavra": "Big",
+              "inicio": 4.5,
+              "fim": 4.66,
+              "destaque": true
+            }
+          ]
+        },
+        {
+          "inicio": 5.8,
+          "fim": 6.44,
+          "palavras": [
+            {
+              "palavra": "que",
+              "inicio": 5.8,
+              "fim": 5.94,
+              "destaque": false
+            },
+            {
+              "palavra": "eu",
+              "inicio": 5.94,
+              "fim": 6.02,
+              "destaque": false
+            },
+            {
+              "palavra": "tô",
+              "inicio": 6.02,
+              "fim": 6.1,
+              "destaque": false
+            },
+            {
+              "palavra": "num",
+              "inicio": 6.1,
+              "fim": 6.24,
+              "destaque": false
+            },
+            {
+              "palavra": "lugar",
+              "inicio": 6.24,
+              "fim": 6.44,
+              "destaque": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "video": "clip3a.mp4",
+      "duracao": 3.35,
+      "zoom": "punch",
+      "frases": [
+        {
+          "inicio": 0.02,
+          "fim": 0.84,
+          "palavras": [
+            {
+              "palavra": "Só",
+              "inicio": 0.02,
+              "fim": 0.18,
+              "destaque": false
+            },
+            {
+              "palavra": "que",
+              "inicio": 0.18,
+              "fim": 0.26,
+              "destaque": false
+            },
+            {
+              "palavra": "a",
+              "inicio": 0.26,
+              "fim": 0.42,
+              "destaque": false
+            },
+            {
+              "palavra": "gente",
+              "inicio": 0.42,
+              "fim": 0.52,
+              "destaque": false
+            },
+            {
+              "palavra": "viu",
+              "inicio": 0.52,
+              "fim": 0.84,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 0.84,
+          "fim": 2.44,
+          "palavras": [
+            {
+              "palavra": "a",
+              "inicio": 0.84,
+              "fim": 1.12,
+              "destaque": false
+            },
+            {
+              "palavra": "oportunidade,",
+              "inicio": 1.12,
+              "fim": 2.14,
+              "destaque": true
+            },
+            {
+              "palavra": "já",
+              "inicio": 2.14,
+              "fim": 2.16,
+              "destaque": false
+            },
+            {
+              "palavra": "que",
+              "inicio": 2.16,
+              "fim": 2.32,
+              "destaque": false
+            },
+            {
+              "palavra": "está",
+              "inicio": 2.32,
+              "fim": 2.44,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 2.44,
+          "fim": 2.8,
+          "palavras": [
+            {
+              "palavra": "aqui,",
+              "inicio": 2.44,
+              "fim": 2.72,
+              "destaque": false
+            },
+            {
+              "palavra": "está",
+              "inicio": 2.72,
+              "fim": 2.8,
+              "destaque": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "video": "clip3b.mp4",
+      "duracao": 2.05,
+      "zoom": "shake",
+      "frases": [
+        {
+          "inicio": 0,
+          "fim": 1.9,
+          "palavras": [
+            {
+              "palavra": "avião",
+              "inicio": 0,
+              "fim": 0.54,
+              "destaque": true
+            },
+            {
+              "palavra": "parado",
+              "inicio": 0.54,
+              "fim": 1.12,
+              "destaque": true
+            },
+            {
+              "palavra": "a",
+              "inicio": 1.12,
+              "fim": 1.36,
+              "destaque": false
+            },
+            {
+              "palavra": "perder",
+              "inicio": 1.36,
+              "fim": 1.58,
+              "destaque": false
+            },
+            {
+              "palavra": "dinheiro",
+              "inicio": 1.58,
+              "fim": 1.9,
+              "destaque": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "video": "clip4.mp4",
+      "duracao": 11.209,
+      "zoom": "kenburns",
+      "frases": [
+        {
+          "inicio": 0.04,
+          "fim": 1.74,
+          "palavras": [
+            {
+              "palavra": "o",
+              "inicio": 0.04,
+              "fim": 0.18,
+              "destaque": false
+            },
+            {
+              "palavra": "ângulo",
+              "inicio": 0.18,
+              "fim": 0.62,
+              "destaque": true
+            },
+            {
+              "palavra": "do",
+              "inicio": 0.62,
+              "fim": 0.96,
+              "destaque": false
+            },
+            {
+              "palavra": "meu",
+              "inicio": 0.96,
+              "fim": 1.3,
+              "destaque": false
+            },
+            {
+              "palavra": "negócio",
+              "inicio": 1.3,
+              "fim": 1.74,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 1.74,
+          "fim": 2.54,
+          "palavras": [
+            {
+              "palavra": "frente",
+              "inicio": 1.74,
+              "fim": 2.08,
+              "destaque": false
+            },
+            {
+              "palavra": "ao",
+              "inicio": 2.08,
+              "fim": 2.26,
+              "destaque": false
+            },
+            {
+              "palavra": "mercado",
+              "inicio": 2.26,
+              "fim": 2.54,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 2.72,
+          "fim": 3.44,
+          "palavras": [
+            {
+              "palavra": "que",
+              "inicio": 2.72,
+              "fim": 3,
+              "destaque": false
+            },
+            {
+              "palavra": "faz",
+              "inicio": 3,
+              "fim": 3.16,
+              "destaque": false
+            },
+            {
+              "palavra": "toda",
+              "inicio": 3.16,
+              "fim": 3.34,
+              "destaque": false
+            },
+            {
+              "palavra": "a",
+              "inicio": 3.34,
+              "fim": 3.44,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 3.96,
+          "fim": 5.44,
+          "palavras": [
+            {
+              "palavra": "eu",
+              "inicio": 3.96,
+              "fim": 4.1,
+              "destaque": false
+            },
+            {
+              "palavra": "determino",
+              "inicio": 4.1,
+              "fim": 4.6,
+              "destaque": false
+            },
+            {
+              "palavra": "bem",
+              "inicio": 4.6,
+              "fim": 4.86,
+              "destaque": false
+            },
+            {
+              "palavra": "o",
+              "inicio": 4.86,
+              "fim": 5.2,
+              "destaque": false
+            },
+            {
+              "palavra": "ângulo",
+              "inicio": 5.2,
+              "fim": 5.44,
+              "destaque": true
+            }
+          ]
+        },
+        {
+          "inicio": 5.44,
+          "fim": 5.92,
+          "palavras": [
+            {
+              "palavra": "do",
+              "inicio": 5.44,
+              "fim": 5.6,
+              "destaque": false
+            },
+            {
+              "palavra": "negócio",
+              "inicio": 5.6,
+              "fim": 5.92,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 6.22,
+          "fim": 7.3,
+          "palavras": [
+            {
+              "palavra": "tem",
+              "inicio": 6.22,
+              "fim": 6.34,
+              "destaque": false
+            },
+            {
+              "palavra": "margem,",
+              "inicio": 6.34,
+              "fim": 7.06,
+              "destaque": true
+            },
+            {
+              "palavra": "que",
+              "inicio": 7.06,
+              "fim": 7.16,
+              "destaque": false
+            },
+            {
+              "palavra": "tem",
+              "inicio": 7.16,
+              "fim": 7.3,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 8.04,
+          "fim": 8.48,
+          "palavras": [
+            {
+              "palavra": "é",
+              "inicio": 8.04,
+              "fim": 8.06,
+              "destaque": false
+            },
+            {
+              "palavra": "a",
+              "inicio": 8.06,
+              "fim": 8.12,
+              "destaque": false
+            },
+            {
+              "palavra": "proposta",
+              "inicio": 8.12,
+              "fim": 8.36,
+              "destaque": false
+            },
+            {
+              "palavra": "de",
+              "inicio": 8.36,
+              "fim": 8.48,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 8.86,
+          "fim": 9.94,
+          "palavras": [
+            {
+              "palavra": "a",
+              "inicio": 8.86,
+              "fim": 9.02,
+              "destaque": false
+            },
+            {
+              "palavra": "gente",
+              "inicio": 9.02,
+              "fim": 9.1,
+              "destaque": false
+            },
+            {
+              "palavra": "consegue",
+              "inicio": 9.1,
+              "fim": 9.44,
+              "destaque": false
+            },
+            {
+              "palavra": "ter",
+              "inicio": 9.44,
+              "fim": 9.72,
+              "destaque": false
+            },
+            {
+              "palavra": "a",
+              "inicio": 9.72,
+              "fim": 9.94,
+              "destaque": false
+            }
+          ]
+        },
+        {
+          "inicio": 9.94,
+          "fim": 10.26,
+          "palavras": [
+            {
+              "palavra": "maior",
+              "inicio": 9.94,
+              "fim": 10.26,
+              "destaque": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "duracao": 33.53
+}

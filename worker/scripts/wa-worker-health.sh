@@ -60,8 +60,8 @@ if [ "$current" = "down" ] && [ "$prev" != "down" ]; then
   else
     log "ERRO: nao consegui descobrir PID do whatsapp-worker"
   fi
-  bash "$WAPI_SH" POST /messages/private "{\"to\":\"$JEFF_PHONE\",\"body\":\"[auto-fix] worker WhatsApp foi reiniciado: $reason. Mensagens stuck devem entregar agora.\"}" >>"$LOG" 2>&1 || true
-  bash "$WAPI_SH" POST /messages/private "{\"to\":\"$VINI_PHONE\",\"body\":\"[auto-fix] worker WhatsApp foi reiniciado: $reason. Verificar logs.\"}" >>"$LOG" 2>&1 || true
+  # Aviso por fora: se o Zeus caiu, wa-alerta.sh manda pelo jeff-wa-relay (antes ia pelo próprio Zeus fora do ar)
+  ( sleep 90; bash /opt/jeff-worker/scripts/wa-alerta.sh zeus-autofix "[auto-fix] WhatsApp do ZEUS foi reiniciado: $reason. Se ele estiver pedindo QR, leia de novo na Central › Conectores › WhatsApp." ) >>"$LOG" 2>&1 &
 fi
 
 echo "$current" > "$STATE"

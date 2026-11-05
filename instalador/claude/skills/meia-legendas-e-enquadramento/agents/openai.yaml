@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legendas e enquadramento"
+  short_description: "Ajusta legenda e enquadramento pela fala real"
+  default_prompt: "Use $meia-legendas-e-enquadramento para orientar a edição de [VÍDEO OU PROJETO] conforme o resultado e os arquivos que forneci."

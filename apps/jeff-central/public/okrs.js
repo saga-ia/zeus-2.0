@@ -480,15 +480,15 @@
         const t = ev.target, q = s => t.closest && t.closest(s); let el;
         const cur = () => objById(_detalhe);
         if(q("[data-okr-edit-obj]")) return abrirForm(cur());
-        if(q("[data-okr-del-obj]")){ const x = cur(); if(!x) return; if(!confirm(`Excluir "${x.title}"? Os resultados-chave e check-ins dele somem; objetivos desdobrados sobem um nível.`)) return; _detalhe = null; const r = await acao("/objectives/" + encodeURIComponent(x.id), "DELETE"); if(r){ fecharModal(); toast("Objetivo excluído."); } return; }
+        if(q("[data-okr-del-obj]")){ const x = cur(); if(!x) return; if(!await zConfirm(`Excluir "${x.title}"? Os resultados-chave e check-ins dele somem; objetivos desdobrados sobem um nível.`)) return; _detalhe = null; const r = await acao("/objectives/" + encodeURIComponent(x.id), "DELETE"); if(r){ fecharModal(); toast("Objetivo excluído."); } return; }
         if(q("[data-okr-add-kr]")) return abrirKrForm(null, cur());
         if((el = q("[data-okr-nav]"))){ _detalhe = el.dataset.okrNav; return abrirDetalhe(el.dataset.okrNav); }
         if((el = q("[data-kr-ci]"))){ const b = m.querySelector(`[data-kr-ci-box="${el.dataset.krCi}"]`); if(b){ b.hidden = !b.hidden; if(!b.hidden) b.querySelector("[data-kr-ci-val]").focus(); } return; }
         if((el = q("[data-kr-ci-save]"))){ const b = m.querySelector(`[data-kr-ci-box="${el.dataset.krCiSave}"]`); const v = b.querySelector("[data-kr-ci-val]").value.trim(); if(!v) return toast("Informe o valor atual.", true); el.disabled = true; const r = await acao("/krs/" + encodeURIComponent(el.dataset.krCiSave), "PATCH", { current: v, note: b.querySelector("[data-kr-ci-note]").value }); if(r) toast("Check-in registrado."); else el.disabled = false; return; }
         if((el = q("[data-kr-hist]"))){ const b = m.querySelector(`[data-kr-hist-box="${el.dataset.krHist}"]`); if(!b) return; if(!b.hidden){ b.hidden = true; return; } b.hidden = false; b.innerHTML = `<span style="color:${CINZA}">Carregando...</span>`; try { const j = await apiJ("/krs/" + encodeURIComponent(el.dataset.krHist) + "/checkins"); const k = (cur() || { krs: [] }).krs.find(x => x.id === el.dataset.krHist) || { unit: "" }; b.innerHTML = j.checkins.length ? `<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:10px;background:#FAFAFA;border:1px solid #E6E6EA">${j.checkins.map(c => `<div style="display:flex;gap:10px;align-items:center"><span style="color:${CINZA};width:80px">${dataBr(c.date)}</span><strong style="width:90px">${fmtVal(c.value, k.unit)}</strong><span style="flex:1;min-width:0;color:#3C3C44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(c.note || "")}</span><span style="color:#9A9AA3;font-size:11px">${e(c.author || "")}</span><span data-ci-del="${e(c.id)}" title="Apagar" style="cursor:pointer;color:#9A9AA3">${icon(ICONS.x, 11, "currentColor")}</span></div>`).join("")}</div>` : `<span style="color:${CINZA}">Nenhum check-in registrado.</span>`; } catch(err){ b.innerHTML = `<span style="color:${VERM}">${e(err.message)}</span>`; } return; }
-        if((el = q("[data-ci-del]"))){ if(!confirm("Apagar este check-in? O valor atual volta para o anterior.")) return; const r = await acao("/checkins/" + encodeURIComponent(el.dataset.ciDel), "DELETE"); if(r) toast("Check-in apagado."); return; }
+        if((el = q("[data-ci-del]"))){ if(!await zConfirm("Apagar este check-in? O valor atual volta para o anterior.")) return; const r = await acao("/checkins/" + encodeURIComponent(el.dataset.ciDel), "DELETE"); if(r) toast("Check-in apagado."); return; }
         if((el = q("[data-kr-edit]"))){ const k = (cur() || { krs: [] }).krs.find(x => x.id === el.dataset.krEdit); if(k) abrirKrForm(k, cur()); return; }
-        if((el = q("[data-kr-del]"))){ if(!confirm("Excluir este resultado-chave e o histórico dele?")) return; const r = await acao("/krs/" + encodeURIComponent(el.dataset.krDel), "DELETE"); if(r) toast("Resultado-chave excluído."); return; }
+        if((el = q("[data-kr-del]"))){ if(!await zConfirm("Excluir este resultado-chave e o histórico dele?")) return; const r = await acao("/krs/" + encodeURIComponent(el.dataset.krDel), "DELETE"); if(r) toast("Resultado-chave excluído."); return; }
       } });
     _detalhe = id;
     const m = document.getElementById("okr-modal"); if(m) m.querySelector("form").addEventListener("keydown", ev => { if(ev.key === "Enter" && ev.target.matches("[data-kr-ci-val],[data-kr-ci-note]")){ ev.preventDefault(); const box = ev.target.closest("[data-kr-ci-box]"); const b = box && box.querySelector("[data-kr-ci-save]"); if(b) b.click(); } });
@@ -681,7 +681,7 @@
 
   // ─── Eventos da tela ────────────────────────────────────────────────────────
   function bind(root){
-    bindOnce(root, "click", ev => {
+    bindOnce(root, "click", async ev => {
       const t = ev.target, q = s => t.closest && t.closest(s); let el;
       if((el = q("[data-okr-view]"))){ ok().view = el.dataset.okrView; if(ok().view === "arvore") ok().tree.fitted = false; paint(); return; }
       if(q("[data-okr-novo]")) return abrirForm(null);
@@ -689,7 +689,7 @@
       if(q("[data-okr-checkin]")) return abrirCheckin();
       if(q("[data-okr-novo-ciclo]")) return abrirNovoCiclo();
       if(q("[data-okr-encerrar]")) return abrirEncerrar();
-      if(q("[data-okr-reabrir]")){ const c = D().cycle; if(c && confirm(`Reativar "${c.name}"? O ciclo ativo atual será encerrado.`)) acao("/cycles/" + encodeURIComponent(c.id), "PATCH", { status: "ativo" }).then(r => { if(r) toast("Ciclo reativado."); }); return; }
+      if(q("[data-okr-reabrir]")){ const c = D().cycle; if(c && await zConfirm(`Reativar "${c.name}"? O ciclo ativo atual será encerrado.`)) acao("/cycles/" + encodeURIComponent(c.id), "PATCH", { status: "ativo" }).then(r => { if(r) toast("Ciclo reativado."); }); return; }
       if(q("[data-okr-atencao]")){ ok().f.atencao = !ok().f.atencao; paintView(); return; }
       if((el = q("[data-okr-filtro-status]"))){ ok().f = { status: el.dataset.okrFiltroStatus, area: "", owner: "", atencao: false }; ok().view = "cards"; paint(); return; }
       if((el = q("[data-okr-expand]"))){ ev.stopPropagation(); ok().expanded[el.dataset.okrExpand] = !ok().expanded[el.dataset.okrExpand]; paintView(); return; }

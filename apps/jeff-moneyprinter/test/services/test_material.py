@@ -512,7 +512,7 @@ class TestMaterialTlsVerification(unittest.TestCase):
         requests 的连接异常可能回显完整请求 URL。异常详情仍应保留用于排查，
         但 URL 查询参数中的 Pixabay API Key 必须在写入日志前脱敏。
         """
-        api_key = "pixabay-secret-key"
+        api_key = "<REDACTED>"
         config.app["pixabay_api_keys"] = [api_key]
         config.proxy.clear()
         error = requests.ConnectionError(
@@ -622,7 +622,7 @@ class TestMaterialTlsVerification(unittest.TestCase):
                     "height": 1080,
                     "download_url": "https://cdn.example.com/private",
                 },
-                "api_key": "must-not-persist",
+                "api_key": "<REDACTED>",
             },
         )
 

@@ -14,6 +14,7 @@ const { publishPost } = require('./publisher');
 const bulkProcessor = require('./lib/bulk');
 const analytics = require('./lib/analytics');
 const { refreshExpiringMetaTokens } = require('./lib/tokens');
+const sequencia = require('./lib/sequencia');
 
 const HEARTBEAT_KEY = 'worker_heartbeat';
 const HEARTBEAT_STALE_SEC = 150; // 2 ticks e meia de tolerância
@@ -47,11 +48,15 @@ async function runTick() {
     for (const post of duePosts) {
       post.platforms = JSON.parse(post.platforms || '[]');
       post.account_ids = JSON.parse(post.account_ids || '[]');
+      // trava de sequência: card derivado não vai ao ar sem o card base
+      if (!sequencia.liberado(db, post)) continue;
       try {
         const results = await publishPost(post, db);
         console.log(`[scheduler] post ${post.id} processado:`, results.map(r => `${r.platform}:${r.status}`).join(', '));
+        try { sequencia.aposPublicar(db, post, results); } catch (e) { console.error('[scheduler] pós-publicação da sequência falhou:', e.message); }
       } catch (err) {
         console.error(`[scheduler] erro no post ${post.id}:`, err.message);
+        try { sequencia.aposPublicar(db, post, [{ status: 'failed', error: err.message }]); } catch (e) { console.error('[scheduler] aviso de falha não saiu:', e.message); }
       }
     }
   }

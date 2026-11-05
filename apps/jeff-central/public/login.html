@@ -89,7 +89,7 @@
       <p id="subtitle" style="margin:0 0 26px;font-size:13.5px;color:#66666F;line-height:1.6">Use o e-mail da empresa para acessar seu workspace e seus agentes.</p>
 
       <div id="err-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(192,52,28,0.3);border-radius:11px;background:rgba(192,52,28,0.07);font-size:12.5px;color:#C0341C"></div>
-      <div id="invite-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(103,61,230,0.28);border-radius:11px;background:rgba(103,61,230,0.06);font-size:12.5px;color:#5429C9">Já existe um admin nesta central. Cadastros novos precisam de token de convite. Fale com o admin.</div>
+      <div id="invite-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(103,61,230,0.28);border-radius:11px;background:rgba(103,61,230,0.06);font-size:12.5px;color:#5429C9">O cadastro nesta central é só por convite. Peça ao administrador da sua empresa o link de convite: ele abre direto a tela para você criar sua senha.</div>
       <div id="first-admin-box" style="display:none;margin-bottom:18px;padding:11px 14px;border:1px solid rgba(15,122,104,0.28);border-radius:11px;background:rgba(15,122,104,0.07);font-size:12.5px;color:#0F7A68">Você é o primeiro cadastro nesta central. Sua conta será criada como <strong>Admin</strong>.</div>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px">
@@ -122,10 +122,6 @@
               <div style="font-size:12px;color:#66666F;margin-bottom:7px">Empresa</div>
               <div style="padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF"><input type="text" name="_company" placeholder="Alpha Digital" style="font-size:13.5px"></div>
             </div>
-          </div>
-          <div id="invite-field" style="display:none">
-            <div style="font-size:12px;color:#66666F;margin-bottom:7px">Token de convite</div>
-            <div style="padding:12px 14px;border:1px solid #DADADF;border-radius:11px;background:#FFFFFF"><input type="text" name="invite" placeholder="cole aqui o token recebido" style="font-size:13.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace"></div>
           </div>
         </div>
 
@@ -228,7 +224,6 @@
   var errBox = document.getElementById("err-box");
   var inviteBox = document.getElementById("invite-box");
   var firstAdminBox = document.getElementById("first-admin-box");
-  var inviteField = document.getElementById("invite-field");
   var form = document.getElementById("auth-form");
 
   var hasAdmin = false;
@@ -255,7 +250,8 @@
     forgot.style.display = signup ? "none" : "inline";
     firstAdminBox.style.display = (signup && !hasAdmin) ? "block" : "none";
     inviteBox.style.display = (signup && hasAdmin) ? "block" : "none";
-    inviteField.style.display = (signup && hasAdmin) ? "block" : "none";
+    // Central com dono: cadastro só pelo link de convite, então o formulário de criar conta some
+    form.style.display = (signup && hasAdmin) ? "none" : "flex";
     form.action = signup ? "/api/signup" : "/api/login";
   }
   function setMode(m){ mode = m; apply(); }
@@ -274,7 +270,8 @@
     "missing": "Preenche e-mail e senha para continuar.",
     "email": "E-mail com formato inválido.",
     "weak": "Senha muito curta. Mínimo 8 caracteres.",
-    "invite": "Cadastro exige token de convite. Fale com o admin.",
+    "invite": "O cadastro é só por convite. Peça o link ao administrador da sua empresa.",
+    "inativo": "Seu acesso está desativado ou ainda não foi liberado. Fale com um administrador da sua empresa.",
     "exists": "Já existe uma conta com esse e-mail. Use Entrar.",
     "server": "Erro ao criar conta. Tente novamente em instantes."
   };

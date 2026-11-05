@@ -321,6 +321,36 @@ module.exports = function(auth) {
     res.json({ ok: true });
   });
 
+  // Altera UM item da programação: horário (epoch em segundos, ou "AAAA-MM-DDTHH:MM" no horário de Brasília) e
+  // legenda própria deste post (vazia = volta a usar a regra de legenda da campanha). Só itens ainda não publicados.
+  router.patch('/bulk/campaigns/:id/items/:itemId', auth, (req, res) => {
+    const db = getDb();
+    const item = db.prepare('SELECT * FROM bulk_campaign_items WHERE id = ? AND campaign_id = ?').get(req.params.itemId, req.params.id);
+    if (!item) return res.status(404).json({ error: 'Item não encontrado nesta campanha' });
+    if (item.status === 'published') return res.status(400).json({ error: 'Este post já foi publicado. O que está no ar não muda por aqui.' });
+    if (item.status === 'processing') return res.status(400).json({ error: 'Este post está sendo publicado neste momento. Tente de novo em instantes.' });
+    const b = req.body || {};
+    let quando = item.scheduled_at;
+    if (b.scheduled_at !== undefined && b.scheduled_at !== null && b.scheduled_at !== '') {
+      const v = b.scheduled_at;
+      quando = typeof v === 'number' ? Math.floor(v) : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(String(v)) ? Math.floor(new Date(String(v) + ':00-03:00').getTime() / 1000) : NaN;
+      if (!Number.isFinite(quando)) return res.status(400).json({ error: 'Data inválida' });
+      if (quando < Math.floor(Date.now() / 1000) + 60) return res.status(400).json({ error: 'Esse horário já passou (ou é daqui a menos de 1 minuto).' });
+    }
+    let meta = {}; try { meta = JSON.parse(item.drive_meta || '{}'); } catch {}
+    if (b.caption !== undefined) {
+      const cap = String(b.caption || '').trim();
+      if (cap.length > 2200) return res.status(400).json({ error: 'A legenda passou de 2.200 caracteres.' });
+      if (cap) meta.caption_override = cap; else delete meta.caption_override;
+    }
+    // item que falhou volta para a fila ao ser alterado
+    const status = item.status === 'failed' ? 'pending' : item.status;
+    db.prepare('UPDATE bulk_campaign_items SET scheduled_at = ?, drive_meta = ?, status = ?, error_message = CASE WHEN ? = \'pending\' AND status = \'failed\' THEN NULL ELSE error_message END WHERE id = ?')
+      .run(quando, JSON.stringify(meta), status, status, item.id);
+    console.log(`[bulk] item ${item.id} da campanha ${item.campaign_id} alterado (horário ${quando !== item.scheduled_at ? 'novo' : 'mantido'}, legenda ${b.caption !== undefined ? (meta.caption_override ? 'própria' : 'da campanha') : 'mantida'})`);
+    res.json({ ok: true, scheduled_at: quando, caption: meta.caption_override || null, status });
+  });
+
   // Remove UM item da programação (sem mexer no resto da campanha).
   // Só itens ainda não publicados — o que já foi ao ar não se desfaz por aqui.
   router.delete('/bulk/campaigns/:id/items/:itemId', auth, (req, res) => {

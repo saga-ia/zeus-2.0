@@ -1,0 +1,5 @@
+# tipo	arquivo (relativo a /opt)	chave	placeholder
+eco	jeff-apps/jeff-sdrs-crm/ecosystem.config.js	CRM_PASSWORD	{{SENHA}}
+eco	jeff-apps/jeff-sdrs-crm/ecosystem.config.js	SDRS_JWT_SECRET	{{S:f39115c862be:96:hex}}
+eco	jeff-apps/jeff-sdrs-crm/ecosystem.config.js	WORKER_TOKEN	{{S:2db1996a9e85:64:hex}}
+literal	jeff-apps/jeff-central/server.js	-	{{S:cdc1cedd1294:48:hex}}

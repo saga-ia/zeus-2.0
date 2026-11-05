@@ -2,6 +2,23 @@ const path = require('path');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { phoneOnly } = require('./chatwoot');
 
+// Reconexão (2026-10-04): antes, sessão que caía ficava 'disconnected' até alguém reiniciar na mão.
+// Queda comum: sai do processo e o PM2 sobe de novo, religando todas as sessões pelo disco (sem QR).
+// Trava de 10 min (arquivo .ultimo-restart) pra não entrar em laço se o WhatsApp estiver fora.
+// LOGOUT: não adianta reiniciar (vai pedir QR); só avisa Jeff e Vinicius.
+const fs = require('fs');
+const MARCA_RESTART = path.join(__dirname, '..', '.ultimo-restart');
+function alertar(chave, texto) {
+  try { require('child_process').execFile('bash', ['/opt/jeff-worker/scripts/wa-alerta.sh', chave, texto], { timeout: 60000 }, () => {}); } catch (_) {}
+}
+function reiniciarProcesso(motivo) {
+  let ult = 0; try { ult = fs.statSync(MARCA_RESTART).mtimeMs; } catch (_) {}
+  if (Date.now() - ult < 10 * 60 * 1000) { console.warn(`[relay] ${motivo}: restart pulado (último há menos de 10 min)`); return; }
+  try { fs.writeFileSync(MARCA_RESTART, new Date().toISOString()); } catch (_) {}
+  console.warn(`[relay] ${motivo}: reiniciando o processo em 15s pra religar as sessões`);
+  setTimeout(() => process.exit(1), 15000);
+}
+
 function createSession({ slug, dataPath, chatwoot }) {
   const state = {
     slug,
@@ -53,6 +70,11 @@ function createSession({ slug, dataPath, chatwoot }) {
     state.status = 'disconnected';
     state.lastDisconnect = { reason, at: new Date().toISOString() };
     console.log(`[${slug}:disconnected] ${reason}`);
+    if (/LOGOUT|UNPAIRED|CONFLICT/i.test(String(reason))) {
+      alertar(`relay-${slug}-logout`, `WhatsApp do relay (final ${slug}) foi desconectado pelo WhatsApp (${reason}). Precisa ler o QR de novo em relay /qr.`);
+    } else {
+      reiniciarProcesso(`${slug} caiu (${reason})`);
+    }
   });
 
   client.on('auth_failure', (msg) => {
@@ -166,6 +188,7 @@ function createSession({ slug, dataPath, chatwoot }) {
   client.initialize().catch((e) => {
     state.status = 'error';
     console.error(`[${slug}:init] falhou:`, e.message);
+    reiniciarProcesso(`${slug} não iniciou (${e.message})`);
   });
 
   return { slug, client, state, chatwoot };

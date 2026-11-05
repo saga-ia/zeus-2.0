@@ -159,6 +159,17 @@ function initSchema() {
     db.exec("ALTER TABLE bulk_campaigns ADD COLUMN suspensions TEXT NOT NULL DEFAULT '{}'");
   }
 
+  // posts: sequência de cards (trava de publicação encadeada).
+  // seq_group junta os cards que formam uma sequência; seq_index é a ordem
+  // dentro dela (1 = card base, do qual os outros dependem).
+  const pCols = db.prepare("PRAGMA table_info(posts)").all().map(c => c.name);
+  if (!pCols.includes('seq_group')) {
+    db.exec("ALTER TABLE posts ADD COLUMN seq_group TEXT");
+    db.exec("ALTER TABLE posts ADD COLUMN seq_index INTEGER");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_posts_seq ON posts(seq_group, seq_index)");
+    backfillSequencias(db);
+  }
+
   // post_analytics: permalink
   const paCols = db.prepare("PRAGMA table_info(post_analytics)").all().map(c => c.name);
   if (!paCols.includes('permalink')) {
@@ -232,6 +243,36 @@ function initSchema() {
   }
 
   migrateEncryption();
+}
+
+// Marca as sequências de stories que já estavam no banco antes da trava existir.
+// Só agrupa os stories nomeados pelo fluxo de sequência ("30 stories de bom dia"
+// = card da frase, "… · dNcM" = cards derivados): mesma conta, mesmo dia em
+// Brasília, 2 ou mais posts. O índice vem da ordem do horário, então o primeiro
+// do dia é sempre o card 1.
+function backfillSequencias(db) {
+  const PADRAO = /(30 stories de bom dia|·\s*d\d+c\d+)/i;
+  const posts = db.prepare(`SELECT id, title, account_ids, scheduled_at FROM posts
+    WHERE post_type = 'story' AND scheduled_at IS NOT NULL ORDER BY scheduled_at`).all();
+  const grupos = new Map();
+  for (const p of posts) {
+    if (!PADRAO.test(p.title || '')) continue;
+    const dia = new Date(p.scheduled_at * 1000).toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    const chave = `dia-${dia}-c${(p.account_ids || '[]').replace(/\D/g, '') || '0'}`;
+    if (!grupos.has(chave)) grupos.set(chave, []);
+    grupos.get(chave).push(p);
+  }
+  const upd = db.prepare('UPDATE posts SET seq_group = ?, seq_index = ? WHERE id = ?');
+  let marcados = 0, seqs = 0;
+  const tx = db.transaction(() => {
+    for (const [chave, itens] of grupos) {
+      if (itens.length < 2) continue;
+      seqs++;
+      itens.forEach((p, i) => { upd.run(chave, i + 1, p.id); marcados++; });
+    }
+  });
+  tx();
+  console.log(`[db] Migration: trava de sequência aplicada a ${marcados} story(ies) em ${seqs} sequência(s)`);
 }
 
 // Criptografa em repouso dados sensíveis que estejam em texto plano

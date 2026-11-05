@@ -31,6 +31,28 @@ const AGGREGATE_WINDOW_SEC = parseInt(process.env.AGGREGATE_WINDOW_SEC || '15', 
 const workerDb = new Database(WORKER_DB_PATH);
 workerDb.pragma('journal_mode = WAL');
 
+// -------------- base de conhecimento (RAG) --------------
+// A Central guarda qual parte da Biblioteca cada agente usa e faz a busca; aqui só pedimos os trechos da mensagem.
+// Sem resposta em 6 s (ou Central fora), o agente responde sem a base, como antes.
+const http = require('http');
+const fs = require('fs');
+const RAG_TOKEN_FILE = process.env.CENTRAL_RAG_TOKEN_FILE || '/opt/jeff-apps/jeff-central/data/.ig-rag-token';
+function buscarBase(agentId, texto) {
+  return new Promise((resolve) => {
+    let token = '';
+    try { token = fs.readFileSync(RAG_TOKEN_FILE, 'utf8').trim(); } catch (_) { return resolve(''); }
+    const corpo = Buffer.from(JSON.stringify({ agent_id: agentId, texto: String(texto || '').slice(0, 2000) }));
+    const req = http.request({ host: '127.0.0.1', port: parseInt(process.env.CENTRAL_PORT || '3031', 10), method: 'POST', path: '/api/interno/ig-rag',
+      headers: { 'content-type': 'application/json', 'content-length': corpo.length, 'x-rag-token': token }, timeout: 6000 }, (r) => {
+      let t = ''; r.on('data', c => { t += c; });
+      r.on('end', () => { try { const j = JSON.parse(t); resolve(j && j.ok ? (j.texto || '') : ''); } catch (_) { resolve(''); } });
+    });
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.on('error', () => resolve(''));
+    req.end(corpo);
+  });
+}
+
 // -------------- helpers --------------
 
 function getTenantForIgUserId(igUserId) {
@@ -92,7 +114,7 @@ function getHistory(contactId, limit = HISTORY_LIMIT) {
   return rows.reverse();
 }
 
-function runClaude(agent, userText, history, threadCtx) {
+function runClaude(agent, userText, history, threadCtx, base) {
   return new Promise((resolve) => {
     const model = agent.model || 'claude-opus-4-7';
     const systemNotes = [
@@ -106,12 +128,14 @@ function runClaude(agent, userText, history, threadCtx) {
     const prompt = [
       persona ? persona + '\n\n' : '',
       systemNotes,
+      base ? `\n\n${base}\nUse esses trechos como fonte para responder quando forem relevantes. Se a resposta não estiver neles, não invente: diga que vai confirmar a informação.` : '',
       convo ? `\n\nHistórico recente da conversa:\n${convo}` : '',
       `\n\nNova mensagem do usuário: ${userText}`,
       `\n\nSua resposta:`,
     ].join('');
 
-    const args = ['-p', prompt, '--model', model, '--strict-mcp-config', '--output-format', 'text'];
+    // Sem ferramenta nenhuma: o texto da DM vem de qualquer pessoa e as permissões globais do servidor liberam Bash/Write/WebFetch
+    const args = ['-p', prompt, '--model', model, '--strict-mcp-config', '--tools', '', '--output-format', 'text'];
     const started = Date.now();
     let stdout = '';
     let stderr = '';
@@ -228,9 +252,13 @@ async function processBatch(events) {
   const history = getHistory(contactId, HISTORY_LIMIT + events.length).slice(0, -events.length);
   const contact = db.prepare('SELECT ig_username FROM contacts WHERE id=?').get(contactId);
 
+  // RAG: trechos da base de conhecimento do agente para esta mensagem (com as 2 últimas do usuário de contexto)
+  const consulta = history.filter(m => m.direction === 'in').slice(-2).map(m => m.text || '').concat(messageBlock).join('\n');
+  const base = await buscarBase(agent.id, consulta);
+  if (base) console.log(`[dispatcher] agente ${agent.id}: base de conhecimento com ${(base.match(/^--- \[/gm) || []).length} trecho(s)`);
   const result = await runClaude(agent, messageBlock, history, {
     username: contact?.ig_username, senderId,
-  });
+  }, base);
 
   const status = result.code === 0 ? 'done' : (result.code === 124 ? 'timeout' : 'error');
   db.prepare(`UPDATE agent_runs SET status=?, output_text=?, stdout=?, stderr=?, duration_ms=?, finished_at=datetime('now') WHERE id=?`)
@@ -306,9 +334,18 @@ async function tick() {
   }
 }
 
+// Fluxos de conversa (src/flows.js) rodam antes dos agentes: o evento que um fluxo pega já sai processado
+const flows = require('./flows');
+flows.init(workerDb);
+// Ecos (o que a conta manda pelo app do Instagram) e mídias recebidas entram no histórico do Direct (src/ecos.js)
+const ecos = require('./ecos');
+ecos.init(workerDb);
+
 async function loop() {
   console.log(`[dispatcher] started (worker=${WORKER_DB_PATH}, aggregate=${AGGREGATE_WINDOW_SEC}s)`);
   while (true) {
+    try { ecos.tick({ getTenantForIgUserId, upsertContact, upsertThread }); } catch (e) { console.error('[dispatcher] ecos error:', e.message); }
+    try { await flows.tick({ getTenantForIgUserId, upsertContact, upsertThread }); } catch (e) { console.error('[dispatcher] flows error:', e.message); }
     try { await tick(); } catch (e) { console.error('[dispatcher] tick error:', e.message); }
     await new Promise(r => setTimeout(r, POLL_MS));
   }
@@ -318,4 +355,4 @@ if (require.main === module) {
   loop();
 }
 
-module.exports = { processBatch, tick, resolveAgent };
+module.exports = { processBatch, tick, resolveAgent, getTenantForIgUserId, upsertContact, upsertThread };

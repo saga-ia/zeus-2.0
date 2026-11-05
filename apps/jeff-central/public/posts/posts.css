@@ -144,6 +144,7 @@ table.tb tbody tr.click{cursor:pointer} table.tb tbody tr.click:hover{background
 .ev.s-published{background:var(--green-bg);border-left-color:var(--green);color:#0B5C4E}
 .ev.s-failed{background:var(--red-bg);border-left-color:var(--red);color:#96280F}
 .ev.s-publishing{background:var(--blue-bg);border-left-color:var(--blue);color:#1B4499}
+.ev.s-blocked{background:#F3EDFF;border-left-color:#8B5CF6;color:#5B21B6}
 .ev.s-paused,.ev.s-draft{background:var(--soft);border-left-color:#B4B4BC;color:var(--mute)}
 .more{font-size:11px;color:var(--mute);padding:1px 6px;font-weight:600}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute)}
@@ -167,3 +168,25 @@ table.tb tbody tr.click{cursor:pointer} table.tb tbody tr.click:hover{background
 .cols-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .cols-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:900px){.two,.cols-2,.cols-3{grid-template-columns:minmax(0,1fr)}.page{padding:20px 16px 60px}.cal-cell{min-height:74px;padding:4px}.ev span{display:none}}
+
+/* ─── Galeria de artes (Calendário > Galeria) ────────────────────────────────
+   Nasceu porque no modo Mês só dava para ver hora e conta: para conferir as
+   artes do mês era preciso abrir post por post. */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px}
+.gcard{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.gcard:hover{border-color:#CFCFD6;box-shadow:0 8px 22px rgba(23,23,26,0.08);transform:translateY(-2px)}
+.gart{position:relative;aspect-ratio:4/5;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.gart img,.gart video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.gart .semarte{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--faint);font-size:11px}
+.gqtd{position:absolute;left:7px;bottom:7px;background:rgba(23,23,26,0.78);color:#fff;font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:20px;backdrop-filter:blur(2px)}
+.gstatus{position:absolute;top:7px;right:7px;width:10px;height:10px;border-radius:50%;background:var(--mute);box-shadow:0 0 0 2px #fff}
+.gstatus.s-scheduled{background:var(--amber)} .gstatus.s-published{background:var(--green)}
+.gstatus.s-failed{background:var(--red)} .gstatus.s-blocked{background:#8B5CF6}
+.gfoot{padding:9px 11px 11px;border-top:1px solid var(--soft)}
+/* lâminas do carrossel dentro do modal */
+.laminas{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:16px}
+.lam{position:relative;display:block;border:1px solid var(--line);border-radius:9px;overflow:hidden;aspect-ratio:4/5;background:var(--soft)}
+.lam img{width:100%;height:100%;object-fit:cover;display:block}
+.lam b{position:absolute;left:5px;top:5px;background:rgba(23,23,26,0.78);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px}
+.thumb .qtd{position:absolute;right:1px;bottom:1px;background:rgba(23,23,26,0.8);color:#fff;font-size:9px;font-weight:700;padding:0 4px;border-radius:5px}
+.thumb{position:relative}

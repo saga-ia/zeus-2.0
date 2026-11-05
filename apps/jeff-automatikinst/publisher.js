@@ -63,6 +63,25 @@ async function publishPost(post, db) {
   return results;
 }
 
+// media_publish com novas tentativas (2026-10-05): a Meta às vezes responde "Media ID is not available" mesmo com o
+// container pronto (a mídia ainda não propagou do lado dela). Antes o post falhava na primeira recusa e não saía;
+// agora espera 8 s, 20 s e 45 s e tenta de novo antes de desistir. Erro definitivo (token, permissão) não repete.
+const ERRO_PASSAGEIRO = /Media ID is not available|not ready|try again|temporar|unexpected error|9007|2207027|2207001|\b(500|502|503)\b/i;
+async function publicarContainer(igId, containerId, token) {
+  const esperas = [8000, 20000, 45000];
+  for (let tentativa = 0; ; tentativa++) {
+    try {
+      return await axios.post(`https://graph.facebook.com/v19.0/${igId}/media_publish`, { creation_id: containerId, access_token: token });
+    } catch (e) {
+      const d = e.response && e.response.data && e.response.data.error;
+      const msg = [d && d.message, d && d.code, d && d.error_subcode, e.response && e.response.status, e.message].filter(Boolean).join(' ');
+      if (tentativa >= esperas.length || !ERRO_PASSAGEIRO.test(msg)) throw e;
+      console.warn(`[publisher] media_publish recusado (${(d && d.message) || e.message}); nova tentativa ${tentativa + 1}/${esperas.length} em ${esperas[tentativa] / 1000}s`);
+      await new Promise(r => setTimeout(r, esperas[tentativa]));
+    }
+  }
+}
+
 async function publishInstagram(post, account) {
   const igId = account.ig_business_id;
   const token = account.access_token;
@@ -80,11 +99,8 @@ async function publishInstagram(post, account) {
       : { media_type: 'STORIES', image_url: mediaUrl, access_token: token };
     const uploadRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media`, params);
     const containerId = uploadRes.data.id;
-    // vídeo precisa terminar o processamento; imagem publica direto
-    if (isVideo) await waitForContainer(containerId, token);
-    const publishRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media_publish`, {
-      creation_id: containerId, access_token: token
-    });
+    await waitForContainer(containerId, token);
+    const publishRes = await publicarContainer(igId, containerId, token);
     return publishRes.data.id;
   }
 
@@ -101,7 +117,7 @@ async function publishInstagram(post, account) {
         : { image_url: url, is_carousel_item: true, access_token: token };
       const r = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media`, params);
       const cid = r.data.id;
-      if (isVideo) await waitForContainer(cid, token);
+      await waitForContainer(cid, token);
       childIds.push(cid);
     }
     const carouselRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media`, {
@@ -109,9 +125,7 @@ async function publishInstagram(post, account) {
     });
     const containerId = carouselRes.data.id;
     await waitForContainer(containerId, token);
-    const publishRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media_publish`, {
-      creation_id: containerId, access_token: token
-    });
+    const publishRes = await publicarContainer(igId, containerId, token);
     return publishRes.data.id;
   }
 
@@ -124,18 +138,15 @@ async function publishInstagram(post, account) {
     });
     const containerId = uploadRes.data.id;
     await waitForContainer(containerId, token);
-    const publishRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media_publish`, {
-      creation_id: containerId, access_token: token
-    });
+    const publishRes = await publicarContainer(igId, containerId, token);
     return publishRes.data.id;
   } else {
     const uploadRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media`, {
       image_url: mediaUrl, caption: post.caption, access_token: token
     });
     const containerId = uploadRes.data.id;
-    const publishRes = await axios.post(`https://graph.facebook.com/v19.0/${igId}/media_publish`, {
-      creation_id: containerId, access_token: token
-    });
+    await waitForContainer(containerId, token);
+    const publishRes = await publicarContainer(igId, containerId, token);
     return publishRes.data.id;
   }
 }

@@ -1,0 +1,418 @@
+#!/usr/bin/env node
+// CLI do agente "Edição de Vídeo" (aba Edição de Vídeo da Central). Roda dentro da pasta da conversa
+// (data/zeus-workdir/<sessão>) e trabalha com os vídeos que a pessoa subiu (data/uploads/<sessão>/).
+// info, quadros espalhados pelo vídeo inteiro, transcrição com tempo de cada fala (Groq, em partes se for longa),
+// e entrega do arquivo final como link que toca no chat: /api/chat/file/<sessão>/<arquivo>.
+// Uso: video ajuda
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const { spawnSync } = require('child_process');
+
+const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, '..', 'data');
+const UPLOADS_ROOT = path.join(DATA_DIR, 'uploads');
+const WORKDIR_ROOT = path.join(DATA_DIR, 'zeus-workdir');
+const FFMPEG = process.env.FFMPEG_BIN || 'ffmpeg';
+const FFPROBE = process.env.FFPROBE_BIN || 'ffprobe';
+const GROQ_MAX = 24 * 1024 * 1024; // limite da API é 25 MB por arquivo de áudio
+// Remotion: o servidor é Debian 11 (glibc 2.31) e o compositor exige 2.35, então o render roda na imagem jeff-remotion
+// (Debian 12, /opt/jeff-apps/jeff-video/docker) com o estúdio montado em /estudio.
+const ESTUDIO = process.env.VIDEO_ESTUDIO || '/opt/jeff-apps/jeff-video/estudio';
+const IMAGEM = process.env.VIDEO_IMAGEM || 'jeff-remotion:1';
+const ESPERA_MS = 9 * 60 * 1000; // o Bash do agente corta em 10 min
+
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] };
+for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) { const k = a.slice(2), v = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; o[k] = k in o ? [].concat(o[k], v) : v; } else o._.push(a); }
+const lista = (v) => (v === undefined || v === true ? [] : [].concat(v)).filter(x => typeof x === 'string');
+
+const AJUDA = `Comandos (rode na pasta da conversa; <arquivo> = caminho do vídeo, ex: o anexo em ${UPLOADS_ROOT}/<sessão>/):
+  videos                          lista os vídeos e áudios que a pessoa subiu nesta conversa (caminho, tamanho, duração)
+  info <arquivo>                  duração, resolução, fps, tamanho, áudio
+  quadros <arquivo> [--n 12]      N quadros espalhados pelo vídeo inteiro + uma folha com todos (abra com Read)
+  transcrever <arquivo>           transcrição com o tempo de cada palavra: transcricao-<nome>.json/.srt/.txt ([mm:ss])
+  entregar <arquivo> [--nome x]   copia o resultado pra conversa e imprime a linha pra colar na resposta (o vídeo toca no chat)
+
+EDIÇÃO (Remotion, estúdio ${ESTUDIO}; o visual vem pronto de lib/edicao.tsx, você só configura o props.json):
+  projeto <slug> --video <a> [--video <b> ...]
+                                  cria projetos/<slug>/ e põe cada vídeo em public/<slug>/video1.mp4, video2.mp4...
+                                  (fonte 4K, girada, HEVC ou fps variável vira uma cópia leve automática: render mais rápido)
+  montar <slug> [--pausa 0.35] [--inteiro] [--ruido -35]
+                                  lê as transcrições (rode "transcrever" antes em cada vídeo) e escreve no props.json
+                                  os clipes SEM pausas e respirações + as palavras pra legenda. Lista cada clipe com o texto
+                                  e marca "REPETE" onde a pessoa refez a frase: apague o clipe errado do props.json.
+                                  --inteiro: um clipe por vídeo, sem cortar nada (só legenda e efeitos).
+  previa <slug> [--quadro 60 | --tempo 3.2]   1 quadro PNG pra conferir (abra com Read)
+  render <slug> [--trecho 4-12] [--rascunho] [--nome x]
+                                  renderiza no contêiner, normaliza o áudio (-14 LUFS) e entrega no chat.
+                                  --trecho 4-12 = só esse intervalo (segundos do vídeo final): a AMOSTRA de ~8 s.
+                                  --rascunho = metade da resolução. ~10 s de render por segundo de vídeo em 1080x1920 (servidor compartilhado).
+                                  Passou de 9 min: devolve um ID.
+  aguardar <ID>                   continua esperando um render (e entrega quando acabar). Chame de novo até terminar.
+  revisar <arquivo.mp4>           QA antes de entregar: folha de quadros (abra com Read), volume em LUFS,
+                                  trechos pretos ou congelados, duração e formato.
+  ajuda                           esta tela
+Corte simples, junção, velocidade, compressão: ffmpeg direto. Comando que pode passar de 8 min: rode em segundo plano.`;
+
+function sessao() { const cwd = process.cwd(); return path.dirname(cwd) === WORKDIR_ROOT ? path.basename(cwd) : null; }
+const run = (bin, args) => { const r = spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }); if (r.status !== 0) throw new Error(`${path.basename(bin)}: ${(r.stderr || '').trim().split('\n').slice(-3).join(' ')}`); return r.stdout; };
+const base = (f) => path.basename(f).replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '-').slice(0, 40) || 'video';
+const mmss = (s) => { s = Math.max(0, s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = Math.floor(s % 60); return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(x).padStart(2, '0'); };
+const srtT = (s) => { const ms = Math.round(s * 1000); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, x = Math.floor(ms / 1000) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}`; };
+const mb = (n) => (n / 1048576).toFixed(1) + ' MB';
+
+function arquivo() {
+  const f = o._[0]; if (!f) throw new Error('informe o arquivo');
+  const p = path.resolve(f); if (!fs.existsSync(p)) throw new Error('arquivo não encontrado: ' + p);
+  return p;
+}
+
+function probe(p) {
+  const j = JSON.parse(run(FFPROBE, ['-v', 'error', '-print_format', 'json', '-show_format', '-show_streams', p]));
+  const v = (j.streams || []).find(s => s.codec_type === 'video'), a = (j.streams || []).find(s => s.codec_type === 'audio');
+  const fr = v && v.avg_frame_rate && v.avg_frame_rate.includes('/') ? (([n, d]) => d ? n / d : 0)(v.avg_frame_rate.split('/').map(Number)) : 0;
+  // vídeo de celular gravado em pé vem com rotação: a largura e a altura que valem são as giradas
+  const rot = v ? Math.abs(Number((v.tags && v.tags.rotate) || ((v.side_data_list || []).find(x => x.rotation !== undefined) || {}).rotation || 0)) : 0;
+  const [w, h] = v ? (rot === 90 || rot === 270 ? [v.height, v.width] : [v.width, v.height]) : [0, 0];
+  const rfr = v && v.r_frame_rate && v.r_frame_rate.includes('/') ? (([n, d]) => d ? n / d : 0)(v.r_frame_rate.split('/').map(Number)) : fr;
+  return { duracao: +(+j.format.duration || 0).toFixed(2), tamanho: +j.format.size || fs.statSync(p).size, largura: w, altura: h, fps: +fr.toFixed(2), rfps: +rfr.toFixed(2), rot, pixFmt: v && v.pix_fmt, temAudio: !!a, videoCodec: v && v.codec_name, audio: a ? `${a.codec_name} ${a.channels}ch ${a.sample_rate} Hz` : 'sem áudio' };
+}
+
+function info() {
+  const p = arquivo(), i = probe(p);
+  console.log(`${p}\nduração ${mmss(i.duracao)} (${i.duracao} s) · ${i.largura}x${i.altura}${i.altura > i.largura ? ' (vertical)' : ''} · ${i.fps} fps · ${i.videoCodec || 'sem vídeo'} · ${i.audio} · ${mb(i.tamanho)}`);
+}
+
+function videos() {
+  const sid = sessao(); if (!sid) throw new Error('rode dentro da pasta da conversa (data/zeus-workdir/<sessão>)');
+  const dir = path.join(UPLOADS_ROOT, sid);
+  const l = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /\.(mp4|mov|m4v|webm|mkv|avi|mp3|m4a|wav|ogg|aac)$/i.test(f) && !/\.audio\.m4a$/.test(f)) : [];
+  if (!l.length) return console.log('Nenhum vídeo ou áudio nesta conversa ainda.');
+  for (const f of l) { const p = path.join(dir, f); try { const i = probe(p); console.log(`${p}  ·  ${mmss(i.duracao)}  ·  ${i.largura ? i.largura + 'x' + i.altura + '  ·  ' : ''}${mb(i.tamanho)}`); } catch (_) { console.log(p); } }
+}
+
+function quadros() {
+  const p = arquivo(), i = probe(p), n = Math.max(2, Math.min(40, parseInt(o.n || 12, 10)));
+  const dir = path.resolve(`quadros-${base(p)}`); fs.mkdirSync(dir, { recursive: true });
+  const lista = [];
+  for (let k = 0; k < n; k++) {
+    const t = i.duracao * (k + 0.5) / n, out = path.join(dir, `q${String(k + 1).padStart(2, '0')}-${mmss(t).replace(/:/g, 'm')}s.jpg`);
+    run(FFMPEG, ['-y', '-v', 'error', '-ss', String(t.toFixed(2)), '-i', p, '-frames:v', '1', '-vf', 'scale=480:-2', out]);
+    lista.push([t, out]);
+  }
+  // folha: todos os quadros numa imagem só, com o tempo de cada um embaixo (PIL; o ffmpeg do servidor não tem drawtext)
+  const cols = n <= 6 ? n : n <= 12 ? 4 : 6, folha = path.join(dir, 'folha.jpg');
+  const py = `import sys, json
+from PIL import Image, ImageDraw, ImageFont
+itens, cols, out = json.loads(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+ims = [Image.open(f).convert("RGB") for _, f in itens]
+W = 360; ims = [im.resize((W, round(im.height * W / im.width))) for im in ims]
+H = max(im.height for im in ims) + 34; rows = -(-len(ims) // cols)
+fol = Image.new("RGB", (cols * W, rows * H), "black"); d = ImageDraw.Draw(fol)
+try: fonte = ImageFont.truetype("DejaVuSans-Bold.ttf", 22)
+except Exception: fonte = ImageFont.load_default()
+for k, (im, (t, _)) in enumerate(zip(ims, itens)):
+    x, y = (k % cols) * W, (k // cols) * H
+    fol.paste(im, (x, y)); d.text((x + 8, y + im.height + 5), t, fill="white", font=fonte)
+fol.save(out, quality=85)`;
+  const r = spawnSync('python3', ['-I', '-c', py, JSON.stringify(lista.map(([t, f]) => [mmss(t), f])), String(cols), folha], { encoding: 'utf8' });
+  if (r.status !== 0) console.log('(folha não gerada: ' + (r.stderr || '').trim().split('\n').pop() + ')');
+  console.log(`${n} quadros de ${mmss(i.duracao)} em ${dir}`);
+  if (fs.existsSync(folha)) console.log(`folha com todos: ${folha}  (abra com Read)`);
+  lista.forEach(([t, f]) => console.log(`${mmss(t)}  ${f}`));
+}
+
+function chaveGroq() {
+  try { const D = require(path.join(__dirname, '..', 'node_modules', 'better-sqlite3')); const w = new D(process.env.WORKER_DB_PATH || '/opt/jeff-worker/data/worker.db', { readonly: true, fileMustExist: true }); const r = w.prepare(`SELECT value FROM app_settings WHERE key='groq_api_key'`).get(); w.close(); if (r && r.value) return r.value; } catch (_) {}
+  try { const m = fs.readFileSync(process.env.WORKER_ENV_PATH || '/opt/jeff-worker/.env', 'utf8').match(/^\s*GROQ_API_KEY\s*=\s*(.+?)\s*$/m); if (m) return m[1].replace(/^['"]|['"]$/g, ''); } catch (_) {}
+  return null;
+}
+
+function groq(audio, key) {
+  const FormData = require(path.join(__dirname, '..', 'node_modules', 'form-data'));
+  const form = new FormData();
+  form.append('file', fs.createReadStream(audio));
+  form.append('model', 'whisper-large-v3-turbo');
+  form.append('response_format', 'verbose_json');
+  form.append('timestamp_granularities[]', 'segment');
+  form.append('timestamp_granularities[]', 'word');
+  form.append('language', o.idioma || 'pt');
+  const headers = form.getHeaders(); headers.Authorization = 'Bearer ' + key;
+  return new Promise((ok, falha) => {
+    const req = https.request({ method: 'POST', hostname: 'api.groq.com', path: '/openai/v1/audio/transcriptions', headers, timeout: 600000 }, (res) => {
+      let b = ''; res.on('data', d => b += d);
+      res.on('end', () => { try { const j = JSON.parse(b); if (res.statusCode >= 300) return falha(new Error('groq: ' + ((j.error && j.error.message) || b.slice(0, 200)))); ok(j); } catch (e) { falha(e); } });
+    });
+    req.on('error', falha); req.on('timeout', () => req.destroy(new Error('groq: tempo esgotado')));
+    form.pipe(req);
+  });
+}
+
+async function transcrever() {
+  const p = arquivo(), i = probe(p), key = chaveGroq();
+  if (!key) throw new Error('groq_api_key não configurada (Configurações > Chaves)');
+  const nome = base(p), tmp = path.resolve(`.transcricao-${nome}`); fs.mkdirSync(tmp, { recursive: true });
+  // áudio mono 16 kHz em ~32 kbps: 1 hora dá uns 14 MB. Mais que o limite da API: corta em partes de 20 min.
+  const audio = path.join(tmp, 'audio.m4a');
+  run(FFMPEG, ['-y', '-v', 'error', '-i', p, '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'aac', '-b:a', '32k', audio]);
+  let partes = [[audio, 0]];
+  if (fs.statSync(audio).size > GROQ_MAX) {
+    const PARTE = 1200; partes = [];
+    for (let ini = 0, k = 0; ini < i.duracao; ini += PARTE, k++) {
+      const f = path.join(tmp, `parte${k}.m4a`);
+      run(FFMPEG, ['-y', '-v', 'error', '-ss', String(ini), '-t', String(PARTE), '-i', audio, '-c', 'copy', f]);
+      partes.push([f, ini]);
+    }
+  }
+  const segmentos = [], palavras = [];
+  for (const [f, ini] of partes) {
+    process.stdout.write(`transcrevendo ${partes.length > 1 ? 'parte a partir de ' + mmss(ini) : mmss(i.duracao) + ' de áudio'}...\n`);
+    const j = await groq(f, key);
+    (j.segments || []).forEach(s => segmentos.push({ inicio: +(s.start + ini).toFixed(2), fim: +(s.end + ini).toFixed(2), texto: String(s.text || '').trim() }));
+    (j.words || []).forEach(w => palavras.push({ inicio: +(w.start + ini).toFixed(2), fim: +(w.end + ini).toFixed(2), palavra: String(w.word || '').trim() }));
+  }
+  const out = path.resolve(`transcricao-${nome}`);
+  fs.writeFileSync(out + '.json', JSON.stringify({ arquivo: p, duracao: i.duracao, segmentos, palavras }, null, 1));
+  fs.writeFileSync(out + '.srt', segmentos.map((s, k) => `${k + 1}\n${srtT(s.inicio)} --> ${srtT(s.fim)}\n${s.texto}\n`).join('\n'));
+  fs.writeFileSync(out + '.txt', segmentos.map(s => `[${mmss(s.inicio)}] ${s.texto}`).join('\n'));
+  fs.rmSync(tmp, { recursive: true, force: true });
+  console.log(`${segmentos.length} trechos, ${palavras.length} palavras com tempo.\n${out}.txt  (leia este pra achar os cortes)\n${out}.srt\n${out}.json  (segmentos e palavras pro Remotion)`);
+}
+
+function entregar() {
+  const p = arquivo(), sid = sessao();
+  if (!sid) throw new Error('rode dentro da pasta da conversa (data/zeus-workdir/<sessão>) pra entregar no chat');
+  const ext = path.extname(p).toLowerCase() || '.mp4';
+  const nome = (o.nome ? String(o.nome).replace(/[^\w-]+/g, '-').slice(0, 50) : base(p)) + '-' + Date.now().toString(36) + ext;
+  const dir = path.join(UPLOADS_ROOT, sid); fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(p, path.join(dir, nome));
+  let det = ''; try { const i = probe(p); det = ` (${mmss(i.duracao)}, ${i.largura}x${i.altura}, ${mb(i.tamanho)})`; } catch (_) {}
+  console.log(`Entregue${det}. Cole na resposta:\n![${base(p)}](/api/chat/file/${sid}/${nome})\n[Baixar o vídeo](/api/chat/file/${sid}/${nome})`);
+}
+
+
+// ─── Remotion ────────────────────────────────────────────────────────────────
+const slugOk = (x) => { const v = String(x || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); if (!v || v === '_modelo') throw new Error('informe o slug do projeto (letras, números e hífen)'); return v; };
+const docker = (args) => spawnSync('docker', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const dockerBase = (slug) => ['-v', `${ESTUDIO}:/estudio`, '-w', '/estudio', '-e', 'NPM_CONFIG_UPDATE_NOTIFIER=false', IMAGEM, 'npx', 'remotion'];
+
+// Fonte pesada deixa o render lento (o Remotion decodifica cada quadro): 4K, HEVC, girada, 10 bits ou fps variável
+// vira uma cópia H.264 30 fps. Vertical fica com o lado curto em 1080; horizontal guarda até 2160 de altura pro recorte 9:16.
+function prepararFonte(src, dest) {
+  const i = probe(src), vertical = i.altura >= i.largura, curto = Math.min(i.largura, i.altura), teto = vertical ? 1080 : 2160;
+  const vfr = i.rfps && i.fps && Math.abs(i.rfps - i.fps) > 0.5;
+  const ok = i.videoCodec === 'h264' && i.pixFmt === 'yuv420p' && !i.rot && curto <= teto && i.fps <= 31 && !vfr;
+  fs.rmSync(dest, { force: true });
+  if (ok) { try { fs.linkSync(src, dest); } catch (_) { fs.copyFileSync(src, dest); } return { i, leve: false }; }
+  const escala = curto > teto ? (vertical ? ['-vf', `scale=${teto}:-2`] : ['-vf', `scale=-2:${teto}`]) : [];
+  process.stdout.write(`preparando cópia leve de ${path.basename(src)} (${i.largura}x${i.altura} ${i.videoCodec}${vfr ? ' fps variável' : ''})...\n`);
+  run(FFMPEG, ['-y', '-v', 'error', '-i', src, ...escala, '-r', '30', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', '-pix_fmt', 'yuv420p',
+    ...(i.temAudio ? ['-c:a', 'aac', '-b:a', '192k', '-ar', '48000'] : ['-an']), '-movflags', '+faststart', dest]);
+  return { i: probe(dest), leve: true };
+}
+
+function projeto() {
+  const slug = slugOk(o._[0]), dir = path.join(ESTUDIO, 'projetos', slug), pub = path.join(ESTUDIO, 'public', slug);
+  if (!fs.existsSync(dir)) fs.cpSync(path.join(ESTUDIO, 'projetos', '_modelo'), dir, { recursive: true });
+  fs.mkdirSync(pub, { recursive: true });
+  const fArq = path.join(dir, 'fontes.json');
+  const fontes = fs.existsSync(fArq) ? JSON.parse(fs.readFileSync(fArq, 'utf8')) : {};
+  for (const v of lista(o.video)) {
+    const src = path.resolve(v); if (!fs.existsSync(src)) throw new Error('vídeo não encontrado: ' + src);
+    let nome = Object.keys(fontes).find(k => fontes[k] === src);
+    if (!nome) { let n = 1; while (fontes['video' + n + '.mp4']) n++; nome = 'video' + n + '.mp4'; }
+    const r = prepararFonte(src, path.join(pub, nome));
+    fontes[nome] = src;
+    console.log(`${nome} <- ${src} (${mmss(r.i.duracao)}, ${r.i.largura}x${r.i.altura}, ${r.i.fps} fps${r.leve ? ', cópia leve' : ''})`);
+  }
+  fs.writeFileSync(fArq, JSON.stringify(fontes, null, 1));
+  console.log(`projeto: ${dir}
+  Próximo: "video transcrever <arquivo>" em cada vídeo (se ainda não fez) e "video montar ${slug}".
+  Depois ajuste o props.json (destaques, impactos, zooms, gancho, cta) e confira com "video previa ${slug} --tempo X".`);
+}
+
+// Silêncios reais do áudio (ffmpeg silencedetect): o Whisper costuma esticar o fim da palavra por cima da pausa.
+// Limiar relativo ao volume médio da própria gravação (uma fixa em -35 dB não acha pausa em áudio com ruído de sala).
+function silencios(p) {
+  let n = parseFloat(o.ruido);
+  if (isNaN(n)) {
+    const v = spawnSync(FFMPEG, ['-hide_banner', '-nostats', '-i', p, '-vn', '-af', 'volumedetect', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const m = (v.stderr || '').match(/mean_volume: (-?[\d.]+) dB/);
+    n = m ? Math.max(-50, Math.min(-22, +m[1] - 14)) : -35;
+  }
+  const r = spawnSync(FFMPEG, ['-hide_banner', '-nostats', '-i', p, '-vn', '-af', `silencedetect=n=${n}dB:d=0.12`, '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const out = [], txt = r.stderr || '';
+  let ini = null;
+  for (const l of txt.split('\n')) {
+    let m = l.match(/silence_start: (-?[\d.]+)/); if (m) ini = Math.max(0, +m[1]);
+    m = l.match(/silence_end: ([\d.]+)/); if (m && ini !== null) { out.push([ini, +m[1]]); ini = null; }
+  }
+  return out;
+}
+
+const normT = (t) => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9%$]+/g, '');
+
+function montar() {
+  const slug = slugOk(o._[0]), dir = path.join(ESTUDIO, 'projetos', slug), pub = path.join(ESTUDIO, 'public', slug);
+  const fArq = path.join(dir, 'fontes.json');
+  if (!fs.existsSync(fArq)) throw new Error(`rode antes: video projeto ${slug} --video <arquivo>`);
+  const fontes = JSON.parse(fs.readFileSync(fArq, 'utf8'));
+  const pausa = parseFloat(o.pausa || 0.25), antes = parseFloat(o.antes || 0.08), depois = parseFloat(o.depois || 0.15);
+  const arqs = lista(o.transcricao).map(f => path.resolve(f));
+  const porVideo = {};
+  for (const [nome, orig] of Object.entries(fontes)) {
+    let t = arqs.find(f => { try { return path.resolve(JSON.parse(fs.readFileSync(f, 'utf8')).arquivo) === orig; } catch (_) { return false; } });
+    if (!t) { const c = path.resolve(`transcricao-${base(orig)}.json`); if (fs.existsSync(c)) t = c; }
+    if (!t) throw new Error(`falta a transcrição de ${nome} (${orig}): rode "video transcrever ${orig}"`);
+    porVideo[nome] = JSON.parse(fs.readFileSync(t, 'utf8'));
+  }
+  const palavras = {}, clipes = [], linhas = [];
+  let antesTotal = 0;
+  for (const [nome, j] of Object.entries(porVideo)) {
+    const dur = probe(path.join(pub, nome)).duracao; antesTotal += dur;
+    const ws = (j.palavras || []).map(w => ({ texto: w.palavra, inicio: w.inicio, fim: w.fim })).filter(w => w.texto);
+    palavras[nome] = ws;
+    if (o.inteiro || !ws.length) { clipes.push({ video: nome, de: 0, ate: dur }); linhas.push({ nome, de: 0, ate: dur, texto: ws.map(w => w.texto).join(' ') }); continue; }
+    const sil = silencios(path.join(pub, nome));
+    // borda real de cada palavra: corta o pedaço dela que cai dentro de um silêncio
+    const real = ws.map(w => {
+      let a = w.inicio, b = w.fim;
+      for (const [si, sf] of sil) {
+        if (si > a && si < b && sf >= b - 0.02) b = Math.max(a + 0.08, si);
+        if (si <= a && sf > a && sf < b) a = Math.min(b - 0.08, sf);
+      }
+      return { a, b };
+    });
+    // um clipe por frase: pausa maior que --pausa é cortada fora; fim de frase sem pausa vira corte "colado"
+    // (o próximo começa onde este termina, sem perder áudio), o que permite escolher frases e dá o ritmo do zoom alternado
+    const grupos = [];
+    ws.forEach((w, k) => {
+      const pausaReal = k && real[k].a - real[k - 1].b > pausa;
+      const fimFrase = k && /[.!?…]$/.test(ws[k - 1].texto) && real[k - 1].b - real[grupos[grupos.length - 1].ks[0]].a >= 1.2;
+      if (!k || pausaReal || fimFrase) grupos.push({ ks: [], colado: !!k && !pausaReal });
+      grupos[grupos.length - 1].ks.push(k);
+    });
+    const ultimo = (g) => g.ks[g.ks.length - 1];
+    grupos.forEach((g, gi) => {
+      const ant = grupos[gi - 1], prox = grupos[gi + 1];
+      const de = g.colado ? (real[ultimo(ant)].b + real[g.ks[0]].a) / 2 : Math.max(0, ant ? real[ultimo(ant)].b + 0.02 : 0, real[g.ks[0]].a - antes);
+      const ate = prox && prox.colado ? (real[ultimo(g)].b + real[prox.ks[0]].a) / 2 : Math.min(dur, prox ? real[prox.ks[0]].a - 0.02 : dur, real[ultimo(g)].b + depois);
+      if (ate - de < 0.12) return;
+      clipes.push({ video: nome, de: +de.toFixed(3), ate: +ate.toFixed(3) });
+      linhas.push({ nome, de, ate, texto: g.ks.map(k => ws[k].texto).join(' ') });
+    });
+  }
+  // provável take refeito: o clipe começa igual a um dos dois seguintes
+  const inicio = (t, n) => t.split(/\s+/).slice(0, n).map(normT).join(' ');
+  linhas.forEach((l, k) => {
+    for (const d of [1, 2]) {
+      const p = linhas[k + d]; if (!p) continue;
+      const n = Math.min(3, l.texto.split(/\s+/).length, p.texto.split(/\s+/).length);
+      if (n >= 2 && inicio(l.texto, n) === inicio(p.texto, n)) { l.aviso = `REPETE no #${k + d + 1}: fica com o melhor take (quase sempre o último)`; break; }
+    }
+  });
+  const pArq = path.join(dir, 'props.json');
+  const props = fs.existsSync(pArq) ? JSON.parse(fs.readFileSync(pArq, 'utf8')) : {};
+  props.clipes = clipes; props.palavras = palavras;
+  fs.writeFileSync(pArq, JSON.stringify(props, null, 1));
+  const total = clipes.reduce((s, c) => s + c.ate - c.de, 0);
+  linhas.forEach((l, k) => console.log(`#${k + 1}  ${l.nome}  ${l.de.toFixed(2)}-${l.ate.toFixed(2)} s  (${(l.ate - l.de).toFixed(1)} s)  "${l.texto}"${l.aviso ? '   <-- ' + l.aviso : ''}`));
+  console.log(`\n${clipes.length} clipes · ${mmss(antesTotal)} de gravação -> ${mmss(total)} (${total.toFixed(1)} s) depois de tirar pausas.
+props.json atualizado: ${pArq}
+Pra tirar um take ruim ou reordenar: apague ou mova o item em "clipes" (a legenda acompanha sozinha).`);
+}
+
+function propsDe(slug) {
+  const p = typeof o.props === 'string' ? path.resolve(o.props) : path.join(ESTUDIO, 'projetos', slug, 'props.json');
+  if (!fs.existsSync(p)) return [];
+  const dest = path.join(ESTUDIO, 'projetos', slug, 'props.json');
+  if (path.resolve(p) !== dest) fs.copyFileSync(p, dest);
+  return [`--props=projetos/${slug}/props.json`];
+}
+
+function previa() {
+  const slug = slugOk(o._[0]), q = o.tempo !== undefined ? Math.round(parseFloat(o.tempo) * 30) : parseInt(o.quadro || 60, 10);
+  const out = `saidas/${slug}-quadro${q}.png`; fs.mkdirSync(path.join(ESTUDIO, 'saidas'), { recursive: true });
+  const r = docker(['run', '--rm', ...dockerBase(slug), 'still', `projetos/${slug}/index.ts`, String(o.comp || 'Video'), out, `--public-dir=public/${slug}`, ...propsDe(slug), `--frame=${q}`, '--log=error']);
+  if (r.status !== 0) throw new Error((r.stdout + r.stderr).split('\n').filter(l => l.trim() && !/^\s+at /.test(l) && !/npm notice/.test(l)).slice(-12).join('\n'));
+  console.log(`prévia do quadro ${q}: ${path.join(ESTUDIO, out)}  (abra com Read)`);
+}
+
+const jobArq = (id) => path.join(ESTUDIO, 'saidas', `${id}.json`);
+function render() {
+  const slug = slugOk(o._[0]);
+  const id = `jv-${slug.slice(0, 24)}-${Date.now().toString(36)}`, out = `saidas/${id}.mp4`;
+  fs.mkdirSync(path.join(ESTUDIO, 'saidas'), { recursive: true });
+  const args = ['run', '-d', '--name', id, ...dockerBase(slug), 'render', `projetos/${slug}/index.ts`, String(o.comp || 'Video'), out, `--public-dir=public/${slug}`, ...propsDe(slug), '--log=info'];
+  if (o.rascunho) args.push('--scale=0.5');
+  args.push(`--concurrency=${o.concorrencia || 3}`, '--timeout=120000'); // servidor compartilhado: pico de CPU não pode derrubar o render
+  if (typeof o.trecho === 'string') {
+    const [a, b] = o.trecho.split('-').map(parseFloat);
+    if (!(b > a)) throw new Error('--trecho no formato inicio-fim em segundos, ex: 4-12');
+    args.push(`--frames=${Math.round(a * 30)}-${Math.round(b * 30) - 1}`);
+  }
+  const r = docker(args); if (r.status !== 0) throw new Error('docker: ' + (r.stderr || '').trim().slice(-400));
+  fs.writeFileSync(jobArq(id), JSON.stringify({ id, slug, out: path.join(ESTUDIO, out), sid: sessao(), nome: o.nome || slug, inicio: Date.now() }));
+  console.log(`render iniciado: ${id}`);
+  return esperar(id);
+}
+
+function esperar(id) {
+  const job = (() => { try { return JSON.parse(fs.readFileSync(jobArq(id), 'utf8')); } catch (_) { return null; } })();
+  if (!job) throw new Error('render não encontrado: ' + id);
+  const fim = Date.now() + ESPERA_MS;
+  let estado = '';
+  while (Date.now() < fim) {
+    estado = (docker(['inspect', '-f', '{{.State.Status}} {{.State.ExitCode}}', id]).stdout || '').trim();
+    if (!estado || estado.startsWith('exited') || estado.startsWith('dead')) break;
+    spawnSync('sleep', ['5']);
+  }
+  const log = (docker(['logs', '--tail', '40', id]).stdout || '') + (docker(['logs', '--tail', '40', id]).stderr || '');
+  if (estado.startsWith('running')) {
+    const ult = log.split('\n').filter(l => /Rendered|Encoded/.test(l)).pop() || '';
+    return console.log(`Ainda renderizando (${ult.trim() || 'em andamento'}). Avise a pessoa e rode de novo: video aguardar ${id}`);
+  }
+  docker(['rm', id]);
+  if (!estado.endsWith(' 0') || !fs.existsSync(job.out)) throw new Error('render falhou:\n' + log.split('\n').filter(l => l.trim() && !/^\s+at /.test(l) && !/npm notice/.test(l)).slice(-15).join('\n'));
+  if (!o['sem-loudnorm']) {
+    // voz na frente e no volume certo pro Reels: -14 LUFS, pico -1.5 dB (o vídeo não é recodificado)
+    const tmp = job.out.replace(/\.mp4$/, '.norm.mp4');
+    const r = spawnSync(FFMPEG, ['-y', '-v', 'error', '-i', job.out, '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp], { encoding: 'utf8' });
+    if (r.status === 0) fs.renameSync(tmp, job.out); else fs.rmSync(tmp, { force: true });
+  }
+  const seg = ((Date.now() - job.inicio) / 1000).toFixed(0);
+  console.log(`render pronto em ${seg} s: ${job.out}`);
+  if (sessao()) { o._ = [job.out]; o.nome = job.nome; entregar(); }
+  else console.log(`Pra mostrar no chat: video entregar ${job.out}`);
+}
+
+function revisar() {
+  const p = arquivo(), i = probe(p);
+  console.log(`${p}\n${mmss(i.duracao)} (${i.duracao} s) · ${i.largura}x${i.altura} · ${i.fps} fps · ${i.audio} · ${mb(i.tamanho)}`);
+  const r = spawnSync(FFMPEG, ['-hide_banner', '-nostats', '-i', p, '-af', 'ebur128=peak=true', '-vf', 'blackdetect=d=0.3:pix_th=0.08,freezedetect=n=0.002:d=1.5', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  const t = r.stderr || '';
+  const lufs = (t.match(/Integrated loudness:\s+I:\s+(-?[\d.]+) LUFS/) || [])[1], pico = (t.match(/True peak:\s+Peak:\s+(-?[\d.]+) dBFS/) || [])[1];
+  console.log(`áudio: ${lufs ? lufs + ' LUFS' : 'sem medida'}${pico ? ' · pico ' + pico + ' dBFS' : ''}${lufs && (+lufs < -17 || +lufs > -11) ? '  <-- fora do alvo -14' : ''}`);
+  const pretos = [...t.matchAll(/black_start:([\d.]+) black_end:([\d.]+)/g)].map(m => `${(+m[1]).toFixed(1)}-${(+m[2]).toFixed(1)} s`);
+  const cong = [...t.matchAll(/freeze_start: ([\d.]+)/g)].map(m => (+m[1]).toFixed(1) + ' s');
+  console.log(pretos.length ? `TELA PRETA em: ${pretos.join(', ')}` : 'sem tela preta');
+  console.log(cong.length ? `IMAGEM PARADA (1,5 s ou mais) a partir de: ${cong.join(', ')} (ok se for tela/print; ruim se for rosto)` : 'sem imagem congelada');
+  o.n = o.n || 12; quadros();
+}
+
+(async () => {
+  try {
+    if (cmd === 'info') info();
+    else if (cmd === 'videos') videos();
+    else if (cmd === 'quadros') quadros();
+    else if (cmd === 'transcrever') await transcrever();
+    else if (cmd === 'entregar') entregar();
+    else if (cmd === 'projeto') projeto();
+    else if (cmd === 'previa') previa();
+    else if (cmd === 'montar') montar();
+    else if (cmd === 'revisar') revisar();
+    else if (cmd === 'render') render();
+    else if (cmd === 'aguardar') esperar(String(o._[0] || ''));
+    else console.log(AJUDA);
+  } catch (e) { console.error('erro: ' + e.message); process.exit(1); }
+})();

@@ -65,6 +65,9 @@ CREATE INDEX IF NOT EXISTS idx_agent_files ON agent_files(agent_id, created_at);
   })();
 })();
 
+// Quem criou o agente próprio (e-mail): edita, exclui e sempre enxerga, mesmo com compartilhamento restrito
+if (!db.prepare(`PRAGMA table_info(agents)`).all().some(c => c.name === 'created_by')) db.exec(`ALTER TABLE agents ADD COLUMN created_by TEXT`);
+const acesso = require('./acesso');
 const stmt = {
   list: db.prepare(`SELECT a.*, (SELECT COUNT(*) FROM agent_files f WHERE f.agent_id = a.id) AS file_count
     FROM agents a ORDER BY a.kind = 'zeus', a.sort, a.created_at DESC`),
@@ -111,6 +114,8 @@ function shareSet(agentId, mode, users) {
 // user vem de req.user ({ email, role, admin }). Sem usuário (chamada interna) = acesso liberado.
 function canAccess(agentId, user) {
   if (!user || user.admin) return true;
+  const dono = db.prepare(`SELECT created_by FROM agents WHERE id = ?`).get(agentId);
+  if (dono && dono.created_by && user.email && dono.created_by === user.email) return true;
   const sh = shareGet(agentId);
   if (sh.mode !== 'pessoas') return true;
   if (!user.email) return false;
@@ -141,9 +146,13 @@ function shape(a) {
     warn: a.warn || null,
     model: a.model || '',
     inWorkspace: !!a.in_workspace,
-    panel: AGENT_PANELS[a.id] || null,
+    // Agente de design criado pela empresa (ex.: "designer farias souza") ganha as abas do Agente de Design:
+    // Criar post, Criações e Brand Kit
+    panel: AGENT_PANELS[a.id] || (a.kind === 'custom' && /design/i.test((a.name || '') + ' ' + (a.description || '')) ? AGENT_PANELS['agente-design'] : null),
     home: AGENT_HOME[a.id] || null,
     fileCount: a.file_count || 0,
+    canais: canaisDe(a.id),
+    createdBy: a.created_by || null,
     createdAt: a.created_at,
     updatedAt: a.updated_at,
   };
@@ -267,6 +276,53 @@ function buildAgentSystemPrompt(agentId) {
   return { text: out.join('\n'), model: a.model || '', name: a.name };
 }
 
+// ─── Prompt do agente pros canais (WhatsApp, Instagram) ───────────────────────
+// Quem escreve no canal é um cliente, não alguém da empresa, e o motor do canal roda sem ferramentas. Por isso vai
+// só a persona, os avisos e a base de conhecimento em texto (até o limite): sem habilidades (várias usam scripts do
+// servidor), sem caminhos de arquivo e sem os visuais da Central.
+function buildChannelPrompt(agentId, limite) {
+  const a = getAgent(agentId);
+  if (!a) return null;
+  limite = limite || 20000;
+  const out = [];
+  out.push((a.prompt || `Você é o agente "${a.name}". ${a.description}`).split(VIZ_RULE).join('').trim());
+  if (a.warn) { out.push(''); out.push('Aviso obrigatório quando o tema for sensível: ' + a.warn); }
+  const avisos = agentesCfg().avisos;
+  if (avisos.length) {
+    out.push('');
+    out.push('## Assuntos sensíveis (regra da empresa)');
+    avisos.forEach(v => out.push(`- Quando a conversa envolver "${v.assunto}": ${ACAO_AVISO[v.acao] || ACAO_AVISO.avisar}.${v.descricao ? ' Contexto: ' + v.descricao : ''}`));
+  }
+  let text = out.join('\n').slice(0, limite);
+  let truncado = false;
+  const rows = stmt.files.all(a.id).filter(f => fs.existsSync(path.join(agentDir(a.id), f.filename + '.txt')));
+  if (rows.length) {
+    const cab = '\n\n## Base de conhecimento\nUse estas informações para responder. Se a resposta não estiver aqui, não invente: diga que vai confirmar.';
+    let budget = limite - text.length - cab.length;
+    if (budget > 500) {
+      text += cab;
+      for (const f of rows) {
+        const titulo = `\n\n### ${f.originalname}\n`;
+        let body = fs.readFileSync(path.join(agentDir(a.id), f.filename + '.txt'), 'utf8');
+        if (budget - titulo.length < 200) { truncado = true; break; }
+        if (body.length > budget - titulo.length) { body = body.slice(0, budget - titulo.length); truncado = true; }
+        text += titulo + body;
+        budget -= titulo.length + body.length;
+      }
+    } else truncado = true;
+  }
+  return { text, name: a.name, model: a.model || '', truncado };
+}
+
+// Canais ligados a este agente: avisa o módulo de canais (que reenvia o prompt). Carregado na hora: canais.js usa este módulo.
+function canaisAvisar(id, removido) {
+  setImmediate(() => {
+    try { const c = require('./canais'); (removido ? c.agenteRemovido(id) : c.agenteMudou(id)).catch(e => console.error('[agents] canais', id, e.message)); }
+    catch (e) { console.error('[agents] canais', id, e.message); }
+  });
+}
+function canaisDe(id) { try { return require('./canais').resumo(id); } catch (_) { return []; } }
+
 // ─── Upload ───────────────────────────────────────────────────────────────────
 const upload = multer({
   storage: multer.diskStorage({
@@ -328,10 +384,17 @@ router.get('/:id/share', (req, res) => {
   res.json(Object.assign(shareGet(req.params.id), { pessoas: sharePessoas() }));
 });
 router.put('/:id/share', express.json(), (req, res) => {
-  if (!getAgent(req.params.id)) return res.status(404).json({ error: 'agente não encontrado' });
+  const cur = stmt.get.get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'agente não encontrado' });
+  const trava = travaEdicao(cur, req.user);
+  if (trava) return res.status(403).json({ error: trava });
   const b = req.body || {};
   if (b.mode === 'pessoas' && !(Array.isArray(b.users) && b.users.length)) return res.status(400).json({ error: 'escolha pelo menos uma pessoa' });
-  res.json(Object.assign(shareSet(req.params.id, b.mode, b.users), { pessoas: sharePessoas() }));
+  const antes = new Set(shareGet(req.params.id).users);
+  const r = shareSet(req.params.id, b.mode, b.users);
+  if (r.mode === 'pessoas') { const novos = sharePessoas().filter(p => r.users.includes(p.id) && !antes.has(p.id) && p.email).map(p => p.email);
+    require('./notificacoes').notificar({ para: novos, tipo: 'agente-compartilhado', titulo: `Agente compartilhado com você: ${cur.name}`, texto: `${req.user.name || req.user.email} liberou o acesso.`, link: '/agente/' + cur.id, exceto: req.user.email }); }
+  res.json(Object.assign(r, { pessoas: sharePessoas() }));
 });
 
 // ─── Criar com ZEUS: conversa que monta o agente, e "Enriquecer" do prompt ────
@@ -351,7 +414,7 @@ function claudeTexto(prompt, model) {
     const t = setTimeout(() => { try { p.kill('SIGTERM'); } catch (_) {} }, 150000);
     p.stdout.on('data', d => { out += d; });
     p.stderr.on('data', d => { err += d; });
-    p.on('close', code => { clearTimeout(t); if (!out.trim()) return reject(new Error(err.slice(-300) || 'claude saiu com código ' + code)); resolve(out); });
+    p.on('close', code => { clearTimeout(t); const ruim = claudeSpawn.checaSaida(out, err, code); if (ruim) return reject(new Error(ruim)); resolve(out); });
     p.on('error', e => { clearTimeout(t); reject(e); });
     p.stdin.on('error', () => {});
     p.stdin.end(prompt);
@@ -430,11 +493,20 @@ router.post('/assist', async (req, res) => {
   }
 });
 
+// Agente ZEUS: "Configurar Agentes ZEUS". Agente próprio: quem criou ou Proprietário/Admin.
+// Agentes antigos, sem autor registrado, foram criados pela administração: só admin edita.
+function travaEdicao(cur, user) {
+  if (!user || user.admin) return null;
+  if (cur.kind === 'zeus') return acesso.pode(user, 'editar-zeus') ? null : 'Seu perfil não pode configurar Agentes ZEUS. Peça a um administrador.';
+  return cur.created_by && user.email && cur.created_by === user.email ? null : 'Só quem criou este agente (ou um administrador) pode alterá-lo.';
+}
+
 router.post('/', (req, res) => {
   const o = cleanInput(req.body || {}, true);
   if (!o.name) return res.status(400).json({ error: 'nome obrigatório' });
   const id = slug(o.name) + '-' + newId().slice(0, 4).toLowerCase().replace(/[^a-z0-9]/g, 'x');
   stmt.ins.run(Object.assign({ id, now: Date.now() }, o));
+  db.prepare(`UPDATE agents SET created_by = ? WHERE id = ?`).run((req.user && req.user.email) || null, id);
   res.json({ agent: getAgent(id) });
 });
 
@@ -442,12 +514,20 @@ router.patch('/:id', (req, res) => {
   const cur = stmt.get.get(req.params.id);
   if (!cur) return res.status(404).json({ error: 'agente não encontrado' });
   const o = cleanInput(req.body || {}, false);
+  // Colocar/tirar do workspace segue a matriz; mudar o agente em si, a regra de autoria
+  const b = req.body || {};
+  if (b.inWorkspace !== undefined && !!b.inWorkspace !== !!cur.in_workspace) {
+    const perm = b.inWorkspace ? 'add-workspace' : 'rm-workspace';
+    if (!acesso.pode(req.user, perm)) return acesso.negar(res, req.user, perm);
+  }
+  if (Object.keys(o).length) { const trava = travaEdicao(cur, req.user); if (trava) return res.status(403).json({ error: trava }); }
   if (o.name === '') return res.status(400).json({ error: 'nome obrigatório' });
   if (req.body && req.body.inWorkspace !== undefined) o.in_workspace = req.body.inWorkspace ? 1 : 0;
   const keys = Object.keys(o);
   if (keys.length) {
     db.prepare(`UPDATE agents SET ${keys.map(k => k + ' = @' + k).join(', ')}, updated_at = @now WHERE id = @id`)
       .run(Object.assign({ id: cur.id, now: Date.now() }, o));
+    if (['name', 'prompt', 'model'].some(k => k in o)) canaisAvisar(cur.id);
   }
   res.json({ agent: getAgent(cur.id) });
 });
@@ -456,6 +536,9 @@ router.delete('/:id', (req, res) => {
   const cur = stmt.get.get(req.params.id);
   if (!cur) return res.status(404).json({ error: 'agente não encontrado' });
   if (cur.kind === 'zeus') return res.status(400).json({ error: 'Agentes ZEUS não podem ser excluídos, só removidos do workspace' });
+  const trava = travaEdicao(cur, req.user);
+  if (trava) return res.status(403).json({ error: trava });
+  canaisAvisar(cur.id, true);
   stmt.filesDelAll.run(cur.id);
   stmt.del.run(cur.id);
   const dir = agentDir(cur.id);
@@ -464,7 +547,10 @@ router.delete('/:id', (req, res) => {
 });
 
 router.post('/:id/files', (req, res, next) => {
-  if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'agente não encontrado' });
+  const cur = stmt.get.get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'agente não encontrado' });
+  const trava = travaEdicao(cur, req.user);
+  if (trava) return res.status(403).json({ error: trava });
   next();
 }, upload.array('files', 10), async (req, res) => {
   const out = [];
@@ -483,22 +569,28 @@ router.post('/:id/files', (req, res, next) => {
     stmt.fileIns.run(id, req.params.id, f.filename, f.originalname, f.mimetype, f.size, chars, Date.now());
     out.push(id);
   }
+  if (out.length) canaisAvisar(req.params.id);
   res.json({ ok: true, added: out.length, agent: getAgent(req.params.id) });
 });
 
 router.get('/:id/files/:fid', (req, res) => {
+  if (!canAccess(req.params.id, req.user)) return res.status(403).end();
   const f = stmt.fileGet.get(req.params.fid, req.params.id);
   if (!f) return res.status(404).end();
   res.download(path.join(agentDir(req.params.id), f.filename), f.originalname);
 });
 
 router.delete('/:id/files/:fid', (req, res) => {
+  const cur = stmt.get.get(req.params.id);
+  const trava = cur && travaEdicao(cur, req.user);
+  if (trava) return res.status(403).json({ error: trava });
   const f = stmt.fileGet.get(req.params.fid, req.params.id);
   if (!f) return res.status(404).json({ error: 'arquivo não encontrado' });
   stmt.fileDel.run(f.id);
   const p = path.join(agentDir(req.params.id), f.filename);
   for (const x of [p, p + '.txt']) if (fs.existsSync(x)) fs.rmSync(x, { force: true });
+  canaisAvisar(req.params.id);
   res.json({ ok: true, agent: getAgent(req.params.id) });
 });
 
-module.exports = { router, getAgent, buildAgentSystemPrompt, extractText, canAccess, shareGet };
+module.exports = { router, getAgent, buildAgentSystemPrompt, buildChannelPrompt, extractText, canAccess, shareGet };

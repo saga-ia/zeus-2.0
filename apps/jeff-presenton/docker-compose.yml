@@ -7,6 +7,7 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:5001:80"
+      - "172.17.0.1:5001:80"   # gateway do Docker: é por onde o Nginx Proxy Manager alcança o editor (apresentacoes.jefersonhenrike.com)
     volumes:
       - ./app_data:/app_data
     extra_hosts:

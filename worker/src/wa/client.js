@@ -24,6 +24,12 @@ const { resolvePhone } = require('./contact-resolver');
 const { transcribe } = require('../audio/transcribe');
 const apiReply = require('../agent/api-reply');
 
+// Alerta de queda pro Jeff e o Vinicius (scripts/wa-alerta.sh: tenta o Zeus e cai pro jeff-wa-relay; cooldown de 30 min)
+function alertarQueda(texto) {
+  try { require('node:child_process').execFile('bash', [path.join(__dirname, '..', '..', 'scripts', 'wa-alerta.sh'), 'zeus-logout', texto], { timeout: 60000 }, () => {}); }
+  catch (err) { logger.warn({ err }, 'alerta de queda falhou'); }
+}
+
 fs.mkdirSync(config.authPath, { recursive: true });
 fs.mkdirSync(config.mediaPath, { recursive: true });
 
@@ -348,6 +354,7 @@ function createWAManager({ onMessage, onStateChange }) {
     c.on('auth_failure', (msg) => {
       logger.error({ msg }, 'auth_failure');
       state.transition('auth_failure', { lastError: String(msg) });
+      alertarQueda('O WhatsApp do ZEUS perdeu a sessão (falha de autenticação). Precisa ler o QR de novo na Central › Conectores › WhatsApp.');
       scheduleReconnect('auth_failure');
     });
 
@@ -368,6 +375,9 @@ function createWAManager({ onMessage, onStateChange }) {
     c.on('disconnected', (reason) => {
       logger.warn({ reason }, 'client disconnected');
       state.transition('disconnected', { lastError: String(reason) });
+      // LOGOUT = o WhatsApp desvinculou o aparelho: a reconexão vai cair no QR. Avisa por fora (pelo relay se o Zeus
+      // estiver fora), porque o próprio Zeus não consegue mandar mensagem nesse estado.
+      if (/LOGOUT|UNPAIRED|CONFLICT/i.test(String(reason))) alertarQueda(`O WhatsApp do ZEUS foi desconectado pelo WhatsApp (${reason}). Precisa ler o QR de novo na Central › Conectores › WhatsApp. Se repetir, confira em Aparelhos conectados no celular do ZEUS se há aparelhos demais.`);
       scheduleReconnect('disconnected');
     });
 

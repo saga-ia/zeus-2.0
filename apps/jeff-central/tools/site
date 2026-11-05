@@ -1,0 +1,208 @@
+#!/usr/bin/env node
+// CLI de páginas públicas da Central: publica sites estáticos em https://central.jefersonhenrike.com/site/<slug>/
+// sem mexer no código do servidor nem reiniciar nada. A rota /site do server.js serve public-sites/<slug>/.
+// Cada publicação guarda a versão anterior em data/site-versoes/<slug>/<data>/ (dá pra restaurar).
+// Imagens internas da Central (Agente de Design e anexos do chat) só abrem com login: o publicar copia
+// essas imagens para dentro do site e troca os endereços, senão elas quebram para quem vem do anúncio.
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+
+const ROOT = path.join(__dirname, '..');
+const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(ROOT, 'data');
+const SITES = process.env.CENTRAL_SITES_DIR || path.join(ROOT, 'public-sites');
+const VERSOES = process.env.CENTRAL_SITE_VERSOES_DIR || path.join(DATA_DIR, 'site-versoes');
+const DESIGN_DIR = path.join(DATA_DIR, 'social', '_criacoes');
+const UPLOADS = path.join(DATA_DIR, 'uploads');
+const PUBLIC_URL = (process.env.CENTRAL_PUBLIC_URL || 'https://central.jefersonhenrike.com').replace(/\/+$/, '');
+const PORT = parseInt(process.env.PORT || '3031', 10);
+const LIMITE_MB = 80;
+const RESERVADOS = new Set(['api', 'login', 'admin', 'config', 'static', 'assets', 'site', 'sites']);
+
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] };
+for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) { o[a.slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; } else o._.push(a); }
+
+const AJUDA = `Páginas públicas (landing, página de venda, captura, obrigado, apresentação web) em
+${PUBLIC_URL}/site/<slug>/  — abrem sem login, prontas pra anúncio.
+
+Comandos:
+  site publicar <slug> --de <pasta ou arquivo.html>   publica (ou atualiza) a página e testa o link
+  site listar                                          páginas no ar, tamanho e última atualização
+  site verificar <slug>                                testa se o link responde e se não há imagem quebrada
+  site versoes <slug>                                  versões anteriores guardadas
+  site restaurar <slug> <versao>                       volta uma versão anterior (a atual vira versão também)
+  site remover <slug>                                  tira do ar (guarda uma cópia em versões)
+
+Regras:
+  - slug: minúsculas, números e hífen, 3 a 60 caracteres (ex.: zeus-central, black-friday-2026).
+  - A pasta precisa ter index.html. Coloque CSS, JS e imagens dentro dela e use caminhos relativos
+    (img/foto.png, style.css), nunca começando com "/".
+  - Imagens do Agente de Design (/api/design/arquivo/...) e anexos do chat (/api/chat/file/...) são
+    copiadas para dentro do site automaticamente.
+  - Não edite server.js nem peça restart: a rota /site já existe e lê os arquivos na hora.
+  - Só entregue o link depois que "publicar" ou "verificar" disser OK.`;
+
+function sair(msg, codigo) { console.log(msg); process.exit(codigo == null ? 1 : codigo); }
+function slugOk(s) {
+  if (!s || !/^[a-z0-9](?:[a-z0-9-]{1,58})[a-z0-9]$/.test(s) || s.includes('--')) sair(`Slug inválido: "${s || ''}". Use minúsculas, números e hífen, 3 a 60 caracteres, sem hífen no começo/fim.`);
+  if (RESERVADOS.has(s)) sair(`O slug "${s}" é reservado. Escolha outro.`);
+  return s;
+}
+const link = s => `${PUBLIC_URL}/site/${s}/`;
+const carimbo = () => new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
+function tamanho(dir) { let t = 0; for (const f of fs.readdirSync(dir, { withFileTypes: true })) { const p = path.join(dir, f.name); t += f.isDirectory() ? tamanho(p) : f.isFile() ? fs.statSync(p).size : 0; } return t; }
+function arquivos(dir, base) { base = base || dir; let out = []; for (const f of fs.readdirSync(dir, { withFileTypes: true })) { const p = path.join(dir, f.name); if (f.isSymbolicLink()) continue; if (f.isDirectory()) out = out.concat(arquivos(p, base)); else if (f.isFile()) out.push(path.relative(base, p)); } return out; }
+const mb = n => (n / 1048576).toFixed(1).replace('.', ',') + ' MB';
+const brt = ms => new Date(ms - 3 * 3600000).toISOString().slice(0, 16).replace('T', ' ');
+
+function get(caminho) {
+  return new Promise(resolve => {
+    const req = http.get({ host: '127.0.0.1', port: PORT, path: caminho, timeout: 15000 }, res => {
+      let corpo = ''; res.setEncoding('utf8'); res.on('data', c => { if (corpo.length < 2e6) corpo += c; }); res.on('end', () => resolve({ status: res.statusCode, corpo, local: res.headers.location }));
+    });
+    req.on('error', e => resolve({ status: 0, erro: e.message }));
+    req.on('timeout', () => { req.destroy(); resolve({ status: 0, erro: 'tempo esgotado' }); });
+  });
+}
+
+// Copia imagens internas (que exigem login) para dentro do site e reescreve os endereços
+function localizar(destino) {
+  const trocas = [], faltando = [];
+  const htmls = arquivos(destino).filter(f => /\.(html?|css)$/i.test(f));
+  for (const rel of htmls) {
+    const arq = path.join(destino, rel);
+    let txt = fs.readFileSync(arq, 'utf8');
+    const prefixo = path.relative(path.dirname(arq), path.join(destino, 'img')).split(path.sep).join('/') || '.';
+    txt = txt.replace(/(?:https?:\/\/[^"'()\s]*?)?\/api\/(design\/arquivo|chat\/file)\/([\w-]+)\/([^"'()\s?#]+)(\?[^"'()\s#]*)?/g, (m, tipo, id, nome) => {
+      const limpo = path.basename(decodeURIComponent(nome)), idL = path.basename(id);
+      const origem = tipo === 'design/arquivo' ? path.join(DESIGN_DIR, idL, limpo) : path.join(UPLOADS, idL, limpo);
+      if (!fs.existsSync(origem) || !/\.(png|jpe?g|webp|gif|svg|mp4|webm|pdf)$/i.test(limpo)) { faltando.push(m); return m; }
+      const novo = `${idL}-${limpo}`;
+      fs.mkdirSync(path.join(destino, 'img'), { recursive: true });
+      fs.copyFileSync(origem, path.join(destino, 'img', novo));
+      trocas.push(novo);
+      return `${prefixo}/${novo}`;
+    });
+    fs.writeFileSync(arq, txt);
+  }
+  return { trocas: [...new Set(trocas)], faltando: [...new Set(faltando)] };
+}
+
+// Endereços que vão quebrar para o visitante: caminho absoluto da Central, /api/ que sobrou, ou arquivo local inexistente
+function problemas(dir) {
+  const out = [];
+  for (const rel of arquivos(dir).filter(f => /\.(html?|css)$/i.test(f))) {
+    const arq = path.join(dir, rel), txt = fs.readFileSync(arq, 'utf8');
+    const refs = [...txt.matchAll(/(?:src|href|poster)\s*=\s*["']([^"']+)["']|url\(\s*["']?([^"')]+)["']?\s*\)/gi)].map(m => (m[1] || m[2] || '').trim());
+    for (const r of refs) {
+      if (!r || /^(https?:|mailto:|tel:|data:|#|javascript:|\/\/)/i.test(r)) continue;
+      if (r.startsWith('/')) { if (!r.startsWith('/site/') && r !== '/favicon.svg') out.push(`${rel}: "${r}" começa com "/" (aponta pra Central, não pro site). Use caminho relativo.`); continue; }
+      const alvo = path.join(path.dirname(arq), decodeURIComponent(r.split(/[?#]/)[0]));
+      if (!alvo.startsWith(dir) || !fs.existsSync(alvo)) out.push(`${rel}: "${r}" não existe dentro do site.`);
+    }
+    if (/href\s*=\s*["']#["']/i.test(txt)) out.push(`${rel}: há botão/link com href="#" (sem destino). Peça o link de WhatsApp, checkout ou formulário.`);
+  }
+  return [...new Set(out)];
+}
+
+async function verificar(slug, silencioso) {
+  const r = await get(`/site/${slug}/`);
+  if (r.status !== 200) { const msg = r.status === 302 ? 'redirecionou pro login (a página não existe)' : r.erro || 'HTTP ' + r.status; if (!silencioso) console.log(`FALHOU: ${link(slug)} -> ${msg}`); return false; }
+  const titulo = (r.corpo.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1];
+  const p = problemas(path.join(SITES, slug));
+  console.log(`OK: ${link(slug)} responde 200${titulo ? ` · título "${titulo.trim()}"` : ' · sem <title> (bom colocar um)'}`);
+  if (p.length) console.log('Atenção, itens que vão aparecer quebrados para o visitante:\n- ' + p.join('\n- '));
+  return true;
+}
+
+function guardar(slug, motivo) {
+  const atual = path.join(SITES, slug);
+  if (!fs.existsSync(atual)) return null;
+  const v = carimbo() + (motivo ? '-' + motivo : ''), dest = path.join(VERSOES, slug, v);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.cpSync(atual, dest, { recursive: true });
+  // mantém as 15 versões mais recentes
+  const todas = fs.readdirSync(path.join(VERSOES, slug)).sort();
+  for (const velha of todas.slice(0, Math.max(0, todas.length - 15))) fs.rmSync(path.join(VERSOES, slug, velha), { recursive: true, force: true });
+  return v;
+}
+
+async function publicar() {
+  const slug = slugOk(o._[0]);
+  const de = o.de || o._[1];
+  if (!de) sair('Diga de onde vem a página: site publicar <slug> --de <pasta ou arquivo.html>');
+  const origem = path.resolve(de);
+  if (!fs.existsSync(origem)) sair(`Não achei "${de}".`);
+  if (origem === path.join(SITES, slug) || origem.startsWith(path.join(SITES, slug) + path.sep)) sair('A origem já é a pasta publicada. Monte a página em outra pasta (ex.: no seu diretório de trabalho) e publique a partir dela.');
+  const ehArq = fs.statSync(origem).isFile();
+  if (ehArq && !/\.html?$/i.test(origem)) sair('Arquivo único precisa ser .html.');
+  if (!ehArq && !fs.existsSync(path.join(origem, 'index.html'))) sair(`A pasta "${de}" não tem index.html.`);
+  if (!ehArq && tamanho(origem) > LIMITE_MB * 1048576) sair(`A pasta passa de ${LIMITE_MB} MB. Comprima as imagens/vídeos antes.`);
+
+  fs.mkdirSync(SITES, { recursive: true });
+  const tmp = path.join(SITES, `.${slug}.novo-${process.pid}`);
+  fs.rmSync(tmp, { recursive: true, force: true });
+  if (ehArq) { fs.mkdirSync(tmp); fs.copyFileSync(origem, path.join(tmp, 'index.html')); }
+  else fs.cpSync(origem, tmp, { recursive: true, filter: s => !path.basename(s).startsWith('.') && !fs.lstatSync(s).isSymbolicLink() });
+  const loc = localizar(tmp);
+
+  const anterior = guardar(slug);
+  const atual = path.join(SITES, slug), lixo = path.join(SITES, `.${slug}.velho-${process.pid}`);
+  if (fs.existsSync(atual)) fs.renameSync(atual, lixo);
+  fs.renameSync(tmp, atual);
+  fs.rmSync(lixo, { recursive: true, force: true });
+
+  console.log(`${anterior ? 'Atualizada' : 'Publicada'}: ${slug} (${mb(tamanho(atual))}, ${arquivos(atual).length} arquivo(s))${anterior ? ` · versão anterior guardada como ${anterior}` : ''}`);
+  if (loc.trocas.length) console.log(`Copiei ${loc.trocas.length} imagem(ns) interna(s) da Central para dentro do site (img/).`);
+  if (loc.faltando.length) console.log('Não achei estas imagens internas (vão quebrar):\n- ' + loc.faltando.join('\n- '));
+  const ok = await verificar(slug);
+  process.exit(ok ? 0 : 1);
+}
+
+function listar() {
+  if (!fs.existsSync(SITES)) sair('Nenhuma página publicada ainda.', 0);
+  const lista = fs.readdirSync(SITES, { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('.'));
+  if (!lista.length) sair('Nenhuma página publicada ainda.', 0);
+  for (const d of lista) { const p = path.join(SITES, d.name); console.log(`${d.name}\t${link(d.name)}\t${mb(tamanho(p))}\tatualizada ${brt(fs.statSync(path.join(p, 'index.html')).mtimeMs)} BRT`); }
+}
+
+function versoes() {
+  const slug = slugOk(o._[0]), dir = path.join(VERSOES, slug);
+  const vs = fs.existsSync(dir) ? fs.readdirSync(dir).sort().reverse() : [];
+  if (!vs.length) sair(`Nenhuma versão guardada de ${slug}.`, 0);
+  vs.forEach(v => console.log(v));
+}
+
+async function restaurar() {
+  const slug = slugOk(o._[0]), v = path.basename(String(o._[1] || ''));
+  const src = path.join(VERSOES, slug, v);
+  if (!v || !fs.existsSync(src)) sair(`Versão "${o._[1] || ''}" não encontrada. Rode: site versoes ${slug}`);
+  const antes = guardar(slug, 'antes-de-restaurar');
+  const atual = path.join(SITES, slug), tmp = path.join(SITES, `.${slug}.rest-${process.pid}`);
+  fs.cpSync(src, tmp, { recursive: true });
+  if (fs.existsSync(atual)) fs.rmSync(atual, { recursive: true, force: true });
+  fs.renameSync(tmp, atual);
+  console.log(`Restaurada a versão ${v}.${antes ? ` A que estava no ar ficou guardada como ${antes}.` : ''}`);
+  process.exit((await verificar(slug)) ? 0 : 1);
+}
+
+function remover() {
+  const slug = slugOk(o._[0]), atual = path.join(SITES, slug);
+  if (!fs.existsSync(atual)) sair(`Não existe página "${slug}".`);
+  const v = guardar(slug, 'removida');
+  fs.rmSync(atual, { recursive: true, force: true });
+  console.log(`Tirei ${slug} do ar. Cópia guardada como ${v} (site restaurar ${slug} ${v} traz de volta).`);
+}
+
+(async () => {
+  try {
+    if (cmd === 'publicar') return await publicar();
+    if (cmd === 'listar') return listar();
+    if (cmd === 'verificar') { const ok = await verificar(slugOk(o._[0])); process.exit(ok ? 0 : 1); }
+    if (cmd === 'versoes') return versoes();
+    if (cmd === 'restaurar') return await restaurar();
+    if (cmd === 'remover') return remover();
+    console.log(AJUDA);
+  } catch (e) { sair('Erro: ' + e.message); }
+})();

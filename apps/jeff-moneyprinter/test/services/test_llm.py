@@ -492,7 +492,7 @@ class TestLiteLLMProvider(unittest.TestCase):
         config.app.update(
             {
                 "llm_provider": "pollinations",
-                "pollinations_api_key": "pollinations-test-key",
+                "pollinations_api_key": "<REDACTED>",
                 "pollinations_base_url": "https://text.pollinations.ai/openai/",
                 "pollinations_model_name": "default",
             }
@@ -517,7 +517,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="pollinations-test-key",
+            api_key="<REDACTED>",
             base_url="https://gen.pollinations.ai/v1",
         )
         self.assertEqual(
@@ -534,7 +534,7 @@ class TestLiteLLMProvider(unittest.TestCase):
         config.app.update(
             {
                 "llm_provider": "gemini",
-                "gemini_api_key": "gemini-test-key",
+                "gemini_api_key": "<REDACTED>",
                 "gemini_base_url": "",
                 "gemini_model_name": "gemini-test-model",
             }
@@ -563,7 +563,7 @@ class TestLiteLLMProvider(unittest.TestCase):
         self.assertEqual(result, "hellogemini")
         self.assertEqual(
             captured["client_kwargs"],
-            {"api_key": "gemini-test-key", "http_options": None},
+            {"api_key": "<REDACTED>", "http_options": None},
         )
         self.assertEqual(captured["model"], "gemini-test-model")
         self.assertEqual(captured["contents"], "Say hello")
@@ -575,7 +575,7 @@ class TestLiteLLMProvider(unittest.TestCase):
         config.app.update(
             {
                 "llm_provider": "cloudflare",
-                "cloudflare_api_key": "test-token",
+                "cloudflare_api_key": "<REDACTED>",
                 "cloudflare_account_id": "",
                 "cloudflare_model_name": "",
             }
@@ -592,7 +592,7 @@ class TestLiteLLMProvider(unittest.TestCase):
         config.app.update(
             {
                 "llm_provider": "cloudflare",
-                "cloudflare_api_key": "cloudflare-token",
+                "cloudflare_api_key": "<REDACTED>",
                 "cloudflare_account_id": "account-123",
                 "cloudflare_gateway_id": "",
                 "cloudflare_model_name": "",
@@ -624,7 +624,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="cloudflare-token",
+            api_key="<REDACTED>",
             base_url=(
                 "https://api.cloudflare.com/client/v4/accounts/account-123/ai/v1"
             ),
@@ -901,7 +901,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="aihubmix-key",
+            api_key="<REDACTED>",
             base_url="https://aihubmix.com/v1",
         )
         self.assertEqual(
@@ -938,7 +938,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="aimlapi-key",
+            api_key="<REDACTED>",
             base_url="https://api.aimlapi.com/v1",
         )
         self.assertEqual(
@@ -980,7 +980,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="evolink-key",
+            api_key="<REDACTED>",
             base_url="https://direct.evolink.ai/v1",
         )
         self.assertEqual(
@@ -1022,7 +1022,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="volcengine-key",
+            api_key="<REDACTED>",
             base_url="https://ark.cn-beijing.volces.com/api/v3",
         )
         self.assertEqual(
@@ -1084,7 +1084,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="groq-test-key",
+            api_key="<REDACTED>",
             base_url="https://api.groq.com/openai/v1",
         )
         self.assertEqual(result, "hellogroq")
@@ -1204,7 +1204,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         openai_client.assert_called_once_with(
-            api_key="mimo-key",
+            api_key="<REDACTED>",
             base_url="https://api.xiaomimimo.com/v1",
         )
         self.assertEqual(
@@ -1248,7 +1248,7 @@ class TestLiteLLMProvider(unittest.TestCase):
             result = llm._generate_response("Say hello")
 
         azure_client.assert_called_once_with(
-            api_key="azure-key",
+            api_key="<REDACTED>",
             api_version="2024-02-15-preview",
             azure_endpoint="https://example.openai.azure.com",
         )

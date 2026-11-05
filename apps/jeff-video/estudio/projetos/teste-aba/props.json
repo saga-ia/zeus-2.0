@@ -1,0 +1,8 @@
+{
+  "video": "video.mp4",
+  "inicio": 0,
+  "legendas": [
+    { "inicio": 0, "fim": 6, "texto": "Teste da Edição de Vídeo" }
+  ],
+  "destaque": "#FF0000"
+}

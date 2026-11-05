@@ -17,7 +17,7 @@
 
 set -u
 DB="/opt/jeff-worker/data/worker.db"
-API="https://graph.facebook.com/v19.0"
+API="https://graph.facebook.com/v23.0" # versão da Marketing API (a Meta desliga cada versão uns 2 anos depois)
 
 get_setting() {
   sqlite3 "$DB" "SELECT value FROM app_settings WHERE key='$1';"

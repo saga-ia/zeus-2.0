@@ -52,59 +52,84 @@ api_ig() {
   fi
 }
 
+# Leitura com reserva: se o token da Meta (Facebook Login) for recusado por permissão (#10/#190/#200 ou #100 subcódigo 33), tenta o mesmo
+# caminho no graph.instagram.com com o token do login do Instagram (IGAA). Em 16/10/2026 o token da Meta perdeu os
+# escopos instagram_* e só o perfil respondia; com a reserva, posts e métricas post a post continuam saindo.
+ler() {
+  local path="$1" out
+  out=$(api GET "$path")
+  if [ -n "$IG_LOGIN_TOKEN" ] && echo "$out" | grep -qE '"code": ?(10|190|200)[,}]|"error_subcode": ?33[,}]'; then
+    api_ig GET "$path"
+  else
+    echo "$out"
+  fi
+}
+
+# Mesma reserva para escrita (responder, publicar): a primeira tentativa foi recusada por permissão, sem efeito nenhum,
+# então repetir no graph.instagram.com não duplica nada.
+escrever() {
+  local path="$1" body="$2" out
+  out=$(api POST "$path" "$body")
+  if [ -n "$IG_LOGIN_TOKEN" ] && echo "$out" | grep -qE '"code": ?(10|190|200)[,}]|"error_subcode": ?33[,}]'; then
+    api_ig POST "$path" "$body"
+  else
+    echo "$out"
+  fi
+}
+
 cmd="${1:-}"
 case "$cmd" in
   me)
-    api GET "/$IG_ID?fields=id,username,name,biography,website,followers_count,follows_count,media_count,profile_picture_url"
+    ler "/$IG_ID?fields=id,username,name,biography,website,followers_count,follows_count,media_count,profile_picture_url"
     ;;
   posts)
     LIMIT="${2:-10}"
-    api GET "/$IG_ID/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,thumbnail_url&limit=$LIMIT"
+    ler "/$IG_ID/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,thumbnail_url&limit=$LIMIT"
     ;;
   post)
     MID="${2:?usage: post <media_id>}"
-    api GET "/$MID?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,thumbnail_url"
+    ler "/$MID?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,thumbnail_url"
     ;;
   post-insights)
     MID="${2:?usage: post-insights <media_id>}"
-    api GET "/$MID/insights?metric=reach,saved,shares,total_interactions"
+    ler "/$MID/insights?metric=reach,saved,shares,total_interactions"
     ;;
   insights)
     PERIOD="${2:-day}"
-    api GET "/$IG_ID/insights?metric=reach,follower_count&period=$PERIOD&metric_type=total_value"
+    ler "/$IG_ID/insights?metric=reach,follower_count&period=$PERIOD&metric_type=total_value"
     ;;
   comments)
     MID="${2:?usage: comments <media_id>}"
-    api GET "/$MID/comments?fields=id,text,username,timestamp,like_count,replies{id,text,username,timestamp}&limit=50"
+    ler "/$MID/comments?fields=id,text,username,timestamp,like_count,replies{id,text,username,timestamp}&limit=50"
     ;;
   reply)
     CID="${2:?usage: reply <comment_id> <text>}"
     TEXT="${3:?text required}"
     BODY=$(python3 -c "import json,sys;print(json.dumps({'message':sys.argv[1]}))" "$TEXT")
-    api POST "/$CID/replies" "$BODY"
+    escrever "/$CID/replies" "$BODY"
     ;;
   publish-photo)
     IMG_URL="${2:?usage: publish-photo <image_url> <caption>}"
     CAP="${3:-}"
     BODY=$(python3 -c "import json,sys;print(json.dumps({'image_url':sys.argv[1],'caption':sys.argv[2]}))" "$IMG_URL" "$CAP")
-    CONTAINER=$(api POST "/$IG_ID/media" "$BODY" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('id','')) if not d.get('error') else print('ERR:',d.get('error'),file=sys.stderr) or sys.exit(1)")
+    CONTAINER=$(escrever "/$IG_ID/media" "$BODY" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('id','')) if not d.get('error') else print('ERR:',d.get('error'),file=sys.stderr) or sys.exit(1)")
     [ -z "$CONTAINER" ] && exit 1
     sleep 3  # Meta processa container
-    api POST "/$IG_ID/media_publish" "{\"creation_id\":\"$CONTAINER\"}"
+    escrever "/$IG_ID/media_publish" "{\"creation_id\":\"$CONTAINER\"}"
     ;;
   publish-reel)
     VID_URL="${2:?usage: publish-reel <video_url> <caption>}"
     CAP="${3:-}"
     BODY=$(python3 -c "import json,sys;print(json.dumps({'media_type':'REELS','video_url':sys.argv[1],'caption':sys.argv[2]}))" "$VID_URL" "$CAP")
-    CONTAINER=$(api POST "/$IG_ID/media" "$BODY" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('id','')) if not d.get('error') else print('ERR:',d.get('error'),file=sys.stderr) or sys.exit(1)")
+    CONTAINER=$(escrever "/$IG_ID/media" "$BODY" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('id','')) if not d.get('error') else print('ERR:',d.get('error'),file=sys.stderr) or sys.exit(1)")
     [ -z "$CONTAINER" ] && exit 1
     # reels demora mais a processar
     for i in 1 2 3 4 5; do
-      STATUS=$(api GET "/$CONTAINER?fields=status_code" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('status_code',''))")
+      STATUS=$(ler "/$CONTAINER?fields=status_code" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('status_code',''))")
       [ "$STATUS" = "FINISHED" ] && break
       sleep 5
     done
-    api POST "/$IG_ID/media_publish" "{\"creation_id\":\"$CONTAINER\"}"
+    escrever "/$IG_ID/media_publish" "{\"creation_id\":\"$CONTAINER\"}"
     ;;
   dm-send)
     # Envio via Instagram Login API (graph.instagram.com) — recomendado

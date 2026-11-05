@@ -6,10 +6,17 @@
 
   // ─── detalhes de um evento (usado também pelo dashboard) ───────────────────
   ZP.openEvento = async function (ev, contas, aoMudar) {
-    const midia = ZP.safeUrl(ev.media_url || ev.media_path || '');
-    const ehVideo = ev.tipo === 'reel' || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(midia);
+    // a mídia é recalculada a cada render: o media_path de carrossel só chega depois, por /posts
+    const arte = () => {
+      const lista = ZP.midiasDe(ev), midia = lista[0] || '';
+      if (!midia) return '';
+      const ehVideo = ev.tipo === 'reel' || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(midia);
+      if (lista.length > 1) return `<div class="tiny mute" style="margin:0 0 7px">${lista.length} lâminas, na ordem de publicação</div>
+        <div class="laminas">${lista.map((u, i) => `<a class="lam" href="${u}" target="_blank" rel="noopener" title="Abrir lâmina ${i + 1} em tamanho real"><img src="${u}" alt="" loading="lazy"><b>${i + 1}</b></a>`).join('')}</div>`;
+      return `<div class="preview" style="margin-bottom:16px;max-height:300px">${ehVideo ? `<video src="${midia}" controls preload="metadata" style="max-height:300px"></video>` : `<a href="${midia}" target="_blank" rel="noopener" title="Abrir em tamanho real"><img src="${midia}" alt="" style="max-height:300px"></a>`}</div>`;
+    };
     const corpo = (resultados) => `
-      ${midia ? `<div class="preview" style="margin-bottom:16px;max-height:300px">${ehVideo ? `<video src="${midia}" controls preload="metadata" style="max-height:300px"></video>` : `<img src="${midia}" alt="" style="max-height:300px">`}</div>` : ''}
+      ${arte()}
       <div class="row" style="margin-bottom:14px">${ui.badge(ev.status)}${ui.tipo(ev.tipo)}${ev.origem === 'campanha' ? `<span class="tag">${icon('rocket', 12)}Campanha: ${e(ev.titulo || '#' + ev.campaign_id)}</span>` : ''}</div>
       <div class="cols-2" style="gap:12px;margin-bottom:14px">
         <div><div class="tiny mute" style="margin-bottom:3px">Quando</div><div style="font-size:13.5px">${e(fmt.full(ev.quando))}</div><div class="tiny mute">${fmt.rel(ev.quando)}</div></div>
@@ -27,18 +34,44 @@
         if (!(await ui.confirm({ title: 'Excluir post', text: ev.status === 'published' ? 'Isso apaga o registro aqui no painel. O post já publicado continua no Instagram.' : 'O post sai da agenda e não será publicado.', ok: 'Excluir', danger: true }))) return;
         try { await api.del('/posts/' + ev.post_id); ui.toast('Post excluído', 'ok'); c(); aoMudar && aoMudar(); } catch (err) { ui.toast(err.message, 'err'); }
       } });
-      if (['draft', 'scheduled', 'failed'].includes(ev.status)) {
+      if (['draft', 'scheduled', 'failed', 'blocked'].includes(ev.status)) {
         acoes.push({ label: ev.status === 'failed' ? 'Tentar publicar agora' : 'Publicar agora', icon: 'bolt', onClick: async (c, btn) => {
           if (!(await ui.confirm({ title: 'Publicar agora', html: `O post vai ao ar <strong>imediatamente</strong> em ${e(ZP.accName(contas, ev.account_ids))}. Não dá pra desfazer por aqui.`, ok: 'Publicar' }))) return;
           ui.busy(btn, true, 'Publicando...');
-          try { const r = await api.post('/posts/' + ev.post_id + '/publish'); const falhou = (r.results || []).filter((x) => x.status === 'failed' || x.error); falhou.length ? ui.toast('Falhou: ' + (falhou[0].error || falhou[0].error_message || 'erro da Meta'), 'err') : ui.toast('Publicado', 'ok'); c(); aoMudar && aoMudar(); }
-          catch (err) { ui.busy(btn, false); ui.toast(err.message, 'err'); }
+          const publicar = async (forcar) => {
+            const r = await api.post('/posts/' + ev.post_id + '/publish' + (forcar ? '?forcar=1' : ''));
+            const falhou = (r.results || []).filter((x) => x.status === 'failed' || x.error);
+            falhou.length ? ui.toast('Falhou: ' + (falhou[0].error || falhou[0].error_message || 'erro da Meta'), 'err') : ui.toast('Publicado', 'ok');
+            c(); aoMudar && aoMudar();
+          };
+          try { await publicar(false); }
+          catch (err) {
+            ui.busy(btn, false);
+            // trava de sequência: o card anterior não foi publicado
+            if (err.dados && err.dados.sequencia_travada) {
+              if (!(await ui.confirm({ title: 'Sequência travada', html: `${e(err.message)}<br><br>Publicar fora de ordem deixa a sequência sem o card de abertura.`, ok: 'Publicar fora de ordem', danger: true }))) return;
+              ui.busy(btn, true, 'Publicando...');
+              try { await publicar(true); } catch (e2) { ui.busy(btn, false); ui.toast(e2.message, 'err'); }
+              return;
+            }
+            ui.toast(err.message, 'err');
+          }
         } });
         acoes.push({ label: 'Editar', kind: 'pri', icon: 'edit', onClick: (c) => { c(); ZP.go('novo', { id: ev.post_id }); } });
       }
     }
     ui.modal({ title: ev.titulo || (ev.origem === 'campanha' ? 'Item de campanha' : 'Post #' + ev.post_id), body: corpo(null), actions: acoes,
-      onOpen: async (b) => { if (ev.origem !== 'post') return; try { const p = (await api.get('/posts')).find((x) => x.id === ev.post_id); if (p && p.results && p.results.length) b.innerHTML = corpo(p.results); } catch (_) {} } });
+      onOpen: async (b) => {
+        if (ev.origem !== 'post') return;
+        // busca os resultados por conta e, de passagem, o media_path cru (a agenda não devolve o de carrossel)
+        try {
+          const antes = ZP.midiasDe(ev).length;
+          const posts = await api.get('/posts');
+          posts.forEach((p) => { if (p && p.media_path) ZP.mediaMap[p.id] = p.media_path; });
+          const p = posts.find((x) => x.id === ev.post_id);
+          if ((p && p.results && p.results.length) || ZP.midiasDe(ev).length !== antes) b.innerHTML = corpo(p && p.results);
+        } catch (_) {}
+      } });
   };
 
   let _contas = [];
@@ -46,10 +79,30 @@
   const rotulo = (ev) => { const a = _contas.find((c) => (ev.account_ids || []).includes(c.id)); return (a ? '@' + a.platform_username : '') + (ev.account_ids && ev.account_ids.length > 1 ? ' +' + (ev.account_ids.length - 1) : ''); };
   const chip = (ev) => `<div class="ev s-${e(ev.status)}" data-ev="${e(ev.id)}" title="${e(fmt.time(ev.quando) + ' · ' + ui.statusLabel(ev.status) + ' · ' + (ev.titulo || ev.media_name || ev.caption || '').slice(0, 80))}">${icon(ui.tipoIcon(ev.tipo), 11)}<b>${fmt.time(ev.quando)}</b><span>${e(rotulo(ev) || ev.media_name || ev.titulo || '')}</span></div>`;
 
+  // cartão da galeria: a arte grande, com hora, status e conta por baixo
+  const cartao = (ev) => {
+    const lista = ZP.midiasDe(ev), u = lista[0] || '';
+    const isVid = ev.tipo === 'reel' || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(u) || String(ev.media_type || '').startsWith('video');
+    // o ícone fica sempre atrás: se a arte não existir mais no disco, é o que sobra na tela
+    const fundo = `<span class="semarte">${icon(isVid ? 'video' : ui.tipoIcon(ev.tipo), 22)}<small>${u ? (isVid ? 'vídeo' : 'arte indisponível') : 'sem prévia'}</small></span>`;
+    const arte = u && !isVid ? `<img src="${u}" alt="" loading="lazy">`
+      : u && isVid ? `<video src="${u}" muted preload="metadata" playsinline></video>` : '';
+    return `<div class="gcard click" data-ev="${e(ev.id)}" title="Abrir detalhes">
+      <div class="gart">${fundo}${arte}${lista.length > 1 ? `<span class="gqtd">${lista.length} lâminas</span>` : ''}<span class="gstatus s-${e(ev.status)}"></span></div>
+      <div class="gfoot"><div class="row" style="gap:6px;flex-wrap:nowrap"><strong class="num" style="font-size:13px">${fmt.time(ev.quando)}</strong>${ui.tipo(ev.tipo)}</div>
+        <div class="trunc" style="font-size:12.5px;margin-top:6px">${e(ev.titulo || (ev.caption || '').replace(/\s+/g, ' ').slice(0, 70) || 'Sem título')}</div>
+        <div class="row" style="gap:6px;flex-wrap:nowrap;margin-top:5px"><span class="tiny mute trunc grow">${e(ZP.accName(contas_(), ev.account_ids))}</span>${ui.badge(ev.status)}</div></div></div>`;
+  };
+  const contas_ = () => _contas;
+
   async function mount(el, params) {
     if (params && params.conta) st.conta = params.conta;
     const ini = new Date(st.y, st.m, 1), fim = new Date(st.y, st.m + 1, 0, 23, 59, 59);
-    const [contas, ag] = await Promise.all([ZP.accounts(), api.get('/schedule' + api.qs({ from: Math.floor(ini / 1000), to: Math.floor(fim / 1000), account_id: st.conta, status: st.status, type: st.tipo, limit: 5000 }))]);
+    const [contas, ag] = await Promise.all([
+      ZP.accounts(),
+      api.get('/schedule' + api.qs({ from: Math.floor(ini / 1000), to: Math.floor(fim / 1000), account_id: st.conta, status: st.status, type: st.tipo, limit: 5000 })),
+      st.modo === 'mes' ? null : ZP.carregarMidias(), // galeria e lista precisam do media_path cru (carrossel)
+    ]);
     const evs = ag.eventos || []; _contas = contas;
     const porDia = {}; evs.forEach((ev) => { const k = fmt.ymd(new Date(ev.quando * 1000)); (porDia[k] = porDia[k] || []).push(ev); });
     const hoje = fmt.ymd(new Date());
@@ -65,6 +118,11 @@
       }
       while (celulas.length % 7) celulas.push(`<div class="cal-cell out"><div class="dn">${celulas.length - offset - dias + 1}</div></div>`);
       grade = `<div class="cal"><div class="cal-dow">${['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((d) => `<span>${d}</span>`).join('')}</div><div class="cal-grid">${celulas.join('')}</div></div>`;
+    } else if (st.modo === 'galeria') {
+      const dias = Object.keys(porDia).sort();
+      grade = dias.length ? dias.map((k) => `<div class="card" style="overflow:hidden;margin-bottom:14px"><div class="card-h"><strong class="grow" style="font-size:13.5px;font-weight:600;text-transform:capitalize">${e(new Date(k + 'T12:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }))}</strong><span class="small mute">${porDia[k].length} ${porDia[k].length === 1 ? 'publicação' : 'publicações'}</span></div>
+        <div class="card-b"><div class="gal">${porDia[k].map(cartao).join('')}</div></div></div>`).join('')
+        : `<div class="card">${ui.empty('Nada neste mês', 'Nenhuma publicação com os filtros escolhidos.', `<a class="btn sm" href="#/novo">Agendar post</a>`, 'image')}</div>`;
     } else {
       const dias = Object.keys(porDia).sort();
       grade = dias.length ? dias.map((k) => `<div class="card" style="overflow:hidden;margin-bottom:14px"><div class="card-h"><strong class="grow" style="font-size:13.5px;font-weight:600;text-transform:capitalize">${e(new Date(k + 'T12:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }))}</strong><span class="small mute">${porDia[k].length} ${porDia[k].length === 1 ? 'publicação' : 'publicações'}</span></div>
@@ -77,7 +135,7 @@
     el.innerHTML = `<div class="page">
       <div class="page-head">
         <div class="ttl"><h1>Calendário</h1><p class="sub">Tudo que está agendado, publicado ou falhou, incluindo os itens das campanhas em massa.</p></div>
-        <div class="row"><span class="seg"><span data-modo="mes" class="${st.modo === 'mes' ? 'on' : ''}">${icon('calendar', 13)}Mês</span><span data-modo="lista" class="${st.modo === 'lista' ? 'on' : ''}">${icon('layers', 13)}Lista</span></span>
+        <div class="row"><span class="seg"><span data-modo="mes" class="${st.modo === 'mes' ? 'on' : ''}">${icon('calendar', 13)}Mês</span><span data-modo="galeria" class="${st.modo === 'galeria' ? 'on' : ''}">${icon('grid', 13)}Galeria</span><span data-modo="lista" class="${st.modo === 'lista' ? 'on' : ''}">${icon('layers', 13)}Lista</span></span>
           <a class="btn pri" href="#/novo">${icon('plus', 13)}Novo post</a></div>
       </div>
       <div class="row" style="margin-bottom:18px">
@@ -87,13 +145,13 @@
         <button class="btn sm ghost" data-nav="0">Hoje</button>
         <span class="grow"></span>
         <select class="sel" id="c-conta" style="width:auto;min-width:170px">${ui.accOptions(contas, st.conta)}</select>
-        <select class="sel" id="c-status" style="width:auto">${[['', 'Todos os status'], ['scheduled', 'Agendados'], ['published', 'Publicados'], ['failed', 'Falhas'], ['draft', 'Rascunhos'], ['paused', 'Pausados']].map((o) => `<option value="${o[0]}" ${st.status === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
+        <select class="sel" id="c-status" style="width:auto">${[['', 'Todos os status'], ['scheduled', 'Agendados'], ['published', 'Publicados'], ['failed', 'Falhas'], ['blocked', 'Travados na sequência'], ['draft', 'Rascunhos'], ['paused', 'Pausados']].map((o) => `<option value="${o[0]}" ${st.status === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
         <select class="sel" id="c-tipo" style="width:auto">${[['', 'Todos os formatos'], ['feed', 'Feed'], ['reel', 'Reels'], ['carousel', 'Carrossel'], ['story', 'Stories']].map((o) => `<option value="${o[0]}" ${st.tipo === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
       </div>
       <div class="row" style="margin-bottom:14px"><div class="legend grow">
         <span><i style="background:var(--amber)"></i>Agendado (${conta('scheduled')})</span><span><i style="background:var(--green)"></i>Publicado (${conta('published')})</span>
-        <span><i style="background:var(--red)"></i>Falhou (${conta('failed')})</span><span><i style="background:#B4B4BC"></i>Rascunho ou pausado (${conta('draft') + conta('paused')})</span></div>
-        <span class="tiny faint">${evs.length} no mês · clique num dia para criar um post</span></div>
+        <span><i style="background:var(--red)"></i>Falhou (${conta('failed')})</span><span><i style="background:#8B5CF6"></i>Travado na sequência (${conta('blocked')})</span><span><i style="background:#B4B4BC"></i>Rascunho ou pausado (${conta('draft') + conta('paused')})</span></div>
+        <span class="tiny faint">${evs.length} no mês · ${st.modo === 'mes' ? 'clique num dia para criar um post' : 'clique numa arte para ver em tamanho grande'}</span></div>
       ${grade}</div>`;
 
     const recarregar = () => mount(el).catch((err) => ui.toast(err.message, 'err'));

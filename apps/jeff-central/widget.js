@@ -140,7 +140,7 @@ router.post('/tickets', (req, res) => {
   const num = (db.prepare(`SELECT MAX(num) AS m FROM w_tickets`).get().m || 1000) + 1;
   db.prepare(`INSERT INTO w_tickets (id, num, subject, category, priority, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'aberto', ?, ?)`)
     .run(id, num, subject, CATS.includes(b.category) ? b.category : 'duvida', TPRIOS.includes(b.priority) ? b.priority : 'normal', now, now);
-  db.prepare(`INSERT INTO w_ticket_msgs (id, ticket_id, author, text, created_at) VALUES (?, ?, ?, ?, ?)`).run(newId(), id, ME, text, now);
+  db.prepare(`INSERT INTO w_ticket_msgs (id, ticket_id, author, text, created_at) VALUES (?, ?, ?, ?, ?)`).run(newId(), id, (req.user && req.user.name) || ME, text, now);
   res.json({ ticket: ticketOut(db.prepare(`SELECT * FROM w_tickets WHERE id = ?`).get(id), true), tickets: tickets() });
 });
 router.get('/tickets/:id', (req, res) => {
@@ -153,7 +153,7 @@ router.post('/tickets/:id/msgs', (req, res) => {
   if (!t) return erro(res, 404, 'chamado não encontrado');
   const text = txt((req.body || {}).text, 5000);
   if (!text) return erro(res, 400, 'mensagem vazia');
-  const author = (req.body || {}).author === 'suporte' ? 'Suporte ZEUS' : ME;
+  const author = (req.body || {}).author === 'suporte' ? 'Suporte ZEUS' : ((req.user && req.user.name) || ME);
   const now = Date.now();
   db.prepare(`INSERT INTO w_ticket_msgs (id, ticket_id, author, text, created_at) VALUES (?, ?, ?, ?, ?)`).run(newId(), t.id, author, text, now);
   db.prepare(`UPDATE w_tickets SET updated_at = ?, status = CASE WHEN status = 'resolvido' THEN 'aberto' ELSE status END WHERE id = ?`).run(now, t.id);

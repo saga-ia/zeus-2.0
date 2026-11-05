@@ -1,0 +1,6 @@
+{
+  "error": {
+    "type": "platform-feature-disabled",
+    "message": "Monthly usage hard limit exceeded"
+  }
+}

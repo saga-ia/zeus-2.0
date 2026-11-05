@@ -371,7 +371,7 @@
       extra: c ? `<span data-pdx-comp-del="${e(c.id)}" style="${BTN_SEC};color:${VERM}">${icon(ICONS.trash, 13, "currentColor")}Excluir</span>` : "",
       body: `<div>${pdiLbl("Competência")}<input name="name" required value="${e(c ? c.name : "")}" placeholder="Ex: Liderança" style="${PDI_IN}"></div>
         <div style="display:flex;gap:12px"><div style="flex:1">${pdiLbl("Nível atual")}${niv("levelFrom", c ? c.levelFrom : 3)}</div><div style="flex:1">${pdiLbl("Nível alvo")}${niv("levelTo", c ? c.levelTo : 5)}</div></div>`,
-      onClick: async ev => { const d = ev.target.closest("[data-pdx-comp-del]"); if(d && confirm("Excluir esta competência?")){ pdiModalClose(); await pdiAcao("/competencies/" + encodeURIComponent(d.dataset.pdxCompDel), "DELETE"); } },
+      onClick: async ev => { const d = ev.target.closest("[data-pdx-comp-del]"); if(d && await zConfirm("Excluir esta competência?")){ pdiModalClose(); await pdiAcao("/competencies/" + encodeURIComponent(d.dataset.pdxCompDel), "DELETE"); } },
       onSubmit: async d => !!(await pdiAcao(c ? "/competencies/" + encodeURIComponent(c.id) : "/" + encodeURIComponent(p.id) + "/competencies", c ? "PATCH" : "POST", d)) || false });
   }
 
@@ -388,13 +388,13 @@
     if(!p) return;
     if((el = q("[data-pdx-act]"))){ ev.stopPropagation(); const j = await pdiAcao("/actions/" + encodeURIComponent(el.dataset.pdxAct), "PATCH", { status: el.dataset.st, who: me() }); if(j && el.dataset.st === "concluida"){ const a = (j.pdi.goals || []).flatMap(g => g.actions).find(y => y.id === el.dataset.pdxAct); toast(a && a.status === "validacao" ? "Ação concluída: aguardando validação do gestor." : "Ação concluída."); } return; }
     if((el = q("[data-pdx-evid]"))){ ev.stopPropagation(); const j = await pdiAcao("/evidences/" + encodeURIComponent(el.dataset.pdxEvid), "PATCH", { status: el.dataset.st, who: me() }); if(j) toast(el.dataset.st === "validada" ? "Evidência validada." : el.dataset.st === "recusada" ? "Evidência recusada." : "Evidência reaberta."); return; }
-    if((el = q("[data-pdx-evid-del]"))){ ev.stopPropagation(); if(confirm("Excluir esta evidência?")) pdiAcao("/evidences/" + encodeURIComponent(el.dataset.pdxEvidDel), "DELETE"); return; }
+    if((el = q("[data-pdx-evid-del]"))){ ev.stopPropagation(); if(await zConfirm("Excluir esta evidência?")) pdiAcao("/evidences/" + encodeURIComponent(el.dataset.pdxEvidDel), "DELETE"); return; }
     if((el = q("[data-pdx-evid-for]"))){ ev.stopPropagation(); return modalEvidencia(p, el.dataset.pdxEvidFor); }
     if(q("[data-pdx-evid-new]")){ ev.stopPropagation(); return modalEvidencia(p, ""); }
     if(q("[data-pdx-progresso]")){ ev.stopPropagation(); return modalProgresso(p); }
     if(q("[data-pdx-feedback]")){ ev.stopPropagation(); return modalFeedback(p); }
     if((el = q("[data-pdx-fb-reply]"))){ ev.stopPropagation(); const f = (p.feedback || []).find(y => y.id === el.dataset.pdxFbReply); if(f) modalResposta(p, f); return; }
-    if((el = q("[data-pdx-fb-del]"))){ ev.stopPropagation(); if(confirm("Excluir este pedido de feedback?")) pdiAcao("/feedback/" + encodeURIComponent(el.dataset.pdxFbDel), "DELETE"); return; }
+    if((el = q("[data-pdx-fb-del]"))){ ev.stopPropagation(); if(await zConfirm("Excluir este pedido de feedback?")) pdiAcao("/feedback/" + encodeURIComponent(el.dataset.pdxFbDel), "DELETE"); return; }
     if(q("[data-pdx-comp-new]")){ ev.stopPropagation(); return modalCompetencia(p, null); }
     if((el = q("[data-pdx-comp]"))){ ev.stopPropagation(); const c = (p.competencies || []).find(y => y.id === el.dataset.pdxComp); if(c) modalCompetencia(p, c); return; }
   });

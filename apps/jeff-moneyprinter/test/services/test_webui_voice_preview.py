@@ -82,12 +82,12 @@ def test_duration_estimator_is_local_and_respects_voice_rate():
 def test_provider_signature_changes_when_api_key_changes():
     """只修改 API Key 也必须让试听缓存失效，不能伪装成新凭证验证成功。"""
     test_config = SimpleNamespace(
-        app={"gemini_api_key": "old-gemini", "mimo_api_key": "old-mimo"},
+        app={"gemini_api_key": "<REDACTED>", "mimo_api_key": "<REDACTED>"},
         azure={"speech_region": "eastasia", "speech_key": "old-azure"},
-        siliconflow={"api_key": "old-siliconflow"},
-        elevenlabs={"api_key": "old-elevenlabs", "model_id": "eleven_v3"},
+        siliconflow={"api_key": "<REDACTED>"},
+        elevenlabs={"api_key": "<REDACTED>", "model_id": "eleven_v3"},
         chatterbox={
-            "api_key": "old-chatterbox",
+            "api_key": "<REDACTED>",
             "base_url": "http://127.0.0.1:4123/v1",
             "model_id": "chatterbox",
         },

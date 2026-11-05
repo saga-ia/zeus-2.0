@@ -7,7 +7,7 @@ set -euo pipefail
 
 DB_CIGC="/opt/jeff-apps/jeff-cigc-clientarea/data/cigc.db"
 DB_WORKER="/opt/jeff-worker/data/worker.db"
-GLAUCO_TOKEN="f2e45627e91d57e780b74e40b25813515d7b6ed95bdcfe25"
+GLAUCO_TOKEN="<REDACTED>"
 GLAUCO_PHONE="556282363940"
 LINK="https://cigc.jefersonhenrike.com/cadastro?t=${GLAUCO_TOKEN}"
 LOG="/opt/jeff-worker/logs/chase-glauco-cadastro.log"

@@ -122,7 +122,7 @@ class TestMptAgentSkill(unittest.TestCase):
             config_path = Path(temp_dir) / "config.toml"
             config_path.write_text(
                 MINIMAL_CONFIG.replace(
-                    'moonshot_api_key = ""', 'moonshot_api_key = "configured"'
+                    'moonshot_api_key = ""', 'moonshot_api_key = "<REDACTED>"'
                 ).replace("pixabay_api_keys = []", 'pixabay_api_keys = ["key"]'),
                 encoding="utf-8",
             )
@@ -138,7 +138,7 @@ class TestMptAgentSkill(unittest.TestCase):
     def test_existing_provider_key_is_reused_without_asking_user(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.toml"
-            secret = "already-configured-deepseek-key"
+            secret = "<REDACTED>"
             config_path.write_text(
                 MINIMAL_CONFIG.replace(
                     'deepseek_api_key = ""', f'deepseek_api_key = "{secret}"'
@@ -203,7 +203,7 @@ class TestMptAgentSkill(unittest.TestCase):
                 os.environ,
                 {
                     "MPT_LLM_PROVIDER": "openai_compatible",
-                    "MPT_LLM_API_KEY": "custom-key",
+                    "MPT_LLM_API_KEY": "<REDACTED>",
                     "MPT_LLM_BASE_URL": "https://llm.example.com/v1",
                     "MPT_LLM_MODEL_NAME": "example-model",
                 },
@@ -213,7 +213,7 @@ class TestMptAgentSkill(unittest.TestCase):
 
             config = config_path.read_text(encoding="utf-8")
             self.assertIn('llm_provider = "oneapi"', config)
-            self.assertIn('oneapi_api_key = "custom-key"', config)
+            self.assertIn('oneapi_api_key = "<REDACTED>"', config)
             self.assertIn(
                 'oneapi_base_url = "https://llm.example.com/v1"', config
             )

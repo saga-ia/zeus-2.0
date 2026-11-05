@@ -96,6 +96,107 @@ function mount(app, requireAuth) {
   });
   // mídias dos posts vêm da API como /uploads/arquivo
   app.use('/uploads', requireAuth, (req, res) => proxy(req, res, '/uploads' + req.url));
+  // prévia de vídeo que o navegador não toca (HEVC/10-bit de iPhone): cópia H.264 leve só para ver na tela
+  app.get('/api/zeuspost-previa', requireAuth, previaInfo);
+  app.get('/api/zeuspost-previa/arquivo/:f', requireAuth, (req, res) => {
+    const f = path.basename(String(req.params.f || ''));
+    if (!/^[\w.-]+\.mp4$/.test(f)) return res.status(400).end();
+    const p = path.join(PREVIA_DIR, f);
+    if (!fs.existsSync(p)) return res.status(404).end();
+    res.set('Cache-Control', 'private, max-age=86400');
+    res.sendFile(p);
+  });
 }
 
-module.exports = { mount, serviceToken, PREFIX };
+// ─── Prévia de vídeo ──────────────────────────────────────────────────────────
+// O arquivo original (o que vai para o Instagram) não é alterado; a cópia fica em data/previas-video/.
+const { execFile } = require('child_process');
+const UPLOADS_ZP = '/opt/jeff-apps/jeff-automatikinst/data/uploads';
+const PREVIA_DIR = path.join(__dirname, 'data', 'previas-video');
+const _codec = new Map(), _gerando = new Set(), _fila = [];
+let _rodando = false;
+const codecDe = p => new Promise(ok => {
+  if (_codec.has(p)) return ok(_codec.get(p));
+  execFile('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name,pix_fmt', '-of', 'csv=p=0', p], { timeout: 15000 }, (err, out) => {
+    const v = err ? '' : String(out || '').trim(); _codec.set(p, v); ok(v);
+  });
+});
+// toca no Chrome/Safari/Edge de qualquer máquina: H.264 8-bit 4:2:0
+const tocaNoNavegador = c => /^h264,yuv420p$/.test(c);
+function proximaPrevia() {
+  if (_rodando || !_fila.length) return;
+  _rodando = true;
+  const { orig, dest } = _fila.shift(), tmp = dest + '.tmp.mp4';
+  execFile('nice', ['-n', '10', 'ffmpeg', '-y', '-v', 'error', '-i', orig, '-vf', "scale='min(720,iw)':-2", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', tmp], { timeout: 10 * 60 * 1000 }, (err) => {
+    try { if (!err) fs.renameSync(tmp, dest); else { fs.rmSync(tmp, { force: true }); console.error('[zeuspost] prévia falhou:', path.basename(orig), err.message); } } catch (_) {}
+    _gerando.delete(dest); _rodando = false; proximaPrevia();
+  });
+}
+async function previaInfo(req, res) {
+  const u = String(req.query.u || '');
+  const m = /^\/uploads\/([\w.-]+\.(?:mp4|mov|m4v))$/i.exec(u);
+  if (!m) return res.status(400).json({ error: 'mídia inválida' });
+  const orig = path.join(UPLOADS_ZP, path.basename(m[1]));
+  if (!fs.existsSync(orig)) return res.json({ url: u }); // não está no disco local: deixa o navegador tentar o original
+  const c = await codecDe(orig);
+  if (!c || tocaNoNavegador(c)) return res.json({ url: u });
+  const nome = path.basename(m[1]).replace(/\.[^.]+$/, '') + '.mp4', dest = path.join(PREVIA_DIR, nome);
+  if (fs.existsSync(dest)) return res.json({ url: '/api/zeuspost-previa/arquivo/' + nome, previa: true, codec: c });
+  if (!_gerando.has(dest)) { fs.mkdirSync(PREVIA_DIR, { recursive: true }); _gerando.add(dest); _fila.push({ orig, dest }); proximaPrevia(); }
+  res.json({ gerando: true, codec: c });
+}
+
+// ─── Agendar um post pela API do Automatik (usado pela aprovação nas Equipes) ────────────────────────────────
+const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm' };
+function zpCall(method, p, body, rawHeaders) {
+  return new Promise((resolve, reject) => {
+    const isBuf = Buffer.isBuffer(body);
+    const data = body == null ? null : (isBuf ? body : Buffer.from(JSON.stringify(body)));
+    const headers = Object.assign({ authorization: 'Bearer ' + serviceToken(), 'x-forwarded-for': 'central-aprovacao' },
+      data && !isBuf ? { 'content-type': 'application/json' } : {}, rawHeaders || {}, data ? { 'content-length': data.length } : {});
+    const req = http.request({ host: ZP_HOST, port: ZP_PORT, method, path: '/api' + p, headers }, (res) => {
+      let out = ''; res.on('data', d => { out += d; });
+      res.on('end', () => { let j; try { j = JSON.parse(out); } catch { j = { raw: out.slice(0, 2000) }; } if (res.statusCode >= 400) return reject(new Error(j.error || ('HTTP ' + res.statusCode))); resolve(j); });
+    });
+    req.setTimeout(5 * 60 * 1000, () => req.destroy(new Error('tempo esgotado')));
+    req.on('error', reject);
+    req.end(data || undefined);
+  });
+}
+function zpUpload(abs) {
+  if (!fs.existsSync(abs)) throw new Error('arquivo não existe: ' + path.basename(abs));
+  const mime = MIME[path.extname(abs).toLowerCase()];
+  if (!mime) throw new Error('formato não aceito: ' + path.extname(abs));
+  const bd = '----central' + Date.now().toString(16);
+  const body = Buffer.concat([Buffer.from(`--${bd}\r\nContent-Disposition: form-data; name="file"; filename="${path.basename(abs).replace(/"/g, '')}"\r\nContent-Type: ${mime}\r\n\r\n`), fs.readFileSync(abs), Buffer.from(`\r\n--${bd}--\r\n`)]);
+  return zpCall('POST', '/upload', body, { 'content-type': 'multipart/form-data; boundary=' + bd });
+}
+// criarPost({ arquivos: [caminho absoluto...], legenda, contas: [ids], quando: "AAAA-MM-DD HH:MM" (BRT) ou null (rascunho), tipo: feed|carousel|story|reel, titulo })
+async function criarPost(o) {
+  const arquivos = (o.arquivos || []).filter(Boolean);
+  if (!arquivos.length) throw new Error('post sem mídia');
+  const contas = (o.contas || []).map(x => parseInt(x, 10)).filter(Boolean);
+  if (!contas.length) throw new Error('escolha a conta');
+  const ups = []; for (const a of arquivos) ups.push(await zpUpload(a));
+  const video = /^video/.test(ups[0].mimetype || '');
+  let post_type = o.tipo === 'story' ? 'story' : o.tipo === 'reel' || video ? 'video' : (arquivos.length > 1 || o.tipo === 'carousel') ? 'carousel' : 'image';
+  if (post_type === 'carousel' && (ups.length < 2 || ups.length > 10)) throw new Error('carrossel precisa de 2 a 10 imagens');
+  let quando = null;
+  if (o.quando) { const t = String(o.quando).trim().replace(' ', 'T'); if (isNaN(require('./aprovacao').dataBRT(t))) throw new Error('data inválida: ' + o.quando); if (require('./aprovacao').dataBRT(t) < new Date()) throw new Error('a data já passou: ' + o.quando); quando = t; }
+  const body = { title: o.titulo || null, caption: post_type === 'story' ? '' : String(o.legenda || ''), media_path: post_type === 'carousel' ? JSON.stringify(ups.map(u => u.path)) : ups[0].path, media_type: video ? 'video' : 'image', post_type, platforms: ['instagram'], account_ids: contas, scheduled_at: quando };
+  // Sequência de stories: os cards 2, 3 e 4 nascem do card 1 (a frase), então
+  // stories da mesma conta no mesmo dia entram no mesmo grupo. Se o card 1
+  // falhar na Meta, o ZEUS POST trava os seguintes em vez de publicar uma
+  // sequência sem começo. O índice é definido lá pelo horário agendado.
+  if (post_type === 'story' && quando) {
+    const dia = require('./aprovacao').dataBRT(quando).toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    body.seq_group = o.sequencia || `dia-${dia}-c${contas[0]}`;
+  }
+  if (post_type !== 'story' && !body.caption) throw new Error('legenda vazia');
+  const r = await zpCall('POST', '/posts', body);
+  return { id: r.id, status: quando ? 'scheduled' : 'draft', quando, midia: body.media_path, contas, post_type };
+}
+const excluirPost = id => zpCall('DELETE', '/posts/' + encodeURIComponent(id));
+const contas = () => zpCall('GET', '/accounts');
+
+module.exports = { mount, serviceToken, PREFIX, criarPost, excluirPost, contas };

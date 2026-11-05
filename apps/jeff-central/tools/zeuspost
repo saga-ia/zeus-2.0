@@ -95,6 +95,7 @@ const AJUDA = `Comandos (horários em BRT):
                                            calendário unificado (posts + itens de campanha). Padrão: hoje até +14 dias
   post ID                                  detalhes de um post (com resultado por conta)
   upload ARQUIVO                           sobe imagem/vídeo e devolve o caminho /uploads/... pra usar em --midia
+  criar --arquivos a.png,b.png,c.png --legenda ... --contas ... [--quando ...]   carrossel (2 a 10 imagens)
   criar --legenda "..." [--legenda-arquivo F] [--midia /uploads/x | --arquivo LOCAL] --contas 1,5
         [--tipo feed|reel|story] [--quando "AAAA-MM-DD HH:MM"] [--titulo "..."]
                                            sem --quando vira rascunho. Story exige mídia e ignora legenda
@@ -138,6 +139,10 @@ const AJUDA = `Comandos (horários em BRT):
     case 'post': print(await getPost(o._[0])); break;
     case 'upload': print(await upload(o._[0])); break;
     case 'criar': {
+      if (o.arquivos) { // carrossel: --arquivos a.png,b.png,c.png (2 a 10 imagens)
+        const r = await require(path.join(__dirname, '..', 'zeuspost.js')).criarPost({ arquivos: String(o.arquivos).split(',').map(x => x.trim()).filter(Boolean), legenda: o['legenda-arquivo'] ? fs.readFileSync(o['legenda-arquivo'], 'utf8') : (o.legenda === true ? '' : o.legenda), contas: ids(o.contas || ''), quando: o.quando && o.quando !== true && o.quando !== 'rascunho' ? o.quando : null, tipo: o.tipo || 'carousel', titulo: o.titulo });
+        print({ ok: true, id: r.id, status: r.status, quando_brt: r.quando, midia: r.midia, contas: r.contas, tipo: r.post_type }); break;
+      }
       if (o.arquivo) { const up = await upload(o.arquivo); o.midia = up.path; o['midia-mime'] = up.mimetype; }
       const b = corpoPost(o);
       if (!b.account_ids.length) throw new Error('informe --contas (ids do comando "contas")');

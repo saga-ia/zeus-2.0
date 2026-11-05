@@ -4,7 +4,7 @@
 const { db } = require('../db');
 const logger = require('../logger');
 
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const TOKEN_URL = '<REDACTED>';
 
 let cachedAccessToken = null;
 let cachedExpiresAt = 0;

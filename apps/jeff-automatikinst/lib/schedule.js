@@ -52,6 +52,12 @@ function getSchedule(f = {}) {
     ORDER BY COALESCE(p.scheduled_at, p.created_at) ASC
     LIMIT ?`).all(...params, limit);
 
+  const midiasDoPost = (mp) => {
+    let l = [];
+    const t = String(mp || '').trim();
+    if (t.charAt(0) === '[') { try { l = JSON.parse(t); } catch { l = []; } } else if (t) l = [t];
+    return (Array.isArray(l) ? l : []).map(String).filter(u => u.startsWith('/uploads/'));
+  };
   const eventos = [];
   for (const p of posts) {
     let ids = [];
@@ -68,7 +74,10 @@ function getSchedule(f = {}) {
       status: p.status,
       tipo: tipoDePost(p.post_type),
       account_ids: ids,
-      media_url: p.media_path && String(p.media_path).startsWith('/uploads/') ? p.media_path : null,
+      // Carrossel guarda as lâminas como lista JSON (["/uploads/a.png", ...]); antes só caminho simples passava
+      // e o carrossel chegava sem imagem nenhuma no calendário da Central
+      media_url: midiasDoPost(p.media_path)[0] || null,
+      media_urls: midiasDoPost(p.media_path),
       editavel: p.status === 'draft' || p.status === 'scheduled'
     });
   }
@@ -108,7 +117,8 @@ function getSchedule(f = {}) {
       post_id: null,
       campaign_id: it.campaign_id,
       titulo: it.campaign_name,
-      caption: '',
+      caption: meta.caption_override || '',
+      caption_propria: !!meta.caption_override,
       quando: it.scheduled_at,
       status: paradaPorCampanha ? 'paused' : (STATUS_ITEM_TO_POST[it.status] || it.status),
       tipo: tipoDePost(null, it.post_format),
@@ -116,7 +126,7 @@ function getSchedule(f = {}) {
       media_name: meta.name || meta.groupName || meta.folderName || files[0]?.name || null,
       media_url: meta.url || files[0]?.url || null,
       error_message: it.error_message || null,
-      editavel: false
+      editavel: ['pending', 'failed'].includes(it.status)
     });
   }
 

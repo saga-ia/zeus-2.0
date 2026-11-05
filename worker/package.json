@@ -8,7 +8,7 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "migrate": "node src/scripts/migrate.js",
-    "hash-password": "node src/scripts/hash-password.js",
+    "hash-password": "<REDACTED>",
     "session:reset": "node src/scripts/session-reset.js",
     "queue:flush": "node src/scripts/queue-flush.js",
     "export:chat": "node src/scripts/export-chat.js",

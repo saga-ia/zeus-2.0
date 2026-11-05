@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aplicação Farias Souza</title>
+<title>Aplicação Executiva | Farias Souza</title>
+<meta name="description" content="Aplicação executiva para o Conselho do Dono, com Farias Souza. Preencha a aplicação e nosso time entra em contato após a análise.">
+<meta name="robots" content="noindex,follow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -22,136 +29,160 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --gold:#C9A84C;
-    --gold-light:#E8C97A;
-    --bg:#0A0A0A;
-    --card:#111111;
-    --border:#222;
-    --text:#F0F0F0;
-    --muted:#888;
-    --radius:12px;
-    --radio-bg:#1A1A1A;
-    --radio-hover:#222;
-    --radio-checked:#1E1A0F;
-    --radio-checked-border:#C9A84C;
+    --bg:#050505;
+    --bg-2:#0a0a0a;
+    --panel:#0d0d0d;
+    --line:rgba(255,255,255,0.09);
+    --line-2:rgba(255,255,255,0.16);
+    /* laranja da arte oficial */
+    --acc:#F2651A;
+    --acc-2:#FF7A2F;
+    /* laranja de botao: mais fundo pro branco ler bem */
+    --acc-btn:#CC4A0B;
+    --acc-btn-h:#E8580F;
+    --green:#15803D;
+    --text:#FFFFFF;
+    --text-2:#B5B5B5;
+    --text-3:#8C8C8C;
+    --err:#FF6B4A;
   }
-  html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.6}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.55}
+  ::selection{background:var(--acc);color:#fff}
+  input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.option:focus-visible{outline:2px solid var(--acc-2);outline-offset:3px}
 
-  #progress-bar-wrapper{position:fixed;top:0;left:0;right:0;z-index:100}
-  #progress-track{height:4px;background:#1A1A1A}
-  #progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));width:0%;transition:width .5s cubic-bezier(.4,0,.2,1)}
-  #progress-label{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 4px;background:var(--bg);letter-spacing:.5px}
+  /* BARRA DE PROGRESSO */
+  #progress-bar-wrapper{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--line)}
+  #progress-track{height:3px;background:rgba(255,255,255,0.07)}
+  #progress-bar{height:100%;background:var(--acc);width:0%;transition:width .45s cubic-bezier(.4,0,.2,1)}
+  #progress-label{text-align:center;font-family:'Archivo',sans-serif;font-size:10px;font-weight:700;color:var(--text-3);padding:9px 0 8px;letter-spacing:0.22em;text-transform:uppercase}
 
-  .container{max-width:680px;margin:0 auto;padding:80px 20px 60px}
+  .container{max-width:680px;margin:0 auto;padding:78px 24px 72px}
 
-  .header{text-align:center;margin-bottom:48px}
-  .header .logo{font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.9}
-  .header h1{font-size:clamp(24px,5vw,34px);font-weight:700;line-height:1.2;letter-spacing:-.5px}
-  .header h1 span{color:var(--gold)}
-  .header p{margin-top:12px;color:var(--muted);font-size:15px}
+  /* CABECALHO */
+  .header{margin-bottom:46px;padding-bottom:30px;border-bottom:1px solid var(--line)}
+  .header .logo{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .header .logo .mark{width:32px;height:32px;min-width:32px;background:var(--acc-btn);display:grid;place-items:center;color:#fff;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px}
+  .header .logo .txt{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;line-height:1.2}
+  .header .logo .txt small{display:block;color:var(--text-3);font-family:'Inter',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
+  .header h1{font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-0.015em;line-height:1.02;font-size:clamp(30px,7.5vw,46px)}
+  .header h1 em{font-style:italic;color:var(--acc)}
+  .header p{margin-top:16px;color:var(--text-2);font-size:15.5px;line-height:1.65;max-width:520px}
 
-  .bloco-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1E1A0F}
+  .bloco-label{font-family:'Archivo',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.26em;text-transform:uppercase;color:var(--acc);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--line)}
 
   .q-slide{display:none}
-  .q-slide.active{display:block;animation:fadeInUp .4s ease}
-  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .q-slide.active{display:block;animation:fadeInUp .35s ease}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-  .q-label{display:block;font-size:18px;font-weight:600;margin-bottom:20px;line-height:1.4}
-  .q-label .num{color:var(--gold);margin-right:6px;font-size:14px;font-weight:400}
-  .hint{font-size:12px;color:var(--muted);margin-top:10px;margin-bottom:16px;font-style:italic}
+  .q-label{display:block;font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-0.005em;font-size:clamp(19px,4.4vw,25px);line-height:1.14;margin-bottom:24px}
+  .q-label .num{display:block;font-family:'Archivo',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.22em;color:var(--acc);margin:0 0 12px;text-transform:uppercase}
+  .hint{font-size:12.5px;color:var(--text-3);margin-top:12px;margin-bottom:16px;letter-spacing:0.01em}
 
   input[type=text],input[type=tel],input[type=email],input[type=url],textarea,select{
-    width:100%;background:#111;border:1.5px solid var(--border);color:var(--text);
-    border-radius:8px;padding:14px 16px;font-size:15px;font-family:inherit;
-    transition:border-color .2s,box-shadow .2s;outline:none
+    width:100%;background:var(--panel);border:1px solid var(--line-2);color:var(--text);
+    border-radius:0;padding:17px 18px;font-size:16px;font-family:'Inter',sans-serif;
+    transition:border-color .15s,background .15s;outline:none
   }
   input[type=text]:focus,input[type=tel]:focus,input[type=email]:focus,input[type=url]:focus,textarea:focus,select:focus{
-    border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)
+    border-color:var(--acc);background:#111
   }
-  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 20px) center,calc(100% - 14px) center;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:40px}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--acc) 50%),linear-gradient(135deg,var(--acc) 50%,transparent 50%);background-position:calc(100% - 20px) center,calc(100% - 14px) center;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:40px}
   textarea{min-height:120px;resize:vertical;line-height:1.6}
-  ::placeholder{color:#444}
+  ::placeholder{color:#555}
 
-  .options{display:flex;flex-direction:column;gap:10px}
+  /* OPCOES */
+  .options{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
   .option{
-    display:flex;align-items:flex-start;gap:14px;
-    background:var(--radio-bg);border:1.5px solid var(--border);border-radius:10px;
-    padding:14px 16px;cursor:pointer;transition:all .2s;user-select:none
+    display:flex;align-items:flex-start;gap:15px;
+    background:transparent;border:0;border-bottom:1px solid var(--line);border-left:2px solid transparent;
+    border-radius:0;padding:17px 16px 17px 14px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none
   }
-  .option:hover{background:var(--radio-hover);border-color:#333}
+  .option:hover{background:var(--bg-2);border-left-color:var(--line-2)}
   .option input[type=radio],.option input[type=checkbox]{display:none}
-  .option.selected{background:var(--radio-checked);border-color:var(--radio-checked-border)}
+  .option.selected{background:var(--panel);border-left-color:var(--acc)}
   .radio-dot{
-    width:20px;height:20px;min-width:20px;border-radius:50%;
-    border:2px solid #444;margin-top:1px;transition:all .2s;
+    width:19px;height:19px;min-width:19px;border-radius:0;
+    border:1px solid #4a4a4a;margin-top:2px;transition:all .15s;
     display:flex;align-items:center;justify-content:center;flex-shrink:0
   }
-  .option.selected .radio-dot{border-color:var(--gold);background:var(--gold)}
-  .radio-dot-inner{width:8px;height:8px;border-radius:50%;background:#0A0A0A;opacity:0;transition:opacity .2s}
+  .option.selected .radio-dot{border-color:var(--acc);background:var(--acc)}
+  .radio-dot-inner{width:7px;height:7px;border-radius:0;background:#050505;opacity:0;transition:opacity .15s}
   .option.selected .radio-dot-inner{opacity:1}
-  .option-text{font-size:15px;line-height:1.5;padding-top:1px}
+  .option-text{font-size:15px;line-height:1.5;color:var(--text-2)}
+  .option.selected .option-text{color:var(--text)}
+  .option-text strong{color:var(--text);font-weight:600}
 
-  .outro-wrap{margin-top:10px;display:none}
+  .outro-wrap{margin-top:16px;display:none}
   .outro-wrap.show{display:block}
 
-  .btn-row{display:flex;gap:12px;justify-content:flex-end;margin-top:40px;align-items:center}
+  /* BOTOES */
+  .btn-row{display:flex;gap:14px;justify-content:space-between;margin-top:38px;align-items:stretch}
   .btn-back{
-    background:transparent;border:1.5px solid var(--border);color:var(--muted);
-    padding:13px 24px;border-radius:8px;font-size:15px;cursor:pointer;
-    transition:all .2s;font-family:inherit
+    background:transparent;border:1px solid var(--line-2);color:var(--text-3);
+    padding:0 26px;border-radius:0;font-family:'Archivo',sans-serif;font-weight:700;
+    font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:border-color .15s,color .15s
   }
-  .btn-back:hover{border-color:#444;color:var(--text)}
+  .btn-back:hover{border-color:var(--acc);color:var(--acc)}
   .btn-next{
-    background:var(--gold);color:#000;border:none;
-    padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;
-    cursor:pointer;transition:all .2s;font-family:inherit;letter-spacing:.3px
+    display:flex;align-items:stretch;flex:1;max-width:330px;margin-left:auto;
+    background:var(--acc-btn);color:#fff;border:0;border-radius:0;
+    font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:background .15s;overflow:hidden
   }
-  .btn-next:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 4px 20px rgba(201,168,76,.3)}
-  .btn-next:active{transform:translateY(0)}
-  .btn-next:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn-next > span{flex:1;display:flex;align-items:center;justify-content:center;padding:19px 14px;text-align:center;line-height:1.2}
+  .btn-next > i{width:54px;min-width:54px;display:grid;place-items:center;background:#fff;color:var(--acc-btn);font-style:normal;font-size:16px;border-left:1px solid rgba(0,0,0,0.12)}
+  .btn-next:hover{background:var(--acc-btn-h)}
+  .btn-next:disabled{opacity:.55;cursor:not-allowed}
+  .btn-next:disabled > i{color:#999}
 
-  #success{display:none;text-align:center;padding:60px 20px;animation:fadeInUp .5s ease}
-  .success-icon{font-size:56px;margin-bottom:24px;color:var(--gold)}
-  #success h2{font-size:26px;font-weight:700;margin-bottom:12px}
-  #success p{color:var(--muted);font-size:16px;line-height:1.7;max-width:480px;margin:0 auto}
+  /* SUCESSO */
+  #success{display:none;padding:50px 0 20px;animation:fadeInUp .45s ease}
+  .success-icon{font-family:'Archivo',sans-serif;width:56px;height:56px;display:grid;place-items:center;background:var(--green);color:#fff;font-size:28px;font-weight:800;margin-bottom:26px}
+  #success h2{font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-0.015em;line-height:1.05;font-size:clamp(28px,6.5vw,40px);margin-bottom:16px}
+  #success p{color:var(--text-2);font-size:16px;line-height:1.7;max-width:480px}
 
-  .error-msg{color:#ff6b6b;font-size:13px;margin-top:8px;display:none}
+  .error-msg{color:var(--err);font-family:'Archivo',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:12px;padding-left:12px;border-left:2px solid var(--err);display:none;line-height:1.5}
   .error-msg.show{display:block}
 
+  /* MODAL */
   #modal-overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;
-    display:none;align-items:center;justify-content:center;padding:20px;
-    backdrop-filter:blur(4px)
+    position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;
+    display:none;align-items:center;justify-content:center;padding:22px;
+    backdrop-filter:blur(5px)
   }
-  #modal-overlay.show{display:flex;animation:fadeIn .25s ease}
+  #modal-overlay.show{display:flex;animation:fadeIn .2s ease}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   .modal-box{
-    background:var(--card);border:1.5px solid var(--gold);border-radius:14px;
-    max-width:440px;width:100%;padding:32px 28px;text-align:center;
-    box-shadow:0 20px 60px rgba(201,168,76,.2);animation:fadeInUp .3s ease
+    background:var(--panel);border:1px solid var(--line-2);border-top:3px solid var(--acc);border-radius:0;
+    max-width:440px;width:100%;padding:34px 30px 30px;animation:fadeInUp .25s ease
   }
   .modal-icon{
-    width:56px;height:56px;border-radius:50%;background:rgba(255,107,107,.15);
-    color:#ff6b6b;display:flex;align-items:center;justify-content:center;
-    font-size:32px;font-weight:700;margin:0 auto 18px
+    width:44px;height:44px;border-radius:0;background:var(--err);
+    color:#0a0a0a;display:grid;place-items:center;
+    font-family:'Archivo',sans-serif;font-size:26px;font-weight:800;margin:0 0 20px
   }
-  .modal-title{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:12px}
-  .modal-text{font-size:15px;line-height:1.6;color:var(--text);margin-bottom:8px}
-  .modal-hint{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
-  .modal-hint strong{color:var(--gold-light)}
+  .modal-title{font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;line-height:1.08;font-size:21px;color:var(--text);margin-bottom:14px}
+  .modal-text{font-size:15px;line-height:1.6;color:var(--text-2);margin-bottom:10px}
+  .modal-hint{font-size:13.5px;color:var(--text-3);margin-bottom:26px;line-height:1.6}
+  .modal-hint strong{color:var(--acc);font-weight:600}
   .modal-btn{
-    background:var(--gold);color:#000;border:none;padding:12px 32px;
-    border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;
-    transition:all .2s;font-family:inherit
+    display:flex;align-items:stretch;width:100%;background:var(--acc-btn);color:#fff;border:0;border-radius:0;
+    font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:background .15s;overflow:hidden
   }
-  .modal-btn:hover{background:var(--gold-light);transform:translateY(-1px)}
+  .modal-btn > span{flex:1;display:flex;align-items:center;justify-content:center;padding:17px 14px}
+  .modal-btn > i{width:52px;min-width:52px;display:grid;place-items:center;background:#fff;color:var(--acc-btn);font-style:normal;font-size:16px}
+  .modal-btn:hover{background:var(--acc-btn-h)}
 
-  @media(max-width:480px){
-    .container{padding:80px 16px 48px}
-    .btn-row{flex-direction:column-reverse}
-    .btn-next,.btn-back{width:100%}
+  @media(max-width:560px){
+    .container{padding:74px 18px 56px}
+    .header{margin-bottom:36px}
+    .btn-row{flex-direction:column-reverse;gap:12px}
+    .btn-next{max-width:100%;margin-left:0}
+    .btn-back{padding:16px 24px;text-align:center}
+    .option{padding:16px 12px 16px 12px}
   }
 </style>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -167,19 +198,22 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
     <div class="modal-title" id="modal-title">Número de telefone incorreto</div>
     <div class="modal-text" id="modal-text">Coloque o DDD, o nono dígito e o número do seu telefone.</div>
     <div class="modal-hint" id="modal-hint">Exemplo: <strong>(11) 91234-5678</strong><br>Não use o código do país (55) no início.</div>
-    <button type="button" class="modal-btn" onclick="closeModal()">Corrigir</button>
+    <button type="button" class="modal-btn" onclick="closeModal()"><span>Corrigir</span><i>&rarr;</i></button>
   </div>
 </div>
 
 <div id="progress-bar-wrapper">
   <div id="progress-track"><div id="progress-bar"></div></div>
-  <div id="progress-label">Pergunta <span id="cur-num">1</span> de <span id="tot-num">7</span></div>
+  <div id="progress-label">Etapa <span id="cur-num">1</span> de <span id="tot-num">7</span></div>
 </div>
 
 <div class="container">
   <div class="header">
-    <div class="logo">Farias Souza</div>
-    <h1>Aplicação <span>Executiva</span></h1>
+    <div class="logo">
+      <div class="mark">FS</div>
+      <div class="txt">Farias Souza<small>Board Academy</small></div>
+    </div>
+    <h1>Aplicação <em>Executiva</em></h1>
     <p>Preencha com atenção. Um dos nossos consultores entrará em contato após a análise.</p>
   </div>
 
@@ -187,52 +221,52 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
 
     <!-- Q1: Nome completo -->
     <div class="q-slide active" id="q1">
-      <label class="q-label" for="nome"><span class="num">1.</span> Nome completo</label>
+      <label class="q-label" for="nome"><span class="num">Pergunta 01</span> Nome completo</label>
       <input type="text" id="nome" name="nome" placeholder="Seu nome completo" autocomplete="name">
       <div class="error-msg" id="err-nome">Por favor, informe seu nome completo.</div>
       <div class="btn-row">
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q2: Telefone com DDD -->
     <div class="q-slide" id="q2">
-      <label class="q-label" for="telefone"><span class="num">2.</span> Telefone com DDD</label>
+      <label class="q-label" for="telefone"><span class="num">Pergunta 02</span> Telefone com DDD</label>
       <input type="tel" id="telefone" name="telefone" placeholder="(DDD) 9XXXX-XXXX" maxlength="20" autocomplete="tel">
       <div class="hint">DDD + nono dígito + 8 dígitos (total 11 números)</div>
       <div class="error-msg" id="err-telefone">Número inválido. Informe DDD + 9 dígitos reais.</div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q3: E-mail -->
     <div class="q-slide" id="q3">
-      <label class="q-label" for="email"><span class="num">3.</span> E-mail</label>
+      <label class="q-label" for="email"><span class="num">Pergunta 03</span> E-mail</label>
       <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email">
       <div class="hint">Informe seu melhor e-mail para contato.</div>
       <div class="error-msg" id="err-email">Informe um e-mail válido.</div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q4: Nome da empresa -->
     <div class="q-slide" id="q4">
-      <label class="q-label" for="empresa"><span class="num">4.</span> Qual o nome da sua empresa?</label>
+      <label class="q-label" for="empresa"><span class="num">Pergunta 04</span> Qual o nome da sua empresa?</label>
       <input type="text" id="empresa" name="empresa" placeholder="Razão social ou nome fantasia" autocomplete="organization">
       <div class="error-msg" id="err-empresa">Por favor, informe o nome da empresa.</div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q9: Faturamento -->
     <div class="q-slide" id="q9">
-      <label class="q-label"><span class="num">5.</span> Qual o faturamento anual atual da sua empresa?</label>
+      <label class="q-label"><span class="num">Pergunta 05</span> Qual o faturamento anual atual da sua empresa?</label>
       <div class="options">
         <label class="option">
           <input type="radio" name="faturamento" value="Até R$ 500 mil/ano">
@@ -277,14 +311,14 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
       </div>
       <div class="error-msg" id="err-faturamento">Por favor, selecione o faturamento.</div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q10: Você é -->
     <div class="q-slide" id="q10">
-      <label class="q-label"><span class="num">6.</span> Você é:</label>
+      <label class="q-label"><span class="num">Pergunta 06</span> Você é:</label>
       <div class="options" id="opts-posicao">
         <label class="option">
           <input type="radio" name="posicao" value="Dono Fundador">
@@ -327,14 +361,14 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
       </div>
       <div class="error-msg" id="err-posicao">Por favor, selecione uma opção.</div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" onclick="nextQ()">Continuar &rarr;</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" onclick="nextQ()"><span>Continuar</span><i>&rarr;</i></button>
       </div>
     </div>
 
     <!-- Q11: Gargalo — SUBMIT AQUI -->
     <div class="q-slide" id="q11">
-      <label class="q-label"><span class="num">7.</span> Qual é o maior gargalo da sua empresa hoje?</label>
+      <label class="q-label"><span class="num">Pergunta 07</span> Qual é o maior gargalo da sua empresa hoje?</label>
       <div class="hint">Escolha até 2 opções.</div>
       <div class="options" data-multi="gargalo" data-max="2">
         <label class="option">
@@ -366,8 +400,8 @@ src="https://www.facebook.com/tr?id=1537250761230409&ev=PageView&noscript=1"
       <div class="error-msg" id="err-gargalo">Selecione ao menos 1 e no máximo 2 opções.</div>
       <div id="submit-error" class="error-msg" style="margin-top:8px;font-size:15px"></div>
       <div class="btn-row">
-        <button type="button" class="btn-back" onclick="prevQ()">&#8592; Voltar</button>
-        <button type="button" class="btn-next" id="btn-submit" onclick="submitForm()">Enviar Aplicação</button>
+        <button type="button" class="btn-back" onclick="prevQ()">Voltar</button>
+        <button type="button" class="btn-next" id="btn-submit" onclick="submitForm()"><span id="btn-submit-label">Enviar Aplicação</span><i>&rarr;</i></button>
       </div>
     </div>
 
@@ -435,7 +469,7 @@ const VALID_DDDS = new Set([
   21,22,24,27,28,
   31,32,33,34,35,37,38,
   41,42,43,44,45,46,47,48,49,
-  51,53,54,55,
+  51,53,54,
   61,62,63,64,65,66,67,68,69,
   71,73,74,75,77,79,
   81,82,83,84,85,86,87,88,89,
@@ -447,6 +481,7 @@ function phoneValidationResult(digits){
   if (digits.length < 11) return { ok:false, reason:'curto' };
   if (digits.length > 11) return { ok:false, reason:'longo' };
   const ddd = parseInt(digits.substring(0,2), 10);
+  if (ddd === 55) return { ok:false, reason:'ddi' };
   if (!VALID_DDDS.has(ddd)) return { ok:false, reason:'ddd' };
   if (digits[2] !== '9') return { ok:false, reason:'nono' };
   if (/(.)\1{5}/.test(digits)) return { ok:false, reason:'repetido' };
@@ -468,7 +503,9 @@ function openPhoneModal(reason){
   const hint = document.getElementById('modal-hint');
   title.textContent = 'Número de telefone incorreto';
   text.textContent = 'Coloque o DDD, o nono dígito e o número do seu telefone.';
-  if (reason === 'ddd'){
+  if (reason === 'ddi'){
+    hint.innerHTML = 'Você digitou <strong>55</strong> no DDD. O 55 é o código do país (DDI), não o DDD da sua cidade.<br>Use o DDD de onde você mora, ex: <strong>(11) 91234-5678</strong> pra São Paulo.';
+  } else if (reason === 'ddd'){
     hint.innerHTML = 'O DDD informado não existe.<br>Exemplo: <strong>(11) 91234-5678</strong> — não use o código do país (55) no início.';
   } else if (reason === 'nono'){
     hint.innerHTML = 'Falta o <strong>9</strong> no início do celular.<br>Exemplo: <strong>(11) 91234-5678</strong>';
@@ -641,8 +678,9 @@ window.addEventListener('beforeunload', function(){ autosave(true); });
 async function submitForm(){
   if (!validateCurrent()) return;
   const btn = document.getElementById('btn-submit');
+  const btnLabel = document.getElementById('btn-submit-label');
   btn.disabled = true;
-  btn.textContent = 'Enviando...';
+  btnLabel.textContent = 'Enviando...';
 
   const posSel = getRadioValue('posicao');
   const finalPos = posSel === 'Outro'
@@ -708,6 +746,7 @@ async function submitForm(){
       document.getElementById('form').style.display = 'none';
       document.getElementById('success').style.display = 'block';
       document.getElementById('progress-bar').style.width = '100%';
+      window.location.href = 'https://obrigado-ocd.fariassouza.com.br';
     } else {
       showSubmitError(result.error || 'Erro ao enviar. Tente novamente.');
     }
@@ -715,7 +754,7 @@ async function submitForm(){
     showSubmitError('Erro de conexão. Verifique sua internet e tente novamente.');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Enviar Aplicação';
+    btnLabel.textContent = 'Enviar Aplicação';
   }
 }
 

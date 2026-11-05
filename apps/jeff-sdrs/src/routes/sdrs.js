@@ -2,10 +2,17 @@
 const express = require('express');
 const { db } = require('../db');
 const { requireAuth } = require('../auth');
-const { connectSlot, disconnectSlot, runtimeStatus, sendText, requestPairingCodeForSlot, reconnectSlot, resetWelcomeCache, replayStuckForSlot, syncMissedInboundForSlot } = require('../services/waManager');
+const { connectSlot, disconnectSlot, runtimeStatus, sendText, requestPairingCodeForSlot, reconnectSlot, resetWelcomeCache, replayStuckForSlot, syncMissedInboundForSlot, syncChatsAll, syncChatsStatus } = require('../services/waManager');
 
 const router = express.Router();
 router.use(requireAuth);
+
+// Espelho das conversas dos chips conectados (Central › WhatsApp › Conversas). POST dispara em segundo plano; GET mostra o andamento.
+router.post('/sync-chats', (req, res) => {
+  try { res.json(Object.assign({ ok: true }, syncChatsAll(req.body || {}))); }
+  catch (e) { res.status(500).json({ error: 'sync_fail', detail: e && e.message }); }
+});
+router.get('/sync-chats', (req, res) => res.json(Object.assign({ ok: true }, syncChatsStatus())));
 
 // Replay: reprocessa conversas onde o cliente falou por ultimo e nao teve resposta
 // (vitimas de daily_limit ou worker offline). Nao debounca, dispara direto.

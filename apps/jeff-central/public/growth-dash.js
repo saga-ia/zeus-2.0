@@ -8,6 +8,9 @@
   const lsGet = k => { try { return localStorage.getItem(k); } catch(err){ return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch(err){} };
 
+  // Logos oficiais (os mesmos da tela de motores/conectores), no lugar dos círculos com iniciais
+  const logo = (nome, size) => typeof connectorLogoHTML === "function" ? connectorLogoHTML({ name: nome, label: "", bg: "#FFFFFF" }, size) : "";
+  const logoPuro = (nome, size) => { const L = typeof CONNECTOR_LOGOS !== "undefined" && CONNECTOR_LOGOS[nome]; return L && L.p ? `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="flex:0 0 ${size}px"><path d="${L.p}" fill="${L.c}"/></svg>` : ""; };
   function gw(){ return state.growth || {}; }
   function gwSet(patch){ state.growth = Object.assign({}, gw(), patch); render(); }
 
@@ -117,6 +120,7 @@
       ${vista("dash", ICONS.grid, "Dashboard")}
       ${vista("ia", ICONS.bolt, "Análise dos Anúncios IA")}
       <span data-gw-estrategista data-hover style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;color:#3C3C44;cursor:pointer">${icon(ICONS.agentes, 14)}Perguntar ao Estrategista</span>
+      ${typeof souAdmin === "function" && souAdmin() && typeof gcAbrir === "function" && g.plat !== "google" ? `<span style="flex:1"></span><span onclick="gcAbrir()" data-hover-dark style="display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:9px;background:${AMBAR};color:#FFFFFF;font-size:12.5px;font-weight:700;cursor:pointer">${icon(ICONS.plus, 13, "currentColor")}Criar anúncio</span>` : ""}
     </div>`;
   }
   function seletores(g){
@@ -129,7 +133,7 @@
   function googleVazio(g, compacto){
     const falta = (g.google && g.google.falta) || [];
     return `<div style="border:1px dashed #DADADF;border-radius:14px;background:#FFFFFF;padding:${compacto ? "18px 20px" : "34px 28px"};${compacto ? "margin-bottom:26px" : "text-align:center;max-width:640px;margin:30px auto"}">
-      <div style="display:flex;align-items:center;gap:12px;${compacto ? "" : "justify-content:center;margin-bottom:12px"}"><span style="width:30px;height:30px;border-radius:50%;background:#4285F4;color:#FFF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 30px">GA</span>
+      <div style="display:flex;align-items:center;gap:12px;${compacto ? "" : "justify-content:center;margin-bottom:12px"}">${logo("Google Ads", 30)}
         <strong style="${HEAD};font-size:${compacto ? 15 : 17}px;font-weight:600">Google Ads ainda não está conectado</strong></div>
       <p style="margin:${compacto ? "10px 0 0" : "0 0 14px"};font-size:13px;line-height:1.6;color:${CINZA}">Os dois sites de origem (ads e metadash) só tinham dados da Meta, e o servidor não tem nenhuma credencial do Google Ads. Para ligar, faltam: ${falta.map(f => `<strong style="color:#3C3C44">${e(f)}</strong>`).join(", ") || "as credenciais"}.${compacto ? "" : " Quando essas chaves forem cadastradas, esta aba passa a mostrar os mesmos gráficos com os dados do Google."}</p></div>`;
   }
@@ -151,7 +155,7 @@
 
     return `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap">
-        <span style="width:30px;height:30px;border-radius:50%;background:#0866FF;color:#FFF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">MA</span>
+        ${logo("Meta Ads", 30)}
         <strong style="${HEAD};font-size:17px;font-weight:600">Meta Ads</strong>
         <span style="font-size:11.5px;color:#3C3C44;background:#F1F1F3;padding:4px 10px;border-radius:6px">${e(d.conta.name)}</span>
         <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:${scoreCor};background:${scoreCor}14;border:1px solid ${scoreCor}4D;padding:3px 10px;border-radius:20px"><span style="width:5px;height:5px;border-radius:50%;background:${scoreCor}"></span>Saúde ${d.saude.score}/100</span>
@@ -343,7 +347,13 @@
 
     const barras = embed ? "" : barraTopo() + barraPlataforma(g);
     const seletorPlat = "";
-    if(g.view === "ia") return `<div id="${embed ? "gw-embed" : ""}">${barras}${g.contas && g.contas.length ? iaVista(g) : `<div style="padding:26px 30px">${corpo}</div>`}</div>`;
+    if(g.view === "ia"){
+      // Análise dos Anúncios IA: por enquanto só Meta; Google mostra o aviso de conexão, Ambos mostra o aviso e a análise da Meta
+      const ia = g.plat === "google" ? `<div style="padding:26px 30px">${googleVazio(g, false)}</div>`
+        : !(g.contas && g.contas.length) ? `<div style="padding:26px 30px">${corpo}</div>`
+        : (g.plat === "ambos" ? `<div style="padding:26px 30px 0;max-width:1240px">${googleVazio(g, true)}</div>` : "") + iaVista(g);
+      return `<div id="${embed ? "gw-embed" : ""}">${barras}${ia}</div>`;
+    }
     return `<div id="${embed ? "gw-embed" : ""}">${barras}${seletorPlat}
       <div style="padding:${seletorPlat ? "18px" : "26px"} 30px 60px;max-width:1240px">
         <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid #E6E6EA;margin-bottom:22px">
@@ -390,11 +400,24 @@
   RENDERERS.growthDash = () => abrirEstrategista(gw().view === "ia" ? "ia" : "dash");
   // Abas do Estrategista de Growth (página do agente): mesma tela, sem as barras do Motor, com a visão da aba
   // Seletor Meta | Google | Ambos na barra do Estrategista (só com o Dashboard aberto)
-  window.agNativeTabsExtra = function(tab){
-    if(tab.screen !== "growth" || tab.view === "ia") return "";
+  window.agNativeTabsExtra = function(tab, agente){
+    if(!(agente && agente.id === "estrategista-growth") && !(tab && tab.screen === "growth")) return "";
     const g = gw();
-    return `<span style="display:inline-flex;gap:3px;padding:3px;background:#F3F4F6;border:1px solid #E3E5E9;border-radius:12px">${[["meta", "Meta"], ["google", "Google"], ["ambos", "Ambos"]].map(([k, rot]) => { const on = (g.plat || "meta") === k; return `<span ${on ? "" : `data-gw-plat="${k}"`} style="padding:6px 18px;border-radius:9px;font-size:13px;font-weight:600;white-space:nowrap;cursor:${on ? "default" : "pointer"};${on ? "background:#FFFFFF;color:#14807F;box-shadow:0 1px 3px rgba(23,23,26,0.12)" : "color:#4A4A52"}">${rot}</span>`; }).join("")}</span>`;
+    return `<span style="display:inline-flex;gap:3px;padding:3px;background:#F3F4F6;border:1px solid #E3E5E9;border-radius:12px">${[["meta", "Meta", ["Meta Ads"]], ["google", "Google", ["Google Ads"]], ["ambos", "Ambos", []]].map(([k, rot, ls]) => { const on = (g.plat || "meta") === k; return `<span ${on ? "" : `data-gw-plat="${k}"`} style="display:flex;align-items:center;gap:7px;padding:6px 16px;border-radius:9px;font-size:13px;font-weight:600;white-space:nowrap;cursor:${on ? "default" : "pointer"};${on ? "background:#FFFFFF;color:#14807F;box-shadow:0 1px 3px rgba(23,23,26,0.12)" : "color:#4A4A52"}">${ls.map(x => logoPuro(x, 14)).join("")}${rot}</span>`; }).join("")}</span>`;
   };
+  window.agNativeTabsExtraApos = a => a && a.id === "estrategista-growth" ? "dash" : null;
+  // Na aba Agente (chat) o seletor também aparece: escolher a plataforma abre o Dashboard nela
+  document.addEventListener("click", ev => {
+    const el = ev.target.closest && ev.target.closest("[data-gw-plat]");
+    const emb = document.getElementById("gw-embed");
+    if(!el || (emb && emb.offsetParent !== null)) return; // com o Dashboard/Análise visível, o seletor já age lá
+    const a = state.agentDetail;
+    if(state.screen !== "agente" || !a || a.id !== "estrategista-growth" || typeof agPanelApply !== "function") return;
+    ev.stopPropagation();
+    if(!state.growth) state.growth = {};
+    state.growth.plat = el.dataset.gwPlat;
+    _agPanelTab[a.id] = "dash"; agPanelApply(a);
+  }, true);
   window.agNativePanel = function(tab){
     if(tab.screen !== "growth") return "";
     if(!state.growth) state.growth = {};

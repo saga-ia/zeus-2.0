@@ -56,4 +56,46 @@ function pickModel(agentModel, isAgent) {
   return isAgent ? agentDefaultModel() : DEFAULT_MODEL;
 }
 
-module.exports = { CLAUDE_BIN, DEFAULT_MODEL, EFFORT, EFFORT_LIGHT, MCP_ENABLED, claudeEnv, commonArgs, agentDefaultModel, pickModel };
+// Quem não é Proprietário/Admin usa o Claude sem terminal, sem arquivos do servidor e sem buscar URLs:
+// o `claude -p` roda como root nesta máquina, então com essas ferramentas qualquer pessoa leria .env, bancos e tokens.
+// Conversa, análise, base de conhecimento (vai no prompt), anexos (vão no prompt) e pesquisa web continuam.
+const MEMBRO_BLOQUEADAS = ['Bash', 'BashOutput', 'KillBash', 'KillShell', 'Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'NotebookRead',
+  'Glob', 'Grep', 'LS', 'Agent', 'Task', 'TaskCreate', 'TaskUpdate', 'TaskList', 'TaskGet', 'TaskOutput', 'TaskStop', 'Monitor',
+  'CronCreate', 'CronList', 'CronDelete', 'ScheduleWakeup', 'WebFetch'];
+const restrito = (user) => !!(user && !user.admin);
+// Um único --disallowedTools com o que já era bloqueado (extra) + o bloqueio de membro
+function bloqueio(user, extra) {
+  const set = new Set(extra || []);
+  if (!restrito(user)) return set.size ? ['--disallowedTools', [...set].join(' ')] : [];
+  // Membro: lista PERMITIDA (só pesquisa web), não lista de bloqueio: ferramentas novas do Claude
+  // (Workflow, SendMessage, RemoteTrigger...) já ficam de fora. Sem as configurações e o CLAUDE.md do
+  // usuário root: carrega só o contexto da plataforma (projeto).
+  MEMBRO_BLOQUEADAS.forEach((t) => set.add(t));
+  const tools = set.has('WebSearch') ? '' : 'WebSearch';
+  return ['--tools', tools, '--setting-sources', 'project,local', '--disallowedTools', [...set].join(' ')];
+}
+
+// Erro do `claude -p` nunca chega cru pra quem usa (12/10/2026: "Your organization has disabled Claude subscription
+// access..." foi gravado no chat e entregue por WhatsApp em 6 rotinas). Problema de conta/assinatura/limite vira
+// PLANO_VENCIDO; qualquer outra falha vira FALHA_GERAL. Nunca cita o Claude, nunca sai em inglês.
+const PLANO_VENCIDO = 'Seu plano está vencido. Por favor, renove com o Jeferson.';
+const FALHA_GERAL = 'Não consegui concluir agora. Tente de novo em alguns minutos.';
+const CONTA_RE = /subscription access|organization has disabled|anthropic api key|invalid api key|not logged in|please run \/login|oauth token|authentication_error|credit balance|hit your .*limit|usage limit|weekly limit|rate limit reached|billing|plan (has )?expired/i;
+// texto: o que o claude devolveu (ou o stderr); falhou: o processo terminou com erro (exit != 0, is_error, sem saída).
+// Devolve a mensagem em PT-BR que deve substituir o texto, ou null quando é uma resposta normal.
+function falhaClaude(texto, falhou) {
+  const t = String(texto || '').trim();
+  // Resposta normal curta que menciona "billing" etc. não pode virar erro: sem falha, só conta se for curta
+  if ((falhou || t.length < 600) && CONTA_RE.test(t)) return PLANO_VENCIDO;
+  return falhou ? FALHA_GERAL : null;
+}
+// Atalho pros spawns em --output-format text (lá o erro da conta sai no stdout com exit 1)
+function checaSaida(out, err, code) {
+  const falhou = code !== 0 || !String(out || '').trim();
+  const ruim = falhaClaude(falhou ? `${out || ''}\n${err || ''}` : out, falhou);
+  if (ruim) console.error(`[claude] falha (exit ${code}): ${String((out || '') + ' ' + (err || '')).trim().slice(-300)}`);
+  return ruim;
+}
+
+module.exports = { restrito, bloqueio, MEMBRO_BLOQUEADAS, CLAUDE_BIN, DEFAULT_MODEL, EFFORT, EFFORT_LIGHT, MCP_ENABLED, claudeEnv, commonArgs, agentDefaultModel, pickModel,
+  PLANO_VENCIDO, FALHA_GERAL, falhaClaude, checaSaida };

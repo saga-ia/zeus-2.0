@@ -10,7 +10,7 @@ const maturationRoutes = require('./src/routes/maturation');
 const configRoutes = require('./src/routes/config');
 const crmSyncRoutes = require('./src/routes/crm-sync');
 const keysRoutes = require('./src/routes/keys');
-const { restoreSlots, startUploadDispatcher, startConnectionWatchdog, startReplayScheduler } = require('./src/services/waManager');
+const { restoreSlots, startUploadDispatcher, startConnectionWatchdog, startReplayScheduler, startHealthCheck } = require('./src/services/waManager');
 const maturation = require('./src/services/maturation');
 
 const app = express();
@@ -65,5 +65,6 @@ app.listen(PORT, '0.0.0.0', () => {
   maturation.start();
   startUploadDispatcher();
   startConnectionWatchdog();
+  startHealthCheck();
   startReplayScheduler();
 });

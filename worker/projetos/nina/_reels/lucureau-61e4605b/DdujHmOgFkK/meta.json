@@ -1,0 +1,27 @@
+{
+ "id": "DdujHmOgFkK",
+ "url": "https://www.instagram.com/p/DdujHmOgFkK/",
+ "plays": 34496,
+ "curtidas": null,
+ "comentarios": 84,
+ "data": "2026-09-25",
+ "duracao_s": 117.7,
+ "cortes": 0,
+ "cortes_por_min": 0.0,
+ "primeiro_corte_s": null,
+ "palavras_por_min": 181,
+ "fala": true,
+ "abertura_falada": "Você considera melhor ter um único perfil ou separar PJ de PF?",
+ "jev": {
+  "topic": "marketing",
+  "opening": "question",
+  "mechanism": "recognition",
+  "structure": "opinion",
+  "evidence": "reasoning",
+  "emotion": "relief",
+  "specificity": "action",
+  "cta": "none"
+ },
+ "legenda": "Nunca posto caixinha por aqui, mas senti que essa valia a pena 🩷 \n\nVocê deve ter um perfil pessoal e um outro profissional? Respondi minha visão sobre esse assunto aqui! :)",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/lucureau-61e4605b/DdujHmOgFkK/folha.jpg"
+}

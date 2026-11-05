@@ -1,0 +1,135 @@
+#!/usr/bin/env node
+// CLI do Agente de Design: gera e ajusta posts de imagem com IA (Nano Banana / GPT Image) na identidade da marca.
+// Usa o mesmo motor da tela /ferramentas/agente-design: a criação aparece em "Criações" e abre no editor.
+// Uso: design <comando> [args]   (rode "design ajuda"). Gerar leva de 40s a 2min por arte: rode com timeout de 600000 ms.
+process.env.DESIGN_CLI = '1';
+const fs = require('fs');
+const path = require('path');
+const d = require('../design');
+const social = require('../social');
+const [cmd, ...rest] = process.argv.slice(2);
+
+const AJUDA = `Comandos:
+  formatos                      formatos disponíveis (id, plataforma, tamanho, carrossel)
+  motores                       quais motores de imagem estão configurados
+  criar '<json>'                gera a arte e espera terminar. Campos:
+      marca (obrigatório: id, nome, tag ou @), formato (obrigatório: id de "design formatos"),
+      prompt (obrigatório: roteiro em markdown com **Objetivo do Conteúdo:**, **Headline:**, **Corpo do Texto:**, **Elementos Visuais:**, **CTA:**;
+              carrossel: blocos "## Slide 1", "## Slide 2"... cada um com Headline, Corpo e Visual),
+      legenda, objetivo (engajar|vender), abordagem (viral|educativo|comunidade|autoridade|oferta|prova-social|bastidores|data),
+      ideia (pedido original), motor (auto|gemini|openai; padrão auto), qualidade (medium = GPT Image 2.5 Flare ~30s, padrão | high = 2.5 Sunburst ~1min, só se o usuário pedir capricho), logo (true/false, padrão true), referencias (true/false, padrão true),
+      anexos: ["/caminho/imagem.png", ...] até 4 imagens enviadas pelo usuário (produto, foto), notas: ["o que é cada anexo", ...]
+  html '<json>'                 arte feita em HTML pelo Claude (sem custo de API de imagem; texto sempre exato). Campos:
+      marca, formato (obrigatórios), arquivos: ["/caminho/arte.html", ...] (um HTML por lâmina; post simples = 1 arquivo) ou html: "<!doctype html>...",
+      legenda, ideia (pedido original), roteiro (resumo do que a arte diz).
+      O HTML é fotografado no tamanho exato do formato (ex.: ig-post = 1080x1350): use <body style="margin:0;width:1080px;height:1350px;overflow:hidden">,
+      fontes do Google Fonts por <link> ou fontes do sistema, cores do Brand Kit, e a logo com <img src="file:///caminho-da-logo"> se quiser.
+      Bom para card de frase, citação, lista, aviso e layout tipográfico. Não cria foto nem ilustração: para isso use "criar".
+  html-refazer <id> '<json>'    nova versão de uma arte em HTML: {"arquivos":[...]} ou {"html":"..."} com o HTML corrigido (todas as lâminas)
+  ajustar <id> "<pedido>" [slide]   edita a arte atual (slide começa em 1; sem slide ajusta todos) e espera terminar
+  refazer <id> [slide]          gera de novo do zero com o mesmo roteiro
+  ver <id>                      status, versões e arquivos
+  listar [marca]                últimas criações
+Antes de criar, rode "marca ver <marca>" pra ler o Brand Kit e escreva o roteiro seguindo cores, tom e estilo da marca.
+Na resposta, mostre as imagens com ![slide](URL) usando as URLs que este comando devolve e o link do editor.`;
+
+const parse = (s) => { try { return JSON.parse(s); } catch (e) { console.error('JSON inválido: ' + e.message); process.exit(1); } };
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/^@/, '');
+function acharMarca(q) {
+  const l = social.stmt.list.all(), n = norm(q);
+  return l.find(r => r.id === q) || l.find(r => norm(r.nome) === n)
+    || l.find(r => { const x = JSON.parse(r.dados || '{}'); return norm(x.tag) === n || norm(x.instagram) === n; })
+    || l.find(r => norm(r.nome).includes(n));
+}
+function mostrar(c) {
+  const v = c.versoes[c.versoes.length - 1];
+  const L = [`Criação ${c.id} · ${c.marca} · ${c.formato.nome} (${c.formato.w}x${c.formato.h}) · status: ${c.status}`];
+  if (c.erro) L.push('Erro: ' + c.erro);
+  if (v) {
+    L.push(`Versão ${v.v} (${v.modelo || (v.provider === 'gemini' ? 'Nano Banana' : 'GPT Image')})${v.aviso ? ' · motor reserva: ' + v.aviso : ''}`);
+    v.urls.forEach((u, i) => L.push(`- ${v.urls.length > 1 ? 'Slide ' + (i + 1) : 'Arte'}: ${u}  (arquivo: ${path.join(d.dirCria(c.id), v.imagens[i])})`));
+  }
+  L.push(`Editor: /ferramentas/agente-design?c=${c.id}`);
+  if (v) L.push(`ZIP com todas as artes: /api/design/zip/${c.id}`, `Biblioteca: as artes e a legenda ficam salvas automaticamente em Biblioteca › Agente de Design › ${c.marca}`);
+  if (c.dados.legenda) L.push('', 'Legenda:', c.dados.legenda);
+  console.log(L.join('\n'));
+}
+const pub = (id) => d.pub(d.st.get.get(id));
+
+(async () => {
+  if (!cmd || cmd === 'ajuda' || cmd === 'help') return console.log(AJUDA);
+  if (cmd === 'formatos') return d.FORMATOS.forEach(f => console.log(`${f.id}  ${d.PLATAFORMAS[f.plat]} · ${f.nome} · ${f.w}x${f.h}${f.carrossel ? ' · carrossel' : ''}`));
+  if (cmd === 'motores') { const k = d.chaves(); return console.log(`Nano Banana (Gemini): ${k.gemini ? 'configurado' : 'sem chave'} · GPT Image (OpenAI): ${k.openai ? 'configurado' : 'sem chave'}`); }
+  if (cmd === 'listar') {
+    const m = rest[0] ? acharMarca(rest.join(' ')) : null;
+    const rows = m ? d.st.listM.all(m.id) : d.st.list.all();
+    if (!rows.length) return console.log('Nenhuma criação ainda.');
+    return rows.slice(0, 20).map(d.pub).forEach(c => console.log(`${c.id}  ${c.marca} · ${c.formato.nome} · ${c.status} · ${c.versoes.length} versão(ões) · ${(c.dados.ideia || '').slice(0, 60)}`));
+  }
+  if (cmd === 'ver') { const c = pub(rest[0]); if (!c) { console.error('Criação não encontrada.'); process.exit(1); } return mostrar(c); }
+
+  if (cmd === 'criar') {
+    const b = parse(rest.join(' '));
+    const r = acharMarca(b.marca || ''); if (!r) { console.error(`Marca não encontrada: "${b.marca}". Rode "marca listar".`); process.exit(1); }
+    const f = d.formato(b.formato); if (!f) { console.error('Formato inválido. Rode "design formatos".'); process.exit(1); }
+    if (!String(b.prompt || '').trim()) { console.error('Falta o prompt (roteiro da arte).'); process.exit(1); }
+    const k = d.chaves(); if (!k.gemini && !k.openai) { console.error('Nenhum motor de imagem configurado (gemini_api_key / openai_api_key).'); process.exit(1); }
+    const id = d.newId(), agora = Date.now();
+    fs.mkdirSync(d.dirCria(id), { recursive: true });
+    const anexos = [];
+    (Array.isArray(b.anexos) ? b.anexos : []).slice(0, 4).forEach((p, i) => {
+      const ext = path.extname(p).slice(1).toLowerCase().replace('jpeg', 'jpg');
+      if (!['png', 'jpg', 'webp'].includes(ext) || !fs.existsSync(p)) { console.error('Anexo ignorado (precisa ser PNG, JPG ou WebP existente): ' + p); return; }
+      const nome = `anexo-${i + 1}.${ext}`; fs.copyFileSync(p, path.join(d.dirCria(id), nome)); anexos.push(nome);
+    });
+    const dados = { objetivo: ['engajar', 'vender'].includes(b.objetivo) ? b.objetivo : null, abordagem: d.ABORDAGENS.find(a => a[0] === b.abordagem) ? b.abordagem : null,
+      modo: 'zero', ideia: String(b.ideia || '').slice(0, 3000), link: '', prompt: String(b.prompt).slice(0, 12000), legenda: String(b.legenda || '').slice(0, 3000),
+      provider: ['auto', 'gemini', 'openai'].includes(b.motor) ? b.motor : 'auto', qualidade: ['medium', 'high'].includes(b.qualidade) ? b.qualidade : undefined, logo: b.logo !== false, usarRefs: b.referencias !== false, anexos,
+      anexosNotas: (Array.isArray(b.notas) ? b.notas : []).slice(0, 4).map(x => String(x).slice(0, 200)), via: 'chat' };
+    d.st.ins.run(id, r.id, f.id, JSON.stringify(dados), 'Agente de Design (chat)', agora, agora);
+    await d.rodar(id, {});
+    const c = pub(id); mostrar(c); process.exit(c.status === 'pronto' ? 0 : 1);
+  }
+  if (cmd === 'html' || cmd === 'html-refazer') {
+    const novo = cmd === 'html';
+    const b = parse((novo ? rest : rest.slice(1)).join(' '));
+    const htmls = (Array.isArray(b.arquivos) && b.arquivos.length ? b.arquivos.map(p => { if (!fs.existsSync(p)) { console.error('Arquivo não existe: ' + p); process.exit(1); } return fs.readFileSync(p, 'utf8'); })
+      : [].concat(b.html || [])).map(x => String(x || '').trim()).filter(Boolean).slice(0, 10);
+    if (!htmls.length) { console.error('Falta o HTML: passe "arquivos":["/caminho/arte.html"] ou "html":"<!doctype html>...".'); process.exit(1); }
+    if (htmls.some(h => h.length > 400000)) { console.error('HTML grande demais (limite de 400 mil caracteres por lâmina). Não embuta imagem em base64: referencie por file:///caminho.'); process.exit(1); }
+    let id;
+    if (novo) {
+      const r = acharMarca(b.marca || ''); if (!r) { console.error(`Marca não encontrada: "${b.marca}". Rode "marca listar".`); process.exit(1); }
+      const f = d.formato(b.formato); if (!f) { console.error('Formato inválido. Rode "design formatos".'); process.exit(1); }
+      if (!f.carrossel && htmls.length > 1) { console.error(`O formato ${f.id} tem uma arte só. Para várias lâminas use um formato de carrossel, ou crie uma arte por comando.`); process.exit(1); }
+      id = d.newId(); const agora = Date.now();
+      fs.mkdirSync(d.dirCria(id), { recursive: true });
+      const dados = { objetivo: null, abordagem: null, modo: 'zero', ideia: String(b.ideia || '').slice(0, 3000), link: '', prompt: String(b.roteiro || b.ideia || 'Arte em HTML feita pelo Claude').slice(0, 12000),
+        legenda: String(b.legenda || '').slice(0, 3000), provider: 'claude', htmls, logo: false, usarRefs: false, anexos: [], anexosNotas: [], via: 'chat' };
+      d.st.ins.run(id, r.id, f.id, JSON.stringify(dados), 'Agente de Design (chat)', agora, agora);
+      await d.rodar(id, {});
+    } else {
+      const c0 = d.st.get.get(rest[0]); if (!c0) { console.error('Criação não encontrada.'); process.exit(1); }
+      if (JSON.parse(c0.dados || '{}').provider !== 'claude') { console.error('Essa criação não foi feita em HTML. Use "ajustar" ou "refazer".'); process.exit(1); }
+      if (c0.status === 'gerando') { console.error('Essa criação ainda está gerando. Tente de novo em instantes.'); process.exit(1); }
+      id = c0.id; d.st.set.run('gerando', 'Refazendo a arte', null, Date.now(), id);
+      await d.rodar(id, { htmls });
+    }
+    const c = pub(id); mostrar(c);
+    const v = c.versoes[c.versoes.length - 1];
+    if (v) console.log('Fonte em HTML (edite e rode "html-refazer" para corrigir): ' + v.imagens.map((_, i) => path.join(d.dirCria(id), `v${v.v}-s${i + 1}.html`)).join(', '));
+    process.exit(c.status === 'pronto' && !c.erro ? 0 : 1);
+  }
+  if (cmd === 'ajustar' || cmd === 'refazer') {
+    const c0 = d.st.get.get(rest[0]); if (!c0) { console.error('Criação não encontrada.'); process.exit(1); }
+    if (c0.status === 'gerando') { console.error('Essa criação ainda está gerando. Tente de novo em instantes.'); process.exit(1); }
+    const pedido = cmd === 'ajustar' ? String(rest[1] || '').trim() : '';
+    if (cmd === 'ajustar' && !pedido) { console.error('Diga o que ajustar.'); process.exit(1); }
+    const sArg = cmd === 'ajustar' ? rest[2] : rest[1];
+    const slide = sArg ? parseInt(sArg, 10) - 1 : null;
+    d.st.set.run('gerando', cmd === 'ajustar' ? 'Aplicando ajuste' : 'Refazendo a arte', null, Date.now(), c0.id);
+    await d.rodar(c0.id, cmd === 'ajustar' ? { ajuste: pedido, slide } : { slide: slide === null ? undefined : slide });
+    const c = pub(c0.id); mostrar(c); process.exit(c.status === 'pronto' && !c.erro ? 0 : 1);
+  }
+  console.error('Comando desconhecido.\n' + AJUDA); process.exit(1);
+})().catch(e => { console.error('Falhou: ' + e.message); process.exit(1); });

@@ -634,6 +634,7 @@ async function processBatch(entry) {
             mimetype: synth.mimetype,
             filename: 'reply.ogg',
             asPtt: true,
+            fallbackText: reply,
           },
           priority: 5,
         });

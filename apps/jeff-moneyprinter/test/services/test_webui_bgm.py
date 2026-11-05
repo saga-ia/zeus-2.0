@@ -205,7 +205,7 @@ class TestWebuiBackgroundMusic(unittest.TestCase):
         """选择 Sonilo 后应回填本机 Key，且保持密码显示模式。"""
         for locale in TEST_LOCALES:
             with self.subTest(locale=locale):
-                test_config = dict(config.app, sonilo_api_key="saved-test-key")
+                test_config = dict(config.app, sonilo_api_key="<REDACTED>")
                 with (
                     patch.object(config, "app", test_config),
                     patch.object(config, "save_config"),
@@ -234,7 +234,7 @@ class TestWebuiBackgroundMusic(unittest.TestCase):
                 self.assertEqual([str(item.value) for item in app.exception], [])
 
     def test_sonilo_connection_button_reports_success(self):
-        test_config = dict(config.app, sonilo_api_key="saved-test-key")
+        test_config = dict(config.app, sonilo_api_key="<REDACTED>")
         with (
             patch.object(config, "app", test_config),
             patch.object(config, "save_config"),
@@ -274,7 +274,7 @@ class TestWebuiBackgroundMusic(unittest.TestCase):
             with self.subTest(locale=locale):
                 test_config = dict(
                     config.elevenlabs,
-                    api_key="saved-elevenlabs-key",
+                    api_key="<REDACTED>",
                     model_id="eleven_multilingual_v2",
                     music_model_id="music_v2",
                 )
@@ -357,7 +357,7 @@ class TestWebuiBackgroundMusic(unittest.TestCase):
         self.assertEqual([str(item.value) for item in app.exception], [])
 
     def test_elevenlabs_connection_button_reports_success(self):
-        test_config = dict(config.elevenlabs, api_key="saved-test-key")
+        test_config = dict(config.elevenlabs, api_key="<REDACTED>")
         with (
             patch.object(config, "elevenlabs", test_config),
             patch.object(config, "save_config"),
@@ -384,7 +384,7 @@ class TestWebuiBackgroundMusic(unittest.TestCase):
         for locale in TEST_LOCALES:
             with self.subTest(locale=locale):
                 test_config = dict(
-                    config.elevenlabs, api_key="saved-test-key"
+                    config.elevenlabs, api_key="<REDACTED>"
                 )
                 with (
                     patch.object(config, "elevenlabs", test_config),

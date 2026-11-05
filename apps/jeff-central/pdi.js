@@ -70,7 +70,25 @@ CREATE TABLE IF NOT EXISTS pdi_templates (
 );
 `);
 
-const ME = process.env.PDI_ME || 'Vinícius Nunes';
+const ME = process.env.PDI_ME || 'Vinícius Nunes'; // "eu" dos dados de demonstração (seed)
+// "Eu" = quem está logado: cada requisição roda com a própria pessoa (ver router.use abaixo)
+const { AsyncLocalStorage } = require('async_hooks');
+const als = new AsyncLocalStorage();
+const eu = () => ((als.getStore() || {}).eu) || ME;
+const acesso = require('./acesso');
+const normNome = s => String(s || '').trim().toLowerCase();
+// Ver/editar um PDI: o próprio e os que a pessoa gere sempre; os demais pelo nível de "Ver PDIs da equipe"
+// (Total: todos; Somente leitura: vê todos e não edita os dos outros; Restrito à equipe: só quem está no alcance).
+function acessoPdi(p, user, escrever) {
+  if (!p || !user || user.admin) return true;
+  const e = normNome(eu());
+  if (normNome(p.person) === e || normNome(p.manager) === e) return true;
+  const v = acesso.nivel(user, 'ver-pdis');
+  if (v === 'total') return true;
+  if (v === 'leitura') return !escrever;
+  if (v === 'equipe') return acesso.alcanca(user, 'ver-pdis', p.person);
+  return false;
+}
 const TYPES = ['tecnica', 'comportamental', 'lideranca', 'carreira'];
 const KINDS = ['70', '20', '10']; // 70% prática, 20% troca/mentoria, 10% estudo formal
 const FORMATS = ['projeto', 'curso', 'leitura', 'mentoria', 'checkin', 'outro']; // formato da ação (o 70-20-10 continua sendo a dimensão de aprendizagem)
@@ -146,7 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_pdi_hist ON pdi_history(pdi_id, at);
 db.prepare(`UPDATE pdi_actions SET format = CASE kind WHEN '20' THEN 'mentoria' WHEN '10' THEN 'curso' ELSE 'projeto' END WHERE format IS NULL OR format = ''`).run();
 db.prepare(`UPDATE pdi_actions SET status = CASE WHEN done = 1 THEN 'concluida' ELSE 'pendente' END WHERE status IS NULL OR status = ''`).run();
 db.prepare(`UPDATE pdis SET title = 'Desenvolvimento como ' || COALESCE(NULLIF(role, ''), 'profissional') WHERE title IS NULL OR title = ''`).run();
-function hist(pdiId, action, detail, who) { db.prepare(`INSERT INTO pdi_history (id, pdi_id, at, who, action, detail) VALUES (?, ?, ?, ?, ?, ?)`).run(newId(), pdiId, Date.now(), who || ME, action, detail || ''); }
+function hist(pdiId, action, detail, who) { db.prepare(`INSERT INTO pdi_history (id, pdi_id, at, who, action, detail) VALUES (?, ?, ?, ?, ?, ?)`).run(newId(), pdiId, Date.now(), who || eu(), action, detail || ''); }
 
 const stmt = {
   pdis: db.prepare(`SELECT * FROM pdis ORDER BY person COLLATE NOCASE`),
@@ -224,7 +242,7 @@ function pdiOut(p, full) {
   else if (diasSemCheckin > 30 || (esperado !== null && esperado - progress > 25)) health = 'atencao';
   const out = {
     id: p.id, person: p.person, role: p.role || '', manager: p.manager || '', cycleStart: p.cycle_start, cycleEnd: p.cycle_end,
-    status: p.status, templateId: p.template_id, summary: p.summary || '', isMe: p.person === ME, isManager: p.manager === ME,
+    status: p.status, templateId: p.template_id, summary: p.summary || '', isMe: p.person === eu(), isManager: p.manager === eu(),
     title: p.title || ('Desenvolvimento como ' + (p.role || 'profissional')), targetRole: p.target_role || '', team: p.team || '', cadence: CADENCES[p.cadence] ? p.cadence : 'quinzenal',
     nextCheckin, daysLeft,
     progress, expected: esperado, health, goalsTotal: goals.length, goalsDone: goals.filter(g => g.status === 'concluida').length, goalsActive: goals.filter(g => g.status !== 'concluida').length,
@@ -377,6 +395,25 @@ const TEMPLATES = [
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 const router = express.Router();
+router.use((req, res, next) => als.run({ eu: (req.user && req.user.name) || ME }, next));
+// Toda rota com :id (PDI) ou com id de meta/ação/competência/evidência/feedback/check-in passa pela checagem do PDI dono
+function checarPdi(pdiId, req, res, next) {
+  const p = pdiId ? stmt.pdi.get(pdiId) : null;
+  if (p && !acessoPdi(p, req.user, req.method !== 'GET')) return erro(res, 403, 'Você não tem acesso a este PDI.');
+  next();
+}
+const pdiDe = (sql) => (id) => { try { const r = db.prepare(sql).get(id); return r && r.pdi_id; } catch { return null; } };
+const PAI = {
+  gid: pdiDe(`SELECT pdi_id FROM pdi_goals WHERE id = ?`),
+  aid: pdiDe(`SELECT g.pdi_id FROM pdi_actions a JOIN pdi_goals g ON g.id = a.goal_id WHERE a.id = ?`),
+  eid: pdiDe(`SELECT pdi_id FROM pdi_evidences WHERE id = ?`),
+  fid: pdiDe(`SELECT pdi_id FROM pdi_feedback WHERE id = ?`),
+  comp: pdiDe(`SELECT pdi_id FROM pdi_competencies WHERE id = ?`),
+  chk: pdiDe(`SELECT pdi_id FROM pdi_checkins WHERE id = ?`),
+};
+router.param('id', (req, res, next, id) => checarPdi(id, req, res, next));
+['gid', 'aid', 'eid', 'fid'].forEach(k => router.param(k, (req, res, next, id) => checarPdi(PAI[k](id), req, res, next)));
+router.param('cid', (req, res, next, id) => checarPdi((req.path.startsWith('/checkins') ? PAI.chk : PAI.comp)(id), req, res, next));
 const erro = (res, code, msg) => res.status(code).json({ error: msg });
 
 // Cockpit da equipe: o que precisa do gestor, em ordem de urgência
@@ -391,15 +428,21 @@ function cockpit(pdis) {
     else if (p.status === 'ativo' && p.daysSinceCheckin > 30) itens.push({ kind: 'checkin', pdiId: p.id, person: p.person, text: `Sem check-in há ${p.daysSinceCheckin} dias`, cta: 'Ver PDI', prio: 4 });
   });
   const com = new Set(pdis.filter(p => p.status !== 'concluido').map(p => p.person.toLowerCase()));
-  stmt.members.all().filter(m => m.status !== 'inativo' && m.name !== ME && !com.has(m.name.toLowerCase()))
+  stmt.members.all().filter(m => m.status !== 'inativo' && m.name !== eu() && !com.has(m.name.toLowerCase()))
     .forEach(m => itens.push({ kind: 'sem_pdi', pdiId: null, person: m.name, role: m.cargo || '', text: 'Ainda não tem um PDI', cta: 'Criar PDI', prio: 5 }));
   return itens.sort((a, b) => a.prio - b.prio || a.person.localeCompare(b.person));
 }
-router.get('/', (_req, res) => {
-  const pdis = stmt.pdis.all().map(p => pdiOut(p, false));
-  const members = stmt.members.all();
-  res.json({ me: ME, pdis, cockpit: cockpit(pdis), formats: FORMATS, cadences: Object.keys(CADENCES),
-    people: [...new Set(members.map(m => m.name).concat(pdis.map(p => p.person)).concat([ME]))].sort((a, b) => a.localeCompare(b)),
+// Pessoas para quem dá pra criar PDI: a própria e, com "Criar PDI para outra pessoa", as do alcance
+function pessoasCriaveis(user, members) {
+  if (!user || user.admin) return members;
+  const e = normNome(eu());
+  return members.filter(m => normNome(m.name) === e || acesso.alcanca(user, 'criar-pdi', m.name));
+}
+router.get('/', (req, res) => {
+  const pdis = stmt.pdis.all().filter(p => acessoPdi(p, req.user, false)).map(p => pdiOut(p, false));
+  const members = pessoasCriaveis(req.user, stmt.members.all());
+  res.json({ me: eu(), pdis, cockpit: cockpit(pdis), formats: FORMATS, cadences: Object.keys(CADENCES),
+    people: [...new Set(members.map(m => m.name).concat(pdis.map(p => p.person)).concat([eu()]))].sort((a, b) => a.localeCompare(b)),
     members: members.map(m => ({ name: m.name, role: m.cargo || '', area: m.area || '' })) });
 });
 
@@ -460,8 +503,8 @@ router.delete('/templates/:tid', (req, res) => {
 });
 
 // Evolução: agregados de todos os PDIs
-router.get('/analytics', (_req, res) => {
-  const pdis = stmt.pdis.all().map(p => pdiOut(p, true));
+router.get('/analytics', (req, res) => {
+  const pdis = stmt.pdis.all().filter(p => acessoPdi(p, req.user, false)).map(p => pdiOut(p, true));
   const ativos = pdis.filter(p => p.status !== 'rascunho');
   const d = hoje();
   const tipos = {}; TYPES.forEach(t => { tipos[t] = { total: 0, done: 0, progressSum: 0 }; });
@@ -561,8 +604,8 @@ router.patch('/actions/:aid', (req, res) => {
   if (b.note !== undefined) o.note = txt(b.note, 1000);
   const k = Object.keys(o);
   if (k.length) db.prepare(`UPDATE pdi_actions SET ${k.map(x => x + ' = @' + x).join(', ')} WHERE id = @id`).run(Object.assign({ id: a.id }, o));
-  if (b.status !== undefined && ACTION_ST.includes(b.status)) setActionStatus(a, b.status, txt(b.who, 120) || ME);
-  else if (b.done !== undefined) setActionStatus(a, b.done ? 'concluida' : 'pendente', txt(b.who, 120) || ME);
+  if (b.status !== undefined && ACTION_ST.includes(b.status)) setActionStatus(a, b.status, eu());
+  else if (b.done !== undefined) setActionStatus(a, b.done ? 'concluida' : 'pendente', eu());
   touch(g.pdi_id);
   res.json({ pdi: pdiOut(stmt.pdi.get(g.pdi_id), true) });
 });
@@ -595,10 +638,11 @@ router.patch('/evidences/:eid', (req, res) => {
   const p = stmt.pdi.get(x.pdi_id);
   if (b.status !== undefined) {
     if (!['pendente', 'validada', 'recusada'].includes(b.status)) return erro(res, 400, 'status inválido');
-    db.prepare(`UPDATE pdi_evidences SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?`).run(b.status, b.status === 'pendente' ? null : (txt(b.who, 120) || ME), b.status === 'pendente' ? null : Date.now(), x.id);
-    hist(p.id, 'evidencia', `Evidência "${x.title}" ${b.status === 'validada' ? 'validada' : b.status === 'recusada' ? 'recusada' : 'reaberta'}`, txt(b.who, 120) || ME);
+    db.prepare(`UPDATE pdi_evidences SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?`).run(b.status, b.status === 'pendente' ? null : (eu()), b.status === 'pendente' ? null : Date.now(), x.id);
+    hist(p.id, 'evidencia', `Evidência "${x.title}" ${b.status === 'validada' ? 'validada' : b.status === 'recusada' ? 'recusada' : 'reaberta'}`, eu());
+    if (b.status !== 'pendente') require('./notificacoes').notificar({ para: p.person, tipo: 'pdi-evidencia', titulo: `Evidência ${b.status}: ${x.title}`, texto: `${eu()} ${b.status === 'validada' ? 'validou' : 'recusou'} sua entrega no PDI.`, link: '/pdi/ver/' + p.id, exceto: req.user.email });
     // Evidência validada conclui a ação ligada a ela; recusada devolve a ação para em andamento
-    if (x.action_id) { const a = stmt.action.get(x.action_id); if (a) { if (b.status === 'validada') setActionStatus(a, 'concluida', txt(b.who, 120) || ME); else if (b.status === 'recusada' && a.status === 'validacao') setActionStatus(a, 'em_andamento', txt(b.who, 120) || ME); } }
+    if (x.action_id) { const a = stmt.action.get(x.action_id); if (a) { if (b.status === 'validada') setActionStatus(a, 'concluida', eu()); else if (b.status === 'recusada' && a.status === 'validacao') setActionStatus(a, 'em_andamento', eu()); } }
   }
   const o = {};
   if (b.title !== undefined) { o.title = txt(b.title, 200); if (!o.title) return erro(res, 400, 'título obrigatório'); }
@@ -623,7 +667,7 @@ router.patch('/feedback/:fid', (req, res) => {
   const reply = txt((req.body || {}).reply, 3000);
   if (!reply) return erro(res, 400, 'escreva a resposta');
   db.prepare(`UPDATE pdi_feedback SET reply = ?, replied_at = ? WHERE id = ?`).run(reply, Date.now(), f.id);
-  hist(f.pdi_id, 'feedback', 'Feedback respondido', txt((req.body || {}).who, 120) || ME);
+  hist(f.pdi_id, 'feedback', 'Feedback respondido', eu());
   touch(f.pdi_id);
   res.json({ pdi: pdiOut(stmt.pdi.get(f.pdi_id), true) });
 });
@@ -663,7 +707,7 @@ function claudeTexto(prompt) {
     const t = setTimeout(() => { try { pr.kill('SIGTERM'); } catch (_) {} }, 150000);
     pr.stdout.on('data', d => { out += d; });
     pr.stderr.on('data', d => { err += d; });
-    pr.on('close', code => { clearTimeout(t); if (!out.trim()) return reject(new Error(err.slice(-300) || 'claude saiu com código ' + code)); resolve(out); });
+    pr.on('close', code => { clearTimeout(t); const ruim = require('./claude-spawn').checaSaida(out, err, code); if (ruim) return reject(new Error(ruim)); resolve(out); });
     pr.on('error', e => { clearTimeout(t); reject(e); });
     pr.stdin.on('error', () => {});
     pr.stdin.end(prompt);
@@ -673,7 +717,7 @@ router.post('/generate', async (req, res) => {
   const b = req.body || {};
   const meses = [3, 6, 12].includes(parseInt(b.months, 10)) ? parseInt(b.months, 10) : 6;
   const ctx = {
-    pessoa: txt(b.person, 120) || ME, cargo: txt(b.role, 120) || '', objetivo: txt(b.objective, 1500) || '',
+    pessoa: txt(b.person, 120) || eu(), cargo: txt(b.role, 120) || '', objetivo: txt(b.objective, 1500) || '',
     desenvolver: txt(b.focus, 1500) || '', contexto: txt(b.context, 2000) || '', ajuste: txt(b.adjust, 1000) || '',
   };
   if (!ctx.objetivo && !ctx.desenvolver) return erro(res, 400, 'conte o objetivo de carreira ou o que quer desenvolver');
@@ -717,6 +761,7 @@ router.post('/', (req, res) => {
   const b = req.body || {};
   const person = txt(b.person, 120);
   if (!person) return erro(res, 400, 'informe de quem é o PDI');
+  if (req.user && !req.user.admin && normNome(person) !== normNome(eu()) && !acesso.alcanca(req.user, 'criar-pdi', person)) return acesso.negar(res, req.user, 'criar-pdi');
   const inicio = dataOk(b.cycleStart) || hoje();
   const fim = dataOk(b.cycleEnd) || somaDias(inicio, 180);
   if (fim <= inicio) return erro(res, 400, 'o fim do ciclo precisa ser depois do início');
@@ -729,8 +774,9 @@ router.post('/', (req, res) => {
         txt(b.title, 160) || (tpl ? tpl.name : null), txt(b.targetRole, 120) || '', txt(b.team, 120) || '', CADENCES[b.cadence] ? b.cadence : 'quinzenal', Date.now(), Date.now());
     if (tpl) aplicarTemplate(id, tpl, inicio);
     else if (Array.isArray(b.goals)) { cleanTplGoals(b.goals).forEach((g, i) => addGoal(id, g, i, somaDias(inicio, g.weeks * 7))); competenciasDasMetas(id); } // estrutura gerada pela IA
-    hist(id, 'criado', status === 'solicitado' ? 'PDI solicitado ao gestor' : `PDI criado (${status})${tpl ? ' a partir do template ' + tpl.name : ''}`, txt(b.who, 120) || ME);
+    hist(id, 'criado', status === 'solicitado' ? 'PDI solicitado ao gestor' : `PDI criado (${status})${tpl ? ' a partir do template ' + tpl.name : ''}`, eu());
   })();
+  if (normNome(person) !== normNome(eu())) require('./notificacoes').notificar({ para: person, tipo: 'pdi-criado', titulo: `${eu()} criou um PDI para você`, texto: txt(b.title, 160) || (tpl ? tpl.name : 'Plano de desenvolvimento individual'), link: '/pdi/ver/' + id });
   res.json({ pdi: pdiOut(stmt.pdi.get(id), true) });
 });
 // Atualizar progresso em lote: status das ações e progresso manual das metas sem ações
@@ -738,7 +784,7 @@ router.post('/:id/progress', (req, res) => {
   const p = stmt.pdi.get(req.params.id);
   if (!p) return erro(res, 404, 'PDI não encontrado');
   const b = req.body || {};
-  const who = txt(b.who, 120) || ME;
+  const who = eu();
   let n = 0;
   db.transaction(() => {
     (Array.isArray(b.actions) ? b.actions : []).forEach(x => {
@@ -773,7 +819,7 @@ router.post('/:id/evidences', (req, res) => {
   const b = req.body || {};
   const title = txt(b.title, 200);
   if (!title) return erro(res, 400, 'dê um título à evidência');
-  const who = txt(b.author, 120) || ME;
+  const who = eu();
   const a = b.actionId ? stmt.action.get(String(b.actionId)) : null;
   db.transaction(() => {
     db.prepare(`INSERT INTO pdi_evidences (id, pdi_id, action_id, title, url, note, author, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendente', ?)`)
@@ -791,9 +837,10 @@ router.post('/:id/feedback', (req, res) => {
   const b = req.body || {};
   const message = txt(b.message, 3000);
   if (!message) return erro(res, 400, 'escreva o pedido de feedback');
-  const from = txt(b.from, 120) || ME;
+  const from = eu();
   db.prepare(`INSERT INTO pdi_feedback (id, pdi_id, from_who, to_who, message, created_at) VALUES (?, ?, ?, ?, ?, ?)`).run(newId(), p.id, from, txt(b.to, 120) || p.manager || '', message, Date.now());
   hist(p.id, 'feedback', 'Feedback solicitado' + (b.to ? ' a ' + txt(b.to, 120) : ''), from);
+  require('./notificacoes').notificar({ para: txt(b.to, 120) || p.manager || '', tipo: 'pdi-feedback', titulo: `${from} pediu seu feedback`, texto: message.slice(0, 160), link: '/pdi/ver/' + p.id, exceto: req.user.email });
   touch(p.id);
   res.json({ pdi: pdiOut(stmt.pdi.get(p.id), true) });
 });
@@ -817,8 +864,8 @@ router.patch('/:id', (req, res) => {
   if (ini && fim && fim <= ini) return erro(res, 400, 'o fim do ciclo precisa ser depois do início');
   const k = Object.keys(o);
   if (k.length) db.prepare(`UPDATE pdis SET ${k.map(x => x + ' = @' + x).join(', ')}, updated_at = @now WHERE id = @id`).run(Object.assign({ id: p.id, now: Date.now() }, o));
-  if (o.status && o.status !== p.status) hist(p.id, 'status', { ativo: 'PDI ativado', pausado: 'PDI pausado', concluido: 'PDI concluído', rascunho: 'PDI voltou a rascunho', solicitado: 'PDI solicitado' }[o.status] || o.status, txt(b.who, 120) || ME);
-  else if (k.length) hist(p.id, 'editado', 'Dados do PDI editados: ' + k.join(', '), txt(b.who, 120) || ME);
+  if (o.status && o.status !== p.status) hist(p.id, 'status', { ativo: 'PDI ativado', pausado: 'PDI pausado', concluido: 'PDI concluído', rascunho: 'PDI voltou a rascunho', solicitado: 'PDI solicitado' }[o.status] || o.status, eu());
+  else if (k.length) hist(p.id, 'editado', 'Dados do PDI editados: ' + k.join(', '), eu());
   res.json({ pdi: pdiOut(stmt.pdi.get(p.id), true) });
 });
 router.delete('/:id', (req, res) => {
@@ -854,8 +901,8 @@ router.post('/:id/checkins', (req, res) => {
   if (!note) return erro(res, 400, 'escreva como está a evolução');
   const mood = Math.max(1, Math.min(5, parseInt(b.mood, 10) || 3));
   db.prepare(`INSERT INTO pdi_checkins (id, pdi_id, date, author, mood, note, progress, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(newId(), p.id, dataOk(b.date) || hoje(), txt(b.author, 120) || ME, mood, note, pdiOut(p).progress, Date.now());
-  hist(p.id, 'checkin', 'Check-in registrado', txt(b.author, 120) || ME);
+    .run(newId(), p.id, dataOk(b.date) || hoje(), eu(), mood, note, pdiOut(p).progress, Date.now());
+  hist(p.id, 'checkin', 'Check-in registrado', eu());
   touch(p.id);
   res.json({ pdi: pdiOut(stmt.pdi.get(p.id), true) });
 });

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='7' fill='%23673DE6'/%3E%3Cpath d='M13.6 3.5 6.5 13.4h4.6l-1 7.1 7.4-10.2h-4.8l.9-6.8z' fill='%23fff'/%3E%3C/svg%3E">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Instalação do ZEUS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+/* Layout: índice fixo de etapas à esquerda (desktop) + coluna única de cartões; no celular o índice vira barra de progresso. Visual oficial Design ZEUS. */
+:root{
+  --roxo:#673DE6; --roxo-hover:#5429C9; --roxo-suave:#EFEAFD;
+  --fundo:#F6F6F7; --card:#FFFFFF; --linha:#E6E6EA;
+  --texto:#17171A; --texto-2:#3C3C44; --texto-3:#66666F;
+  --ok:#0F7A68; --ok-suave:#E3F3EF; --atencao:#9A6700; --atencao-suave:#FBF1DC;
+  --f-titulo:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --f-texto:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --raio:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --roxo:#9B7BFF; --roxo-hover:#B39CFF; --roxo-suave:#2A2340;
+  --fundo:#121215; --card:#1B1B20; --linha:#2E2E36;
+  --texto:#F1F1F4; --texto-2:#C9C9D2; --texto-3:#9A9AA6;
+  --ok:#4FC9B0; --ok-suave:#15302B; --atencao:#E2B54F; --atencao-suave:#33290F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --roxo:#9B7BFF; --roxo-hover:#B39CFF; --roxo-suave:#2A2340;
+  --fundo:#121215; --card:#1B1B20; --linha:#2E2E36;
+  --texto:#F1F1F4; --texto-2:#C9C9D2; --texto-3:#9A9AA6;
+  --ok:#4FC9B0; --ok-suave:#15302B; --atencao:#E2B54F; --atencao-suave:#33290F; color-scheme:dark}
+
+body{background:var(--fundo);color:var(--texto);font-family:var(--f-texto);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;padding-block:40px 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px}
+h1,h2,h3{font-family:var(--f-titulo);text-wrap:balance;margin:0;color:var(--texto)}
+a{color:var(--roxo)}
+a:hover{color:var(--roxo-hover)}
+
+.marca{display:flex;align-items:center;gap:10px;font-family:var(--f-titulo);font-weight:700;font-size:15px;letter-spacing:.08em}
+.marca svg{width:26px;height:26px;flex:none}
+.topo{grid-column:1/-1;display:flex;flex-direction:column;gap:14px;max-width:720px}
+.topo h1{font-size:clamp(28px,4.4vw,40px);line-height:1.1}
+.topo p{margin:0;color:var(--texto-2);max-width:62ch}
+.aviso{display:flex;gap:12px;align-items:flex-start;background:var(--atencao-suave);color:var(--texto);border-radius:var(--raio);padding:12px 14px;font-size:14px}
+.aviso b{color:var(--atencao)}
+
+nav.indice{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;display:flex;flex-direction:column;gap:2px}
+.indice .prog{font-size:13px;color:var(--texto-3);margin-bottom:10px}
+.barra{height:6px;border-radius:99px;background:var(--linha);overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;width:0;background:var(--roxo);transition:width .3s}
+.indice a{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--texto-2);padding:7px 10px;border-radius:8px;font-size:14px}
+.indice a:hover{background:var(--card);color:var(--texto)}
+.indice a .n{font-family:var(--f-titulo);font-size:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--linha);color:var(--texto-3);flex:none;font-variant-numeric:tabular-nums}
+.indice a.feito .n{background:var(--ok);border-color:var(--ok);color:var(--card)}
+
+main{display:flex;flex-direction:column;gap:20px;min-width:0}
+section.etapa{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:22px;scroll-margin-top:20px}
+.etapa header{display:flex;flex-direction:column;gap:6px}
+.etapa .rot{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--roxo)}
+.etapa h2{font-size:22px}
+.etapa header p{margin:0;color:var(--texto-2);max-width:64ch}
+
+.campo{display:flex;flex-direction:column;gap:8px;min-width:0}
+.campo>label,.campo>.lbl{font-weight:600;font-size:14.5px;color:var(--texto)}
+.campo .dica{font-size:13.5px;color:var(--texto-3);margin:-4px 0 0}
+.req{color:var(--roxo);margin-left:2px}
+.grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px}
+.grade .largo{grid-column:1/-1}
+input[type=text],input[type=email],input[type=tel],input[type=url],input[type=password],select,textarea{
+  font:inherit;color:var(--texto);background:var(--fundo);border:1px solid var(--linha);border-radius:8px;padding:10px 12px;width:100%;box-sizing:border-box}
+textarea{min-height:88px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--roxo);outline-offset:1px;border-color:transparent;background:var(--card)}
+.opcoes{display:flex;flex-direction:column;gap:6px}
+.opcoes.chips{flex-direction:row;flex-wrap:wrap}
+.op{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--linha);border-radius:8px;cursor:pointer;background:var(--card)}
+.op:hover{border-color:var(--roxo)}
+.op input{accent-color:var(--roxo);margin-top:4px;flex:none}
+.op:has(input:checked){border-color:var(--roxo);background:var(--roxo-suave)}
+.op:has(input:focus-visible){outline:2px solid var(--roxo);outline-offset:1px}
+.op small{display:block;color:var(--texto-3);font-size:13px}
+.rec{font-size:11.5px;font-weight:600;color:var(--ok);background:var(--ok-suave);padding:1px 7px;border-radius:99px;margin-left:6px;white-space:nowrap}
+
+.chave{border:1px solid var(--linha);border-radius:var(--raio);padding:16px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px}
+.chave h3{font-size:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chave .tag{font-family:var(--f-texto);font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--fundo);color:var(--texto-3);border:1px solid var(--linha)}
+.chave .tag.ob{background:var(--roxo-suave);color:var(--roxo);border-color:transparent}
+.chave .pra{grid-column:1/-1;margin:0;color:var(--texto-2);font-size:14px}
+.chave ol{grid-column:1/-1;margin:2px 0 4px;padding-left:20px;color:var(--texto-2);font-size:14px;display:flex;flex-direction:column;gap:2px}
+.chave .opcoes{grid-column:1/-1}
+.chave .link{align-self:start;font-size:13.5px;white-space:nowrap}
+.chave .chave-campo{grid-column:1/-1;margin-top:6px}
+.segredo{display:flex;gap:8px;min-width:0}
+.segredo input{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px}
+button.mostrar{padding:8px 12px;font-size:13px;flex:none}
+
+.cond[hidden]{display:none}
+.final{display:flex;flex-direction:column;gap:14px}
+.botoes{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit;font-weight:600;border-radius:8px;padding:11px 18px;cursor:pointer;border:1px solid var(--linha);background:var(--card);color:var(--texto)}
+button.pri{background:var(--roxo);border-color:var(--roxo);color:#fff}
+button.pri:hover{background:var(--roxo-hover)}
+button:focus-visible{outline:2px solid var(--roxo);outline-offset:2px}
+button:disabled{opacity:.6;cursor:default}
+#resumo{min-height:260px;font-size:13.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--fundo)}
+.status{font-size:13.5px;color:var(--ok);min-height:1.2em}
+.faltam{font-size:13.5px;color:var(--atencao)}
+footer.rod{font-size:13px;color:var(--texto-3);text-align:left}
+
+@media (max-width:820px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:24px 60px}
+  nav.indice{position:static}
+  .indice a{display:none}
+  section.etapa{padding:20px}
+  .grade{grid-template-columns:minmax(0,1fr)}
+  .chave{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topo">
+    <div class="marca" aria-label="ZEUS">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="7" fill="var(--roxo)"/><path d="M13.6 3.5 6.5 13.4h4.6l-1 7.1 7.4-10.2h-4.8l.9-6.8z" fill="#fff"/></svg>
+      ZEUS
+    </div>
+    <h1>Formulário de instalação do ZEUS</h1>
+    <p>Com estas respostas a gente prepara o seu ZEUS antes da chamada de instalação. Leva uns 15 minutos. O que você não souber, deixe em branco que a gente resolve junto na chamada. Suas respostas ficam salvas neste navegador enquanto você preenche.</p>
+    <div class="aviso" role="note"><span aria-hidden="true">🔒</span><span><b>Pode colar aqui as chaves de API e os dados do app da Meta.</b> Nunca coloque senha de login (Instagram, Facebook, e-mail, banco). Ao enviar, as respostas saem deste navegador e ficam guardadas só com a equipe da Alpha.</span></div>
+  </div>
+
+  <nav class="indice" aria-label="Etapas">
+    <div class="prog"><span id="progTxt">0 de 0 itens essenciais</span><div class="barra"><i id="progBar"></i></div></div>
+    <div id="indiceLinks"></div>
+  </nav>
+
+  <main>
+    <form id="form" novalidate></form>
+    <section class="etapa final" id="enviar">
+      <header>
+        <span class="rot">Última etapa</span>
+        <h2>Enviar para a Alpha</h2>
+        <p>Quando terminar, clique em Enviar respostas. Pode enviar mesmo com itens em branco; a gente completa na chamada. Se mudar alguma coisa depois, é só preencher e enviar de novo.</p>
+      </header>
+      <p class="faltam" id="faltam"></p>
+      <div class="botoes">
+        <button type="button" class="pri" id="btEnviar">Enviar respostas</button>
+        <button type="button" id="btLimpar">Apagar respostas</button>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </section>
+    <footer class="rod">ZEUS · plataforma de IA da Alpha Digital</footer>
+  </main>
+</div>
+
+<script>
+const ETAPAS = [
+ {id:'responsavel', titulo:'Responsável e equipe', intro:'Quem é o dono do ZEUS na sua empresa e quem vai usar.', campos:[
+  {id:'nome', label:'Seu nome completo', tipo:'text', req:true},
+  {id:'empresa', label:'Nome da empresa', tipo:'text', req:true},
+  {id:'email', label:'Seu e-mail', tipo:'email', req:true, dica:'Vira o login de Proprietário na Central do ZEUS.'},
+  {id:'whats', label:'Seu WhatsApp com DDD', tipo:'tel', req:true},
+  {id:'segmento', label:'O que a empresa vende e pra quem', tipo:'textarea', largo:true, req:true, dica:'Duas ou três linhas bastam.'},
+  {id:'usuarios', label:'Outras pessoas que vão usar a Central', tipo:'textarea', largo:true, dica:'Uma por linha: nome, e-mail e função (ex.: Ana, ana@empresa.com, comercial).'},
+  {id:'autorizados', label:'Números que podem dar ordens ao ZEUS pelo WhatsApp', tipo:'textarea', largo:true, req:true, dica:'O ZEUS só obedece comandos desses números. Normalmente o dono e um sócio ou gestor.'}
+ ]},
+ {id:'endereco', titulo:'Domínio', intro:'A Central do ZEUS fica num endereço com o domínio da sua empresa, algo como zeus.suaempresa.com.br.', campos:[
+  {id:'tem_dominio', label:'A empresa já tem domínio?', tipo:'radio', req:true, largo:true, opcoes:[
+   {v:'Sim, já tenho', d:'O mesmo do site ou do e-mail da empresa serve.'},
+   {v:'Ainda não tenho', d:'Mostramos abaixo onde contratar. Leva uns 10 minutos.'}
+  ]},
+  {id:'dominio_passos', tipo:'passos', se:['tem_dominio','Ainda não tenho'], nome:'Como contratar o domínio', link:'https://registro.br', passos:['Entre em registro.br e pesquise o nome da empresa terminado em .com.br.','Se estiver livre, contrate no CNPJ da empresa ou no CPF do dono. Custa por volta de R$ 40 por ano.','Guarde o login do Registro.br: na chamada vamos usar para apontar o endereço do ZEUS.','Depois de contratar, volte aqui, marque "Sim, já tenho" e preencha o domínio.']},
+  {id:'dominio', label:'Domínio da empresa', tipo:'text', req:true, se:['tem_dominio','Sim, já tenho'], dica:'Ex.: suaempresa.com.br'},
+  {id:'dns', label:'Onde o domínio foi registrado', tipo:'select', se:['tem_dominio','Sim, já tenho'], opcoes:['Registro.br','Cloudflare','Hostinger','GoDaddy','Locaweb','HostGator','Outro','Não sei']},
+  {id:'dns_resp', label:'Quem consegue mexer nesse domínio', tipo:'text', largo:true, se:['tem_dominio','Sim, já tenho'], dica:'Nome e WhatsApp de quem tem o acesso (você, a agência do site, o TI).'}
+ ]},
+ {id:'whatsapp', titulo:'WhatsApp', intro:'O ZEUS conecta num número de WhatsApp para atender clientes e receber suas ordens. A conexão é feita lendo um QR code, como no WhatsApp Web.', campos:[
+  {id:'wa_num', label:'Número que o ZEUS vai usar (com DDD)', tipo:'tel', req:true},
+  {id:'wa_tipo', label:'Que número é esse?', tipo:'radio', req:true, largo:true, opcoes:[
+   {v:'Chip dedicado só para o ZEUS', d:'O mais seguro. O número fica só para o atendimento.', rec:true},
+   {v:'Número comercial que já uso no WhatsApp Business', d:'Funciona. O ZEUS entra como aparelho conectado e responde junto com a equipe.'},
+   {v:'Meu número pessoal', d:'Não recomendamos: o ZEUS leria e poderia responder conversas pessoais.'}
+  ]},
+  {id:'wa_idade', label:'Há quanto tempo esse número usa WhatsApp?', tipo:'select', req:true, opcoes:['Menos de 1 mês','De 1 a 6 meses','Mais de 6 meses','É um chip novo'], dica:'Número novo precisa de um período de aquecimento antes de mandar muitas mensagens.'},
+  {id:'wa_api', label:'Esse número já usa a API oficial do WhatsApp (Meta, Twilio, Blip, Z-API, etc.)?', tipo:'select', opcoes:['Não','Sim','Não sei']},
+  {id:'wa_funcoes', label:'O que o ZEUS vai fazer no WhatsApp', tipo:'checks', largo:true, req:true, opcoes:['Responder quem chega (leads e clientes)','Qualificar e agendar reuniões','Fazer follow-up de quem parou de responder','Mandar avisos e cobranças para a equipe','Receber ordens minhas (relatórios, tarefas, conteúdo)','Participar de um grupo da equipe']},
+  {id:'wa_volume', label:'Quantas conversas novas por dia, mais ou menos?', tipo:'select', opcoes:['Até 20','De 20 a 100','De 100 a 500','Mais de 500']},
+  {id:'wa_qr', label:'Combinado para o dia da instalação', tipo:'checks', largo:true, req:true, opcoes:['O celular com esse número vai estar comigo na chamada para ler o QR code']}
+ ]},
+ {id:'meta', titulo:'Instagram e Facebook', intro:'Para o ZEUS responder Direct, ler métricas, publicar ou acompanhar anúncios. Você mesmo faz o login na chamada para autorizar; ninguém pede sua senha.', campos:[
+  {id:'ig', label:'@ do Instagram', tipo:'text', dica:'Deixe em branco se não for usar Instagram agora.'},
+  {id:'ig_tipo', label:'Tipo de conta do Instagram', tipo:'select', opcoes:['Profissional: Empresa','Profissional: Criador de conteúdo','Pessoal','Não sei'], dica:'Se for pessoal, a gente muda para profissional na chamada. É gratuito.'},
+  {id:'fb_pagina', label:'O Instagram está ligado a uma Página do Facebook?', tipo:'select', opcoes:['Sim','Não','Não sei']},
+  {id:'fb_bm', label:'A empresa tem Gerenciador de Negócios (Business Manager)?', tipo:'select', opcoes:['Sim, verificado','Sim, sem verificação','Não','Não sei']},
+  {id:'ads_conta', label:'ID da conta de anúncios (se já anuncia)', tipo:'text', dica:'Fica no Gerenciador de Anúncios, ao lado do nome da conta. Pode deixar em branco.'},
+  {id:'ads_quem', label:'Quem cuida dos anúncios hoje', tipo:'text', dica:'Você, um gestor de tráfego ou uma agência.'},
+  {id:'meta_ok', label:'Combinado para o dia da instalação', tipo:'checks', largo:true, opcoes:['Vou estar logado no Instagram e no Facebook (com acesso de administrador da página e do Gerenciador de Negócios)']}
+ ]},
+ {id:'metaapp', titulo:'App da Meta (Facebook Developers)', intro:'Obrigatório. Para o ZEUS falar com o seu Instagram e o seu Facebook, a empresa precisa ter um app próprio no painel de desenvolvedores da Meta. É gratuito e leva uns 15 minutos.', campos:[
+  {id:'meta_passos', tipo:'passos', nome:'Como criar o app', link:'https://developers.facebook.com/apps', passos:['Entre em developers.facebook.com com o Facebook que é administrador da Página e do Gerenciador de Negócios. No primeiro acesso, clique em Começar e confirme o celular para virar desenvolvedor.','Clique em Meus apps > Criar app. Use o nome da empresa e o e-mail da empresa.','Nos casos de uso, escolha os do Instagram (mensagens e conteúdo) e, se a empresa anuncia, o de anúncios (API de Marketing).','Conecte o app ao portfólio empresarial (Gerenciador de Negócios) da empresa.','Em Configurações do app > Básico, copie o ID do app e a Chave secreta do app e cole abaixo.','Na parte do Instagram dentro do app, copie o ID e a chave secreta do app do Instagram.','Em Funções do app, adicione o @ da empresa como Testador do Instagram e aceite o convite em instagram.com > Configurações > Apps e sites.','Não precisa mandar o app para análise da Meta: como o app é da sua empresa, ele já funciona nas suas contas.']},
+  {id:'meta_app_id', label:'ID do app', tipo:'text', req:true},
+  {id:'meta_app_secret', label:'Chave secreta do app', tipo:'segredo', req:true},
+  {id:'ig_app_id', label:'ID do app do Instagram', tipo:'text', req:true, dica:'Fica na parte do Instagram, dentro do app. É diferente do ID do app.'},
+  {id:'ig_app_secret', label:'Chave secreta do app do Instagram', tipo:'segredo', req:true},
+  {id:'bm_id', label:'ID do Gerenciador de Negócios', tipo:'text', dica:'Em business.facebook.com > Configurações > Informações da empresa.'},
+  {id:'pagina_nome', label:'Nome da Página do Facebook ligada ao Instagram', tipo:'text'},
+  {id:'meta_token', label:'Token de acesso do Facebook (se já tiver)', tipo:'segredo', largo:true, dica:'Começa com EAA. Pode ser o token do usuário do sistema do Gerenciador de Negócios. Se não souber gerar, deixe em branco que a gente gera na chamada.'},
+  {id:'ig_token', label:'Token do Instagram (se já tiver)', tipo:'segredo', largo:true, dica:'Começa com IG. Se não tiver, a gente gera na chamada.'},
+  {id:'meta_feito', label:'Já fiz', tipo:'checks', largo:true, req:true, opcoes:['Criei a conta de desenvolvedor da Meta','Criei o app e conectei ao Gerenciador de Negócios','Adicionei o Instagram da empresa como testador e aceitei o convite']}
+ ]},
+ {id:'chaves', titulo:'Claude e chaves de IA', intro:'O ZEUS usa serviços de IA cobrados direto no seu cartão. Assim o custo fica transparente e no seu nome. Crie as contas abaixo, marque o que já fez e cole cada chave no campo dela.', especial:'chaves', campos:[
+  {id:'k_claude', tipo:'chave', nome:'Claude (Anthropic)', ob:true, req:true, semChave:true, status:['Conta criada','Plano assinado'], pra:'É o cérebro do ZEUS: conversa, raciocina, escreve e executa as tarefas. Funciona pela assinatura do Claude, no nome da empresa.', link:'https://claude.ai', passos:['Crie a conta em claude.ai com o e-mail da empresa.','Assine o plano em Configurações > Cobrança.','Na chamada de instalação, você faz o login do Claude no ZEUS. Deixe o e-mail da conta aberto para receber o código.']},
+  {id:'claude_plano', label:'Qual plano do Claude você assinou?', tipo:'select', req:true, opcoes:['Pro','Max 5x','Max 20x','Ainda não assinei']},
+  {id:'k_openai', tipo:'chave', nome:'OpenAI (GPT)', ob:true, req:true, pra:'Gera imagens para posts, carrosséis e anúncios, e serve de apoio ao ZEUS.', link:'https://platform.openai.com', passos:['Crie a conta em platform.openai.com.','Em Settings > Billing, cadastre o cartão e coloque um crédito inicial.','Em Settings > Organization, faça a verificação da organização (pede um documento). Sem ela a geração de imagem não libera.','Em API keys, crie uma chave com o nome ZEUS e cole abaixo.']},
+  {id:'k_gemini', tipo:'chave', nome:'Google Gemini', ob:true, req:true, pra:'Segunda opção de geração de imagem e leitura de imagens e documentos.', link:'https://aistudio.google.com/apikey', passos:['Entre em aistudio.google.com com uma conta Google da empresa.','Ative o faturamento (Billing) no projeto da chave. O plano gratuito não gera imagens.','Clique em Get API key, crie a chave e cole abaixo.']},
+  {id:'k_groq', tipo:'chave', nome:'Groq', ob:false, pra:'Transcreve os áudios que chegam no WhatsApp. Tem plano gratuito que costuma bastar.', link:'https://console.groq.com/keys', passos:['Crie a conta em console.groq.com.','Em API Keys, crie uma chave com o nome ZEUS e cole abaixo.']},
+  {id:'k_eleven', tipo:'chave', nome:'ElevenLabs', ob:false, pra:'Só se quiser que o ZEUS mande áudios com uma voz própria ou clonada.', link:'https://elevenlabs.io', passos:['Crie a conta e assine um plano que permita clonar voz.','Em Developers > API Keys, crie a chave e cole abaixo.']}
+ ]},
+ {id:'google', titulo:'Google e outras ferramentas', intro:'Opcional. Integrações que deixam o ZEUS mais útil no dia a dia.', campos:[
+  {id:'g_conta', label:'Conta Google da empresa', tipo:'email', dica:'Para o ZEUS usar Agenda, Gmail, Drive e Planilhas. Você autoriza com login na chamada.'},
+  {id:'g_usos', label:'O que o ZEUS pode usar do Google', tipo:'checks', largo:true, opcoes:['Agenda (marcar e consultar reuniões)','Gmail (ler e mandar e-mails)','Drive (guardar e ler arquivos)','Planilhas','Contatos']},
+  {id:'ferramentas', label:'Outras ferramentas que a empresa usa', tipo:'checks', largo:true, opcoes:['Asaas','ZapSign','ClickUp','Trello ou Notion','RD Station','Hotmart, Kiwify ou Eduzz','CRM próprio ou outro CRM','Nenhuma']},
+  {id:'ferramentas_obs', label:'Quais e para quê', tipo:'textarea', largo:true, dica:'Ex.: "Usamos o Pipedrive e queremos que o ZEUS cadastre os leads lá".'}
+ ]},
+ {id:'treino', titulo:'Material para treinar o ZEUS', intro:'Quanto mais o ZEUS conhece da sua empresa, melhor ele atende. Mande o que já existe; não precisa produzir nada novo.', campos:[
+  {id:'site', label:'Site da empresa', tipo:'url'},
+  {id:'drive', label:'Link de uma pasta com materiais', tipo:'url', largo:true, dica:'Apresentação, tabela de preços, perguntas frequentes, roteiro de vendas, respostas a objeções, contratos modelo. Google Drive ou Dropbox, com acesso liberado para quem tem o link.'},
+  {id:'tom', label:'Como a empresa fala com o cliente', tipo:'textarea', largo:true, req:true, dica:'Ex.: "informal, chama de você, sem gíria, usa o primeiro nome".'},
+  {id:'nunca', label:'O que o ZEUS nunca pode dizer ou fazer', tipo:'textarea', largo:true, req:true, dica:'Ex.: dar desconto, prometer prazo, falar de concorrente, passar preço sem entender o caso.'},
+  {id:'humano', label:'Quando o ZEUS deve passar a conversa para uma pessoa', tipo:'textarea', largo:true, dica:'Ex.: cliente irritado, pedido de reembolso, negociação acima de R$ 10 mil. E para quem passar.'}
+ ]},
+ {id:'agenda', titulo:'Chamada de instalação', intro:'Uma chamada de cerca de 1 hora e meia para conectar tudo com você.', campos:[
+  {id:'data1', label:'Primeira opção de dia e horário', tipo:'text', req:true, dica:'Ex.: terça, 28/10, às 14h'},
+  {id:'data2', label:'Segunda opção', tipo:'text'},
+  {id:'checklist', label:'Na chamada vou ter em mãos', tipo:'checks', largo:true, req:true, opcoes:['Computador (não só celular)','O celular do número do ZEUS','Login do Instagram e do Facebook','As chaves de IA que criei','Login de onde o domínio está registrado']}
+ ]}
+];
+
+const LS = 'zeus-instalacao-v1';
+const form = document.getElementById('form');
+let dados = {};
+try { dados = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch(e) { dados = {}; }
+
+function el(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs||{})) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  kids.flat().forEach(k => k != null && e.append(k));
+  return e;
+}
+function rotulo(c, forId){
+  const l = el(forId ? 'label' : 'span', forId ? {for:forId} : {class:'lbl'}, c.label);
+  if (c.req) l.append(el('span', {class:'req', 'aria-hidden':'true', text:' *'}));
+  return l;
+}
+
+function montar(){
+  const idx = document.getElementById('indiceLinks');
+  ETAPAS.forEach((et, i) => {
+    idx.append(el('a', {href:'#'+et.id, 'data-etapa':et.id}, el('span',{class:'n',text:String(i+1)}), et.titulo));
+    const sec = el('section', {class:'etapa', id:et.id},
+      el('header', {}, el('span',{class:'rot',text:'Etapa '+(i+1)+' de '+ETAPAS.length}), el('h2',{text:et.titulo}), el('p',{text:et.intro})));
+    const box = el('div', {class: et.especial === 'chaves' ? 'opcoes' : 'grade'});
+    if (et.especial === 'chaves') box.style.gap = '14px';
+    et.campos.forEach(c => box.append(campo(c)));
+    sec.append(box);
+    form.append(sec);
+  });
+}
+
+function campo(c){
+  const fid = 'f_' + c.id;
+  let wrap;
+  if (c.tipo === 'chave') {
+    const st = c.status || ['Conta criada','Cartão ou crédito cadastrado','Chave gerada'];
+    wrap = el('div', {class:'chave', 'data-campo':c.id},
+      el('h3', {}, c.nome, el('span', {class:'tag'+(c.ob?' ob':''), text:c.ob?'Necessário':'Opcional'})),
+      el('a', {class:'link', href:c.link, target:'_blank', rel:'noopener'}, 'Abrir site ↗'),
+      el('p', {class:'pra', text:c.pra}),
+      el('ol', {}, c.passos.map(p => el('li',{text:p}))),
+      el('div', {class:'opcoes chips', role:'group', 'aria-label':c.nome}, st.map((s,j) => {
+        const id = fid+'_'+j; const inp = el('input',{type:'checkbox', id, name:c.id, value:s});
+        if ((dados[c.id]||[]).includes(s)) inp.checked = true;
+        return el('label',{class:'op', for:id}, inp, el('span',{text:s}));
+      }))
+    );
+    if (!c.semChave) {
+      const kid = fid + '_chave';
+      wrap.append(el('div', {class:'campo chave-campo'}, el('label', {for:kid, text:'Cole a chave de API aqui'}), segredo(kid, c.id + '_chave')));
+    }
+    return wrap;
+  }
+  if (c.tipo === 'passos') {
+    const box = el('div', {class:'chave largo'+(c.se?' cond':''), 'data-campo':c.id},
+      el('h3', {}, c.nome),
+      el('a', {class:'link', href:c.link, target:'_blank', rel:'noopener'}, 'Abrir site ↗'),
+      el('ol', {}, c.passos.map(p => el('li',{text:p}))));
+    if (c.se) box.dataset.se = JSON.stringify(c.se);
+    return box;
+  }
+  wrap = el('div', {class:'campo'+(c.largo?' largo':'')+(c.se?' cond':''), 'data-campo':c.id});
+  if (c.se) wrap.dataset.se = JSON.stringify(c.se);
+  if (c.tipo === 'radio' || c.tipo === 'checks') {
+    wrap.append(rotulo(c));
+    if (c.dica) wrap.append(el('p',{class:'dica',text:c.dica}));
+    const grp = el('div', {class:'opcoes', role: c.tipo==='radio'?'radiogroup':'group', 'aria-label':c.label});
+    c.opcoes.forEach((o, j) => {
+      const v = typeof o === 'string' ? o : o.v;
+      const id = fid+'_'+j;
+      const inp = el('input', {type: c.tipo==='radio'?'radio':'checkbox', id, name:c.id, value:v});
+      if (c.tipo === 'radio' ? dados[c.id] === v : (dados[c.id]||[]).includes(v)) inp.checked = true;
+      const txt = el('span', {}, v);
+      if (o.rec) txt.append(el('span',{class:'rec',text:'recomendado'}));
+      if (o.d) txt.append(el('small',{text:o.d}));
+      grp.append(el('label', {class:'op', for:id}, inp, txt));
+    });
+    wrap.append(grp);
+  } else {
+    wrap.append(rotulo(c, fid));
+    if (c.dica) wrap.append(el('p',{class:'dica',text:c.dica}));
+    let inp;
+    if (c.tipo === 'textarea') inp = el('textarea', {id:fid, name:c.id});
+    else if (c.tipo === 'select') {
+      inp = el('select', {id:fid, name:c.id}, el('option',{value:'',text:'Escolha'}), c.opcoes.map(o => el('option',{value:o,text:o})));
+    } else if (c.tipo === 'segredo') { wrap.append(segredo(fid, c.id)); return wrap; }
+    else inp = el('input', {type:c.tipo, id:fid, name:c.id, autocomplete:'off'});
+    if (dados[c.id]) inp.value = dados[c.id];
+    wrap.append(inp);
+  }
+  return wrap;
+}
+
+function segredo(id, name){
+  const inp = el('input', {type:'password', id, name, autocomplete:'off', spellcheck:'false'});
+  if (dados[name]) inp.value = dados[name];
+  const bt = el('button', {type:'button', class:'mostrar', 'aria-controls':id, text:'Mostrar'});
+  bt.addEventListener('click', () => { const oculto = inp.type === 'password'; inp.type = oculto ? 'text' : 'password'; bt.textContent = oculto ? 'Ocultar' : 'Mostrar'; });
+  return el('div', {class:'segredo'}, inp, bt);
+}
+
+function todosCampos(){ return ETAPAS.flatMap(et => et.campos.map(c => ({...c, etapa:et}))); }
+function ler(){
+  const out = {};
+  todosCampos().forEach(c => {
+    if (c.tipo === 'passos') return;
+    if (c.tipo === 'chave' && !c.semChave) { const k = form.querySelector(`[name="${c.id}_chave"]`); out[c.id + '_chave'] = k ? k.value.trim() : ''; }
+    if (c.tipo === 'checks' || c.tipo === 'chave') out[c.id] = [...form.querySelectorAll(`input[name="${c.id}"]:checked`)].map(i => i.value);
+    else if (c.tipo === 'radio') { const r = form.querySelector(`input[name="${c.id}"]:checked`); out[c.id] = r ? r.value : ''; }
+    else { const i = form.querySelector(`[name="${c.id}"]`); out[c.id] = i ? i.value.trim() : ''; }
+  });
+  return out;
+}
+function visivel(c, d){ return !c.se || d[c.se[0]] === c.se[1]; }
+function preenchido(c, d){
+  const v = d[c.id];
+  if (c.tipo === 'chave') return (v||[]).length === (c.status || [1,2,3]).length && (c.semChave || !!d[c.id + '_chave']);
+  return Array.isArray(v) ? v.length > 0 : !!v;
+}
+
+function atualizar(){
+  dados = ler();
+  try { localStorage.setItem(LS, JSON.stringify(dados)); } catch(e) {}
+  form.querySelectorAll('[data-se]').forEach(w => { const [k,v] = JSON.parse(w.dataset.se); w.hidden = dados[k] !== v; });
+  let tot = 0, ok = 0;
+  ETAPAS.forEach(et => {
+    const reqs = et.campos.filter(c => c.req && visivel(c, dados));
+    const feitos = reqs.filter(c => preenchido(c, dados)).length;
+    tot += reqs.length; ok += feitos;
+    const a = document.querySelector(`.indice a[data-etapa="${et.id}"]`);
+    if (a) a.classList.toggle('feito', reqs.length > 0 && feitos === reqs.length);
+  });
+  document.getElementById('progTxt').textContent = `${ok} de ${tot} itens essenciais`;
+  document.getElementById('progBar').style.width = (tot ? Math.round(ok/tot*100) : 0) + '%';
+  return {ok, tot};
+}
+
+function faltando(){
+  return todosCampos().filter(c => c.req && visivel(c, dados) && !preenchido(c, dados)).map(c => c.label || c.nome);
+}
+
+function resumo(){
+  const d = ler();
+  const linhas = [`*Instalação do ZEUS: ${d.empresa || 'empresa'}*`, ''];
+  ETAPAS.forEach((et, i) => {
+    const itens = [];
+    et.campos.forEach(c => {
+      if (!visivel(c, d)) return;
+      const v = d[c.id];
+      if (c.tipo === 'chave') {
+        const n = (c.status || [1,2,3]).length;
+        const s = (v||[]).length === n ? 'pronto' : (v||[]).length ? 'em andamento ('+v.join(', ').toLowerCase()+')' : 'não iniciado';
+        itens.push(`• ${c.nome}: ${s}`);
+        if (d[c.id + '_chave']) itens.push(`  Chave: ${d[c.id + '_chave']}`);
+        return;
+      }
+      if (!v || (Array.isArray(v) && !v.length)) return;
+      const val = Array.isArray(v) ? v.join('; ') : v;
+      itens.push(`• ${c.label}: ${val.includes('\n') ? '\n  ' + val.split('\n').join('\n  ') : val}`);
+    });
+    if (itens.length) { linhas.push(`*${i+1}. ${et.titulo}*`, ...itens, ''); }
+  });
+  const f = faltando();
+  if (f.length) linhas.push(`Ainda em aberto: ${f.join('; ')}.`);
+  return linhas.join('\n').trim();
+}
+
+montar();
+form.addEventListener('input', atualizar);
+form.addEventListener('change', atualizar);
+form.addEventListener('submit', e => e.preventDefault());
+atualizar();
+
+const st = document.getElementById('status');
+const btEnviar = document.getElementById('btEnviar');
+function avisarFaltas(){
+  const f = faltando();
+  document.getElementById('faltam').textContent = f.length ? `Faltam ${f.length} itens essenciais. Pode enviar assim mesmo; a gente completa na chamada.` : '';
+}
+form.addEventListener('change', avisarFaltas);
+form.addEventListener('input', () => { if (btEnviar.disabled) { btEnviar.disabled = false; btEnviar.textContent = 'Enviar respostas'; } });
+avisarFaltas();
+btEnviar.addEventListener('click', async () => {
+  const d = ler();
+  st.style.color = '';
+  if (!d.nome || !d.empresa) {
+    st.textContent = 'Preencha pelo menos seu nome e o nome da empresa antes de enviar.';
+    st.style.color = 'var(--atencao)';
+    document.getElementById(d.nome ? 'f_empresa' : 'f_nome').focus();
+    return;
+  }
+  btEnviar.disabled = true; btEnviar.textContent = 'Enviando...';
+  try {
+    const r = await fetch('/api/enviar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({dados:d, resumo:resumo(), faltando:faltando()})});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.erro || 'falha no envio');
+    try { localStorage.removeItem(LS); } catch(e) {}
+    dados = {}; form.reset(); atualizar(); avisarFaltas();
+    btEnviar.textContent = 'Enviado';
+    st.textContent = 'Respostas enviadas. A equipe da Alpha já recebeu tudo e vai falar com você para marcar a instalação. As respostas foram apagadas deste navegador.';
+    window.scrollTo({top: document.getElementById('enviar').offsetTop - 20});
+  } catch(e) {
+    btEnviar.disabled = false; btEnviar.textContent = 'Enviar respostas';
+    st.textContent = 'Não foi possível enviar agora (' + e.message + '). Suas respostas continuam salvas aqui; tente de novo em alguns minutos.';
+    st.style.color = 'var(--atencao)';
+  }
+});
+let confirmarLimpar = false;
+document.getElementById('btLimpar').addEventListener('click', e => {
+  if (!confirmarLimpar) { confirmarLimpar = true; e.target.textContent = 'Clique de novo para apagar tudo'; setTimeout(() => { confirmarLimpar = false; e.target.textContent = 'Apagar respostas'; }, 4000); return; }
+  try { localStorage.removeItem(LS); } catch(err) {}
+  dados = {}; form.reset(); atualizar(); avisarFaltas();
+  confirmarLimpar = false; e.target.textContent = 'Apagar respostas'; st.textContent = 'Respostas apagadas.';
+});
+</script>
+
+</body>
+</html>

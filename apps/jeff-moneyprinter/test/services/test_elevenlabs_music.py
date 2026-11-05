@@ -77,7 +77,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
             patch.object(
                 elevenlabs_music.config,
                 "elevenlabs",
-                {"api_key": "config-key"},
+                {"api_key": "<REDACTED>"},
             ),
             patch.dict(os.environ, {"ELEVENLABS_API_KEY": "env-key"}),
         ):
@@ -128,7 +128,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
             patch.object(
                 elevenlabs_music.config,
                 "elevenlabs",
-                {"api_key": "test-key"},
+                {"api_key": "<REDACTED>"},
             ),
             patch.object(
                 elevenlabs_music.requests,
@@ -172,7 +172,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
             patch.object(
                 elevenlabs_music.config,
                 "elevenlabs",
-                {"api_key": "test-key"},
+                {"api_key": "<REDACTED>"},
             ),
             patch.object(
                 elevenlabs_music.requests,
@@ -218,7 +218,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
                 patch.object(
                     elevenlabs_music.config,
                     "elevenlabs",
-                    {"api_key": "test-key"},
+                    {"api_key": "<REDACTED>"},
                 ),
                 patch.object(
                     elevenlabs_music.requests,
@@ -275,7 +275,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
             patch.object(
                 elevenlabs_music.config,
                 "elevenlabs",
-                {"api_key": "test-key"},
+                {"api_key": "<REDACTED>"},
             ),
             patch.object(
                 elevenlabs_music.requests,
@@ -411,7 +411,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
                     elevenlabs_music.config,
                     "elevenlabs",
                     {
-                        "api_key": "test-key",
+                        "api_key": "<REDACTED>",
                         "music_model_id": "music_v2",
                     },
                 ),
@@ -482,7 +482,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
                     patch.object(
                         elevenlabs_music.config,
                         "elevenlabs",
-                        {"api_key": "test-key"},
+                        {"api_key": "<REDACTED>"},
                     ),
                     patch.object(
                         elevenlabs_music.requests,
@@ -516,7 +516,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
                 patch.object(
                     elevenlabs_music.config,
                     "elevenlabs",
-                    {"api_key": "test-key"},
+                    {"api_key": "<REDACTED>"},
                 ),
                 patch.object(
                     elevenlabs_music, "_create_video_proxy"
@@ -553,7 +553,7 @@ class TestElevenLabsMusicService(unittest.TestCase):
                 patch.object(
                     elevenlabs_music.config,
                     "elevenlabs",
-                    {"api_key": "test-key"},
+                    {"api_key": "<REDACTED>"},
                 ),
                 patch.object(
                     elevenlabs_music,

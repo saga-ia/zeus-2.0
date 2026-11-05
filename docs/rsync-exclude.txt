@@ -71,3 +71,5 @@ data/
 .encryption-key
 chatwoot-cache*.json
 ganhos/data.json
+core
+core.[0-9]*

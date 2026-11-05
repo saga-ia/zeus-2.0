@@ -25,3 +25,9 @@
 */3 * * * * /usr/bin/python3 /opt/jeff-sites/boardsummit2026planilha/refresh.py >> /opt/jeff-sites/boardsummit2026planilha/refresh.log 2>&1
 */10 * * * * /usr/bin/python3 /opt/jeff-sites/cigc-dashboard/update-from-vitor.py >> /var/log/cigc-dashboard-update.log 2>&1
 45 23 * * * /usr/bin/python3 /opt/jeff-sites/cigc-dashboard/update-from-gustavo.py >> /var/log/cigc-dashboard-update.log 2>&1
+# Guardião dos WhatsApps: limite de memória do Chrome + restart noturno 04h BRT (sessão mantida) + aviso de queda
+*/5 * * * * /opt/jeff-worker/scripts/wa-guardiao.sh >> /opt/jeff-worker/logs/wa-guardiao.log 2>&1
+0 13,14 * * 1 /opt/jeff-worker/scripts/nina-weekly.sh >> /opt/jeff-worker/logs/nina-weekly.log 2>&1
+30 5 * * * /opt/jeff-worker/scripts/server-map.sh >> /opt/jeff-worker/logs/server-map.log 2>&1
+# Relatório diário Farias Souza — 21h BRT (02h CEST)
+# DESATIVADO 2026-10-10 Jeff pediu: 0 2 * * * /opt/jeff-worker/scripts/farias-daily-report.sh >> /opt/jeff-worker/logs/farias-daily-report.log 2>&1

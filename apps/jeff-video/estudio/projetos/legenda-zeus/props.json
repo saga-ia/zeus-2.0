@@ -1,0 +1,2360 @@
+{
+ "video": "video.mp4",
+ "inicio": 0,
+ "duracao": 176.2,
+ "palavras": [
+  {
+   "texto": "EU",
+   "inicio": 0.16,
+   "fim": 0.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "GOSTARIA",
+   "inicio": 0.84,
+   "fim": 2.22,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DE",
+   "inicio": 2.22,
+   "fim": 2.34,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SABER",
+   "inicio": 2.34,
+   "fim": 2.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EXATAMENTE",
+   "inicio": 2.52,
+   "fim": 2.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 2.98,
+   "fim": 3.3,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 3.3,
+   "fim": 3.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 3.4,
+   "fim": 3.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZ,",
+   "inicio": 3.68,
+   "fim": 4.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUAIS",
+   "inicio": 4.6,
+   "fim": 4.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SÃO",
+   "inicio": 4.68,
+   "fim": 4.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 4.84,
+   "fim": 4.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AGENTES",
+   "inicio": 4.92,
+   "fim": 5.14,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 5.14,
+   "fim": 5.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 5.28,
+   "fim": 5.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TEM",
+   "inicio": 5.44,
+   "fim": 5.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "À",
+   "inicio": 5.64,
+   "fim": 5.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SUA",
+   "inicio": 5.72,
+   "fim": 5.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DISPOSIÇÃO",
+   "inicio": 5.82,
+   "fim": 6.2,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "AÍ.",
+   "inicio": 6.2,
+   "fim": 6.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESPECIFICAMENTE,",
+   "inicio": 12.06,
+   "fim": 12.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DETALHA",
+   "inicio": 12.78,
+   "fim": 13.16,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 13.16,
+   "fim": 13.3,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MIM",
+   "inicio": 13.3,
+   "fim": 13.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TUDO",
+   "inicio": 13.44,
+   "fim": 13.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 13.66,
+   "fim": 13.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 13.74,
+   "fim": 13.76,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 13.76,
+   "fim": 13.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 13.9,
+   "fim": 14.12,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER.",
+   "inicio": 14.12,
+   "fim": 14.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 23.4,
+   "fim": 24.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 24.32,
+   "fim": 24.54,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ANALISAR",
+   "inicio": 24.54,
+   "fim": 24.84,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 24.84,
+   "fim": 24.96,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TRABALHO",
+   "inicio": 24.96,
+   "fim": 25.18,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DO",
+   "inicio": 25.18,
+   "fim": 25.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TIME",
+   "inicio": 25.42,
+   "fim": 25.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "COMERCIAL,",
+   "inicio": 25.56,
+   "fim": 25.88,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 25.88,
+   "fim": 26.1,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EXEMPLO?",
+   "inicio": 26.1,
+   "fim": 26.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 30,
+   "fim": 32.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 32.04,
+   "fim": 32.26,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ANALISAR",
+   "inicio": 32.26,
+   "fim": 32.68,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 32.68,
+   "fim": 32.8,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MÉTRICAS",
+   "inicio": 32.8,
+   "fim": 33.24,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DO",
+   "inicio": 33.24,
+   "fim": 33.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FACEBOOK,",
+   "inicio": 33.54,
+   "fim": 34.26,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ANÚNCIO",
+   "inicio": 34.26,
+   "fim": 34.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DA",
+   "inicio": 34.54,
+   "fim": 34.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "META",
+   "inicio": 34.72,
+   "fim": 34.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 34.9,
+   "fim": 35.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DO",
+   "inicio": 35.08,
+   "fim": 35.14,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "GOOGLE,",
+   "inicio": 35.14,
+   "fim": 35.54,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DO",
+   "inicio": 35.54,
+   "fim": 35.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "LINKEDIN,",
+   "inicio": 35.6,
+   "fim": 36.04,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "TIKTOK?",
+   "inicio": 36.04,
+   "fim": 36.64,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUAIS",
+   "inicio": 45.62,
+   "fim": 46.58,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SÃO",
+   "inicio": 46.58,
+   "fim": 46.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 46.72,
+   "fim": 46.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AGENTES",
+   "inicio": 46.82,
+   "fim": 47.04,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 47.04,
+   "fim": 47.16,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 47.16,
+   "fim": 47.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TEM",
+   "inicio": 47.36,
+   "fim": 47.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AÍ",
+   "inicio": 47.52,
+   "fim": 47.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "À",
+   "inicio": 47.62,
+   "fim": 47.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SUA",
+   "inicio": 47.7,
+   "fim": 47.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DISPOSIÇÃO?",
+   "inicio": 47.78,
+   "fim": 48.26,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 60,
+   "fim": 62.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE,",
+   "inicio": 62.12,
+   "fim": 62.94,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 62.94,
+   "fim": 63.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EXEMPLO,",
+   "inicio": 63.32,
+   "fim": 63.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 63.6,
+   "fim": 63.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "GENTE",
+   "inicio": 63.66,
+   "fim": 63.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PRECISA",
+   "inicio": 63.74,
+   "fim": 63.96,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 63.96,
+   "fim": 64.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "UMA",
+   "inicio": 64.36,
+   "fim": 64.86,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTRUTURA",
+   "inicio": 64.86,
+   "fim": 65.9,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 65.9,
+   "fim": 66.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "30",
+   "inicio": 66.08,
+   "fim": 66.26,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DIAS",
+   "inicio": 66.26,
+   "fim": 66.52,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DE",
+   "inicio": 66.52,
+   "fim": 66.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONTEÚDO",
+   "inicio": 66.68,
+   "fim": 66.98,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 66.98,
+   "fim": 67.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 67.72,
+   "fim": 67.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MINHA",
+   "inicio": 67.82,
+   "fim": 67.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "REDE",
+   "inicio": 67.9,
+   "fim": 68.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SOCIAL.",
+   "inicio": 68.08,
+   "fim": 68.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 68.48,
+   "fim": 68.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 68.6,
+   "fim": 68.88,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER?",
+   "inicio": 68.88,
+   "fim": 69.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EU",
+   "inicio": 75.56,
+   "fim": 76.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUERO",
+   "inicio": 76.4,
+   "fim": 76.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 76.64,
+   "fim": 76.8,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ...",
+   "inicio": 76.8,
+   "fim": 77.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 77.42,
+   "fim": 77.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 77.78,
+   "fim": 78.08,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 78.08,
+   "fim": 78.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 78.54,
+   "fim": 79.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 79.42,
+   "fim": 79.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 79.74,
+   "fim": 79.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "IMAGENS,",
+   "inicio": 79.9,
+   "fim": 80.72,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 80.72,
+   "fim": 80.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 80.98,
+   "fim": 81.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EDIÇÃO",
+   "inicio": 81.12,
+   "fim": 81.34,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DOS",
+   "inicio": 81.34,
+   "fim": 81.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VÍDEOS,",
+   "inicio": 81.54,
+   "fim": 82.1,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 82.1,
+   "fim": 82.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 82.24,
+   "fim": 82.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SCRIPTS,",
+   "inicio": 82.42,
+   "fim": 82.98,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 82.98,
+   "fim": 83.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 83.06,
+   "fim": 83.2,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PUBLICAÇÕES?",
+   "inicio": 83.2,
+   "fim": 83.68,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "EU",
+   "inicio": 83.08,
+   "fim": 84.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTOU",
+   "inicio": 84.18,
+   "fim": 84.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SOLICITANDO",
+   "inicio": 84.36,
+   "fim": 84.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AOS",
+   "inicio": 84.88,
+   "fim": 85.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SEUS",
+   "inicio": 85.04,
+   "fim": 85.14,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 85.14,
+   "fim": 85.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CRIAR",
+   "inicio": 85.32,
+   "fim": 85.5,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 85.5,
+   "fim": 85.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "IMAGENS,",
+   "inicio": 85.7,
+   "fim": 86.16,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "EDITAR",
+   "inicio": 86.16,
+   "fim": 86.26,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 86.26,
+   "fim": 86.46,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VÍDEOS,",
+   "inicio": 86.46,
+   "fim": 87.06,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 87.06,
+   "fim": 87.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 87.18,
+   "fim": 87.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SCRIPTS",
+   "inicio": 87.36,
+   "fim": 87.62,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 87.62,
+   "fim": 87.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 87.78,
+   "fim": 87.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PUBLICAÇÕES.",
+   "inicio": 87.82,
+   "fim": 88.36,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 88.66,
+   "fim": 88.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 88.78,
+   "fim": 88.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MAIS",
+   "inicio": 88.84,
+   "fim": 88.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POSSO",
+   "inicio": 88.98,
+   "fim": 89.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 89.18,
+   "fim": 89.38,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 89.38,
+   "fim": 89.5,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ,",
+   "inicio": 89.5,
+   "fim": 89.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "JEFFERSON?",
+   "inicio": 89.92,
+   "fim": 90.02,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 90.12,
+   "fim": 90.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 90.26,
+   "fim": 90.54,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ME",
+   "inicio": 90.54,
+   "fim": 90.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENVIAR",
+   "inicio": 90.7,
+   "fim": 90.9,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ESSE",
+   "inicio": 90.9,
+   "fim": 91.3,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "RELATÓRIO",
+   "inicio": 91.3,
+   "fim": 91.74,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 91.74,
+   "fim": 91.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 91.9,
+   "fim": 92.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTÁ",
+   "inicio": 92.06,
+   "fim": 92.16,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZENDO",
+   "inicio": 92.16,
+   "fim": 92.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 92.4,
+   "fim": 92.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VIA",
+   "inicio": 92.62,
+   "fim": 92.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E-MAIL",
+   "inicio": 92.84,
+   "fim": 93.18,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "OU",
+   "inicio": 93.18,
+   "fim": 93.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VIA",
+   "inicio": 93.48,
+   "fim": 93.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "WHATSAPP?",
+   "inicio": 93.14,
+   "fim": 93.84,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "JEFFERSON,",
+   "inicio": 94.28,
+   "fim": 94.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EU",
+   "inicio": 94.56,
+   "fim": 94.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSIGO",
+   "inicio": 94.72,
+   "fim": 94.82,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ENVIAR",
+   "inicio": 94.82,
+   "fim": 95.08,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ESSE",
+   "inicio": 95.08,
+   "fim": 95.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "RELATÓRIO",
+   "inicio": 95.24,
+   "fim": 95.54,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 95.54,
+   "fim": 95.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E-MAIL",
+   "inicio": 95.72,
+   "fim": 95.9,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "OU",
+   "inicio": 95.9,
+   "fim": 96.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "WHATSAPP.",
+   "inicio": 96.04,
+   "fim": 96.28,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUAL",
+   "inicio": 96.56,
+   "fim": 96.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 96.74,
+   "fim": 96.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PREFERE",
+   "inicio": 96.92,
+   "fim": 97.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "IR",
+   "inicio": 97.26,
+   "fim": 97.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 97.32,
+   "fim": 97.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUAL",
+   "inicio": 97.44,
+   "fim": 97.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONTATO?",
+   "inicio": 97.56,
+   "fim": 97.76,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "EU",
+   "inicio": 98.12,
+   "fim": 98.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUERO",
+   "inicio": 98.28,
+   "fim": 98.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 98.4,
+   "fim": 98.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 98.52,
+   "fim": 98.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENVIE",
+   "inicio": 98.7,
+   "fim": 99,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 99,
+   "fim": 99.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 99.18,
+   "fim": 99.22,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MEU",
+   "inicio": 99.22,
+   "fim": 99.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONTATO",
+   "inicio": 99.26,
+   "fim": 99.7,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "LÁ",
+   "inicio": 99.7,
+   "fim": 99.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 99.82,
+   "fim": 99.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "WHATSAPP",
+   "inicio": 99.9,
+   "fim": 100.1,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "UM",
+   "inicio": 100.1,
+   "fim": 100.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "RELATÓRIO",
+   "inicio": 100.72,
+   "fim": 101.08,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DE",
+   "inicio": 101.08,
+   "fim": 101.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TUDO",
+   "inicio": 101.24,
+   "fim": 101.34,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 101.34,
+   "fim": 101.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 101.44,
+   "fim": 101.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTÁ",
+   "inicio": 101.2,
+   "fim": 101.8,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZENDO",
+   "inicio": 101.8,
+   "fim": 102.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 102.08,
+   "fim": 102.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 102.26,
+   "fim": 102.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 102.36,
+   "fim": 102.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 102.4,
+   "fim": 102.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTÁ",
+   "inicio": 102.52,
+   "fim": 102.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZENDO.",
+   "inicio": 102.6,
+   "fim": 102.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "JEFFERSON,",
+   "inicio": 103.22,
+   "fim": 103.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "JÁ",
+   "inicio": 103.48,
+   "fim": 103.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTOU",
+   "inicio": 103.7,
+   "fim": 103.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PEDINDO",
+   "inicio": 103.84,
+   "fim": 104.1,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 104.1,
+   "fim": 104.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OS",
+   "inicio": 104.24,
+   "fim": 104.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SEUS",
+   "inicio": 104.36,
+   "fim": 104.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENVIAR",
+   "inicio": 104.44,
+   "fim": 104.68,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 104.68,
+   "fim": 104.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "RELATÓRIO",
+   "inicio": 104.9,
+   "fim": 105.12,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "COMPLETO",
+   "inicio": 105.12,
+   "fim": 105.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 105.42,
+   "fim": 105.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 105.66,
+   "fim": 105.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SEU",
+   "inicio": 105.78,
+   "fim": 105.86,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "WHATSAPP.",
+   "inicio": 105.86,
+   "fim": 106.56,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 106.48,
+   "fim": 106.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 106.64,
+   "fim": 106.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MAIS",
+   "inicio": 106.68,
+   "fim": 106.82,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POSSO",
+   "inicio": 106.82,
+   "fim": 107.02,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZER",
+   "inicio": 107.02,
+   "fim": 107.2,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 107.2,
+   "fim": 107.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ?",
+   "inicio": 107.36,
+   "fim": 107.58,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 108.36,
+   "fim": 108.5,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "GENTE",
+   "inicio": 108.5,
+   "fim": 108.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TEM",
+   "inicio": 108.6,
+   "fim": 108.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ALGUMA",
+   "inicio": 108.7,
+   "fim": 108.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TAREFA",
+   "inicio": 108.88,
+   "fim": 109.18,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ATRASADA?",
+   "inicio": 109.18,
+   "fim": 109.66,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "JÁ",
+   "inicio": 110,
+   "fim": 110.14,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTOU",
+   "inicio": 110.14,
+   "fim": 110.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VERIFICANDO",
+   "inicio": 110.24,
+   "fim": 110.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SE",
+   "inicio": 110.6,
+   "fim": 110.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TEMOS",
+   "inicio": 110.72,
+   "fim": 110.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ALGUMA",
+   "inicio": 110.88,
+   "fim": 111.16,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TAREFA",
+   "inicio": 111.16,
+   "fim": 111.38,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ATRASADA.",
+   "inicio": 111.38,
+   "fim": 111.96,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 114.5,
+   "fim": 114.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENQUANTO",
+   "inicio": 114.52,
+   "fim": 114.8,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NÃO",
+   "inicio": 114.8,
+   "fim": 114.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 115.46,
+   "fim": 120.76,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "APOSTILA",
+   "inicio": 120.76,
+   "fim": 127.16,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "TÁ",
+   "inicio": 127.16,
+   "fim": 127.34,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "LÁ",
+   "inicio": 127.34,
+   "fim": 127.46,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 127.46,
+   "fim": 127.6,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NOSSO",
+   "inicio": 127.6,
+   "fim": 127.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "GOOGLE",
+   "inicio": 127.9,
+   "fim": 128.24,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DRIVE",
+   "inicio": 128.24,
+   "fim": 128.48,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 128.48,
+   "fim": 128.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE",
+   "inicio": 128.74,
+   "fim": 128.94,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ACESSAR",
+   "inicio": 128.94,
+   "fim": 129.22,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ELA",
+   "inicio": 129.22,
+   "fim": 129.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 129.4,
+   "fim": 129.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AÍ",
+   "inicio": 129.54,
+   "fim": 129.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 134.7,
+   "fim": 134.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "OLHA",
+   "inicio": 134.72,
+   "fim": 134.96,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SÓ",
+   "inicio": 134.96,
+   "fim": 135.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 135.18,
+   "fim": 135.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "RELATÓRIO",
+   "inicio": 135.32,
+   "fim": 135.68,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "VEIO",
+   "inicio": 135.68,
+   "fim": 135.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 135.92,
+   "fim": 136.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PARA",
+   "inicio": 136.08,
+   "fim": 136.22,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "WHATSAPP",
+   "inicio": 136.22,
+   "fim": 136.52,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "COM",
+   "inicio": 136.52,
+   "fim": 137.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TUDO",
+   "inicio": 137.32,
+   "fim": 137.46,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 137.46,
+   "fim": 137.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ELE",
+   "inicio": 137.56,
+   "fim": 137.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TÁ",
+   "inicio": 137.68,
+   "fim": 137.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FAZENDO",
+   "inicio": 137.72,
+   "fim": 137.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "LÁ",
+   "inicio": 137.92,
+   "fim": 138.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "Ó",
+   "inicio": 138.12,
+   "fim": 138.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TÁ",
+   "inicio": 138.24,
+   "fim": 138.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TUDO",
+   "inicio": 138.64,
+   "fim": 138.8,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 138.8,
+   "fim": 138.9,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 138.9,
+   "fim": 139.02,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 139.88,
+   "fim": 140.02,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "HORÁRIO",
+   "inicio": 140.02,
+   "fim": 140.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AGORA,",
+   "inicio": 140.26,
+   "fim": 141.2,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "15H51.",
+   "inicio": 141.2,
+   "fim": 142.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 143.06,
+   "fim": 143.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "HORÁRIO,",
+   "inicio": 143.24,
+   "fim": 143.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "15H52.",
+   "inicio": 143.52,
+   "fim": 144.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ISSO",
+   "inicio": 145.14,
+   "fim": 145.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 145.32,
+   "fim": 145.4,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EU",
+   "inicio": 145.4,
+   "fim": 145.44,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MOSTREI",
+   "inicio": 145.44,
+   "fim": 145.58,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PRA",
+   "inicio": 145.58,
+   "fim": 145.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 145.7,
+   "fim": 145.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 145.88,
+   "fim": 146.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AGORA",
+   "inicio": 146.08,
+   "fim": 146.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "É",
+   "inicio": 146.32,
+   "fim": 146.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 146.62,
+   "fim": 146.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NOSSO",
+   "inicio": 146.72,
+   "fim": 147,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SISTEMA",
+   "inicio": 147,
+   "fim": 147.74,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ZEUS.",
+   "inicio": 147.74,
+   "fim": 148.18,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 148.46,
+   "fim": 148.58,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 148.58,
+   "fim": 148.7,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NA",
+   "inicio": 148.7,
+   "fim": 148.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "LATERAL,",
+   "inicio": 148.78,
+   "fim": 149.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ELE",
+   "inicio": 149.06,
+   "fim": 149.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TEM",
+   "inicio": 149.48,
+   "fim": 149.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VÁRIAS",
+   "inicio": 149.66,
+   "fim": 150.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FUNCIONABILIDADES.",
+   "inicio": 150.04,
+   "fim": 151.18,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "E",
+   "inicio": 151.4,
+   "fim": 151.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 151.54,
+   "fim": 151.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PODE",
+   "inicio": 151.64,
+   "fim": 151.84,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ACOMPANHAR",
+   "inicio": 151.84,
+   "fim": 152.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VÁRIOS",
+   "inicio": 152.28,
+   "fim": 153.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AGENTES",
+   "inicio": 153.18,
+   "fim": 153.58,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "FAZENDO",
+   "inicio": 153.58,
+   "fim": 154.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TODO",
+   "inicio": 154.06,
+   "fim": 154.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 154.26,
+   "fim": 154.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TRABALHO.",
+   "inicio": 154.32,
+   "fim": 154.8,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "ONDE",
+   "inicio": 155.64,
+   "fim": 155.86,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "É",
+   "inicio": 155.86,
+   "fim": 155.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 155.98,
+   "fim": 156,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ELE",
+   "inicio": 156,
+   "fim": 156.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONSEGUE,",
+   "inicio": 156.08,
+   "fim": 156.52,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "POR",
+   "inicio": 156.52,
+   "fim": 156.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EXEMPLO,",
+   "inicio": 156.56,
+   "fim": 157.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ISSO",
+   "inicio": 157.86,
+   "fim": 158,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DAQUI",
+   "inicio": 158,
+   "fim": 158.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FOI",
+   "inicio": 158.12,
+   "fim": 158.24,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 158.24,
+   "fim": 158.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TRABALHO",
+   "inicio": 158.26,
+   "fim": 158.46,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 158.46,
+   "fim": 158.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ELE",
+   "inicio": 158.64,
+   "fim": 158.74,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FEZ",
+   "inicio": 158.74,
+   "fim": 158.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PRA",
+   "inicio": 158.88,
+   "fim": 159.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MIM",
+   "inicio": 159.04,
+   "fim": 159.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NAS",
+   "inicio": 159.18,
+   "fim": 159.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "REDES",
+   "inicio": 159.66,
+   "fim": 159.82,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "SOCIAIS,",
+   "inicio": 159.82,
+   "fim": 160.44,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "CUIDANDO",
+   "inicio": 160.78,
+   "fim": 161.16,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AÍ",
+   "inicio": 161.16,
+   "fim": 161.34,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DE",
+   "inicio": 161.34,
+   "fim": 161.36,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TODAS",
+   "inicio": 161.36,
+   "fim": 161.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AS",
+   "inicio": 161.48,
+   "fim": 161.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PUBLICAÇÕES",
+   "inicio": 161.62,
+   "fim": 162.1,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 162.1,
+   "fim": 162.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESTÃO",
+   "inicio": 162.78,
+   "fim": 162.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ACONTECENDO",
+   "inicio": 162.98,
+   "fim": 163.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AÍ",
+   "inicio": 163.26,
+   "fim": 163.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 163.52,
+   "fim": 163.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "MEU",
+   "inicio": 163.56,
+   "fim": 163.72,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PERFIL",
+   "inicio": 163.72,
+   "fim": 163.88,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "DO",
+   "inicio": 163.88,
+   "fim": 163.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "INSTAGRAM.",
+   "inicio": 163.98,
+   "fim": 164.14,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUER",
+   "inicio": 164.9,
+   "fim": 165.04,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONHECER",
+   "inicio": 165.04,
+   "fim": 165.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 165.42,
+   "fim": 165.56,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ZEUS?",
+   "inicio": 165.56,
+   "fim": 165.78,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUER",
+   "inicio": 165.78,
+   "fim": 165.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "COLOCAR",
+   "inicio": 165.88,
+   "fim": 166.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESSA",
+   "inicio": 166.12,
+   "fim": 166.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FERRAMENTA",
+   "inicio": 166.28,
+   "fim": 166.58,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "INCRÍVEL",
+   "inicio": 166.58,
+   "fim": 166.92,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 166.92,
+   "fim": 167.12,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PRA",
+   "inicio": 167.12,
+   "fim": 167.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "TE",
+   "inicio": 167.28,
+   "fim": 167.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AJUDAR",
+   "inicio": 167.42,
+   "fim": 167.62,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 167.62,
+   "fim": 167.76,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SEU",
+   "inicio": 167.76,
+   "fim": 167.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DIA",
+   "inicio": 167.88,
+   "fim": 167.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "A",
+   "inicio": 167.98,
+   "fim": 168.08,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "DIA?",
+   "inicio": 168.08,
+   "fim": 168.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CLICA",
+   "inicio": 169.02,
+   "fim": 169.26,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "AQUI",
+   "inicio": 169.26,
+   "fim": 169.42,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EMBAIXO,",
+   "inicio": 169.42,
+   "fim": 170.18,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PREENCHA",
+   "inicio": 170.18,
+   "fim": 170.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 170.48,
+   "fim": 170.58,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NOSSO",
+   "inicio": 170.58,
+   "fim": 170.68,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "FORMULÁRIO",
+   "inicio": 170.68,
+   "fim": 171,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "QUE",
+   "inicio": 171.02,
+   "fim": 171.46,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "O",
+   "inicio": 171.46,
+   "fim": 171.54,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ZEUS",
+   "inicio": 171.54,
+   "fim": 171.62,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "VAI",
+   "inicio": 171.62,
+   "fim": 171.78,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENTRAR",
+   "inicio": 171.78,
+   "fim": 171.92,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "EM",
+   "inicio": 171.92,
+   "fim": 171.98,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "CONTATO",
+   "inicio": 171.98,
+   "fim": 172.22,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "COM",
+   "inicio": 172.22,
+   "fim": 172.32,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 172.32,
+   "fim": 172.52,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PRA",
+   "inicio": 172.88,
+   "fim": 173,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VER",
+   "inicio": 173,
+   "fim": 173.14,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SE",
+   "inicio": 173.14,
+   "fim": 173.28,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "VOCÊ",
+   "inicio": 173.28,
+   "fim": 173.48,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SE",
+   "inicio": 173.48,
+   "fim": 173.66,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ENCAIXA",
+   "inicio": 173.66,
+   "fim": 173.96,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "NO",
+   "inicio": 173.96,
+   "fim": 174.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PERFIL",
+   "inicio": 174.06,
+   "fim": 174.34,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "PRA",
+   "inicio": 174.34,
+   "fim": 174.46,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "PODER",
+   "inicio": 174.46,
+   "fim": 174.64,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "UTILIZAR",
+   "inicio": 174.64,
+   "fim": 174.88,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "ESSE",
+   "inicio": 174.88,
+   "fim": 175.06,
+   "cor": "#FFFFFF"
+  },
+  {
+   "texto": "SISTEMA",
+   "inicio": 175.06,
+   "fim": 175.3,
+   "cor": "#2E8BFF"
+  },
+  {
+   "texto": "MARAVILHOSO.",
+   "inicio": 175.3,
+   "fim": 176.44,
+   "cor": "#2E8BFF"
+  }
+ ],
+ "destaque": "#2E8BFF"
+}

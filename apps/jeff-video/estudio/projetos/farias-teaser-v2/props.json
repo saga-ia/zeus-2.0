@@ -1,0 +1,143 @@
+{
+  "video": "video.mp4",
+  "inicio": 0,
+  "duracao": 29.528,
+  "legendas": [
+    {
+      "inicio": 0.0,
+      "fim": 1.1,
+      "texto": "O boi se vende tudo, né?"
+    },
+    {
+      "inicio": 1.1,
+      "fim": 2.3,
+      "texto": "Quando você cria boi, tudo."
+    },
+    {
+      "inicio": 2.64,
+      "fim": 5.02,
+      "texto": "O couro, o mocotó, tudo, tudo."
+    },
+    {
+      "inicio": 5.1,
+      "fim": 5.96,
+      "texto": "Você vende tudo, tudo."
+    },
+    {
+      "inicio": 5.96,
+      "fim": 7.96,
+      "texto": "Esses dias eu fui na lojas americanas."
+    },
+    {
+      "inicio": 8.34,
+      "fim": 11.02,
+      "texto": "A menina do caixa perguntou, o senhor vai querer um Big Mac?"
+    },
+    {
+      "inicio": 11.36,
+      "fim": 12.9,
+      "texto": "Será que eu tô num lugar errado?"
+    },
+    {
+      "inicio": 12.919,
+      "fim": 16.179,
+      "texto": "Só que a gente viu a oportunidade, já que está aqui, está parado."
+    },
+    {
+      "inicio": 16.269,
+      "fim": 18.329,
+      "texto": "Avião parado, a perder dinheiro."
+    },
+    {
+      "inicio": 18.319,
+      "fim": 21.059,
+      "texto": "O ângulo do meu negócio frente ao mercado"
+    },
+    {
+      "inicio": 21.059,
+      "fim": 22.019,
+      "texto": "que faz toda a diferença."
+    },
+    {
+      "inicio": 22.159,
+      "fim": 24.339,
+      "texto": "Quando eu determino bem o ângulo do negócio"
+    },
+    {
+      "inicio": 24.339,
+      "fim": 26.179,
+      "texto": "que tem margem, que tem diferencial,"
+    },
+    {
+      "inicio": 26.279,
+      "fim": 27.059,
+      "texto": "que é a proposta de valor,"
+    },
+    {
+      "inicio": 27.219,
+      "fim": 29.519,
+      "texto": "a gente consegue ter a maior assertividade."
+    }
+  ],
+  "forte": [
+    "boi",
+    "tudo",
+    "couro",
+    "mocotó",
+    "americanas",
+    "big",
+    "mac",
+    "errado",
+    "parado",
+    "dinheiro",
+    "ângulo",
+    "diferença",
+    "margem",
+    "diferencial",
+    "assertividade"
+  ],
+  "destaque": "#1757FF",
+  "blocos": [
+    {
+      "inicio": 0.0,
+      "fim": 5.96,
+      "zoomDe": 1.0,
+      "zoomAte": 1.08,
+      "shake": false
+    },
+    {
+      "inicio": 5.96,
+      "fim": 12.919,
+      "zoomDe": 1.08,
+      "zoomAte": 1.0,
+      "shake": false
+    },
+    {
+      "inicio": 12.919,
+      "fim": 16.269,
+      "zoomDe": 1.0,
+      "zoomAte": 1.12,
+      "shake": false
+    },
+    {
+      "inicio": 16.269,
+      "fim": 18.319,
+      "zoomDe": 1.1,
+      "zoomAte": 1.13,
+      "shake": true
+    },
+    {
+      "inicio": 18.319,
+      "fim": 29.528,
+      "zoomDe": 1.0,
+      "zoomAte": 1.1,
+      "shake": false
+    }
+  ],
+  "cortes": [
+    5.96,
+    12.919,
+    16.269,
+    18.319
+  ]
+}

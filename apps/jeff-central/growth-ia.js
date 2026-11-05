@@ -86,8 +86,9 @@ function rodarClaude(texto) {
     proc.on('close', (code) => {
       clearTimeout(timer);
       let txt = '';
-      try { const j = JSON.parse(out); txt = j.result || ''; if (j.is_error) return resolve({ error: txt || 'falha do Claude' }); } catch (_) { txt = out; }
-      if (!txt) return resolve({ error: (err.slice(-300) || 'exit ' + code) });
+      try { const j = JSON.parse(out); txt = j.result || ''; if (j.is_error) return resolve({ error: claudeSpawn.checaSaida(txt, err, 1) }); } catch (_) { txt = out; }
+      const ruim = claudeSpawn.checaSaida(txt, err, txt ? 0 : code || 1);
+      if (ruim) return resolve({ error: ruim });
       resolve({ text: txt });
     });
     proc.on('error', (e) => { clearTimeout(timer); resolve({ error: e.message }); });

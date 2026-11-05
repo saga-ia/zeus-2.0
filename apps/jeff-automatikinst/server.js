@@ -626,7 +626,7 @@ app.get('/api/posts', auth, (req, res) => {
 });
 
 app.post('/api/posts', auth, (req, res) => {
-  const { title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at } = req.body;
+  const { title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at, seq_group, seq_index } = req.body;
   // Stories não aceitam legenda na Graph API — exigem mídia, não texto
   if (post_type === 'story') {
     if (!media_path) return res.status(400).json({ error: 'Story exige mídia (imagem ou vídeo)' });
@@ -634,23 +634,35 @@ app.post('/api/posts', auth, (req, res) => {
     return res.status(400).json({ error: 'Caption obrigatório' });
   }
   const db = getDb();
-  const result = db.prepare(`INSERT INTO posts (title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at, status)
-    VALUES (?,?,?,?,?,?,?,?,?)`).run(title || null, caption || '', media_path || null, media_type || null, post_type || 'image',
+  const result = db.prepare(`INSERT INTO posts (title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at, status, seq_group, seq_index)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(title || null, caption || '', media_path || null, media_type || null, post_type || 'image',
     JSON.stringify(platforms || []), JSON.stringify(account_ids || []),
     scheduled_at ? Math.floor(new Date(scheduled_at).getTime() / 1000) : null,
-    scheduled_at ? 'scheduled' : 'draft');
+    scheduled_at ? 'scheduled' : 'draft',
+    seq_group || null, seq_index ? parseInt(seq_index, 10) : null);
+  // entrou numa sequência: reordena o grupo pelo horário, então a ordem de
+  // criação não decide quem é o card 1
+  if (seq_group) { try { require('./lib/sequencia').renumerar(db, seq_group); } catch (e) { console.error('[server] renumerar sequência falhou:', e.message); } }
   res.json({ id: result.lastInsertRowid, ok: true });
 });
 
 app.put('/api/posts/:id', auth, (req, res) => {
-  const { title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at, status } = req.body;
+  const { title, caption, media_path, media_type, post_type, platforms, account_ids, scheduled_at, status, seq_group, seq_index } = req.body;
   const db = getDb();
+  // seq_group/seq_index só mudam se vierem no corpo: o editor antigo não os envia
+  // e não pode apagar a trava de sequência sem querer.
+  const atual = db.prepare('SELECT seq_group, seq_index FROM posts WHERE id = ?').get(req.params.id) || {};
   db.prepare(`UPDATE posts SET title=?, caption=?, media_path=?, media_type=?, post_type=?, platforms=?, account_ids=?,
-    scheduled_at=?, status=?, updated_at=unixepoch() WHERE id=?`).run(
+    scheduled_at=?, status=?, seq_group=?, seq_index=?, updated_at=unixepoch() WHERE id=?`).run(
     title || null, caption || '', media_path || null, media_type || null, post_type || 'image',
     JSON.stringify(platforms || []), JSON.stringify(account_ids || []),
     scheduled_at ? Math.floor(new Date(scheduled_at).getTime() / 1000) : null,
-    status || 'scheduled', req.params.id);
+    status || 'scheduled',
+    seq_group === undefined ? (atual.seq_group || null) : (seq_group || null),
+    seq_index === undefined ? (atual.seq_index || null) : (seq_index ? parseInt(seq_index, 10) : null),
+    req.params.id);
+  const grupos = new Set([atual.seq_group, seq_group].filter(Boolean));
+  for (const g of grupos) { try { require('./lib/sequencia').renumerar(db, g); } catch (e) { console.error('[server] renumerar sequência falhou:', e.message); } }
   res.json({ ok: true });
 });
 
@@ -844,8 +856,20 @@ app.post('/api/posts/:id/publish', auth, acaoPesadaLimiter, async (req, res) => 
   post.platforms = JSON.parse(post.platforms || '[]');
   post.account_ids = JSON.parse(post.account_ids || '[]');
 
+  // trava de sequência: no manual não impede, só exige confirmação (forcar=1),
+  // porque publicar fora de ordem às vezes é decisão consciente.
+  const sequencia = require('./lib/sequencia');
+  const bloqueador = sequencia.travadoPor(db, post);
+  if (bloqueador && !(req.query.forcar === '1' || req.body?.forcar)) {
+    return res.status(409).json({
+      error: `Este é o card ${post.seq_index} de uma sequência e o card ${bloqueador.seq_index} ainda não foi publicado (${bloqueador.status}): "${bloqueador.title || bloqueador.id}". Publique o card anterior primeiro, ou confirme pra publicar fora de ordem.`,
+      sequencia_travada: true, bloqueador: { id: bloqueador.id, title: bloqueador.title, status: bloqueador.status, seq_index: bloqueador.seq_index },
+    });
+  }
+
   const { publishPost } = require('./publisher');
   const results = await publishPost(post, db);
+  try { sequencia.aposPublicar(db, post, results); } catch (e) { console.error('[server] pós-publicação da sequência falhou:', e.message); }
   res.json({ ok: true, results });
 });
 

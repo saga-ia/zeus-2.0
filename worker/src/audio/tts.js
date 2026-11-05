@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
-const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const { config } = require('../config');
 const { db } = require('../db');
 const logger = require('../logger');
@@ -20,14 +19,18 @@ function getSetting(key) {
   return row ? row.value : null;
 }
 
+// Uma voz só para o ZEUS em todo lugar (WhatsApp e tela de voz da Central): a clonada "Jefferson ZEUS" (elevenlabs_voice_id)
+// com o mesmo perfil do jeff-central/jarvis.js (VOZ_PERFIL). Mudou aqui, mude lá.
+const VOZ_PERFIL = { model_id: 'eleven_multilingual_v2', stability: 0.6, similarity_boost: 0.85, speed: 1 }; // multilingual v2: a mais fiel à voz clonada (escolha do Jeff em 26/10/2026, amostra D)
+
 async function synthWithElevenLabs(text, outOgg, voiceIdOverride) {
   const apiKey = getSetting('elevenlabs_api_key');
-  const voiceId = voiceIdOverride || getSetting('elevenlabs_voice_id') || getSetting('elevenlabs_voice_lucas');
+  const voiceId = voiceIdOverride || getSetting('elevenlabs_voice_id');
   if (!apiKey || !voiceId) return false;
   const body = {
     text,
-    model_id: 'eleven_turbo_v2_5',
-    voice_settings: { stability: 0.5, similarity_boost: 0.85, style: 0.3 },
+    model_id: VOZ_PERFIL.model_id,
+    voice_settings: { stability: VOZ_PERFIL.stability, similarity_boost: VOZ_PERFIL.similarity_boost, style: 0, use_speaker_boost: true, speed: VOZ_PERFIL.speed },
   };
   const res = await fetch(`${ELEVENLABS_URL}/${voiceId}`, {
     method: 'POST',
@@ -40,7 +43,7 @@ async function synthWithElevenLabs(text, outOgg, voiceIdOverride) {
   });
   if (!res.ok) {
     const err = await res.text();
-    logger.warn({ status: res.status, err }, 'elevenlabs tts failed, falling back to edge');
+    logger.warn({ status: res.status, err }, 'elevenlabs tts failed');
     return false;
   }
   const buf = Buffer.from(await res.arrayBuffer());
@@ -70,51 +73,20 @@ function withTimeout(promise, ms, label) {
   });
 }
 
-async function synthToWebm(text, outFile) {
-  const tts = new MsEdgeTTS();
-  await tts.setMetadata(config.ttsVoice, OUTPUT_FORMAT.WEBM_24KHZ_16BIT_MONO_OPUS);
-  const { audioStream } = tts.toStream(text, { rate: config.ttsRate, pitch: config.ttsPitch });
-  await new Promise((resolve, reject) => {
-    const w = fs.createWriteStream(outFile);
-    audioStream.pipe(w);
-    w.on('finish', resolve);
-    w.on('error', reject);
-    audioStream.on('error', reject);
-  });
-}
-
-function webmToOgg(inFile, outFile) {
-  return new Promise((resolve, reject) => {
-    const p = spawn(FFMPEG_BIN, [
-      '-y', '-i', inFile,
-      '-c:a', 'libopus',
-      '-b:a', '24k',
-      '-ac', '1',
-      '-ar', '24000',
-      '-f', 'ogg',
-      outFile,
-    ], { stdio: 'ignore' });
-    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`))));
-    p.on('error', reject);
-  });
-}
-
 async function synthesize(text, voiceIdOverride) {
   const base = `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
   const ogg = path.join(OUT_DIR, `${base}.ogg`);
+  // Nunca troca de voz: se a ElevenLabs falhar, tenta de novo uma vez e, se ainda falhar, lança erro para quem chamou
+  // mandar a resposta em texto. (A voz da Microsoft/edge era outra voz e fazia o ZEUS "mudar de voz".)
   let usedEleven = false;
-  try {
-    usedEleven = await withTimeout(synthWithElevenLabs(text, ogg, voiceIdOverride), TTS_TIMEOUT_MS, 'elevenlabs-tts');
-  } catch (err) {
-    logger.warn({ err: err.message }, 'elevenlabs tts errored, falling back');
+  for (let tentativa = 1; tentativa <= 2 && !usedEleven; tentativa++) {
+    try {
+      usedEleven = await withTimeout(synthWithElevenLabs(text, ogg, voiceIdOverride), TTS_TIMEOUT_MS, 'elevenlabs-tts');
+    } catch (err) {
+      logger.warn({ err: err.message, tentativa }, 'elevenlabs tts errored');
+    }
   }
-  if (!usedEleven) {
-    const webm = path.join(OUT_DIR, `${base}.webm`);
-    await withTimeout(synthToWebm(text, webm), TTS_TIMEOUT_MS, 'edge-tts');
-    await withTimeout(webmToOgg(webm, ogg), TTS_TIMEOUT_MS, 'ffmpeg');
-    try { fs.unlinkSync(webm); } catch {}
-    logger.info({ voice: config.ttsVoice, chars: text.length, provider: 'edge' }, 'tts synthesize ok');
-  }
+  if (!usedEleven) throw new Error('tts_indisponivel: ElevenLabs falhou, áudio não enviado para não trocar de voz');
   const base64 = fs.readFileSync(ogg).toString('base64');
   return { oggPath: ogg, base64, mimetype: 'audio/ogg; codecs=opus' };
 }

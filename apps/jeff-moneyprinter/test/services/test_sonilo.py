@@ -50,7 +50,7 @@ def _event(event_type, **values):
 class TestSoniloService(unittest.TestCase):
     def test_api_key_prefers_config_and_falls_back_to_environment(self):
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "config-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.dict(os.environ, {"SONILO_API_KEY": "env-key"}),
         ):
             self.assertEqual(sonilo.get_api_key(), "config-key")
@@ -85,7 +85,7 @@ class TestSoniloService(unittest.TestCase):
             payload={"available_services": ["video_to_music"]}
         )
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.object(sonilo.requests, "get", return_value=response) as request,
         ):
             result = sonilo.test_connection()
@@ -102,7 +102,7 @@ class TestSoniloService(unittest.TestCase):
             payload={"available_services": ["video-to-music"]}
         )
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.object(sonilo.requests, "get", return_value=response),
         ):
             result = sonilo.test_connection()
@@ -120,7 +120,7 @@ class TestSoniloService(unittest.TestCase):
             with (
                 self.subTest(payload=payload),
                 patch.object(
-                    sonilo.config, "app", {"sonilo_api_key": "test-key"}
+                    sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}
                 ),
                 patch.object(
                     sonilo.requests,
@@ -136,7 +136,7 @@ class TestSoniloService(unittest.TestCase):
             payload={"available_services": ["text_to_music"]}
         )
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.object(sonilo.requests, "get", return_value=response),
         ):
             with self.assertRaisesRegex(sonilo.SoniloError, "not available"):
@@ -145,7 +145,7 @@ class TestSoniloService(unittest.TestCase):
     def test_connection_converts_network_and_invalid_json_errors(self):
         """连接测试的网络中断和非 JSON 响应都转换为稳定的领域异常。"""
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.object(
                 sonilo.requests,
                 "get",
@@ -157,7 +157,7 @@ class TestSoniloService(unittest.TestCase):
 
         response = _StreamingResponse(payload={})
         with (
-            patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+            patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
             patch.object(sonilo.requests, "get", return_value=response),
             patch.object(response, "json", side_effect=ValueError("invalid json")),
         ):
@@ -355,7 +355,7 @@ class TestSoniloService(unittest.TestCase):
             output_path = Path(temp_dir) / "music.m4a"
             video_path.write_bytes(b"video")
             with (
-                patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+                patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
                 patch.object(sonilo.requests, "post", return_value=response) as post,
                 patch.object(
                     sonilo.bgm_service, "validate_audio_file"
@@ -409,7 +409,7 @@ class TestSoniloService(unittest.TestCase):
                 output_path.write_bytes(b"existing-music")
                 with (
                     patch.object(
-                        sonilo.config, "app", {"sonilo_api_key": "test-key"}
+                        sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}
                     ),
                     patch.object(sonilo.requests, "post", return_value=response),
                     patch.object(
@@ -435,7 +435,7 @@ class TestSoniloService(unittest.TestCase):
             source.write_bytes(b"video")
             proxy.write_bytes(b"proxy")
             with (
-                patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+                patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
                 patch.object(
                     sonilo, "_create_video_proxy", return_value=str(proxy)
                 ),
@@ -460,7 +460,7 @@ class TestSoniloService(unittest.TestCase):
             source.write_bytes(b"video")
             proxy.write_bytes(b"proxy")
             with (
-                patch.object(sonilo.config, "app", {"sonilo_api_key": "test-key"}),
+                patch.object(sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}),
                 patch.object(
                     sonilo, "_create_video_proxy", return_value=str(proxy)
                 ),
@@ -482,7 +482,7 @@ class TestSoniloService(unittest.TestCase):
             source = Path(temp_dir) / "source.mp4"
             source.write_bytes(b"video")
             with patch.object(
-                sonilo.config, "app", {"sonilo_api_key": "test-key"}
+                sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}
             ):
                 for duration in (0, -1, float("nan"), 361):
                     with self.subTest(duration=duration):
@@ -516,7 +516,7 @@ class TestSoniloService(unittest.TestCase):
 
             with (
                 patch.object(
-                    sonilo.config, "app", {"sonilo_api_key": "test-key"}
+                    sonilo.config, "app", {"sonilo_api_key": "<REDACTED>"}
                 ),
                 patch.object(sonilo, "_create_video_proxy") as create_proxy,
             ):

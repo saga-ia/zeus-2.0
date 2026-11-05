@@ -36,3 +36,12 @@ __pycache__/
 .pnpm-store/
 .token
 *.token
+
+# pastas data/ de apps e projetos (bancos, clientes, backups)
+apps/**/data/
+projects/**/data/
+sites/**/data.json
+
+# core dumps (memória de processo, pode ter segredo)
+core
+core.[0-9]*

@@ -12,7 +12,7 @@ from app.services.upload_post import UploadPostService
 
 _CONFIG_BASE = {
     "upload_post_enabled": True,
-    "upload_post_api_key": "test-key",
+    "upload_post_api_key": "<REDACTED>",
     "upload_post_username": "testuser",
     "upload_post_platforms": ["tiktok", "instagram", "youtube"],
     "upload_post_auto_upload": True,

@@ -9,6 +9,8 @@ const Database = require('better-sqlite3');
 const agents = require('./agents');
 const claudeSpawn = require('./claude-spawn');
 const zeusContext = require('./zeus-context');
+const zeuspost = require('./zeuspost');
+const aprovacao = require('./aprovacao');
 
 const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data');
 const WORKDIR_ROOT = path.join(DATA_DIR, 'team-workdir');
@@ -21,7 +23,8 @@ const MODELS = ['', 'opus', 'sonnet', 'haiku'];
 // Quanto de cada entrega segue adiante (pra próxima etapa e pra consolidação)
 const HANDOFF_CHARS = 12000;
 // Planejador e consolidador só pensam e escrevem: nada de mexer no servidor
-const NO_TOOLS = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Task', 'Agent'];
+// Planejador, consolidador e ajuste nunca precisam de arquivo: sem Read/Glob/Grep para ninguém (o pedido vem do usuário)
+const NO_TOOLS = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Task', 'Agent', 'Read', 'Glob', 'Grep'];
 
 if (!fs.existsSync(WORKDIR_ROOT)) fs.mkdirSync(WORKDIR_ROOT, { recursive: true });
 
@@ -232,7 +235,31 @@ function stepOut(s) {
     const pl = reviewStmt.planGet.get(s.id);
     if (pl) o.plan = { okrId: pl.okr_id, okrTitle: pl.okr_title, tasks: pl.tasks, createdAt: pl.created_at };
   }
+  if ((s.kind === 'final' || s.kind === 'agent') && /```zeus-aprovacao/.test(s.content || '')) {
+    o.aprovacoes = apvStmt.list.all(s.id).map(r => ({ bloco: r.bloco, idx: r.idx, status: r.status, postId: r.post_id, quando: r.quando, conta: r.conta, nota: r.note || '', erro: r.erro || '' }));
+  }
   return o;
+}
+
+// ─── Aprovação de posts propostos pela equipe (bloco ```zeus-aprovacao na entrega) ───────────────────────────
+// A equipe propõe imagem + legenda + conta + data; o usuário aprova ou reprova na tela. Aprovar agenda no ZEUS POST
+// pelo servidor (o agente nunca grava sozinho). Reprovar com observação volta para a equipe refazer.
+db.exec(`CREATE TABLE IF NOT EXISTS team_aprovacoes (step_id TEXT NOT NULL, bloco INTEGER NOT NULL, idx INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pendente', post_id INTEGER, quando TEXT, conta TEXT, note TEXT, erro TEXT, updated_at INTEGER NOT NULL, PRIMARY KEY (step_id, bloco, idx));`);
+const apvStmt = {
+  list: db.prepare(`SELECT * FROM team_aprovacoes WHERE step_id = ? ORDER BY bloco, idx`),
+  up: db.prepare(`INSERT INTO team_aprovacoes (step_id, bloco, idx, status, post_id, quando, conta, note, erro, updated_at) VALUES (@step_id, @bloco, @idx, @status, @post_id, @quando, @conta, @note, @erro, @updated_at)
+    ON CONFLICT(step_id, bloco, idx) DO UPDATE SET status = excluded.status, post_id = excluded.post_id, quando = excluded.quando, conta = excluded.conta, note = excluded.note, erro = excluded.erro, updated_at = excluded.updated_at`),
+};
+const { aprovacoesDe, arquivosDaProposta } = require('./aprovacao');
+function stepComAprovacao(runId, stepId) {
+  const s = stmt.stepGet.get(stepId);
+  return s && s.run_id === runId && (s.kind === 'final' || s.kind === 'agent') && s.status === 'done' && /```zeus-aprovacao/.test(s.content || '') ? s : null;
+}
+// Registra a decisão na linha do tempo sem acionar a IA (um turno novo com a mensagem do usuário e a resposta do orquestrador)
+function registrarDecisao(runId, textoUsuario, textoResposta) {
+  const turn = stmt.maxTurn.get(runId).t + 1;
+  addStep(runId, turn, 0, 'user', { content: textoUsuario, status: 'done' });
+  addStep(runId, turn, 1, 'final', { agent_name: 'Orquestrador', status: 'done', task: 'responder', content: textoResposta });
 }
 
 // ─── Aprovação por partes da entrega consolidada ─────────────────────────────
@@ -271,10 +298,10 @@ function finalStepOf(runId, stepId) {
 }
 
 // Refaz só uma parte da entrega, com o pedido de ajuste do usuário
-async function revisePart(runId, stepId, idx, note) {
+async function revisePart(runId, stepId, idx, note, user) {
   const run = stmt.runGet.get(runId);
   const team = getTeam(run.team_id);
-  const ctl = { procs: new Set(), canceled: false };
+  const ctl = { procs: new Set(), canceled: false, user: user || null };
   active.set(runId, ctl);
   const turn = stmt.maxTurn.get(runId).t + 1;
   const setRun = (st) => { stmt.runStatus.run(st, Date.now(), runId); emit(runId, 'run', { id: runId, status: st }); };
@@ -350,7 +377,6 @@ function emitStep(rid, stepId) { const s = stmt.stepGet.get(stepId); if (s) emit
 
 // ─── Claude ──────────────────────────────────────────────────────────────────
 const active = new Map(); // runId -> { procs:Set, canceled:boolean }
-const LIMIT_RE = /hit your .*limit|usage limit reached|rate limit/i;
 
 // Roda o claude com o prompt via stdin (entregas longas estouram o limite de argumento) e devolve o texto final.
 function runClaude(runId, prompt, opts, onToken) {
@@ -370,7 +396,8 @@ function runClaude(runId, prompt, opts, onToken) {
     // planejador e consolidador usam o modelo da equipe ou o do Zeus principal.
     args.push('--model', opts.model || (opts.isAgent ? claudeSpawn.agentDefaultModel() : claudeSpawn.DEFAULT_MODEL));
     args.push(...claudeSpawn.commonArgs()); // esforço explícito, MCPs desligados
-    if (opts.noTools) args.push('--disallowedTools', NO_TOOLS.join(' '));
+    // Agente da equipe roda com o perfil de quem pediu (membro fica sem terminal/arquivos)
+    args.push(...claudeSpawn.bloqueio((ctl && ctl.user) || opts.user, opts.noTools ? NO_TOOLS : null));
     const proc = spawn(CLAUDE_BIN, args, { cwd: workdir, stdio: ['pipe', 'pipe', 'pipe'], env: claudeSpawn.claudeEnv() });
     if (ctl) ctl.procs.add(proc);
     let buf = '', text = '', err = '', timedOut = false;
@@ -401,9 +428,10 @@ function runClaude(runId, prompt, opts, onToken) {
       const canceled = !!(ctl && ctl.canceled);
       if (timedOut) return resolve({ text, error: `tempo esgotado (${Math.round(STEP_TIMEOUT_MS / 60000)} min)` });
       if (canceled) return resolve({ text, canceled: true });
-      // Limite da conta Claude vem como texto de resposta ("You've hit your weekly limit..."): trata como erro
-      if (text.length < 300 && LIMIT_RE.test(text)) return resolve({ text: '', error: 'limite de uso da conta Claude atingido (' + text.trim() + '). Tente de novo depois do horário indicado.' });
-      if (code !== 0 && !text) return resolve({ text: '', error: (err.slice(-400) || 'exit ' + code) });
+      // Erro de conta/limite vem como texto de resposta ("You've hit your weekly limit..."): vira mensagem em PT-BR
+      const quebrou = code !== 0 && !text;
+      const ruim = claudeSpawn.falhaClaude(quebrou ? err.slice(-400) : text, quebrou);
+      if (ruim) { console.error(`[equipes] falha do claude (exit ${code}): ${String(text || err).trim().slice(-300)}`); return resolve({ text: '', error: ruim }); }
       resolve({ text });
     };
     proc.on('close', fim);
@@ -520,6 +548,7 @@ function consolidatePrompt(request, history, plan, results) {
   out.push('- Preserve o conteúdo pronto (copies, roteiros, tabelas) dos agentes, não resuma o que é entregável.');
   out.push('- Se algum agente falhou, diga o que ficou faltando.');
   out.push('- Feche com a seção "## Próximos passos" com ações práticas.');
+  out.push('- Se as entregas contiverem posts prontos para aprovar (imagens geradas pelo Agente de Design em /api/design/arquivo/... com legenda e proposta de conta e data), termine a entrega com UM bloco de código ```zeus-aprovacao contendo JSON neste formato exato, copiando as URLs das imagens sem alterar: {"titulo":"Posts para aprovar","itens":[{"id":"p1","imagens":["/api/design/arquivo/<cid>/<arquivo>.png"],"legenda":"texto completo da legenda","conta":"<id numérico da conta no ZEUS POST>","conta_nome":"@usuario","quando":"AAAA-MM-DD HH:MM","tipo":"feed|carousel|story"}]}. Um item por post; carrossel leva todas as lâminas em "imagens". Se algum bloco ```zeus-aprovacao já vier pronto de um agente, copie-o sem alterar em vez de criar outro. O usuário aprova ou reprova cada post na tela, e só a aprovação agenda a publicação.');
   out.push('Não use ferramentas. Responda direto com o texto final em markdown.');
   return out.join('\n');
 }
@@ -546,10 +575,10 @@ function tokenPump(runId, stepId) {
   };
 }
 
-async function orchestrate(runId, request) {
+async function orchestrate(runId, request, user) {
   const run = stmt.runGet.get(runId);
   const team = getTeam(run.team_id);
-  const ctl = { procs: new Set(), canceled: false };
+  const ctl = { procs: new Set(), canceled: false, user: user || null };
   active.set(runId, ctl);
   const turn = stmt.maxTurn.get(runId).t + 1;
   let seq = 0;
@@ -635,6 +664,9 @@ async function orchestrate(runId, request) {
   } finally {
     active.delete(runId);
     emit(runId, 'end', { id: runId });
+    try { const run = stmt.runGet.get(runId); const t = run && stmt.get.get(run.team_id);
+      if (run && run.user_email) require('./notificacoes').notificar({ para: run.user_email, tipo: 'equipe-concluida', titulo: `Equipe entregou: ${t ? t.name : 'equipe de agentes'}`, texto: String(request || '').slice(0, 160), link: '/equipe/' + run.team_id });
+    } catch (_) {}
   }
 }
 
@@ -690,6 +722,15 @@ function visibleInList(teamId, user) {
 // ─── Router ──────────────────────────────────────────────────────────────────
 const router = express.Router();
 
+// Execução é de quem abriu (e-mail). Sem dono = execução antiga: só administradores.
+if (!db.prepare(`PRAGMA table_info(team_runs)`).all().some(c => c.name === 'user_email')) db.exec(`ALTER TABLE team_runs ADD COLUMN user_email TEXT`);
+const donoRun = (run, user) => !user || user.admin || (!!run.user_email && run.user_email === user.email);
+router.param('rid', (req, res, next, rid) => {
+  const run = stmt.runGet.get(rid);
+  if (run && !donoRun(run, req.user)) return res.status(403).json({ error: 'Esta execução é de outra pessoa.' });
+  next();
+});
+
 router.get('/', (_req, res) => {
   res.json({ teams: stmt.list.all().map(shape).filter(t => visibleInList(t.id, _req.user)).map(t => Object.assign(t, { share: shareGet(t.id).mode })), limits: { min: MIN_AGENTS, max: MAX_AGENTS } });
 });
@@ -717,7 +758,7 @@ router.post('/runs/:rid/send', (req, res) => {
   if (active.has(run.id)) return res.status(409).json({ error: 'a equipe ainda está trabalhando no pedido anterior' });
   const text = String((req.body && req.body.text) || '').trim().slice(0, 20000);
   if (!text) return res.status(400).json({ error: 'mensagem vazia' });
-  orchestrate(run.id, text);
+  orchestrate(run.id, text, req.user);
   res.json({ ok: true });
 });
 
@@ -735,6 +776,53 @@ router.post('/runs/:rid/steps/:sid/review', (req, res) => {
   res.json({ ok: true, step: stepOut(stmt.stepGet.get(s.id)) });
 });
 
+router.post('/runs/:rid/steps/:sid/aprovacao', async (req, res) => {
+  if (!req.user || !req.user.admin) return res.status(403).json({ error: 'Só administradores aprovam publicações.' });
+  const s = stepComAprovacao(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'proposta não encontrada' });
+  const b = req.body || {}, bloco = parseInt(b.bloco, 10) || 0, idx = parseInt(b.idx, 10);
+  const blk = aprovacoesDe(s.content)[bloco], item = blk && blk.itens[idx];
+  if (!item) return res.status(400).json({ error: 'item inválido' });
+  const atual = apvStmt.list.all(s.id).find(r => r.bloco === bloco && r.idx === idx);
+  if (atual && atual.status === 'aprovado') return res.status(409).json({ error: 'esse post já foi aprovado e agendado (#' + atual.post_id + ')' });
+  const rotulo = item.id || ('post ' + (idx + 1));
+  const nota = String(b.nota || '').trim().slice(0, 2000);
+  const grava = (status, extra) => apvStmt.up.run(Object.assign({ step_id: s.id, bloco, idx, status, post_id: null, quando: null, conta: null, note: nota || null, erro: null, updated_at: Date.now() }, extra || {}));
+  if (b.decisao === 'reprovar') {
+    grava('reprovado');
+    emitStep(req.params.rid, s.id);
+    if (nota && !active.has(req.params.rid)) {
+      orchestrate(req.params.rid, aprovacao.pedidoDeRefazer(item, nota), req.user);
+    } else registrarDecisao(req.params.rid, `Reprovei o ${rotulo}.`, 'Anotado. Esse post não vai ser agendado. Quando quiser, me diga o que mudar que a equipe refaz.');
+    return res.json({ ok: true, step: stepOut(stmt.stepGet.get(s.id)) });
+  }
+  if (b.decisao !== 'aprovar') return res.status(400).json({ error: 'decisão inválida' });
+  if (active.has(req.params.rid)) return res.status(409).json({ error: 'a equipe ainda está trabalhando; aprove quando ela terminar' });
+  try {
+    const { quando, conta, post: r, quandoBR } = await aprovacao.agendar(blk, item, b);
+    grava('aprovado', { post_id: r.id, quando, conta });
+    emitStep(req.params.rid, s.id);
+    if (!b.lote) registrarDecisao(req.params.rid, `Aprovei o ${rotulo}.`, `Post agendado no ZEUS POST (#${r.id}) para ${quandoBR}${item.conta_nome ? ' em ' + item.conta_nome : ''}. Dá para ver e editar em Instagram › Posts › Calendário.`);
+    res.json({ ok: true, step: stepOut(stmt.stepGet.get(s.id)), post: r });
+  } catch (e) {
+    grava('erro', { erro: String(e.message || e).slice(0, 500) });
+    emitStep(req.params.rid, s.id);
+    res.status(502).json({ error: 'Não consegui agendar: ' + e.message, step: stepOut(stmt.stepGet.get(s.id)) });
+  }
+});
+
+// Fim do "Aprovar todos": registra um resumo só na linha do tempo (os posts foram aprovados um a um com lote: true)
+router.post('/runs/:rid/steps/:sid/aprovacao-resumo', (req, res) => {
+  if (!req.user || !req.user.admin) return res.status(403).json({ error: 'Só administradores aprovam publicações.' });
+  const s = stepComAprovacao(req.params.rid, req.params.sid);
+  if (!s) return res.status(404).json({ error: 'proposta não encontrada' });
+  const bloco = parseInt((req.body || {}).bloco, 10) || 0, blk = aprovacoesDe(s.content)[bloco];
+  if (!blk) return res.status(400).json({ error: 'bloco inválido' });
+  const r = aprovacao.resumoLote(blk, apvStmt.list.all(s.id).filter(x => x.bloco === bloco));
+  registrarDecisao(req.params.rid, r.usuario, r.resposta);
+  res.json({ ok: true });
+});
+
 router.post('/runs/:rid/steps/:sid/adjust', (req, res) => {
   const s = finalStepOf(req.params.rid, req.params.sid);
   if (!s) return res.status(404).json({ error: 'entrega não encontrada' });
@@ -743,7 +831,7 @@ router.post('/runs/:rid/steps/:sid/adjust', (req, res) => {
   const note = String((req.body || {}).note || '').trim().slice(0, 4000);
   if (!splitParts(s.content).parts[idx]) return res.status(400).json({ error: 'parte inválida' });
   if (!note) return res.status(400).json({ error: 'diga o que quer mudar nesta parte' });
-  revisePart(req.params.rid, s.id, idx, note);
+  revisePart(req.params.rid, s.id, idx, note, req.user);
   res.json({ ok: true });
 });
 
@@ -799,7 +887,11 @@ router.put('/:id/share', (req, res) => {
   if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'equipe não encontrada' });
   const b = req.body || {};
   if (b.mode === 'pessoas' && !(Array.isArray(b.users) && b.users.length)) return res.status(400).json({ error: 'escolha pelo menos uma pessoa' });
-  res.json(Object.assign(shareSet(req.params.id, b.mode, b.users), { pessoas: sharePessoas() }));
+  const antes = new Set(shareGet(req.params.id).users);
+  const r = shareSet(req.params.id, b.mode, b.users);
+  if (r.mode === 'pessoas') { const t = stmt.get.get(req.params.id); const novos = sharePessoas().filter(p => r.users.includes(p.id) && !antes.has(p.id) && p.email).map(p => p.email);
+    require('./notificacoes').notificar({ para: novos, tipo: 'agente-compartilhado', titulo: `Equipe compartilhada com você: ${t.name}`, texto: `${req.user.name || req.user.email} liberou o acesso.`, link: '/equipe/' + t.id, exceto: req.user.email }); }
+  res.json(Object.assign(r, { pessoas: sharePessoas() }));
 });
 
 router.post('/', (req, res) => {
@@ -845,13 +937,15 @@ router.delete('/:id', (req, res) => {
 
 router.get('/:id/runs', (req, res) => {
   if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'equipe não encontrada' });
-  res.json({ runs: stmt.runs.all(req.params.id).map(r => Object.assign({}, r, { status: active.has(r.id) ? 'running' : r.status })) });
+  res.json({ runs: stmt.runs.all(req.params.id).filter(r => donoRun(r, req.user)).map(r => Object.assign({}, r, { status: active.has(r.id) ? 'running' : r.status })) });
 });
 
 router.post('/:id/runs', (req, res) => {
   if (!stmt.get.get(req.params.id)) return res.status(404).json({ error: 'equipe não encontrada' });
+  if (!canAccess(req.params.id, req.user)) return res.status(403).json({ error: 'Esta equipe foi compartilhada só com pessoas específicas. Peça acesso a quem criou.' });
   const id = newId(), now = Date.now();
   stmt.runIns.run(id, req.params.id, 'Nova execução', now, now);
+  db.prepare(`UPDATE team_runs SET user_email = ? WHERE id = ?`).run((req.user && req.user.email) || null, id);
   res.json({ run: stmt.runGet.get(id) });
 });
 

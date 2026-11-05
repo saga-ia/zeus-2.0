@@ -158,13 +158,30 @@ Cadastro vivo de equipe operacional: tabela `jeff_team` (ver `docs/team-roster.m
 | criar/admin grupo, promote, participantes | `docs/groups.md` |
 | cobrança em grupo de trabalho, follow-up interno | `docs/grupo-trabalho.md` |
 | Fase 2 (API reply non-whitelist), debounce | `docs/fase2.md` |
-| novo subdomínio, deploy, NPM host | `docs/criar-site-jeff.md` |
+| site/landing/página (criar ou redesenhar) → skill `site-premium`; subdomínio, deploy, NPM host | `docs/criar-site-jeff.md` |
 | zona DNS, A/CNAME/MX via API Cloudflare | `docs/cloudflare.md` |
 | campanha Meta, BM, CTWA, conta de anúncios | `docs/meta-ads.md` |
 | Asaas (cobrança, pix, customer, fatura) | `docs/asaas.md` |
 | ZapSign (contrato, webhook doc.signed) | `docs/zapsign.md` |
 | ClickUp (tarefas, cobrança, comentários) | `zeus/operacao/clickup.md` |
 | CIGC 2026 (Glauco, teatro, comercial) | `docs/cigc-2026.md` |
+| conteúdo orgânico IG (ideia, gancho, carrossel, revisão semanal) → Nina | `docs/nina-social-media.md` |
+| contexto de marca/cliente (público, voz, oferta, provas) que todo agente lê | `projetos/clientes/README.md` |
+| comercial: call, proposta, oferta, funil, follow-up de lead → agente Otávio (`otavio-comercial`); resumo do funil: `scripts/pipeline.sh` | `/root/.claude/agents/otavio-comercial.md` |
+| revisar/testar antes de entregar site, app ou automação → agente Tomé (`tome-revisor`) | `/root/.claude/agents/tome-revisor.md` |
+| auditoria de segurança de código feito por IA → Smith, skill `smith-auditoria-ia` | `/root/.claude/skills/smith-auditoria-ia/SKILL.md` |
+| pergunta sobre o servidor (o que roda onde, porta, domínio, app parado, onde fica X) → mapa atualizado todo dia 05:30 (Berlin); regenerar na hora: `scripts/server-map.sh` | `docs/mapa-servidor.md` |
+| passar trabalho entre agentes / entregar pro Jeff aprovar (OBJETIVO, ENTRADA, SAÍDA, PROVA, PENDÊNCIAS, PRÓXIMO) | `docs/cartao-passagem.md` |
+| post/carrossel/arte (ainda mais com print de referência): modos IA Google, IA OpenAI, Híbrido, HTML; amostra antes do lote | `/root/.claude/skills/arte-por-referencia/SKILL.md` |
+| criativo pra ANÚNCIO (Meta Ads/tráfego), não post: padrão PRO, 3 variações, política Meta | `/root/.claude/skills/criativo-anuncio/SKILL.md` |
+| minisite: link da bio estilo Linktree ou diagnóstico/quiz pra call (Eduardo) | `/root/.claude/agents/eduardo-minisites.md` + `/root/.claude/skills/minisite/SKILL.md` (modelos em projetos/minisites/_modelos, teste `scripts/minisite-check.js`) |
+| analisar DESIGN de post de imagem (link/print), biblioteca de modelos de post, mostrar modelos alternativos | `/root/.claude/skills/analise-design-post/SKILL.md` + `projetos/design-modelos/estruturas/INDICE.md` |
+| estilos de design salvos por marca (até 7, cada um com vários prints/links, receita, artes aprovadas) | `/opt/jeff-apps/jeff-central/tools/estilo` (listar, ver, mostrar, criar, add, receita, exemplo, correcao, usar) + aba Estilos do Agente de Design. Substitui o refs-marca.sh |
+| post no LinkedIn (perfil pessoal do Jeff, texto + até 9 imagens, rascunho/agendado; publicar só com ok explícito) | `/opt/jeff-apps/jeff-central/tools/linkedin` (ajuda, gerar, rascunho --texto-arquivo post.txt --imagem <arte> [--quando "AAAA-MM-DD HH:MM"], listar, publicar --post <id>); manda o link /linkedin?post=<id> pro Jeff aprovar; conexão e reconexão (60 dias) em https://central.jefersonhenrike.com/linkedin |
+| qualquer peça visual DO ZEUS ou sobre o ZEUS (post, carrossel, slide, tela, minisite, material do produto) | `/opt/jeff-worker/docs/design-system-zeus.md` (visual roxo #673DE6 + magenta #BE185D, fundo aurora, faixas em degradê, Space Grotesk + DM Sans) + modelos `projetos/design-modelos/zeus/`; post do @jeffhenrike segue o gosto.md da marca Jeff; cliente segue o contexto dele |
+| quanto foi gasto com IA de imagem (Nano Banana/GPT Image), total/mês/hoje | `scripts/gasto-ia-imagem.py` (tabela ia_imagem_gastos no central.db; preços em jeff-central/ia-precos.json; tela: Design > Criações) |
+| sequência de e-mail marketing → Ícaro | `/root/.claude/skills/icaro-email/SKILL.md` |
+| história de origem / storytelling / "sobre mim" / VSL (entrevista 8 perguntas) → Ícaro | `/root/.claude/skills/epiphany-bridge/SKILL.md` |
 
 Cada doc é dono único do domínio. Visão geral: `docs/INDEX.md`.
 

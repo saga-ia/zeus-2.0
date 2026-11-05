@@ -12,7 +12,6 @@ function getSetting(key) {
   return row ? row.value : null;
 }
 
-const JEFF_LAST9 = '910075450';
 
 const router = express.Router();
 
@@ -37,18 +36,23 @@ router.post(
     const phone = await resolvePhone(client, jid);
     if (!isWhitelistedPhone(phone)) throw new HttpError(403, 'audio_response_only_for_whitelisted');
 
-    // Quando Zeus fala com Jeff (dono), usa a voz própria do Zeus.
-    // Com clientes/terceiros, usa o clone do Jeff.
-    const isJeff = phone && phone.endsWith(JEFF_LAST9);
-    const voiceId = isJeff
-      ? (getSetting('elevenlabs_voice_zeus') || getSetting('elevenlabs_voice_id'))
-      : getSetting('elevenlabs_voice_id');
+    // Uma voz só para todo mundo (Jeff, clientes e terceiros): a clonada "Jefferson ZEUS" (elevenlabs_voice_id).
+    // Antes o Jeff recebia a elevenlabs_voice_zeus (Brian, em inglês) e o ZEUS parecia trocar de voz.
+    const voiceId = getSetting('elevenlabs_voice_id');
 
-    const { base64, mimetype } = await synthesize(text, voiceId);
+    let audio;
+    try { audio = await synthesize(text, voiceId); }
+    catch (err) {
+      // sem ElevenLabs não manda áudio em outra voz: manda o mesmo conteúdo em texto
+      const rt = await req.app.locals.queue.enqueue({ chat_id: jid, kind: 'text', payload: { body: text }, priority: priority ?? 5 });
+      if (!rt.ok) throw new HttpError(409, 'duplicate');
+      return res.json({ status: 'queued_text', queued_id: rt.id, chars: text.length, motivo: 'tts_indisponivel' });
+    }
+    const { base64, mimetype } = audio;
     const r = await req.app.locals.queue.enqueue({
       chat_id: jid,
       kind: 'audio',
-      payload: { base64, mimetype, filename: 'voice.ogg', asPtt: true },
+      payload: { base64, mimetype, filename: 'voice.ogg', asPtt: true, fallbackText: text },
       priority: priority ?? 5,
     });
     if (!r.ok) throw new HttpError(409, 'duplicate');

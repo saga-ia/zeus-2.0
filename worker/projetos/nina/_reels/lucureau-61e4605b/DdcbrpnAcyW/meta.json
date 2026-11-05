@@ -1,0 +1,27 @@
+{
+ "id": "DdcbrpnAcyW",
+ "url": "https://www.instagram.com/p/DdcbrpnAcyW/",
+ "plays": 20810,
+ "curtidas": 620,
+ "comentarios": 69,
+ "data": "2026-09-18",
+ "duracao_s": 99.9,
+ "cortes": 5,
+ "cortes_por_min": 3.0,
+ "primeiro_corte_s": 7.0,
+ "palavras_por_min": 186,
+ "fala": true,
+ "abertura_falada": "E, Luísa, quando você fala assim, crie por pessoas, não por views, que é seu lema, o que você quer dizer com isso?",
+ "jev": {
+  "topic": "marketing",
+  "opening": "question",
+  "mechanism": "curiosity",
+  "structure": "qa",
+  "evidence": "reasoning",
+  "emotion": "aspiration",
+  "specificity": "principle",
+  "cta": "none"
+ },
+ "legenda": "Não crie por views, crie por pessoas.",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/lucureau-61e4605b/DdcbrpnAcyW/folha.jpg"
+}

@@ -59,12 +59,9 @@ scripts/npm.sh add-proxy $SLUG 172.17.0.1 3010
 Adicionar zona nova: editar `map` em `/opt/jeff-sites/_nginx/default.conf`, validar `docker exec jeff-sites-nginx nginx -t`, recarregar `docker exec jeff-sites-nginx nginx -s reload`.
 
 ## Regra de design
-- Simples, mínimo de elementos, máximo de clareza.
-- Tipografia Inter/system-ui, espaçamento generoso, hierarquia clara.
-- Mobile-first, responsivo nativo (`clamp`, `grid auto-fit`).
-- Paleta limitada (preto/branco + 1 cor de destaque). Dourado/verde defaults bons pro Jeff.
-- Microinterações sutis (pulse, fade), sem dataviz pesada se não for dashboard.
-- Sem emoji, sem clichê. CTA único e inequívoco.
+**Todo site/landing passa pela skill `site-premium`** (`/root/.claude/skills/site-premium/SKILL.md`): briefing → direção de arte aprovada → build com piso de qualidade → `node scripts/site-check.js` (print desktop+celular, sinais de IA, contraste, fonte não carregada, overflow) → CRO → deploy → site-check na URL pública.
+- Proibido como voz da página: Inter/Roboto/Poppins/Montserrat/Arial; gradiente roxo; 3 cards iguais; painel falso de div; número sem fonte; travessão.
+- Log de paletas/fontes já usadas: `/opt/jeff-sites/_design-log.md` (não repetir).
 - **Sempre** `curl https://<slug>.jefersonhenrike.com` e confirmar status 200 antes de mandar URL.
 
 ## Helpers

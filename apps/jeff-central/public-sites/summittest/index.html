@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summit de Marketing e Inteligência Artificial · 26 e 27 de janeiro · Alphaville, SP</title>
+<meta name="description" content="O futuro dos negócios começa agora. 26 e 27 de janeiro, Alphaville (SP): dois dias que transformam conhecimento em grandes resultados com marketing e inteligência artificial.">
+<meta property="og:title" content="Summit de Marketing e Inteligência Artificial">
+<meta property="og:description" content="26 e 27 de janeiro · Alphaville, SP. Do conhecimento a grandes resultados.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#060816">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fundo:#060816;
+    --azul:#0B1635;
+    --ciano:#00C2FF;
+    --roxo:#6A4CFF;
+    --neve:#F4F7FB;
+    --cinza:#8793ad;
+    --linha:rgba(0,194,255,.14);
+    --card:rgba(11,22,53,.55);
+    --grad:linear-gradient(118deg,#00C2FF 0%,#4F8BFF 48%,#6A4CFF 100%);
+    --max:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--fundo);color:var(--neve);
+    font-family:'Montserrat',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  .gr{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ---------- símbolo / logo ---------- */
+  .simbolo{display:block;flex:0 0 auto}
+  .simbolo .b1,.simbolo .b2,.simbolo .b3{transform-origin:center}
+  .marca:hover .simbolo .b1{animation:desliza-b .7s ease}
+  .marca:hover .simbolo .b2{animation:desliza-b .7s .07s ease}
+  .marca:hover .simbolo .b3{animation:desliza-b .7s .14s ease}
+  @keyframes desliza-b{50%{transform:translateX(7px)}}
+  .logo-full{display:flex;align-items:center;gap:16px}
+  .logo-txt b{display:block;font-size:clamp(26px,4.4vw,44px);font-weight:800;letter-spacing:.06em;line-height:1}
+  .logo-txt small{display:block;margin-top:7px;font-size:clamp(8.5px,1.1vw,11.5px);font-weight:500;letter-spacing:.24em;color:#aab6cf;text-transform:uppercase}
+
+  /* ---------- barra de progresso + nav ---------- */
+  #progresso{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad);z-index:60;box-shadow:0 0 16px rgba(0,194,255,.8)}
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;padding:13px 24px;
+    background:transparent;backdrop-filter:blur(0);
+    border-bottom:1px solid transparent;transition:.35s ease;
+  }
+  nav.solida{background:rgba(6,8,22,.86);backdrop-filter:blur(16px);border-bottom:1px solid var(--linha)}
+  .marca{display:flex;align-items:center;gap:10px}
+  .marca span{font-weight:800;letter-spacing:.08em;font-size:15px}
+  .nav-links{display:flex;gap:26px;font-size:13.5px;font-weight:500;color:var(--cinza)}
+  .nav-links a{position:relative}
+  .nav-links a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:.3s ease}
+  .nav-links a:hover{color:var(--neve)}
+  .nav-links a:hover::after{transform:scaleX(1)}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    background:var(--grad);color:#fff;
+    font-family:inherit;font-weight:700;font-size:15px;letter-spacing:.01em;
+    padding:14px 28px;border-radius:999px;border:0;cursor:pointer;
+    position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease;
+    box-shadow:0 10px 30px rgba(0,194,255,.22);
+  }
+  .btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:brilha 3.4s infinite}
+  @keyframes brilha{0%,65%{left:-60%}100%{left:130%}}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(106,76,255,.45)}
+  .btn.pequeno{padding:11px 22px;font-size:13.5px}
+  .btn .seta{transition:transform .25s ease}
+  .btn:hover .seta{transform:translateX(5px)}
+  .btn-vazio{background:transparent;border:1px solid rgba(0,194,255,.4);color:var(--neve);box-shadow:none}
+  .btn-vazio::after{display:none}
+  .btn-vazio:hover{border-color:var(--ciano);box-shadow:0 0 0 4px rgba(0,194,255,.08)}
+
+  /* ---------- hero ---------- */
+  header{position:relative;min-height:100svh;display:flex;align-items:center;padding:128px 0 76px;overflow:hidden}
+  .grade{
+    position:absolute;inset:-25% -20% -20% -20%;
+    background-image:linear-gradient(rgba(0,194,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(0,194,255,.10) 1px,transparent 1px);
+    background-size:68px 68px;
+    transform:perspective(620px) rotateX(60deg) translateY(12%);
+    transform-origin:center top;
+    animation:desliza 9s linear infinite;opacity:.75;
+  }
+  @keyframes desliza{to{background-position:0 68px}}
+  .padrao{position:absolute;inset:0;opacity:.3;pointer-events:none}
+  .padrao svg{position:absolute;animation:bobo 12s ease-in-out infinite}
+  .brilho{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+  .brilho.a{width:560px;height:560px;background:rgba(0,194,255,.22);top:-140px;right:-60px;animation:flutua 12s ease-in-out infinite}
+  .brilho.b{width:460px;height:460px;background:rgba(106,76,255,.26);bottom:-150px;left:-80px;animation:flutua 15s ease-in-out infinite reverse}
+  @keyframes flutua{50%{transform:translate3d(-40px,36px,0) scale(1.14)}}
+  @keyframes bobo{50%{transform:translateY(-18px) rotate(4deg)}}
+  .vinheta{position:absolute;inset:0;background:radial-gradient(85% 72% at 50% 42%,transparent 0%,var(--fundo) 94%)}
+  header .wrap{position:relative;z-index:2}
+  .selo{
+    display:inline-flex;align-items:center;gap:10px;
+    border:1px solid rgba(0,194,255,.38);background:rgba(0,194,255,.07);
+    color:var(--neve);font-size:11.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+    padding:9px 18px;border-radius:999px;margin:26px 0 24px;
+  }
+  .selo i{width:7px;height:7px;border-radius:50%;background:var(--ciano);animation:pulso 1.8s infinite}
+  @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(0,194,255,.7)}70%{box-shadow:0 0 0 12px rgba(0,194,255,0)}100%{box-shadow:0 0 0 0 rgba(0,194,255,0)}}
+  h1{
+    font-size:clamp(36px,7.4vw,86px);line-height:1.02;font-weight:800;letter-spacing:-.02em;
+    max-width:16ch;text-transform:uppercase;
+  }
+  h1 .risco{position:relative;display:inline-block}
+  h1 .risco::after{
+    content:'';position:absolute;left:0;bottom:-.06em;height:.07em;width:100%;border-radius:4px;
+    background:var(--grad);transform:scaleX(0);transform-origin:left;
+    animation:risca 1.1s .8s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  @keyframes risca{to{transform:scaleX(1)}}
+  .sub{margin-top:28px;font-size:clamp(15.5px,1.9vw,19px);line-height:1.68;color:#b4bfd6;max-width:62ch;font-weight:400}
+  .sub b{color:var(--neve);font-weight:700}
+  .acoes{margin-top:38px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .fato{margin-top:40px;display:flex;flex-wrap:wrap;gap:14px 34px;font-size:13.5px;color:var(--cinza);font-weight:500}
+  .fato span{display:flex;align-items:center;gap:9px}
+
+  /* ---------- contagem ---------- */
+  .contagem{display:flex;gap:10px;margin-top:44px;flex-wrap:wrap}
+  .relogio{
+    min-width:96px;text-align:center;border:1px solid var(--linha);border-radius:16px;
+    padding:14px 10px;background:var(--card);position:relative;overflow:hidden;
+  }
+  .relogio::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad)}
+  .relogio b{display:block;font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .relogio small{display:block;margin-top:3px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cinza);font-weight:600}
+
+  /* ---------- faixa rolante ---------- */
+  .faixa{border-top:1px solid var(--linha);border-bottom:1px solid var(--linha);background:#08102a;overflow:hidden;padding:15px 0}
+  .faixa-trilho{display:flex;gap:44px;white-space:nowrap;animation:corre 28s linear infinite;width:max-content}
+  .faixa-trilho span{font-size:12.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#6d7b99;display:flex;align-items:center;gap:44px}
+  .faixa-trilho span::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--ciano)}
+  @keyframes corre{to{transform:translateX(-50%)}}
+
+  /* ---------- seções ---------- */
+  section{padding:112px 0;position:relative}
+  .escura{background:#080c20;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)}
+  .rotulo{
+    font-size:11.5px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
+    display:flex;align-items:center;gap:12px;margin-bottom:18px;
+  }
+  .rotulo::before{content:'';width:34px;height:2px;border-radius:2px;background:var(--grad)}
+  h2{font-size:clamp(26px,4.3vw,50px);line-height:1.08;font-weight:800;letter-spacing:-.02em;max-width:22ch;text-transform:uppercase}
+  .texto{margin-top:22px;font-size:16.5px;line-height:1.75;color:#a8b3cb;max-width:66ch;font-weight:400}
+  .texto + .texto{margin-top:14px}
+
+  /* pilares */
+  .pilares{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+  .pilar{
+    border:1px solid var(--linha);border-radius:999px;padding:9px 18px;
+    font-size:11.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9fb0cd;
+    background:var(--card);transition:.3s ease;
+  }
+  .pilar:hover{border-color:rgba(0,194,255,.5);color:var(--neve);transform:translateY(-2px)}
+
+  /* manifesto */
+  .duas{display:grid;grid-template-columns:1.05fr .95fr;gap:70px;align-items:start}
+  .contraste{display:grid;gap:14px}
+  .linha-contraste{
+    display:flex;gap:16px;align-items:flex-start;border:1px solid var(--linha);border-radius:18px;
+    padding:22px;background:var(--card);transition:.3s ease;position:relative;overflow:hidden;
+  }
+  .linha-contraste::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad);transform:scaleY(0);transform-origin:top;transition:.35s ease}
+  .linha-contraste:hover{border-color:rgba(0,194,255,.4);transform:translateX(6px)}
+  .linha-contraste:hover::before{transform:scaleY(1)}
+  .linha-contraste b{display:block;font-size:15.5px;margin-bottom:6px;font-weight:700}
+  .linha-contraste p{font-size:14.5px;line-height:1.65;color:var(--cinza);font-weight:400}
+
+  /* grid de tópicos */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:54px}
+  .cartao{
+    border:1px solid var(--linha);border-radius:20px;padding:30px 26px;background:var(--card);
+    position:relative;overflow:hidden;transition:.35s cubic-bezier(.2,.8,.2,1);
+  }
+  .cartao::before{
+    content:'';position:absolute;inset:0;opacity:0;transition:.35s ease;
+    background:radial-gradient(120% 90% at 0% 0%,rgba(0,194,255,.14),transparent 62%);
+  }
+  .cartao:hover{transform:translateY(-7px);border-color:rgba(0,194,255,.42);box-shadow:0 22px 50px rgba(0,0,0,.45)}
+  .cartao:hover::before{opacity:1}
+  .cartao > *{position:relative}
+  .cartao h3{font-size:17.5px;font-weight:700;letter-spacing:-.01em;margin:20px 0 10px}
+  .cartao p{font-size:14.5px;line-height:1.68;color:var(--cinza);font-weight:400}
+  .ico{width:46px;height:46px;display:block}
+  .ico *{vector-effect:non-scaling-stroke}
+  .tracos{stroke:url(#gradIco);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:var(--d,200);stroke-dashoffset:var(--d,200)}
+  .visivel .tracos{animation:desenha 1.4s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes desenha{to{stroke-dashoffset:0}}
+  .cartao:hover .gira{animation:gira 5s linear infinite;transform-origin:center}
+  @keyframes gira{to{transform:rotate(360deg)}}
+  .piscante{animation:pisca 1.7s ease-in-out infinite}
+  @keyframes pisca{50%{opacity:.2}}
+  .sobe-desce{animation:sobedesce 2.4s ease-in-out infinite}
+  @keyframes sobedesce{50%{transform:translateY(-4px)}}
+
+  /* trilha */
+  .trilha{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:54px}
+  .dia{border:1px solid var(--linha);border-radius:22px;overflow:hidden;background:var(--card)}
+  .dia-topo{padding:26px 28px;border-bottom:1px solid var(--linha);background:linear-gradient(120deg,rgba(0,194,255,.12),rgba(106,76,255,.12))}
+  .dia-topo small{font-size:11px;letter-spacing:.24em;text-transform:uppercase;font-weight:700}
+  .dia-topo b{display:block;font-size:25px;font-weight:800;letter-spacing:-.02em;margin-top:8px}
+  .dia-topo span{font-size:14px;color:var(--cinza);font-weight:400}
+  .passos{padding:12px 28px 28px;display:grid;gap:2px}
+  .passo{display:grid;grid-template-columns:76px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--linha)}
+  .passo:last-child{border-bottom:0}
+  .passo em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--ciano);font-variant-numeric:tabular-nums;padding-top:2px}
+  .passo b{display:block;font-size:15.5px;margin-bottom:5px;font-weight:700}
+  .passo p{font-size:14px;line-height:1.6;color:var(--cinza);font-weight:400}
+
+  /* para quem */
+  .pares{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:50px}
+  .caixa{border:1px solid var(--linha);border-radius:20px;padding:30px;background:var(--card)}
+  .caixa.sim{border-color:rgba(0,194,255,.35)}
+  .caixa h4{font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:20px;font-weight:700}
+  .caixa.nao h4{color:var(--cinza)}
+  .caixa ul{list-style:none;display:grid;gap:14px}
+  .caixa li{display:flex;gap:12px;font-size:15px;line-height:1.55;color:#bfc9dd;font-weight:400}
+  .caixa li svg{flex:0 0 18px;margin-top:3px}
+
+  /* local */
+  .local{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .mapa{
+    position:relative;aspect-ratio:1/1;border:1px solid var(--linha);border-radius:24px;overflow:hidden;
+    background:
+      radial-gradient(60% 60% at 50% 50%,rgba(0,194,255,.16),transparent 70%),
+      linear-gradient(rgba(0,194,255,.1) 1px,transparent 1px) 0 0/42px 42px,
+      linear-gradient(90deg,rgba(0,194,255,.1) 1px,transparent 1px) 0 0/42px 42px,
+      #070b1e;
+  }
+  .alfinete{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:var(--ciano);box-shadow:0 0 22px rgba(0,194,255,.9)}
+  .onda{position:absolute;left:50%;top:50%;width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(0,194,255,.65);transform:translate(-50%,-50%);animation:onda 3s ease-out infinite}
+  .onda:nth-child(2){animation-delay:1s}
+  .onda:nth-child(3){animation-delay:2s}
+  @keyframes onda{to{width:310px;height:310px;opacity:0}}
+  .mapa-tag{position:absolute;left:24px;bottom:22px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--cinza);font-weight:600}
+  .dados{display:grid;gap:18px;margin-top:30px}
+  .dado{border-top:1px solid var(--linha);padding-top:18px}
+  .dado b{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--cinza);margin-bottom:7px;font-weight:700}
+  .dado p{font-size:16.5px;font-weight:600;letter-spacing:-.01em}
+
+  /* faq */
+  .faq{margin-top:48px;border-top:1px solid var(--linha)}
+  .item{border-bottom:1px solid var(--linha)}
+  .item button{
+    width:100%;background:transparent;border:0;color:var(--neve);cursor:pointer;
+    display:flex;justify-content:space-between;gap:20px;align-items:center;
+    padding:24px 0;font-family:inherit;font-size:16.5px;font-weight:600;letter-spacing:-.01em;text-align:left;
+  }
+  .item button:hover{color:var(--ciano)}
+  .mais{flex:0 0 22px;height:22px;position:relative}
+  .mais::before,.mais::after{content:'';position:absolute;inset:50% 0 auto 0;height:2px;border-radius:2px;background:var(--grad);transition:.3s ease}
+  .mais::after{transform:rotate(90deg)}
+  .item.aberto .mais::after{transform:rotate(0)}
+  .resposta{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,.8,.2,1)}
+  .resposta p{padding:0 0 26px;font-size:15px;line-height:1.75;color:var(--cinza);max-width:72ch;font-weight:400}
+
+  /* inscrição */
+  .inscricao{background:
+      radial-gradient(70% 60% at 50% 0%,rgba(106,76,255,.22),transparent 72%),
+      #080c20;border-top:1px solid var(--linha)}
+  .form-caixa{
+    max-width:560px;margin:46px auto 0;border:1px solid var(--linha);border-radius:24px;
+    padding:36px;background:rgba(6,8,22,.72);backdrop-filter:blur(10px);text-align:left;
+  }
+  .centro{text-align:center}
+  .centro h2,.centro .texto{margin-left:auto;margin-right:auto}
+  .centro .rotulo{justify-content:center}
+  .form-caixa label{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--cinza);margin:18px 0 8px;font-weight:700}
+  .form-caixa input{
+    width:100%;background:#0a1027;border:1px solid var(--linha);border-radius:12px;
+    color:var(--neve);font-family:inherit;font-size:16px;padding:15px 16px;transition:.25s ease;
+  }
+  .form-caixa input:focus{outline:0;border-color:var(--ciano);box-shadow:0 0 0 4px rgba(0,194,255,.12)}
+  .form-caixa .btn{width:100%;justify-content:center;margin-top:28px;font-size:16px;padding:17px}
+  .msg{margin-top:14px;font-size:14.5px;color:#ff7a8a;display:none;text-align:center}
+  .msg.on{display:block}
+  .legal{margin-top:16px;font-size:12px;color:#66728c;text-align:center;line-height:1.6;font-weight:400}
+  .vagas{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--cinza);margin-top:18px;font-weight:500}
+  .vagas i{width:7px;height:7px;border-radius:50%;background:var(--ciano);animation:pulso 1.8s infinite}
+
+  footer{border-top:1px solid var(--linha);padding:44px 0;color:#66728c;font-size:13px;font-weight:400}
+  .rodape-linha{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .85s cubic-bezier(.2,.8,.2,1),transform .85s cubic-bezier(.2,.8,.2,1)}
+  .reveal.visivel{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
+  .reveal.d4{transition-delay:.32s}.reveal.d5{transition-delay:.4s}
+
+  @media (max-width:980px){
+    .nav-links{display:none}
+    .duas,.local{grid-template-columns:1fr;gap:40px}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .trilha,.pares{grid-template-columns:1fr}
+    section{padding:82px 0}
+  }
+  @media (max-width:620px){
+    .grid{grid-template-columns:1fr}
+    .relogio{min-width:72px;padding:12px 8px}
+    .relogio b{font-size:26px}
+    .form-caixa{padding:26px 20px}
+    .padrao{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    .tracos{stroke-dashoffset:0}
+    h1 .risco::after{transform:scaleX(1)}
+  }
+</style>
+</head>
+<body>
+
+<!-- gradientes globais de SVG -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradIco" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00C2FF"/><stop offset="100%" stop-color="#6A4CFF"/>
+    </linearGradient>
+    <linearGradient id="gradS1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00C2FF"/><stop offset="100%" stop-color="#3D8CFF"/>
+    </linearGradient>
+    <linearGradient id="gradS2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2FA9FF"/><stop offset="100%" stop-color="#6A4CFF"/>
+    </linearGradient>
+    <linearGradient id="gradS3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00C2FF"/><stop offset="100%" stop-color="#7B57FF"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="progresso"></div>
+
+<nav id="nav">
+  <a class="marca" href="#topo" aria-label="Summit de Marketing e Inteligência Artificial">
+    <svg class="simbolo" width="30" height="34" viewBox="0 0 120 136" aria-hidden="true">
+      <path class="b1" d="M44 2 H118 L92 36 H18 Z" fill="url(#gradS1)"/>
+      <path class="b2" d="M44 51 H118 L92 85 H18 Z" fill="url(#gradS2)"/>
+      <path class="b3" d="M44 100 H118 L92 134 H18 Z" fill="url(#gradS3)"/>
+    </svg>
+    <span>SUMMIT</span>
+  </a>
+  <div class="nav-links">
+    <a href="#conteudo">Conteúdo</a>
+    <a href="#trilha">Os 2 dias</a>
+    <a href="#local">Local</a>
+    <a href="#faq">Dúvidas</a>
+  </div>
+  <a class="btn pequeno" href="#inscricao">Garantir vaga <span class="seta">→</span></a>
+</nav>
+
+<header id="topo">
+  <div class="grade"></div>
+  <div class="padrao" aria-hidden="true">
+    <svg width="150" height="170" viewBox="0 0 120 136" style="top:14%;right:6%;animation-delay:0s">
+      <g fill="none" stroke="#00C2FF" stroke-width="2" opacity=".5">
+        <path d="M44 2 H118 L92 36 H18 Z"/><path d="M44 51 H118 L92 85 H18 Z"/><path d="M44 100 H118 L92 134 H18 Z"/>
+      </g>
+    </svg>
+    <svg width="110" height="125" viewBox="0 0 120 136" style="bottom:12%;right:22%;animation-delay:2.5s">
+      <g fill="none" stroke="#6A4CFF" stroke-width="2" opacity=".45">
+        <path d="M44 2 H118 L92 36 H18 Z"/><path d="M44 51 H118 L92 85 H18 Z"/><path d="M44 100 H118 L92 134 H18 Z"/>
+      </g>
+    </svg>
+    <svg width="80" height="92" viewBox="0 0 120 136" style="top:66%;left:4%;animation-delay:1.2s">
+      <g fill="none" stroke="#00C2FF" stroke-width="2.4" opacity=".3">
+        <path d="M44 2 H118 L92 36 H18 Z"/><path d="M44 51 H118 L92 85 H18 Z"/><path d="M44 100 H118 L92 134 H18 Z"/>
+      </g>
+    </svg>
+  </div>
+  <div class="brilho a"></div>
+  <div class="brilho b"></div>
+  <div class="vinheta"></div>
+  <div class="wrap">
+    <div class="logo-full reveal">
+      <svg class="simbolo" width="74" height="84" viewBox="0 0 120 136" aria-hidden="true">
+        <path d="M44 2 H118 L92 36 H18 Z" fill="url(#gradS1)"/>
+        <path d="M44 51 H118 L92 85 H18 Z" fill="url(#gradS2)"/>
+        <path d="M44 100 H118 L92 134 H18 Z" fill="url(#gradS3)"/>
+      </svg>
+      <div class="logo-txt">
+        <b>SUMMIT</b>
+        <small>de Marketing e Inteligência Artificial</small>
+      </div>
+    </div>
+    <span class="selo reveal d1"><i></i> 26 e 27 de janeiro · Alphaville, São Paulo</span>
+    <h1 class="reveal d1">O futuro dos negócios <span class="risco gr">começa agora</span>.</h1>
+    <p class="sub reveal d2">Dois dias que transformam conhecimento em resultado: toda a operação de marketing com inteligência artificial que a gente roda, aberta na tela, <b>agente por agente, campanha por campanha</b>. Sem teoria de palco. Você sai com a máquina montada.</p>
+    <div class="acoes reveal d3">
+      <a class="btn" href="#inscricao">Quero minha vaga <span class="seta">→</span></a>
+      <a class="btn btn-vazio" href="#conteudo">Ver o que será entregue</a>
+    </div>
+    <div class="contagem reveal d4" id="contagem" aria-label="Contagem regressiva para o evento">
+      <div class="relogio"><b id="d">00</b><small>dias</small></div>
+      <div class="relogio"><b id="h">00</b><small>horas</small></div>
+      <div class="relogio"><b id="m">00</b><small>min</small></div>
+      <div class="relogio"><b id="s">00</b><small>seg</small></div>
+    </div>
+    <div class="fato reveal d5">
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg> Dois dias que transformam</span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="1.8"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Alphaville · São Paulo</span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg> Turma limitada</span>
+    </div>
+  </div>
+</header>
+
+<div class="faixa" aria-hidden="true">
+  <div class="faixa-trilho">
+    <span>Conhecimento</span><span>Estratégia</span><span>Tecnologia</span><span>Pessoas</span><span>Resultados</span><span>Grandes ideias</span><span>Mais negócios reais</span><span>Um amanhã real</span>
+    <span>Conhecimento</span><span>Estratégia</span><span>Tecnologia</span><span>Pessoas</span><span>Resultados</span><span>Grandes ideias</span><span>Mais negócios reais</span><span>Um amanhã real</span>
+  </div>
+</div>
+
+<section class="escura">
+  <div class="wrap duas">
+    <div>
+      <div class="rotulo gr reveal">O recado</div>
+      <h2 class="reveal d1">Janeiro decide o ano. O resto é reação.</h2>
+      <p class="texto reveal d2">Todo mundo começa o ano com planilha nova e a mesma operação velha. Mesma agência, mesmo criativo, mesmo CRM parado, mesmo time apagando incêndio no WhatsApp. Em dezembro, a conclusão é sempre a mesma: "faltou execução".</p>
+      <p class="texto reveal d2">Não faltou execução. Faltou máquina. Inteligência artificial não é assunto de palestra, é infraestrutura: é o que decide se você vai precisar de dez pessoas ou de três para fazer o dobro.</p>
+      <p class="texto reveal d3">Nos dias 26 e 27 de janeiro a gente abre a operação inteira em Alphaville. Você vê funcionando, monta a sua, e volta para a empresa com a engrenagem rodando. Quem sair da sala e não mudar nada vai ter escolhido isso.</p>
+      <div class="pilares reveal d4">
+        <span class="pilar">Conhecimento</span><span class="pilar">Estratégia</span><span class="pilar">Tecnologia</span><span class="pilar">Pessoas</span><span class="pilar">Resultados</span>
+      </div>
+    </div>
+    <div class="contraste">
+      <div class="linha-contraste reveal d1"><div><b>O jeito de 2024</b><p>Agência cobrando por postagem, criativo no feeling, lead frio no WhatsApp sem resposta, relatório que ninguém lê.</p></div></div>
+      <div class="linha-contraste reveal d2"><div><b>O jeito de 2027</b><p>Agente treinado na sua marca produzindo todo dia, criativo testado em volume, atendimento que qualifica sozinho, painel que diz onde colocar o próximo real.</p></div></div>
+      <div class="linha-contraste reveal d3"><div><b>A diferença no caixa</b><p>Não é custo menor. É velocidade: quem testa trinta ângulos por mês encontra o que vende antes de quem testa três.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="conteudo">
+  <div class="wrap">
+    <div class="rotulo gr reveal">O que você vai dominar</div>
+    <h2 class="reveal d1">Nove frentes. Todas abertas, com o passo a passo.</h2>
+    <p class="texto reveal d2">Cada bloco é entregue com o mecanismo na tela: prompt, estrutura, número e critério de decisão. Você implementa junto, do conhecimento a grandes resultados.</p>
+
+    <div class="grid">
+      <article class="cartao reveal d1">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:260"><rect x="12" y="14" width="24" height="22" rx="5"/><path d="M24 8v6"/><circle cx="19" cy="24" r="2"/><circle cx="29" cy="24" r="2"/><path d="M19 31h10"/></g><circle class="piscante" cx="24" cy="7" r="2" fill="#00C2FF"/></svg>
+        <h3>Agentes de IA da sua empresa</h3>
+        <p>Como criar agentes treinados no seu produto, no seu tom e na sua base, que trabalham sem supervisão e não inventam resposta.</p>
+      </article>
+      <article class="cartao reveal d2">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:240"><path d="M8 34c6-2 8-18 16-18s10 16 16 14"/><path d="M8 40h32"/></g><circle class="sobe-desce" cx="40" cy="30" r="3" fill="#6A4CFF"/></svg>
+        <h3>Tráfego pago com IA no comando</h3>
+        <p>Estrutura de campanha na era Andromeda, sinal limpo, criativo como segmentação e leitura de conta sem achismo.</p>
+      </article>
+      <article class="cartao reveal d3">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:300"><rect x="9" y="10" width="20" height="26" rx="4"/><rect x="21" y="18" width="18" height="22" rx="4"/><path d="M27 28h6M27 33h4"/></g></svg>
+        <h3>Conteúdo em escala sem perder a mão</h3>
+        <p>Linha editorial, arte gerada por IA dentro da identidade e produção de trinta peças numa tarde, com padrão.</p>
+      </article>
+      <article class="cartao reveal d1">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:240"><path d="M10 36l2-6a13 13 0 1 1 6 6l-8 2z"/><path d="M19 24h.01M24 24h.01M29 24h.01"/></g></svg>
+        <h3>Atendimento e WhatsApp automatizados</h3>
+        <p>Robô que qualifica, agenda, cobra e passa o bastão para o humano na hora certa. Com script e com limite.</p>
+      </article>
+      <article class="cartao reveal d2">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:280"><path d="M7 11h34l-13 15v12l-8 4V26z"/></g><circle class="piscante" cx="38" cy="36" r="3" fill="#00C2FF"/></svg>
+        <h3>Funil comercial que fecha</h3>
+        <p>Do lead ao contrato: cadência, qualificação, proposta e o ponto exato onde o seu funil está vazando hoje.</p>
+      </article>
+      <article class="cartao reveal d3">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:260"><rect x="8" y="10" width="32" height="28" rx="4"/><path d="M15 31v-7M23 31V18M31 31v-11"/></g></svg>
+        <h3>Dados, painel e decisão</h3>
+        <p>O número que importa, no lugar onde você olha todo dia. Dashboard vivo em vez de relatório mensal.</p>
+      </article>
+      <article class="cartao reveal d1">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos gira" style="--d:260"><circle cx="24" cy="24" r="8"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4 4M33 33l4 4M37 11l-4 4M15 33l-4 4"/></g></svg>
+        <h3>Automação de rotina e processo</h3>
+        <p>O que a sua operação repete toda semana virando tarefa agendada que roda sozinha e entrega pronta.</p>
+      </article>
+      <article class="cartao reveal d2">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:300"><path d="M24 7l5 11 12 1.5-9 8 2.4 12L24 34l-10.4 5.5L16 27.5 7 19.5 19 18z"/></g></svg>
+        <h3>Posicionamento e oferta</h3>
+        <p>Por que você compete por preço e como sair disso. Big idea, promessa e a oferta que só existe na sua mão.</p>
+      </article>
+      <article class="cartao reveal d3">
+        <svg class="ico" viewBox="0 0 48 48"><g class="tracos" style="--d:280"><circle cx="17" cy="17" r="6"/><path d="M7 38c0-6 4.5-10 10-10s10 4 10 10"/><circle cx="33" cy="20" r="5"/><path d="M28 38c0-5 3-8 7-8s6 3 6 8"/></g></svg>
+        <h3>Time, IA e produtividade</h3>
+        <p>Quem você contrata, quem você treina e quem a máquina substitui. Como montar time pequeno com saída grande.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="trilha" class="escura">
+  <div class="wrap">
+    <div class="rotulo gr reveal">A trilha</div>
+    <h2 class="reveal d1">Dia 1 constrói. Dia 2 coloca para vender.</h2>
+    <p class="texto reveal d2">Horários de referência, com intervalos e tempo de implementação na sala. A grade final é confirmada por e-mail para quem está inscrito.</p>
+
+    <div class="trilha">
+      <div class="dia reveal d1">
+        <div class="dia-topo">
+          <small class="gr">Terça · 26 de janeiro</small>
+          <b>Dia 1 · A máquina</b>
+          <span>Diagnóstico, agentes, conteúdo e automação</span>
+        </div>
+        <div class="passos">
+          <div class="passo"><em>09:00</em><div><b>Abertura: o mapa de 2027</b><p>O que mudou de verdade na IA aplicada a marketing e vendas, e o que é barulho.</p></div></div>
+          <div class="passo"><em>10:30</em><div><b>Operação aberta</b><p>A estrutura real rodando na tela: agentes, rotinas, base de conhecimento e integrações.</p></div></div>
+          <div class="passo"><em>13:30</em><div><b>Construindo seu agente</b><p>Você monta o primeiro agente da sua empresa na sala, com o seu material.</p></div></div>
+          <div class="passo"><em>15:30</em><div><b>Conteúdo e criativo em escala</b><p>Da linha editorial à arte pronta, mantendo identidade e ritmo de publicação.</p></div></div>
+          <div class="passo"><em>17:00</em><div><b>Automação do atendimento</b><p>WhatsApp que qualifica e agenda, com os limites certos para não queimar a marca.</p></div></div>
+        </div>
+      </div>
+      <div class="dia reveal d2">
+        <div class="dia-topo">
+          <small class="gr">Quarta · 27 de janeiro</small>
+          <b>Dia 2 · O dinheiro</b>
+          <span>Tráfego, funil, dados e plano de 90 dias</span>
+        </div>
+        <div class="passos">
+          <div class="passo"><em>09:00</em><div><b>Tráfego pago sem desperdício</b><p>Estrutura, verba, sinal e leitura de conta. O que cortar na segunda-feira.</p></div></div>
+          <div class="passo"><em>10:30</em><div><b>Oferta e posicionamento</b><p>Ajuste da promessa para parar de competir por preço.</p></div></div>
+          <div class="passo"><em>13:30</em><div><b>Funil e time comercial</b><p>Cadência, qualificação e o roteiro de fechamento com apoio de IA.</p></div></div>
+          <div class="passo"><em>15:30</em><div><b>Painel de decisão</b><p>Os indicadores que você vai olhar todo dia e como montar o seu painel.</p></div></div>
+          <div class="passo"><em>17:00</em><div><b>Seu plano de 90 dias</b><p>Você sai da sala com o plano escrito, com responsável e prazo.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rotulo gr reveal">Seja honesto</div>
+    <h2 class="reveal d1">Esse Summit não é para todo mundo. E isso é de propósito.</h2>
+    <div class="pares">
+      <div class="caixa sim reveal d1">
+        <h4 class="gr">É para você se</h4>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="2.2"><path d="M4 12.5l5 5L20 6.5"/></svg> Você é dono, sócio ou responsável por decisão de marketing e vendas.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="2.2"><path d="M4 12.5l5 5L20 6.5"/></svg> Já tem faturamento e quer escalar sem dobrar a folha.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="2.2"><path d="M4 12.5l5 5L20 6.5"/></svg> Está disposto a implementar durante o evento, com o notebook aberto.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="2.2"><path d="M4 12.5l5 5L20 6.5"/></svg> Quer entender o que delegar para IA e o que continua sendo humano.</li>
+        </ul>
+      </div>
+      <div class="caixa nao reveal d2">
+        <h4>Não é para você se</h4>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8793ad" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg> Procura inspiração para postar no story e nada mais.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8793ad" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg> Espera botão mágico que vende sozinho sem oferta e sem verba.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8793ad" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg> Acredita que IA é moda e vai passar.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8793ad" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg> Não pretende mudar nada na operação ao voltar.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="local" class="escura">
+  <div class="wrap local">
+    <div class="mapa reveal">
+      <span class="onda"></span><span class="onda"></span><span class="onda"></span>
+      <span class="alfinete"></span>
+      <span class="mapa-tag">Alphaville · São Paulo</span>
+    </div>
+    <div>
+      <div class="rotulo gr reveal">Onde e quando</div>
+      <h2 class="reveal d1">Alphaville, São Paulo. Dois dias, presencial.</h2>
+      <p class="texto reveal d2">Alphaville concentra operação, dinheiro e decisão em volta de São Paulo, e é fácil de chegar de qualquer aeroporto. Sala com estrutura para implementar, não só assistir.</p>
+      <div class="dados">
+        <div class="dado reveal d1"><b>Datas</b><p>26 e 27 de janeiro · terça e quarta</p></div>
+        <div class="dado reveal d2"><b>Horário</b><p>09:00 às 18:30 (credenciamento às 08:15)</p></div>
+        <div class="dado reveal d3"><b>Local</b><p>Alphaville, São Paulo · endereço exato enviado aos inscritos</p></div>
+        <div class="dado reveal d4"><b>Formato</b><p>Presencial, com implementação na sala</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="rotulo gr reveal">Dúvidas</div>
+    <h2 class="reveal d1">O que perguntam antes de garantir a vaga</h2>
+    <div class="faq">
+      <div class="item reveal d1">
+        <button type="button">Preciso entender de tecnologia para acompanhar? <span class="mais"></span></button>
+        <div class="resposta"><p>Não. Tudo é conduzido do zero, na tela, em português e com o passo a passo. Se você usa WhatsApp e planilha, acompanha. Leve o notebook: a implementação acontece na sala.</p></div>
+      </div>
+      <div class="item reveal d2">
+        <button type="button">Quanto custa a inscrição? <span class="mais"></span></button>
+        <div class="resposta"><p>O valor e as condições do lote são enviados por e-mail e WhatsApp para quem se inscreve nesta página. Quem entra na lista primeiro recebe primeiro a condição de abertura.</p></div>
+      </div>
+      <div class="item reveal d3">
+        <button type="button">Serve para a minha área ou é só para agência? <span class="mais"></span></button>
+        <div class="resposta"><p>Serve para quem vende: serviço, produto físico, imóvel, educação, saúde, software. A engrenagem é a mesma e os exemplos são ajustados para os perfis presentes na sala.</p></div>
+      </div>
+      <div class="item reveal d4">
+        <button type="button">Vai ter gravação? <span class="mais"></span></button>
+        <div class="resposta"><p>O Summit é presencial e a experiência é construída na sala. Os materiais de apoio e templates usados nos dois dias ficam com quem participou.</p></div>
+      </div>
+      <div class="item reveal d5">
+        <button type="button">Posso levar alguém do meu time? <span class="mais"></span></button>
+        <div class="resposta"><p>Pode, e recomendamos. Dono decide, time executa: quando os dois estão na sala, o plano de 90 dias sai de lá já combinado. Fale com a gente após a inscrição para vagas adicionais.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="inscricao" id="inscricao">
+  <div class="wrap centro">
+    <div class="rotulo gr reveal">Inscrição</div>
+    <h2 class="reveal d1">Garanta sua vaga no Summit</h2>
+    <p class="texto reveal d2">Preencha os dados e você recebe a condição de abertura, o endereço e as instruções antes de todo mundo. Turma limitada pela capacidade da sala.</p>
+    <span class="vagas reveal d2"><i></i> Lista de abertura aberta agora</span>
+
+    <form class="form-caixa reveal d3" id="f" novalidate>
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" type="text" placeholder="Seu nome e sobrenome" autocomplete="name" required>
+      <label for="telefone">WhatsApp com DDD</label>
+      <input id="telefone" name="telefone" type="tel" inputmode="numeric" placeholder="(11) 99999-0000" autocomplete="tel" required>
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required>
+      <button class="btn" id="btn" type="submit">Quero minha vaga <span class="seta">→</span></button>
+      <p class="msg" id="msg"></p>
+      <p class="legal">Seus dados são usados apenas para o contato sobre o Summit. Sem repasse para terceiros.</p>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap rodape-linha">
+    <span>Summit de Marketing e Inteligência Artificial · 26 e 27 de janeiro · Alphaville, SP</span>
+    <span>Do conhecimento a grandes resultados · Alpha Digital</span>
+  </div>
+</footer>
+
+<script>
+  var ENDPOINT = 'https://leads.jefersonhenrike.com/api/lead/summit-ia-teste';
+
+  /* contagem regressiva */
+  var ALVO = new Date('2027-01-26T09:00:00-03:00').getTime();
+  function doisDig(n){ return n < 10 ? '0' + n : '' + n; }
+  function tique(){
+    var falta = ALVO - Date.now();
+    if (falta < 0) falta = 0;
+    var seg = Math.floor(falta / 1000);
+    document.getElementById('d').textContent = doisDig(Math.floor(seg / 86400));
+    document.getElementById('h').textContent = doisDig(Math.floor(seg % 86400 / 3600));
+    document.getElementById('m').textContent = doisDig(Math.floor(seg % 3600 / 60));
+    document.getElementById('s').textContent = doisDig(seg % 60);
+  }
+  tique(); setInterval(tique, 1000);
+
+  /* nav + barra de progresso */
+  var nav = document.getElementById('nav'), barra = document.getElementById('progresso');
+  function noScroll(){
+    var y = window.scrollY || document.documentElement.scrollTop;
+    nav.classList.toggle('solida', y > 40);
+    var alt = document.documentElement.scrollHeight - window.innerHeight;
+    barra.style.width = (alt > 0 ? (y / alt) * 100 : 0) + '%';
+  }
+  noScroll();
+  window.addEventListener('scroll', noScroll, { passive: true });
+
+  /* reveal on scroll */
+  var alvos = document.querySelectorAll('.reveal, .cartao');
+  if ('IntersectionObserver' in window){
+    var obs = new IntersectionObserver(function(entradas){
+      entradas.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add('visivel'); obs.unobserve(e.target); }
+      });
+    }, { threshold: .18, rootMargin: '0px 0px -8% 0px' });
+    alvos.forEach(function(el){ obs.observe(el); });
+  } else {
+    alvos.forEach(function(el){ el.classList.add('visivel'); });
+  }
+
+  /* faq */
+  document.querySelectorAll('.item button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var item = b.parentElement, resp = item.querySelector('.resposta');
+      var abrindo = !item.classList.contains('aberto');
+      document.querySelectorAll('.item.aberto').forEach(function(i){
+        i.classList.remove('aberto'); i.querySelector('.resposta').style.maxHeight = '';
+      });
+      if (abrindo){ item.classList.add('aberto'); resp.style.maxHeight = resp.scrollHeight + 'px'; }
+    });
+  });
+
+  /* máscara de telefone */
+  var tel = document.getElementById('telefone');
+  tel.addEventListener('input', function(){
+    var d = tel.value.replace(/\D/g,'').slice(0,11);
+    if (d.length > 6) tel.value = '(' + d.slice(0,2) + ') ' + d.slice(2, d.length > 10 ? 7 : 6) + '-' + d.slice(d.length > 10 ? 7 : 6);
+    else if (d.length > 2) tel.value = '(' + d.slice(0,2) + ') ' + d.slice(2);
+    else tel.value = d;
+  });
+
+  function utms(){
+    var q = new URLSearchParams(location.search), o = {};
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ o[k] = q.get(k) || ''; });
+    return o;
+  }
+
+  var form = document.getElementById('f'), btn = document.getElementById('btn'), msg = document.getElementById('msg');
+  function erro(t){ msg.textContent = t; msg.className = 'msg on'; }
+  function volta(){ btn.disabled = false; btn.innerHTML = 'Quero minha vaga <span class="seta">→</span>'; }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msg.className = 'msg';
+    var dados = Object.assign({
+      nome: document.getElementById('nome').value.trim(),
+      telefone: tel.value,
+      email: document.getElementById('email').value.trim(),
+      pagina: location.href
+    }, utms());
+
+    if (dados.nome.split(' ').filter(Boolean).length < 2) return erro('Escreva seu nome completo.');
+    if (dados.telefone.replace(/\D/g,'').length < 10) return erro('Informe um WhatsApp válido com DDD.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(dados.email)) return erro('Informe um e-mail válido.');
+
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    fetch(ENDPOINT, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) })
+      .then(function(r){ return r.json().catch(function(){ return { ok:false }; }); })
+      .then(function(j){
+        if (j && j.ok){
+          if (j.redirect) { location.href = j.redirect; return; }
+          form.innerHTML = '<div style="text-align:center;padding:14px 0"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg><h3 style="font-size:23px;font-weight:800;letter-spacing:-.02em;margin:18px 0 10px">Vaga reservada</h3><p style="color:#a8b3cb;font-size:15px;line-height:1.7">Chegou aqui. Em instantes você recebe no WhatsApp e no e-mail a condição de abertura e as instruções do Summit. Fica de olho.</p></div>';
+          return;
+        }
+        erro((j && j.error) || 'Não conseguimos registrar agora. Tente de novo em instantes.');
+        volta();
+      })
+      .catch(function(){ erro('Falha de conexão. Confira a internet e tente de novo.'); volta(); });
+  });
+</script>
+</body>
+</html>

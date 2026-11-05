@@ -6,7 +6,8 @@
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const GRAPH = 'https://graph.facebook.com/v19.0';
+// Versão da Marketing API: a Meta desliga cada versão uns 2 anos depois do lançamento. Troque aqui (ou por META_GRAPH_VERSION).
+const GRAPH = 'https://graph.facebook.com/' + (process.env.META_GRAPH_VERSION || 'v23.0');
 const WORKER_DB = process.env.WORKER_DB_PATH || '/opt/jeff-worker/data/worker.db';
 const METADASH_CLIENTS = process.env.METADASH_CLIENTS || '/opt/jeff-apps/jeff-meta-dashboard/data/clients.json';
 const CACHE_MS = 10 * 60 * 1000;

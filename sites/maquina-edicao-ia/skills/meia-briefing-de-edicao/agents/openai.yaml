@@ -1,0 +1,4 @@
+interface:
+  display_name: "Briefing de edição"
+  short_description: "Transforma seu pedido em um briefing executável"
+  default_prompt: "Use $meia-briefing-de-edicao para orientar a edição de [VÍDEO OU PROJETO] conforme o resultado e os arquivos que forneci."

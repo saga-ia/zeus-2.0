@@ -194,7 +194,7 @@ app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
   store: new SQLiteStore(),
-  secret: 'sdrs-crm-' + crypto.randomBytes(8).toString('hex'),
+  secret: '<REDACTED>' + crypto.randomBytes(8).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 12 * 60 * 60 * 1000, secure: false, sameSite: 'lax' }

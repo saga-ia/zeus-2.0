@@ -4,7 +4,7 @@ const path = require('path');
 const { getSetting, setSetting } = require('./settings');
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
-const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const OAUTH_TOKEN_URL = '<REDACTED>';
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
 

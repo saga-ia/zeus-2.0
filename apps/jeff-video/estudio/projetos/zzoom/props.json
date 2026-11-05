@@ -1,0 +1,2636 @@
+{
+  "video": "video.mp4",
+  "inicio": 0,
+  "duracao": 160.12,
+  "palavras": [
+    {
+      "inicio": 0.48,
+      "fim": 0.6,
+      "texto": "vou",
+      "destaque": false
+    },
+    {
+      "inicio": 0.6,
+      "fim": 0.72,
+      "texto": "te",
+      "destaque": false
+    },
+    {
+      "inicio": 0.72,
+      "fim": 0.84,
+      "texto": "mostrar",
+      "destaque": false
+    },
+    {
+      "inicio": 0.84,
+      "fim": 1,
+      "texto": "nesse",
+      "destaque": false
+    },
+    {
+      "inicio": 1,
+      "fim": 1.18,
+      "texto": "vídeo",
+      "destaque": false
+    },
+    {
+      "inicio": 1.18,
+      "fim": 1.36,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 1.36,
+      "fim": 1.48,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 1.48,
+      "fim": 1.82,
+      "texto": "importância",
+      "destaque": false
+    },
+    {
+      "inicio": 1.82,
+      "fim": 1.94,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 1.94,
+      "fim": 2.18,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 2.18,
+      "fim": 2.52,
+      "texto": "estar",
+      "destaque": false
+    },
+    {
+      "inicio": 2.52,
+      "fim": 2.78,
+      "texto": "olhando",
+      "destaque": false
+    },
+    {
+      "inicio": 2.78,
+      "fim": 3.04,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 3.04,
+      "fim": 3.16,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 3.16,
+      "fim": 3.48,
+      "texto": "ETF",
+      "destaque": false
+    },
+    {
+      "inicio": 3.48,
+      "fim": 4.06,
+      "texto": "da",
+      "destaque": false
+    },
+    {
+      "inicio": 4.06,
+      "fim": 4.34,
+      "texto": "bolsa",
+      "destaque": false
+    },
+    {
+      "inicio": 4.34,
+      "fim": 4.8,
+      "texto": "brasileira",
+      "destaque": false
+    },
+    {
+      "inicio": 4.8,
+      "fim": 5,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 5,
+      "fim": 5.2,
+      "texto": "é",
+      "destaque": false
+    },
+    {
+      "inicio": 5.2,
+      "fim": 5.38,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 5.38,
+      "fim": 6.02,
+      "texto": "EWD",
+      "destaque": true
+    },
+    {
+      "inicio": 6.02,
+      "fim": 6.5,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 6.5,
+      "fim": 6.78,
+      "texto": "abertura",
+      "destaque": false
+    },
+    {
+      "inicio": 6.78,
+      "fim": 6.94,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 6.94,
+      "fim": 7.4,
+      "texto": "EWD",
+      "destaque": true
+    },
+    {
+      "inicio": 7.4,
+      "fim": 7.6,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 7.6,
+      "fim": 7.72,
+      "texto": "gente",
+      "destaque": false
+    },
+    {
+      "inicio": 7.72,
+      "fim": 7.84,
+      "texto": "já",
+      "destaque": false
+    },
+    {
+      "inicio": 7.84,
+      "fim": 7.96,
+      "texto": "estava",
+      "destaque": false
+    },
+    {
+      "inicio": 7.96,
+      "fim": 8.08,
+      "texto": "muito",
+      "destaque": false
+    },
+    {
+      "inicio": 8.08,
+      "fim": 8.52,
+      "texto": "próximo",
+      "destaque": false
+    },
+    {
+      "inicio": 8.52,
+      "fim": 8.76,
+      "texto": "da",
+      "destaque": false
+    },
+    {
+      "inicio": 8.76,
+      "fim": 9.1,
+      "texto": "máxima",
+      "destaque": false
+    },
+    {
+      "inicio": 9.1,
+      "fim": 9.66,
+      "texto": "exposição",
+      "destaque": false
+    },
+    {
+      "inicio": 9.66,
+      "fim": 9.88,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 9.88,
+      "fim": 10.34,
+      "texto": "Gamowall",
+      "destaque": true
+    },
+    {
+      "inicio": 10.34,
+      "fim": 10.54,
+      "texto": "onde",
+      "destaque": false
+    },
+    {
+      "inicio": 10.54,
+      "fim": 10.66,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 10.66,
+      "fim": 10.78,
+      "texto": "gente",
+      "destaque": false
+    },
+    {
+      "inicio": 10.78,
+      "fim": 10.92,
+      "texto": "tinha",
+      "destaque": false
+    },
+    {
+      "inicio": 10.92,
+      "fim": 11.12,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 11.12,
+      "fim": 11.74,
+      "texto": "um",
+      "destaque": false
+    },
+    {
+      "inicio": 11.74,
+      "fim": 12,
+      "texto": "cooperante",
+      "destaque": false
+    },
+    {
+      "inicio": 12,
+      "fim": 12.38,
+      "texto": "aberto",
+      "destaque": false
+    },
+    {
+      "inicio": 12.38,
+      "fim": 12.56,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 12.56,
+      "fim": 12.84,
+      "texto": "24",
+      "destaque": false
+    },
+    {
+      "inicio": 12.84,
+      "fim": 13.08,
+      "texto": "mil",
+      "destaque": false
+    },
+    {
+      "inicio": 13.08,
+      "fim": 13.56,
+      "texto": "contratos",
+      "destaque": false
+    },
+    {
+      "inicio": 13.56,
+      "fim": 13.74,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 13.74,
+      "fim": 13.92,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 13.92,
+      "fim": 14.08,
+      "texto": "deu",
+      "destaque": false
+    },
+    {
+      "inicio": 14.08,
+      "fim": 14.2,
+      "texto": "uma",
+      "destaque": false
+    },
+    {
+      "inicio": 14.2,
+      "fim": 14.8,
+      "texto": "sambadinha",
+      "destaque": false
+    },
+    {
+      "inicio": 14.8,
+      "fim": 15.06,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 15.06,
+      "fim": 15.34,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 15.34,
+      "fim": 15.62,
+      "texto": "começou",
+      "destaque": false
+    },
+    {
+      "inicio": 15.62,
+      "fim": 16.06,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 16.06,
+      "fim": 16.34,
+      "texto": "cair",
+      "destaque": false
+    },
+    {
+      "inicio": 16.34,
+      "fim": 16.94,
+      "texto": "presta",
+      "destaque": false
+    },
+    {
+      "inicio": 16.94,
+      "fim": 17.34,
+      "texto": "atenção",
+      "destaque": false
+    },
+    {
+      "inicio": 17.34,
+      "fim": 17.9,
+      "texto": "nessas",
+      "destaque": false
+    },
+    {
+      "inicio": 17.9,
+      "fim": 18.32,
+      "texto": "informações",
+      "destaque": false
+    },
+    {
+      "inicio": 18.32,
+      "fim": 18.74,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 18.74,
+      "fim": 19.1,
+      "texto": "legendas",
+      "destaque": false
+    },
+    {
+      "inicio": 19.1,
+      "fim": 19.22,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 19.22,
+      "fim": 19.42,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 19.42,
+      "fim": 19.58,
+      "texto": "tem",
+      "destaque": false
+    },
+    {
+      "inicio": 19.58,
+      "fim": 19.82,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 20.22,
+      "fim": 20.34,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 20.34,
+      "fim": 20.76,
+      "texto": "Valtrigger",
+      "destaque": true
+    },
+    {
+      "inicio": 20.76,
+      "fim": 20.96,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 20.96,
+      "fim": 21.08,
+      "texto": "é",
+      "destaque": false
+    },
+    {
+      "inicio": 21.08,
+      "fim": 21.2,
+      "texto": "um",
+      "destaque": false
+    },
+    {
+      "inicio": 21.2,
+      "fim": 21.48,
+      "texto": "gatilho",
+      "destaque": false
+    },
+    {
+      "inicio": 21.48,
+      "fim": 21.64,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 21.64,
+      "fim": 22.1,
+      "texto": "volatilidade",
+      "destaque": false
+    },
+    {
+      "inicio": 22.1,
+      "fim": 22.4,
+      "texto": "onde",
+      "destaque": false
+    },
+    {
+      "inicio": 22.4,
+      "fim": 22.52,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 22.52,
+      "fim": 22.8,
+      "texto": "Markmaker",
+      "destaque": false
+    },
+    {
+      "inicio": 22.8,
+      "fim": 23.28,
+      "texto": "perde",
+      "destaque": false
+    },
+    {
+      "inicio": 23.28,
+      "fim": 23.42,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 23.42,
+      "fim": 23.86,
+      "texto": "controle",
+      "destaque": false
+    },
+    {
+      "inicio": 23.86,
+      "fim": 24.22,
+      "texto": "foi",
+      "destaque": false
+    },
+    {
+      "inicio": 24.22,
+      "fim": 24.46,
+      "texto": "exatamente",
+      "destaque": false
+    },
+    {
+      "inicio": 24.46,
+      "fim": 24.64,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 24.64,
+      "fim": 24.76,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 24.76,
+      "fim": 25.02,
+      "texto": "aconteceu",
+      "destaque": false
+    },
+    {
+      "inicio": 25.66,
+      "fim": 25.78,
+      "texto": "mais",
+      "destaque": false
+    },
+    {
+      "inicio": 25.78,
+      "fim": 26.28,
+      "texto": "baixa",
+      "destaque": false
+    },
+    {
+      "inicio": 26.28,
+      "fim": 27,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 27,
+      "fim": 28.14,
+      "texto": "CTAs,",
+      "destaque": true
+    },
+    {
+      "inicio": 28.14,
+      "fim": 28.26,
+      "texto": "compras",
+      "destaque": false
+    },
+    {
+      "inicio": 28.26,
+      "fim": 29.12,
+      "texto": "mecânicas,",
+      "destaque": false
+    },
+    {
+      "inicio": 29.12,
+      "fim": 29.54,
+      "texto": "liquidez",
+      "destaque": false
+    },
+    {
+      "inicio": 29.54,
+      "fim": 29.9,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 29.9,
+      "fim": 30.02,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 30.02,
+      "fim": 30.24,
+      "texto": "Market",
+      "destaque": true
+    },
+    {
+      "inicio": 30.24,
+      "fim": 30.82,
+      "texto": "Maker,",
+      "destaque": true
+    },
+    {
+      "inicio": 30.82,
+      "fim": 30.94,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 30.94,
+      "fim": 31.06,
+      "texto": "os",
+      "destaque": false
+    },
+    {
+      "inicio": 31.06,
+      "fim": 31.86,
+      "texto": "institucionais.",
+      "destaque": false
+    },
+    {
+      "inicio": 32.26,
+      "fim": 32.44,
+      "texto": "E",
+      "destaque": false
+    },
+    {
+      "inicio": 32.44,
+      "fim": 32.68,
+      "texto": "quando",
+      "destaque": false
+    },
+    {
+      "inicio": 32.68,
+      "fim": 32.8,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 32.8,
+      "fim": 33.04,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 33.04,
+      "fim": 33.74,
+      "texto": "aciona",
+      "destaque": false
+    },
+    {
+      "inicio": 33.74,
+      "fim": 34.06,
+      "texto": "primeiro",
+      "destaque": false
+    },
+    {
+      "inicio": 34.06,
+      "fim": 34.22,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 34.22,
+      "fim": 34.74,
+      "texto": "CELSTOP",
+      "destaque": true
+    },
+    {
+      "inicio": 34.74,
+      "fim": 34.98,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 34.98,
+      "fim": 35.36,
+      "texto": "depois",
+      "destaque": false
+    },
+    {
+      "inicio": 35.36,
+      "fim": 36.24,
+      "texto": "aciona",
+      "destaque": false
+    },
+    {
+      "inicio": 36.24,
+      "fim": 36.5,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 36.5,
+      "fim": 37.28,
+      "texto": "GUNAFLIP,",
+      "destaque": true
+    },
+    {
+      "inicio": 37.48,
+      "fim": 37.72,
+      "texto": "olha",
+      "destaque": false
+    },
+    {
+      "inicio": 37.72,
+      "fim": 37.84,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 37.84,
+      "fim": 38.26,
+      "texto": "movimento",
+      "destaque": false
+    },
+    {
+      "inicio": 38.26,
+      "fim": 38.54,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 38.54,
+      "fim": 38.88,
+      "texto": "cai",
+      "destaque": false
+    },
+    {
+      "inicio": 38.88,
+      "fim": 39.02,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 39.02,
+      "fim": 39.44,
+      "texto": "preço.",
+      "destaque": false
+    },
+    {
+      "inicio": 39.66,
+      "fim": 39.86,
+      "texto": "Só",
+      "destaque": false
+    },
+    {
+      "inicio": 39.86,
+      "fim": 39.98,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 39.98,
+      "fim": 40.1,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 40.1,
+      "fim": 40.22,
+      "texto": "mais",
+      "destaque": false
+    },
+    {
+      "inicio": 40.22,
+      "fim": 40.66,
+      "texto": "importante,",
+      "destaque": false
+    },
+    {
+      "inicio": 40.66,
+      "fim": 41.02,
+      "texto": "esta",
+      "destaque": false
+    },
+    {
+      "inicio": 41.02,
+      "fim": 41.5,
+      "texto": "região",
+      "destaque": false
+    },
+    {
+      "inicio": 41.5,
+      "fim": 41.78,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 41.78,
+      "fim": 42.14,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 42.14,
+      "fim": 42.32,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 42.32,
+      "fim": 42.52,
+      "texto": "região",
+      "destaque": false
+    },
+    {
+      "inicio": 42.52,
+      "fim": 42.82,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 42.82,
+      "fim": 43.22,
+      "texto": "37",
+      "destaque": true
+    },
+    {
+      "inicio": 43.22,
+      "fim": 43.64,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 43.64,
+      "fim": 45.22,
+      "texto": "EWZ,",
+      "destaque": true
+    },
+    {
+      "inicio": 45.32,
+      "fim": 45.62,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 45.62,
+      "fim": 45.92,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 45.92,
+      "fim": 46.36,
+      "texto": "caso,",
+      "destaque": false
+    },
+    {
+      "inicio": 46.36,
+      "fim": 46.48,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 46.48,
+      "fim": 46.6,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 46.6,
+      "fim": 46.72,
+      "texto": "uma",
+      "destaque": false
+    },
+    {
+      "inicio": 46.72,
+      "fim": 46.86,
+      "texto": "região",
+      "destaque": false
+    },
+    {
+      "inicio": 46.86,
+      "fim": 46.98,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 46.98,
+      "fim": 47.1,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 47.1,
+      "fim": 47.22,
+      "texto": "um",
+      "destaque": false
+    },
+    {
+      "inicio": 47.22,
+      "fim": 47.76,
+      "texto": "suporte,",
+      "destaque": false
+    },
+    {
+      "inicio": 47.76,
+      "fim": 47.92,
+      "texto": "porque",
+      "destaque": false
+    },
+    {
+      "inicio": 47.92,
+      "fim": 48.06,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 48.06,
+      "fim": 48.2,
+      "texto": "um",
+      "destaque": false
+    },
+    {
+      "inicio": 48.2,
+      "fim": 48.54,
+      "texto": "caual",
+      "destaque": false
+    },
+    {
+      "inicio": 48.54,
+      "fim": 49.02,
+      "texto": "muito",
+      "destaque": false
+    },
+    {
+      "inicio": 49.02,
+      "fim": 49.4,
+      "texto": "forte",
+      "destaque": false
+    },
+    {
+      "inicio": 49.4,
+      "fim": 49.52,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 49.52,
+      "fim": 49.92,
+      "texto": "EWZ.",
+      "destaque": true
+    },
+    {
+      "inicio": 50.42,
+      "fim": 50.62,
+      "texto": "Quando",
+      "destaque": false
+    },
+    {
+      "inicio": 50.62,
+      "fim": 50.76,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 50.76,
+      "fim": 51.22,
+      "texto": "Market",
+      "destaque": true
+    },
+    {
+      "inicio": 51.22,
+      "fim": 51.44,
+      "texto": "Maker",
+      "destaque": true
+    },
+    {
+      "inicio": 51.44,
+      "fim": 51.86,
+      "texto": "perde",
+      "destaque": false
+    },
+    {
+      "inicio": 51.86,
+      "fim": 52.06,
+      "texto": "essa",
+      "destaque": false
+    },
+    {
+      "inicio": 52.06,
+      "fim": 52.32,
+      "texto": "região,",
+      "destaque": false
+    },
+    {
+      "inicio": 52.32,
+      "fim": 52.56,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 52.56,
+      "fim": 52.68,
+      "texto": "está",
+      "destaque": false
+    },
+    {
+      "inicio": 52.68,
+      "fim": 52.84,
+      "texto": "vendo",
+      "destaque": false
+    },
+    {
+      "inicio": 52.84,
+      "fim": 53.3,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 53.3,
+      "fim": 53.58,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 53.58,
+      "fim": 53.82,
+      "texto": "sua",
+      "destaque": false
+    },
+    {
+      "inicio": 53.82,
+      "fim": 55.14,
+      "texto": "esquerda,",
+      "destaque": false
+    },
+    {
+      "inicio": 55.14,
+      "fim": 55.26,
+      "texto": "isso",
+      "destaque": false
+    },
+    {
+      "inicio": 55.26,
+      "fim": 55.38,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 55.38,
+      "fim": 55.5,
+      "texto": "é",
+      "destaque": false
+    },
+    {
+      "inicio": 55.5,
+      "fim": 55.62,
+      "texto": "gama",
+      "destaque": true
+    },
+    {
+      "inicio": 55.62,
+      "fim": 56.52,
+      "texto": "negativo",
+      "destaque": true
+    },
+    {
+      "inicio": 56.52,
+      "fim": 57.12,
+      "texto": "entrando",
+      "destaque": false
+    },
+    {
+      "inicio": 57.12,
+      "fim": 57.54,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 57.54,
+      "fim": 58.16,
+      "texto": "venda.",
+      "destaque": false
+    },
+    {
+      "inicio": 58.74,
+      "fim": 59.54,
+      "texto": "Explosão",
+      "destaque": false
+    },
+    {
+      "inicio": 59.54,
+      "fim": 59.72,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 59.72,
+      "fim": 59.84,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 59.84,
+      "fim": 60,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 60,
+      "fim": 60.14,
+      "texto": "vem",
+      "destaque": false
+    },
+    {
+      "inicio": 60.14,
+      "fim": 60.44,
+      "texto": "buscar",
+      "destaque": false
+    },
+    {
+      "inicio": 60.44,
+      "fim": 60.7,
+      "texto": "os",
+      "destaque": false
+    },
+    {
+      "inicio": 60.7,
+      "fim": 60.92,
+      "texto": "primeiros",
+      "destaque": false
+    },
+    {
+      "inicio": 60.92,
+      "fim": 61.26,
+      "texto": "buy",
+      "destaque": false
+    },
+    {
+      "inicio": 61.26,
+      "fim": 61.7,
+      "texto": "stops",
+      "destaque": false
+    },
+    {
+      "inicio": 61.7,
+      "fim": 62.1,
+      "texto": "dos",
+      "destaque": false
+    },
+    {
+      "inicio": 62.1,
+      "fim": 62.9,
+      "texto": "diários,",
+      "destaque": false
+    },
+    {
+      "inicio": 62.9,
+      "fim": 63.02,
+      "texto": "pontos",
+      "destaque": false
+    },
+    {
+      "inicio": 63.02,
+      "fim": 64.06,
+      "texto": "importantíssimos",
+      "destaque": false
+    },
+    {
+      "inicio": 64.06,
+      "fim": 64.3,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 64.3,
+      "fim": 64.42,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 64.42,
+      "fim": 64.78,
+      "texto": "continuação",
+      "destaque": false
+    },
+    {
+      "inicio": 64.78,
+      "fim": 65.02,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 65.02,
+      "fim": 65.32,
+      "texto": "movimento",
+      "destaque": false
+    },
+    {
+      "inicio": 65.32,
+      "fim": 65.62,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 65.62,
+      "fim": 66.06,
+      "texto": "alta.",
+      "destaque": false
+    },
+    {
+      "inicio": 66.42,
+      "fim": 66.56,
+      "texto": "O",
+      "destaque": false
+    },
+    {
+      "inicio": 66.56,
+      "fim": 66.84,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 66.84,
+      "fim": 67.68,
+      "texto": "recompra",
+      "destaque": false
+    },
+    {
+      "inicio": 67.68,
+      "fim": 68.26,
+      "texto": "fundo",
+      "destaque": false
+    },
+    {
+      "inicio": 68.26,
+      "fim": 68.68,
+      "texto": "novamente",
+      "destaque": false
+    },
+    {
+      "inicio": 68.68,
+      "fim": 69.08,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 69.08,
+      "fim": 69.42,
+      "texto": "volta",
+      "destaque": false
+    },
+    {
+      "inicio": 69.42,
+      "fim": 69.54,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 69.54,
+      "fim": 69.94,
+      "texto": "testar",
+      "destaque": false
+    },
+    {
+      "inicio": 69.94,
+      "fim": 70.06,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 70.06,
+      "fim": 71.04,
+      "texto": "eficiência.",
+      "destaque": false
+    },
+    {
+      "inicio": 71.28,
+      "fim": 71.5,
+      "texto": "O",
+      "destaque": false
+    },
+    {
+      "inicio": 71.5,
+      "fim": 71.66,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 71.66,
+      "fim": 72.46,
+      "texto": "outrora",
+      "destaque": false
+    },
+    {
+      "inicio": 72.46,
+      "fim": 72.8,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 72.8,
+      "fim": 72.96,
+      "texto": "um",
+      "destaque": false
+    },
+    {
+      "inicio": 72.96,
+      "fim": 73.2,
+      "texto": "open",
+      "destaque": true
+    },
+    {
+      "inicio": 73.2,
+      "fim": 73.72,
+      "texto": "interest,",
+      "destaque": true
+    },
+    {
+      "inicio": 73.72,
+      "fim": 73.84,
+      "texto": "onde",
+      "destaque": false
+    },
+    {
+      "inicio": 73.84,
+      "fim": 73.96,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 73.96,
+      "fim": 74.14,
+      "texto": "market",
+      "destaque": true
+    },
+    {
+      "inicio": 74.14,
+      "fim": 74.46,
+      "texto": "maker",
+      "destaque": true
+    },
+    {
+      "inicio": 74.46,
+      "fim": 75.34,
+      "texto": "comprava",
+      "destaque": false
+    },
+    {
+      "inicio": 75.34,
+      "fim": 75.92,
+      "texto": "futuros,",
+      "destaque": false
+    },
+    {
+      "inicio": 75.92,
+      "fim": 76.2,
+      "texto": "agora",
+      "destaque": false
+    },
+    {
+      "inicio": 76.2,
+      "fim": 76.42,
+      "texto": "não",
+      "destaque": false
+    },
+    {
+      "inicio": 76.42,
+      "fim": 76.54,
+      "texto": "tem",
+      "destaque": false
+    },
+    {
+      "inicio": 76.54,
+      "fim": 76.66,
+      "texto": "mais",
+      "destaque": false
+    },
+    {
+      "inicio": 76.66,
+      "fim": 77.26,
+      "texto": "necessidade.",
+      "destaque": false
+    },
+    {
+      "inicio": 77.64,
+      "fim": 77.96,
+      "texto": "Então",
+      "destaque": false
+    },
+    {
+      "inicio": 77.96,
+      "fim": 78.22,
+      "texto": "ele",
+      "destaque": false
+    },
+    {
+      "inicio": 78.22,
+      "fim": 78.8,
+      "texto": "não",
+      "destaque": false
+    },
+    {
+      "inicio": 78.8,
+      "fim": 79.4,
+      "texto": "deixa",
+      "destaque": false
+    },
+    {
+      "inicio": 79.47,
+      "fim": 80.01,
+      "texto": "passar",
+      "destaque": false
+    },
+    {
+      "inicio": 80.01,
+      "fim": 80.65,
+      "texto": "olha",
+      "destaque": false
+    },
+    {
+      "inicio": 80.65,
+      "fim": 80.79,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 80.79,
+      "fim": 81.03,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 81.03,
+      "fim": 81.57,
+      "texto": "perifício",
+      "destaque": false
+    },
+    {
+      "inicio": 81.59,
+      "fim": 81.89,
+      "texto": "em",
+      "destaque": false
+    },
+    {
+      "inicio": 81.89,
+      "fim": 82.25,
+      "texto": "aberto",
+      "destaque": false
+    },
+    {
+      "inicio": 82.25,
+      "fim": 82.89,
+      "texto": "agora",
+      "destaque": false
+    },
+    {
+      "inicio": 82.89,
+      "fim": 83.73,
+      "texto": "99",
+      "destaque": false
+    },
+    {
+      "inicio": 83.73,
+      "fim": 84.09,
+      "texto": "mil",
+      "destaque": false
+    },
+    {
+      "inicio": 84.09,
+      "fim": 84.51,
+      "texto": "contratos",
+      "destaque": false
+    },
+    {
+      "inicio": 84.51,
+      "fim": 85.17,
+      "texto": "agora",
+      "destaque": false
+    },
+    {
+      "inicio": 85.17,
+      "fim": 86.13,
+      "texto": "preste",
+      "destaque": false
+    },
+    {
+      "inicio": 86.13,
+      "fim": 86.41,
+      "texto": "atenção",
+      "destaque": false
+    },
+    {
+      "inicio": 86.41,
+      "fim": 86.65,
+      "texto": "nisso",
+      "destaque": false
+    },
+    {
+      "inicio": 86.65,
+      "fim": 86.89,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 86.89,
+      "fim": 87.09,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 87.09,
+      "fim": 87.45,
+      "texto": "mesmo",
+      "destaque": false
+    },
+    {
+      "inicio": 87.45,
+      "fim": 88.03,
+      "texto": "movimento",
+      "destaque": false
+    },
+    {
+      "inicio": 88.03,
+      "fim": 88.29,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 88.29,
+      "fim": 88.53,
+      "texto": "mini",
+      "destaque": false
+    },
+    {
+      "inicio": 88.53,
+      "fim": 89.03,
+      "texto": "índice",
+      "destaque": false
+    },
+    {
+      "inicio": 89.03,
+      "fim": 89.21,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 89.21,
+      "fim": 89.85,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 89.85,
+      "fim": 90.79,
+      "texto": "arte",
+      "destaque": false
+    },
+    {
+      "inicio": 90.79,
+      "fim": 91.71,
+      "texto": "vendido",
+      "destaque": false
+    },
+    {
+      "inicio": 91.71,
+      "fim": 92.99,
+      "texto": "perde",
+      "destaque": false
+    },
+    {
+      "inicio": 92.99,
+      "fim": 93.13,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 93.13,
+      "fim": 93.75,
+      "texto": "controle",
+      "destaque": false
+    },
+    {
+      "inicio": 93.75,
+      "fim": 94.35,
+      "texto": "vem",
+      "destaque": false
+    },
+    {
+      "inicio": 94.35,
+      "fim": 94.67,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 94.67,
+      "fim": 95.31,
+      "texto": "vall",
+      "destaque": true
+    },
+    {
+      "inicio": 95.31,
+      "fim": 95.93,
+      "texto": "trigger",
+      "destaque": true
+    },
+    {
+      "inicio": 95.93,
+      "fim": 96.63,
+      "texto": "dele",
+      "destaque": false
+    },
+    {
+      "inicio": 96.63,
+      "fim": 97.21,
+      "texto": "vem",
+      "destaque": false
+    },
+    {
+      "inicio": 97.21,
+      "fim": 97.33,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 97.33,
+      "fim": 97.49,
+      "texto": "vall",
+      "destaque": true
+    },
+    {
+      "inicio": 97.49,
+      "fim": 97.77,
+      "texto": "trigger",
+      "destaque": true
+    },
+    {
+      "inicio": 97.77,
+      "fim": 98.19,
+      "texto": "dele",
+      "destaque": false
+    },
+    {
+      "inicio": 98.65,
+      "fim": 99.43,
+      "texto": "recompra",
+      "destaque": false
+    },
+    {
+      "inicio": 99.43,
+      "fim": 99.61,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 99.61,
+      "fim": 99.91,
+      "texto": "fundo",
+      "destaque": false
+    },
+    {
+      "inicio": 99.91,
+      "fim": 100.09,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 100.09,
+      "fim": 100.45,
+      "texto": "volta",
+      "destaque": false
+    },
+    {
+      "inicio": 100.45,
+      "fim": 100.61,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 100.61,
+      "fim": 101.01,
+      "texto": "testar",
+      "destaque": false
+    },
+    {
+      "inicio": 101.01,
+      "fim": 101.27,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 101.27,
+      "fim": 101.69,
+      "texto": "37",
+      "destaque": true
+    },
+    {
+      "inicio": 101.69,
+      "fim": 102.03,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 102.03,
+      "fim": 103.09,
+      "texto": "EWZ.",
+      "destaque": true
+    },
+    {
+      "inicio": 103.09,
+      "fim": 103.21,
+      "texto": "O",
+      "destaque": false
+    },
+    {
+      "inicio": 103.21,
+      "fim": 103.33,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 103.33,
+      "fim": 103.85,
+      "texto": "acontece?",
+      "destaque": false
+    },
+    {
+      "inicio": 104.15,
+      "fim": 104.47,
+      "texto": "Bate",
+      "destaque": false
+    },
+    {
+      "inicio": 104.47,
+      "fim": 104.61,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 104.61,
+      "fim": 105.21,
+      "texto": "venda.",
+      "destaque": false
+    },
+    {
+      "inicio": 105.21,
+      "fim": 105.33,
+      "texto": "Por",
+      "destaque": false
+    },
+    {
+      "inicio": 105.33,
+      "fim": 105.45,
+      "texto": "quê?",
+      "destaque": false
+    },
+    {
+      "inicio": 105.77,
+      "fim": 106.07,
+      "texto": "Não",
+      "destaque": false
+    },
+    {
+      "inicio": 106.07,
+      "fim": 106.39,
+      "texto": "tem",
+      "destaque": false
+    },
+    {
+      "inicio": 106.39,
+      "fim": 106.89,
+      "texto": "interesse",
+      "destaque": false
+    },
+    {
+      "inicio": 106.89,
+      "fim": 107.07,
+      "texto": "em",
+      "destaque": false
+    },
+    {
+      "inicio": 107.07,
+      "fim": 107.27,
+      "texto": "jogar",
+      "destaque": false
+    },
+    {
+      "inicio": 107.27,
+      "fim": 107.41,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 107.41,
+      "fim": 107.67,
+      "texto": "preço",
+      "destaque": false
+    },
+    {
+      "inicio": 107.67,
+      "fim": 107.87,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 107.87,
+      "fim": 108.11,
+      "texto": "cima",
+      "destaque": false
+    },
+    {
+      "inicio": 108.11,
+      "fim": 108.49,
+      "texto": "mais.",
+      "destaque": false
+    },
+    {
+      "inicio": 109.07,
+      "fim": 109.49,
+      "texto": "Agora,",
+      "destaque": false
+    },
+    {
+      "inicio": 109.49,
+      "fim": 109.61,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 109.61,
+      "fim": 109.73,
+      "texto": "gente",
+      "destaque": false
+    },
+    {
+      "inicio": 109.73,
+      "fim": 109.85,
+      "texto": "está",
+      "destaque": false
+    },
+    {
+      "inicio": 109.85,
+      "fim": 109.99,
+      "texto": "numa",
+      "destaque": false
+    },
+    {
+      "inicio": 109.99,
+      "fim": 110.37,
+      "texto": "briga",
+      "destaque": false
+    },
+    {
+      "inicio": 110.37,
+      "fim": 110.65,
+      "texto": "entre",
+      "destaque": false
+    },
+    {
+      "inicio": 110.65,
+      "fim": 112.05,
+      "texto": "comprados",
+      "destaque": false
+    },
+    {
+      "inicio": 112.05,
+      "fim": 112.39,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 112.39,
+      "fim": 113.03,
+      "texto": "vendidos",
+      "destaque": false
+    },
+    {
+      "inicio": 113.03,
+      "fim": 113.77,
+      "texto": "aqui.",
+      "destaque": false
+    },
+    {
+      "inicio": 113.77,
+      "fim": 113.89,
+      "texto": "O",
+      "destaque": false
+    },
+    {
+      "inicio": 113.89,
+      "fim": 114.01,
+      "texto": "put-wall",
+      "destaque": true
+    },
+    {
+      "inicio": 114.01,
+      "fim": 114.13,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 114.13,
+      "fim": 114.33,
+      "texto": "trabalhando",
+      "destaque": false
+    },
+    {
+      "inicio": 114.33,
+      "fim": 114.45,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 114.45,
+      "fim": 114.69,
+      "texto": "preço",
+      "destaque": false
+    },
+    {
+      "inicio": 114.69,
+      "fim": 115.41,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 115.41,
+      "fim": 115.57,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 115.57,
+      "fim": 116.33,
+      "texto": "maior",
+      "destaque": false
+    },
+    {
+      "inicio": 116.33,
+      "fim": 116.85,
+      "texto": "aqui.",
+      "destaque": false
+    },
+    {
+      "inicio": 116.85,
+      "fim": 117.01,
+      "texto": "E",
+      "destaque": false
+    },
+    {
+      "inicio": 117.01,
+      "fim": 117.39,
+      "texto": "isso",
+      "destaque": false
+    },
+    {
+      "inicio": 117.39,
+      "fim": 117.55,
+      "texto": "já",
+      "destaque": false
+    },
+    {
+      "inicio": 117.55,
+      "fim": 117.77,
+      "texto": "está",
+      "destaque": false
+    },
+    {
+      "inicio": 117.77,
+      "fim": 117.93,
+      "texto": "tudo",
+      "destaque": false
+    },
+    {
+      "inicio": 117.93,
+      "fim": 118.51,
+      "texto": "aqui,",
+      "destaque": false
+    },
+    {
+      "inicio": 118.51,
+      "fim": 119.47,
+      "texto": "precificado",
+      "destaque": false
+    },
+    {
+      "inicio": 119.47,
+      "fim": 119.63,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 119.63,
+      "fim": 120.09,
+      "texto": "nós,",
+      "destaque": false
+    },
+    {
+      "inicio": 120.31,
+      "fim": 120.45,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 120.45,
+      "fim": 120.89,
+      "texto": "melhor",
+      "destaque": false
+    },
+    {
+      "inicio": 120.89,
+      "fim": 121.71,
+      "texto": "aplicativo,",
+      "destaque": false
+    },
+    {
+      "inicio": 121.71,
+      "fim": 121.89,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 121.89,
+      "fim": 122.15,
+      "texto": "melhor",
+      "destaque": false
+    },
+    {
+      "inicio": 122.15,
+      "fim": 122.51,
+      "texto": "dashboard",
+      "destaque": false
+    },
+    {
+      "inicio": 122.51,
+      "fim": 122.85,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 122.85,
+      "fim": 123.11,
+      "texto": "mercado",
+      "destaque": false
+    },
+    {
+      "inicio": 123.11,
+      "fim": 123.83,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 123.83,
+      "fim": 124.17,
+      "texto": "operar",
+      "destaque": false
+    },
+    {
+      "inicio": 124.17,
+      "fim": 124.31,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 124.31,
+      "fim": 124.65,
+      "texto": "comportamento",
+      "destaque": false
+    },
+    {
+      "inicio": 124.65,
+      "fim": 124.81,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 124.81,
+      "fim": 125.03,
+      "texto": "Market",
+      "destaque": true
+    },
+    {
+      "inicio": 125.03,
+      "fim": 125.29,
+      "texto": "Maker",
+      "destaque": true
+    },
+    {
+      "inicio": 125.29,
+      "fim": 126.17,
+      "texto": "dentro",
+      "destaque": false
+    },
+    {
+      "inicio": 126.17,
+      "fim": 126.39,
+      "texto": "das",
+      "destaque": false
+    },
+    {
+      "inicio": 126.39,
+      "fim": 126.77,
+      "texto": "opções",
+      "destaque": false
+    },
+    {
+      "inicio": 126.77,
+      "fim": 127.13,
+      "texto": "no",
+      "destaque": false
+    },
+    {
+      "inicio": 127.13,
+      "fim": 127.59,
+      "texto": "Mini-In.",
+      "destaque": true
+    },
+    {
+      "inicio": 127.69,
+      "fim": 127.83,
+      "texto": "Está",
+      "destaque": false
+    },
+    {
+      "inicio": 127.83,
+      "fim": 127.95,
+      "texto": "vendo",
+      "destaque": false
+    },
+    {
+      "inicio": 127.95,
+      "fim": 128.29,
+      "texto": "aqui?",
+      "destaque": false
+    },
+    {
+      "inicio": 128.29,
+      "fim": 128.93,
+      "texto": "37",
+      "destaque": true
+    },
+    {
+      "inicio": 128.93,
+      "fim": 129.67,
+      "texto": "VWD,",
+      "destaque": false
+    },
+    {
+      "inicio": 129.67,
+      "fim": 130.13,
+      "texto": "76",
+      "destaque": false
+    },
+    {
+      "inicio": 130.13,
+      "fim": 130.95,
+      "texto": "mil",
+      "destaque": false
+    },
+    {
+      "inicio": 130.95,
+      "fim": 131.47,
+      "texto": "contratos",
+      "destaque": false
+    },
+    {
+      "inicio": 131.47,
+      "fim": 131.67,
+      "texto": "com",
+      "destaque": false
+    },
+    {
+      "inicio": 131.67,
+      "fim": 131.97,
+      "texto": "vencimento",
+      "destaque": false
+    },
+    {
+      "inicio": 131.97,
+      "fim": 132.27,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 132.27,
+      "fim": 132.39,
+      "texto": "dia",
+      "destaque": false
+    },
+    {
+      "inicio": 132.39,
+      "fim": 132.81,
+      "texto": "16",
+      "destaque": false
+    },
+    {
+      "inicio": 132.81,
+      "fim": 133.79,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 133.79,
+      "fim": 134.85,
+      "texto": "outubro.",
+      "destaque": false
+    },
+    {
+      "inicio": 135.07,
+      "fim": 135.21,
+      "texto": "E",
+      "destaque": false
+    },
+    {
+      "inicio": 135.21,
+      "fim": 135.55,
+      "texto": "tem",
+      "destaque": false
+    },
+    {
+      "inicio": 135.55,
+      "fim": 135.79,
+      "texto": "mais",
+      "destaque": false
+    },
+    {
+      "inicio": 135.79,
+      "fim": 136.11,
+      "texto": "ainda",
+      "destaque": false
+    },
+    {
+      "inicio": 136.11,
+      "fim": 136.29,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 136.29,
+      "fim": 136.41,
+      "texto": "eu",
+      "destaque": false
+    },
+    {
+      "inicio": 136.41,
+      "fim": 136.61,
+      "texto": "gostaria",
+      "destaque": false
+    },
+    {
+      "inicio": 136.61,
+      "fim": 136.73,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 136.73,
+      "fim": 136.93,
+      "texto": "mostrar",
+      "destaque": false
+    },
+    {
+      "inicio": 136.93,
+      "fim": 137.05,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 137.05,
+      "fim": 137.27,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 137.27,
+      "fim": 137.63,
+      "texto": "aqui.",
+      "destaque": false
+    },
+    {
+      "inicio": 137.73,
+      "fim": 138.03,
+      "texto": "Preste",
+      "destaque": false
+    },
+    {
+      "inicio": 138.03,
+      "fim": 138.31,
+      "texto": "atenção",
+      "destaque": false
+    },
+    {
+      "inicio": 138.31,
+      "fim": 138.71,
+      "texto": "porque",
+      "destaque": false
+    },
+    {
+      "inicio": 138.71,
+      "fim": 139.27,
+      "texto": "isso",
+      "destaque": false
+    },
+    {
+      "inicio": 139.27,
+      "fim": 139.39,
+      "texto": "aqui",
+      "destaque": false
+    },
+    {
+      "inicio": 139.39,
+      "fim": 139.51,
+      "texto": "foi",
+      "destaque": false
+    },
+    {
+      "inicio": 139.51,
+      "fim": 139.69,
+      "texto": "falado",
+      "destaque": false
+    },
+    {
+      "inicio": 139.69,
+      "fim": 139.85,
+      "texto": "na",
+      "destaque": false
+    },
+    {
+      "inicio": 139.85,
+      "fim": 140.15,
+      "texto": "live",
+      "destaque": false
+    },
+    {
+      "inicio": 140.15,
+      "fim": 140.49,
+      "texto": "hoje",
+      "destaque": false
+    },
+    {
+      "inicio": 140.49,
+      "fim": 140.69,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 140.69,
+      "fim": 141.01,
+      "texto": "manhã.",
+      "destaque": false
+    },
+    {
+      "inicio": 141.17,
+      "fim": 141.61,
+      "texto": "Desde",
+      "destaque": false
+    },
+    {
+      "inicio": 141.61,
+      "fim": 141.81,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 141.81,
+      "fim": 142.19,
+      "texto": "abertura",
+      "destaque": false
+    },
+    {
+      "inicio": 142.19,
+      "fim": 142.33,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 142.33,
+      "fim": 142.95,
+      "texto": "mercado,",
+      "destaque": false
+    },
+    {
+      "inicio": 142.95,
+      "fim": 143.33,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 143.33,
+      "fim": 143.45,
+      "texto": "gente",
+      "destaque": false
+    },
+    {
+      "inicio": 143.45,
+      "fim": 143.57,
+      "texto": "já",
+      "destaque": false
+    },
+    {
+      "inicio": 143.57,
+      "fim": 143.89,
+      "texto": "sabia",
+      "destaque": false
+    },
+    {
+      "inicio": 143.89,
+      "fim": 144.09,
+      "texto": "que",
+      "destaque": false
+    },
+    {
+      "inicio": 144.09,
+      "fim": 144.21,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 144.21,
+      "fim": 144.37,
+      "texto": "Mark",
+      "destaque": false
+    },
+    {
+      "inicio": 144.37,
+      "fim": 144.55,
+      "texto": "Maker",
+      "destaque": true
+    },
+    {
+      "inicio": 144.55,
+      "fim": 144.95,
+      "texto": "estava",
+      "destaque": false
+    },
+    {
+      "inicio": 144.95,
+      "fim": 145.31,
+      "texto": "em",
+      "destaque": false
+    },
+    {
+      "inicio": 145.31,
+      "fim": 145.61,
+      "texto": "delta",
+      "destaque": true
+    },
+    {
+      "inicio": 145.61,
+      "fim": 146.33,
+      "texto": "negativo",
+      "destaque": true
+    },
+    {
+      "inicio": 146.33,
+      "fim": 146.93,
+      "texto": "e",
+      "destaque": false
+    },
+    {
+      "inicio": 146.93,
+      "fim": 147.27,
+      "texto": "gama",
+      "destaque": true
+    },
+    {
+      "inicio": 147.27,
+      "fim": 148.23,
+      "texto": "negativo.",
+      "destaque": true
+    },
+    {
+      "inicio": 148.23,
+      "fim": 148.51,
+      "texto": "Então",
+      "destaque": false
+    },
+    {
+      "inicio": 148.51,
+      "fim": 148.67,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 148.67,
+      "fim": 149.19,
+      "texto": "expectativa",
+      "destaque": false
+    },
+    {
+      "inicio": 149.19,
+      "fim": 149.45,
+      "texto": "já",
+      "destaque": false
+    },
+    {
+      "inicio": 149.45,
+      "fim": 149.75,
+      "texto": "era",
+      "destaque": false
+    },
+    {
+      "inicio": 149.75,
+      "fim": 150.09,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 150.09,
+      "fim": 150.43,
+      "texto": "baixa",
+      "destaque": false
+    },
+    {
+      "inicio": 150.43,
+      "fim": 150.71,
+      "texto": "para",
+      "destaque": false
+    },
+    {
+      "inicio": 150.71,
+      "fim": 151.07,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 151.07,
+      "fim": 151.33,
+      "texto": "mini",
+      "destaque": false
+    },
+    {
+      "inicio": 151.33,
+      "fim": 151.65,
+      "texto": "índice",
+      "destaque": false
+    },
+    {
+      "inicio": 151.65,
+      "fim": 152.25,
+      "texto": "hoje.",
+      "destaque": false
+    },
+    {
+      "inicio": 152.49,
+      "fim": 152.61,
+      "texto": "E",
+      "destaque": false
+    },
+    {
+      "inicio": 152.61,
+      "fim": 152.85,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 152.85,
+      "fim": 153.45,
+      "texto": "acompanha",
+      "destaque": false
+    },
+    {
+      "inicio": 153.45,
+      "fim": 153.57,
+      "texto": "o",
+      "destaque": false
+    },
+    {
+      "inicio": 153.57,
+      "fim": 153.95,
+      "texto": "comportamento",
+      "destaque": false
+    },
+    {
+      "inicio": 153.95,
+      "fim": 154.13,
+      "texto": "do",
+      "destaque": false
+    },
+    {
+      "inicio": 154.13,
+      "fim": 154.35,
+      "texto": "Mark",
+      "destaque": false
+    },
+    {
+      "inicio": 154.35,
+      "fim": 154.59,
+      "texto": "Maker",
+      "destaque": true
+    },
+    {
+      "inicio": 154.65,
+      "fim": 155.13,
+      "texto": "ou",
+      "destaque": false
+    },
+    {
+      "inicio": 155.13,
+      "fim": 155.41,
+      "texto": "você",
+      "destaque": false
+    },
+    {
+      "inicio": 155.41,
+      "fim": 155.75,
+      "texto": "ainda",
+      "destaque": false
+    },
+    {
+      "inicio": 155.75,
+      "fim": 155.99,
+      "texto": "está",
+      "destaque": false
+    },
+    {
+      "inicio": 155.99,
+      "fim": 156.57,
+      "texto": "preso",
+      "destaque": false
+    },
+    {
+      "inicio": 156.57,
+      "fim": 157.11,
+      "texto": "a",
+      "destaque": false
+    },
+    {
+      "inicio": 157.11,
+      "fim": 158.01,
+      "texto": "padrões",
+      "destaque": false
+    },
+    {
+      "inicio": 158.01,
+      "fim": 158.25,
+      "texto": "de",
+      "destaque": false
+    },
+    {
+      "inicio": 158.25,
+      "fim": 158.63,
+      "texto": "tempo?",
+      "destaque": false
+    }
+  ],
+  "destaque": "#FF0000"
+}

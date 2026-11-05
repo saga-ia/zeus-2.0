@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+// Única ferramenta do analista de vendas (Diagnóstico e Auditoria de Vendas da Central).
+// Aceita só UMA consulta SELECT/WITH, roda com o papel zeus_ro (só enxerga o schema zv), em transação
+// somente leitura com limite de tempo, e devolve CSV cortado em 300 linhas.
+'use strict';
+const { spawnSync } = require('child_process');
+const MAX_LINHAS = 300;
+const CONTAINER = process.env.ZV_PG_CONTAINER || 'jeff-evolution-postgres';
+
+let sql = process.argv.slice(2).join(' ').trim();
+const falhar = (msg) => { process.stderr.write('ERRO: ' + msg + '\n'); process.exit(2); };
+if (!sql) falhar('passe a consulta entre aspas duplas: consulta-sql "SELECT ..."');
+// tira comentários e o ponto e vírgula final; qualquer outro ";" é mais de um comando
+sql = sql.replace(/--[^\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ').trim().replace(/;\s*$/, '');
+if (!/^(select|with)\b/i.test(sql)) falhar('só SELECT ou WITH');
+if (sql.includes(';')) falhar('uma consulta por vez (sem ";" no meio)');
+if (/\b(insert|update|delete|merge|drop|alter|create|truncate|grant|revoke|copy|call|do|vacuum|analyze|refresh|lock|listen|notify|set|reset|pg_sleep|lo_import|lo_export|dblink)\b/i.test(sql.replace(/'[^']*'/g, "''")))
+  falhar('a consulta tem comando que não é leitura');
+
+const entrada = `BEGIN TRANSACTION READ ONLY;\nSET LOCAL statement_timeout = '25s';\nSELECT * FROM (${sql}) AS consulta LIMIT ${MAX_LINHAS + 1};\nROLLBACK;\n`;
+const r = spawnSync('docker', ['exec', '-i', CONTAINER, 'psql', '-U', 'zeus_ro', '-d', 'evolution', '-X', '-q', '--csv', '-v', 'ON_ERROR_STOP=1'],
+  { input: entrada, encoding: 'utf8', timeout: 40000, maxBuffer: 20 * 1024 * 1024 });
+if (r.error) falhar(r.error.message);
+if (r.status !== 0) falhar((r.stderr || '').replace(/^psql:<stdin>:\d+: /gm, '').trim().slice(0, 800) || 'falha na consulta');
+const linhas = (r.stdout || '').replace(/\n+$/, '').split('\n').filter((l, i) => i > 0 || l);
+if (linhas.length - 1 > MAX_LINHAS) { process.stdout.write(linhas.slice(0, MAX_LINHAS + 1).join('\n') + `\n[cortado em ${MAX_LINHAS} linhas: agregue mais ou filtre]\n`); }
+else process.stdout.write((linhas.join('\n') || '(sem linhas)') + '\n');

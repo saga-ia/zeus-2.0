@@ -1,0 +1,27 @@
+{
+ "id": "DdQhyMrsmgO",
+ "url": "https://www.instagram.com/p/DdQhyMrsmgO/",
+ "plays": 948,
+ "curtidas": 18,
+ "comentarios": 8,
+ "data": "2026-09-14",
+ "duracao_s": 52.7,
+ "cortes": 0,
+ "cortes_por_min": 0.0,
+ "primeiro_corte_s": null,
+ "palavras_por_min": 112,
+ "fala": true,
+ "abertura_falada": "Depois de um grande evento, agora é hora de voltar para casa.",
+ "jev": {
+  "topic": "other",
+  "opening": "claim",
+  "mechanism": "direct",
+  "structure": "opinion",
+  "evidence": "personal",
+  "emotion": "relief",
+  "specificity": "none",
+  "cta": "none"
+ },
+ "legenda": "Gratidão Juazeiro do Norte por todo carinho!!!",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/jeffhenrike-fb5ba86b/DdQhyMrsmgO/folha.jpg"
+}

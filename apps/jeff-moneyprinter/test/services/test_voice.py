@@ -462,7 +462,7 @@ class TestVoiceService(unittest.TestCase):
         with patch("google.genai.Client", _FakeClient), patch.object(
             vs.config,
             "app",
-            dict(vs.config.app, gemini_api_key="test-key"),
+            dict(vs.config.app, gemini_api_key="<REDACTED>"),
         ):
             sub_maker = vs.gemini_tts(
                 text=text,
@@ -480,7 +480,7 @@ class TestVoiceService(unittest.TestCase):
         self.assertEqual(len(getattr(sub_maker, "offset", [])), 2)
         self.assertEqual(sub_maker.offset[0][0], 0)
         self.assertLess(sub_maker.offset[0][1], sub_maker.offset[1][1])
-        self.assertEqual(captured["client_kwargs"], {"api_key": "test-key"})
+        self.assertEqual(captured["client_kwargs"], {"api_key": "<REDACTED>"})
         self.assertEqual(captured["model"], "gemini-2.5-flash-preview-tts")
         self.assertEqual(captured["contents"], text)
         self.assertEqual(captured["config"].response_modalities, ["AUDIO"])
@@ -550,7 +550,7 @@ class TestVoiceService(unittest.TestCase):
             "app",
             dict(
                 vs.config.app,
-                mimo_api_key="mimo-key",
+                mimo_api_key="<REDACTED>",
                 mimo_base_url="https://api.xiaomimimo.com/v1",
                 mimo_tts_model_name="mimo-v2.5-tts",
                 mimo_tts_style_prompt="用清晰的中文旁白朗读。",
@@ -567,7 +567,7 @@ class TestVoiceService(unittest.TestCase):
             generated_audio = Path(voice_file).read_bytes()
 
         openai_client.assert_called_once_with(
-            api_key="mimo-key",
+            api_key="<REDACTED>",
             base_url="https://api.xiaomimimo.com/v1",
         )
         self.assertEqual(fake_completions.kwargs["model"], "mimo-v2.5-tts")

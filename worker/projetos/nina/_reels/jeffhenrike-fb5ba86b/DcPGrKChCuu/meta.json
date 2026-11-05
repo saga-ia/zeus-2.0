@@ -1,0 +1,27 @@
+{
+ "id": "DcPGrKChCuu",
+ "url": "https://www.instagram.com/p/DcPGrKChCuu/",
+ "plays": 3222,
+ "curtidas": 80,
+ "comentarios": 13,
+ "data": "2026-08-19",
+ "duracao_s": 147.5,
+ "cortes": 8,
+ "cortes_por_min": 3.3,
+ "primeiro_corte_s": 23.5,
+ "palavras_por_min": 202,
+ "fala": true,
+ "abertura_falada": "E ele ataca novamente. Mais uma vez ele saiu aí a candidato à presidência da república,",
+ "jev": {
+  "topic": "marketing",
+  "opening": "claim",
+  "mechanism": "curiosity",
+  "structure": "explanation",
+  "evidence": "reasoning",
+  "emotion": "surprise",
+  "specificity": "action",
+  "cta": "comment"
+ },
+ "legenda": "Duas estratégias que o Pablo está usando que ninguém percebeu!",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/jeffhenrike-fb5ba86b/DcPGrKChCuu/folha.jpg"
+}

@@ -275,7 +275,8 @@ async function processItem(item, campaign, db) {
   const captionConfig = JSON.parse(campaign.caption_config || '{}');
   const accountIds = JSON.parse(campaign.account_ids || '[]');
 
-  const caption = await captions.generateCaption(captionMode, captionConfig);
+  // legenda própria deste item (alterada na Central) tem prioridade sobre a regra de legenda da campanha
+  const caption = meta.caption_override && campaign.post_format !== 'story' ? String(meta.caption_override) : await captions.generateCaption(captionMode, captionConfig);
   let mediaPath, postType;
   const filesToCleanup = []; // arquivos locais a apagar após publicação
 
@@ -525,6 +526,9 @@ async function processDueItems(maxItems = 20) {
       db.prepare(`UPDATE bulk_campaigns SET failed_count=failed_count+1, updated_at=unixepoch() WHERE id=?`).run(campaign.id);
       ko++;
       console.error(`[bulk] item ${item.id}: FALHOU definitivo após ${MAX_RETRIES + 1} tentativas — ${errMsg.slice(0, 300)}`);
+      try {
+        require('./sequencia').avisar(`❌ ZEUS POST: falha definitiva na campanha\n\nCampanha: ${campaign.name}\nItem ${item.slot_index + 1} (id ${item.id})\nTentativas: ${MAX_RETRIES + 1}\nErro: ${errMsg.slice(0, 300)}\n\nPainel: https://central.jefersonhenrike.com/posts/index.html`);
+      } catch (e) { console.error('[bulk] aviso de falha não saiu:', e.message); }
     }
   };
 

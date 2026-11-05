@@ -109,7 +109,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 app.use(session({
   store: new SQLiteStore(),
-  secret: 'cigc-crm-secret-2026',
+  secret: '<REDACTED>',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 8 * 60 * 60 * 1000, secure: false, sameSite: 'lax' }

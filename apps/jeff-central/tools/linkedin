@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+// CLI do LinkedIn para o ZEUS: cria rascunhos na tela /linkedin da Central e publica só post aprovado pela pessoa.
+// Uso: linkedin ajuda
+const fs = require('fs');
+const li = require('../linkedin');
+
+const args = process.argv.slice(2);
+const cmd = args[0] || 'ajuda';
+const opt = n => { const i = args.indexOf('--' + n); return i >= 0 ? args[i + 1] : null; };
+const opts = n => args.reduce((a, v, i) => (v === '--' + n && args[i + 1] ? a.concat(args[i + 1]) : a), []);
+const HOST = 'https://' + (process.env.PUBLIC_HOST || 'central.jefersonhenrike.com');
+const texto = () => opt('texto') || (opt('texto-arquivo') ? fs.readFileSync(opt('texto-arquivo'), 'utf8') : null);
+// "2026-10-20 09:30" em horário de Brasília
+const quando = s => { if (!s) return null; const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(s.trim()); if (!m) throw new Error('use --quando "AAAA-MM-DD HH:MM" (Brasília)'); return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] + 3, +m[5]); };
+const linha = p => `${p.id}  ${p.status.padEnd(10)} ${p.agendadoPara ? new Date(p.agendadoPara).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : ''}  ${p.texto.replace(/\s+/g, ' ').slice(0, 70)}${p.url ? '  ' + p.url : ''}`;
+
+(async () => {
+  if (cmd === 'status') { console.log(JSON.stringify(li.status(), null, 2)); return; }
+  if (cmd === 'estrategia') {
+    const e = require('../linkedin-estrategia'), est = e.ler();
+    if (!est) { console.log('Nenhuma estratégia salva ainda (tela /linkedin > Estratégia). Escreva normalmente e sugira à pessoa definir os pilares.'); return; }
+    console.log(e.blocoPrompt(est));
+    console.log(`Ritmo: ${est.postsSemana} posts/semana (${est.dias.join(', ')} às ${est.horario}) · newsletter: ${est.newsletter.ativa ? est.newsletter.nome + ' (' + est.newsletter.frequencia + ', ' + est.newsletter.dia + ')' : 'desligada'}`);
+    console.log('Pilares (use o nome em --pilar): ' + est.pilares.map(p => '"' + p.nome + '"').join(', '));
+    return;
+  }
+  if (cmd === 'planejar') {
+    const r = await require('../linkedin-estrategia').planejar({ semana: opt('semana') === 'atual' ? 'atual' : 'proxima', por: 'ZEUS' });
+    console.log(`Plano criado: ${r.posts} posts${r.newsletter ? ' + 1 edição de newsletter' : ''} em rascunho, com data sugerida. Revisar em ${HOST}/linkedin`); return;
+  }
+  if (cmd === 'listar') { li.st.list.all().slice(0, 30).map(li.postPublico).forEach(p => console.log(linha(p))); return; }
+  if (cmd === 'gerar') {
+    const t = await li.gerarTexto({ tema: opt('tema'), base: opt('base-arquivo') ? fs.readFileSync(opt('base-arquivo'), 'utf8') : null, tom: opt('tom'), objetivo: opt('objetivo'), tamanho: opt('tamanho'), pilar: opt('pilar') });
+    console.log(t); return;
+  }
+  if (cmd === 'rascunho') {
+    const p = li.criarPost({ texto: texto(), imagens: opts('imagem'), origem: 'zeus', por: 'ZEUS', agendadoPara: quando(opt('quando')), pilar: opt('pilar') }, { local: true });
+    console.log(`${p.agendadoPara ? 'Post agendado' : 'Rascunho criado'}: ${HOST}/linkedin?post=${p.id}`);
+    console.log('id: ' + p.id + ' · imagens: ' + p.imagens.length);
+    return;
+  }
+  if (cmd === 'editar') {
+    const id = opt('post'); if (!id) throw new Error('falta --post <id>');
+    const patch = {};
+    if (texto()) patch.texto = texto();
+    if (opts('imagem').length) patch.imagens = opts('imagem');
+    if (opt('quando')) patch.agendadoPara = quando(opt('quando'));
+    const p = li.editarPost(id, patch);
+    console.log(`Atualizado (${p.status}): ${HOST}/linkedin?post=${p.id}`); return;
+  }
+  if (cmd === 'publicar') {
+    const id = opt('post'); if (!id) throw new Error('falta --post <id> (crie antes com "linkedin rascunho" e mostre para a pessoa aprovar)');
+    const p = await li.publicarPost(id);
+    console.log('Publicado no LinkedIn: ' + (p.url || p.id)); return;
+  }
+  console.log(`linkedin estrategia                               estratégia da conta (pilares, tom, ritmo). LEIA ANTES de escrever post
+linkedin planejar [--semana atual|proxima]        monta a semana em rascunhos pela estratégia (posts por pilar + newsletter)
+linkedin status                                   conexão (nome, validade)
+linkedin listar                                   últimos posts (id, status, data, início do texto)
+linkedin gerar --tema "..." [--pilar "nome do pilar"] [--tom autoridade|historia|pratico|provocativo|bastidor] [--tamanho curto|medio|longo] [--objetivo "..."] [--base-arquivo resposta.md]
+                                                  escreve o texto do post com IA (não salva nada)
+linkedin rascunho --texto-arquivo post.txt [--pilar "nome"] [--imagem <ref>]... [--quando "AAAA-MM-DD HH:MM"]
+                                                  cria rascunho (ou agendado) na tela /linkedin e devolve o link
+                                                  <ref>: /api/design/arquivo/<criação>/<arte>.png, /api/chat/file/<sessão>/<arq> ou caminho local; até 9
+linkedin editar --post <id> [--texto-arquivo ...] [--imagem <ref>]... [--quando "..."]
+linkedin publicar --post <id>                     publica AGORA um rascunho já aprovado pela pessoa`);
+})().catch(e => { console.error('Erro: ' + e.message); process.exit(1); });

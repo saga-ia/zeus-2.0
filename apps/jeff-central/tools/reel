@@ -1,0 +1,192 @@
+#!/usr/bin/env node
+// CLI do Editor de Reels: reel tipográfico vertical 1080x1920 (gancho, título, lista, número, antes-depois, CTA) a partir
+// de um cenas.json, renderizado com Remotion no estúdio local (/opt/jeff-apps/jeff-reels/estudio). Usa os scripts da
+// skill "reel" (~/.claude/skills/reel, repo andreoliveiras/skills-de-conteudo) para checar, narrar e mixar.
+// Entrega o MP4 (e as prévias PNG) como link do chat: /api/chat/file/<sessão>/<arquivo>.
+// Uso: reel checar|previa|render --cenas arquivo.json [--slug nome] ...  (rode "reel ajuda")
+const fs = require('fs');
+const path = require('path');
+const { spawn, spawnSync } = require('child_process');
+
+const ESTUDIO = process.env.REEL_ESTUDIO || '/opt/jeff-apps/jeff-reels/estudio';
+const SKILL = process.env.REEL_SKILL || '/root/.claude/skills/reel';
+const WORKER_DB = process.env.WORKER_DB_PATH || '/opt/jeff-worker/data/worker.db';
+const DATA_DIR = process.env.CENTRAL_DATA_DIR || path.join(__dirname, '..', 'data');
+const UPLOADS_ROOT = path.join(DATA_DIR, 'uploads');
+const WORKDIR_ROOT = path.join(DATA_DIR, 'zeus-workdir');
+const VOZ_JEFF = 'K95KXX7Te5EkuG9VXpID'; // "Jefferson ZEUS" na conta ElevenLabs do Jeff
+const FPS = 30;
+const ESPERA_MS = 9 * 60 * 1000; // o Bash do agente corta em 10 min
+const LIMITE_MS = 30 * 60 * 1000;
+
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] };
+for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) { o[a.slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; } else o._.push(a); }
+
+const AJUDA = `Comandos (todos recebem --cenas arquivo.json; o formato está em ${SKILL}/SKILL.md, seção "O cenas.json"):
+  checar --cenas c.json                      valida o roteiro (tipos de cena, contraste das cores, tempos). Corrija todo ✖.
+  previa --cenas c.json [--slug nome]        3 quadros PNG (gancho, meio, CTA) em segundos, para conferir texto cortado
+  render --cenas c.json [--slug nome]        renderiza o MP4 (1 a 4 min por reel de 30 s). Opções:
+      --narrar                 narração ElevenLabs (gasta crédito; só com ok explícito da pessoa nesta conversa)
+      --voz <id>               voz da narração (padrão: "Jefferson ZEUS", a voz do Jeff)
+      --velocidade 1.08        0.7 a 1.2
+      --trilha /caminho.mp3    música fornecida pela pessoa (anexo do chat); nunca baixe música da internet
+      --rascunho               sai em 540x960, bem mais rápido
+  narrar-simular --cenas c.json              mostra quantos caracteres (créditos) a narração vai gastar, sem chamar a API
+  aguardar ID                                continua esperando um render que ainda não terminou
+  ajuda                                      esta tela
+Tipos de cena: gancho, titulo, lista, numero, antes-depois, cta (a última é sempre cta). 20 a 45 s, 4 a 8 cenas.
+O mesmo --slug na mesma conversa reaproveita a pasta (narração já gerada não gasta crédito de novo).
+Ao terminar, o comando imprime as linhas para colar na resposta: ![reel](/api/chat/file/...mp4) mostra o vídeo tocando no chat.`;
+
+function sessao() { const cwd = process.cwd(); return path.dirname(cwd) === WORKDIR_ROOT ? path.basename(cwd) : null; }
+const slugify = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+function jobFile(id) { return path.join(process.cwd(), `.reel-${id}.json`); }
+function lerJob(id) { try { return JSON.parse(fs.readFileSync(jobFile(id), 'utf8')); } catch (_) { return null; } }
+
+function exigirEstudio() {
+  if (!fs.existsSync(path.join(ESTUDIO, 'node_modules', '.bin', 'remotion'))) throw new Error(`o estúdio de reels não está instalado em ${ESTUDIO} (falta o npm install)`);
+  if (!fs.existsSync(path.join(SKILL, 'scripts', 'checar.mjs'))) throw new Error(`a skill reel não está em ${SKILL}`);
+}
+
+// Copia o cenas.json para reels/<sessão>-<slug>/ dentro do estúdio. Mantém narracao/palavras/trilha já geradas
+// quando a fala não mudou (o narrar.mjs confere a versão e refaz se precisar).
+function prepararProjeto() {
+  if (typeof o.cenas !== 'string') throw new Error('informe --cenas arquivo.json');
+  const novo = JSON.parse(fs.readFileSync(path.resolve(o.cenas), 'utf8'));
+  const sid = sessao() || 'cli';
+  const slug = slugify(o.slug) || slugify(novo.cenas && novo.cenas[0] && (novo.cenas[0].titulo || novo.cenas[0].fala)) || 'reel';
+  const rel = path.join('reels', `${sid.slice(0, 12)}-${slug}`);
+  const dir = path.join(ESTUDIO, rel);
+  fs.mkdirSync(path.join(dir, 'public'), { recursive: true });
+  let antigo = null; try { antigo = JSON.parse(fs.readFileSync(path.join(dir, 'cenas.json'), 'utf8')); } catch (_) {}
+  if (antigo) for (const k of ['narracao', 'palavras', 'trilha']) if (novo[k] == null && antigo[k]) novo[k] = antigo[k];
+  if (novo.narracao && !fs.existsSync(path.join(dir, 'public', novo.narracao))) { novo.narracao = null; novo.palavras = null; }
+  fs.writeFileSync(path.join(dir, 'cenas.json'), JSON.stringify(novo, null, 2) + '\n');
+  return { sid: sessao(), slug, rel, dir };
+}
+
+function chaveEleven() {
+  if (process.env.ELEVENLABS_API_KEY) return process.env.ELEVENLABS_API_KEY;
+  try {
+    const Database = require(path.join(__dirname, '..', 'node_modules', 'better-sqlite3'));
+    const db = new Database(WORKER_DB, { readonly: true, fileMustExist: true });
+    try { const r = db.prepare(`SELECT value FROM app_settings WHERE key = 'elevenlabs_api_key'`).get(); return r && r.value ? String(r.value).trim() : null; } finally { db.close(); }
+  } catch (_) { return null; }
+}
+
+function rodar(bin, args, extraEnv, mostrar) {
+  const r = spawnSync(bin, args, { cwd: ESTUDIO, encoding: 'utf8', env: Object.assign({}, process.env, extraEnv || {}), maxBuffer: 64 * 1024 * 1024 });
+  const saida = ((r.stdout || '') + (r.stderr || '')).trim();
+  if (mostrar && saida) console.log(saida);
+  if (r.status !== 0) throw new Error(saida.split('\n').slice(-15).join('\n') || `${path.basename(bin)} saiu com código ${r.status}`);
+  return saida;
+}
+const script = nome => path.join(SKILL, 'scripts', nome);
+const remotion = path.join(ESTUDIO, 'node_modules', '.bin', 'remotion');
+function argsRemotion(p) {
+  const a = [`--props=${p.rel}/cenas.json`, `--public-dir=${p.rel}/public`, '--log=error'];
+  if (process.env.REEL_BROWSER) a.push(`--browser-executable=${process.env.REEL_BROWSER}`);
+  if (process.env.REEL_CONCURRENCY) a.push(`--concurrency=${process.env.REEL_CONCURRENCY}`);
+  return a;
+}
+
+// Duração em segundos: da narração (palavras.json + cauda de 1,2 s) ou estimada pela fala (mesma regra de src/tempo.ts)
+function duracao(p) {
+  const d = JSON.parse(fs.readFileSync(path.join(p.dir, 'cenas.json'), 'utf8'));
+  if (d.palavras) { try { return JSON.parse(fs.readFileSync(path.join(p.dir, 'public', d.palavras), 'utf8')).duracao + 1.2; } catch (_) {} }
+  return d.cenas.reduce((t, c) => {
+    const n = String(c.fala || '').trim().split(/\s+/).filter(Boolean).length;
+    return t + (c.duracao != null ? c.duracao : Math.max(c.tipo === 'cta' ? 3.0 : 1.8, n / 2.9 + 0.35));
+  }, 0);
+}
+
+// Coloca o arquivo onde o chat serve e devolve o link (fora do chat devolve o caminho)
+function entregar(p, origem, nome) {
+  if (!p.sid) return origem;
+  const dir = path.join(UPLOADS_ROOT, p.sid); fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(origem, path.join(dir, nome));
+  return `/api/chat/file/${encodeURIComponent(p.sid)}/${encodeURIComponent(nome)}`;
+}
+
+function checar(p) { return rodar(process.execPath, [script('checar.mjs'), '--projeto', p.rel], null, true); }
+
+function previa() {
+  exigirEstudio();
+  const p = prepararProjeto();
+  checar(p);
+  const total = Math.max(1, Math.round(duracao(p) * FPS));
+  const quadros = [['gancho', Math.min(30, total - 1)], ['meio', Math.round(total / 2)], ['cta', Math.max(0, total - 20)]];
+  const tag = Date.now().toString(36);
+  console.log(`\nDuração estimada: ${(total / FPS).toFixed(1)} s. Prévias:`);
+  for (const [nome, f] of quadros) {
+    const out = path.join(ESTUDIO, 'out', `${path.basename(p.rel)}-${nome}.png`);
+    rodar(remotion, ['still', 'Reel', out, `--frame=${f}`, ...argsRemotion(p)]);
+    console.log(`![prévia ${nome}](${entregar(p, out, `reel-${p.slug}-${nome}-${tag}.png`)})`);
+  }
+  console.log('Abra as imagens (Read no PNG) e confira texto cortado, linha órfã e sobreposição antes do render.');
+}
+
+async function worker(id) {
+  const job = lerJob(id);
+  const salvar = patch => fs.writeFileSync(jobFile(id), JSON.stringify(Object.assign(job, patch)));
+  try {
+    const p = job.p;
+    const out = path.join(ESTUDIO, 'out', `${path.basename(p.rel)}.mp4`);
+    const args = ['render', 'Reel', out, ...argsRemotion(p)];
+    if (job.rascunho) args.push('--scale=0.5');
+    rodar(remotion, args);
+    const nome = `reel-${p.slug}-${id}.mp4`;
+    salvar({ status: 'ok', link: entregar(p, out, nome), mb: (fs.statSync(out).size / 1048576).toFixed(1), fim: Date.now() });
+  } catch (e) { salvar({ status: 'erro', erro: String(e.message || e).slice(0, 1500), fim: Date.now() }); }
+}
+
+async function aguardar(id) {
+  const t0 = Date.now();
+  for (;;) {
+    const j = lerJob(id);
+    if (!j) throw new Error(`render ${id} não encontrado nesta conversa`);
+    if (j.status === 'ok') {
+      console.log(`Reel pronto em ${Math.round((j.fim - j.inicio) / 1000)}s (${j.mb} MB, ${j.duracao.toFixed(1)} s de vídeo${j.rascunho ? ', rascunho 540x960' : ', 1080x1920'}).`);
+      console.log(`Entregue assim: ![reel](${j.link})\n[Baixar o reel (MP4)](${j.link})`);
+      return;
+    }
+    if (j.status === 'erro') throw new Error('o render falhou: ' + j.erro);
+    if (Date.now() - j.inicio > LIMITE_MS) throw new Error('o render passou de 30 minutos e foi dado como perdido');
+    if (Date.now() - t0 > ESPERA_MS) { console.log(`Ainda renderizando (${Math.round((Date.now() - j.inicio) / 60000)} min). Rode agora: reel aguardar ${id}`); return; }
+    await new Promise(r => setTimeout(r, 4000));
+  }
+}
+
+async function render() {
+  exigirEstudio();
+  const p = prepararProjeto();
+  if (o.narrar) {
+    const chave = chaveEleven();
+    if (!chave) throw new Error('chave do ElevenLabs não encontrada (app_settings.elevenlabs_api_key)');
+    const a = [script('narrar.mjs'), '--projeto', p.rel, '--voz', typeof o.voz === 'string' ? o.voz : VOZ_JEFF];
+    if (typeof o.velocidade === 'string') a.push('--velocidade', o.velocidade);
+    rodar(process.execPath, a, { ELEVENLABS_API_KEY: chave }, true);
+  }
+  if (typeof o.trilha === 'string') {
+    const a = [script('mixar.mjs'), path.resolve(o.trilha), '--projeto', p.rel];
+    if (typeof o.inicio === 'string') a.push('--inicio', o.inicio);
+    rodar(process.execPath, a, null, true);
+  }
+  checar(p);
+  const id = Date.now().toString(36);
+  fs.writeFileSync(jobFile(id), JSON.stringify({ id, status: 'renderizando', inicio: Date.now(), p, rascunho: !!o.rascunho, duracao: duracao(p) }));
+  spawn(process.execPath, [__filename, '_worker', id], { cwd: process.cwd(), detached: true, stdio: 'ignore' }).unref();
+  console.log(`\nRender ${id} iniciado. Aguardando...`);
+  await aguardar(id);
+}
+
+(async () => {
+  if (cmd === '_worker') return worker(o._[0]);
+  if (cmd === 'checar') { exigirEstudio(); return void checar(prepararProjeto()); }
+  if (cmd === 'previa') return previa();
+  if (cmd === 'render') return render();
+  if (cmd === 'narrar-simular') { exigirEstudio(); const p = prepararProjeto(); const c = chaveEleven(); return void rodar(process.execPath, [script('narrar.mjs'), '--projeto', p.rel, '--voz', typeof o.voz === 'string' ? o.voz : VOZ_JEFF, '--simular'], c ? { ELEVENLABS_API_KEY: c } : null, true); }
+  if (cmd === 'aguardar') { if (!o._[0]) throw new Error('informe o ID do render'); return aguardar(o._[0]); }
+  console.log(AJUDA);
+})().catch(e => { console.error('ERRO: ' + (e.message || e)); process.exit(1); });

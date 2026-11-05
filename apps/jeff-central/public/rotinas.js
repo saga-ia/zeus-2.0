@@ -45,7 +45,16 @@
     try { const j = await api(""); s.data = j.rotinas; s.agora = j.agora; if(j.ferramentas) s.ferramentas = j.ferramentas; }
     catch(err){ s.error = err.message; }
     s.loading = false; repaint();
+    zapLoad();
   }
+  // Entrega por WhatsApp sai pelo número do ZEUS (Zeus Worker). Sem ele pareado nada chega, então a tela avisa.
+  async function zapLoad(){
+    const s = R(), antes = s.zap && s.zap.state;
+    try { const r = await fetch("/api/wa/zeus"); if(!r.ok) return; s.zap = await r.json(); } catch(err){ return; }
+    if(antes !== s.zap.state && state.screen === "rotinas" && !(document.activeElement && document.activeElement.closest && document.activeElement.closest("#rot-modal-host, #rot-root input, #rot-root textarea"))) repaint();
+  }
+  const zapFora = () => { const z = R().zap; return !!(z && z.state && z.state !== "ready"); };
+  const zapAviso = (txt, margem) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid rgba(192,52,28,0.3);border-radius:12px;background:rgba(192,52,28,0.05);margin-bottom:${margem}px;font-size:13px;line-height:1.5">${icon(ICONS.warn, 14, VERM)}<span style="flex:1">${txt}</span><span data-rot-conectar style="font-weight:700;color:${ROXO};cursor:pointer;white-space:nowrap">Conectar o número</span></div>`;
   function repaint(){
     const root = document.getElementById("rot-root");
     if(root){ root.innerHTML = page(); bind(root); }
@@ -97,11 +106,12 @@
         <div style="flex:1;min-width:260px">
           <div style="font-size:10.5px;letter-spacing:0.16em;color:${ROXO};font-weight:700;margin-bottom:8px">OPERAR E AUTOMATIZAR</div>
           <h1 style="${HEAD};font-size:25px;font-weight:600;margin:0 0 6px">Rotinas</h1>
-          <p style="margin:0;color:${CINZA};max-width:720px;line-height:1.55">Pedidos que o ZEUS executa sozinho no horário que você marcar: todo dia, em dias da semana, todo mês, a cada X horas ou uma vez só. O resultado chega em Conversas, no seu WhatsApp ou por e-mail.</p>
+          <p style="margin:0;color:${CINZA};max-width:720px;line-height:1.55">Pedidos que o ZEUS executa sozinho no horário que você marcar. O resultado chega em Conversas, no seu WhatsApp ou por e-mail.</p>
         </div>
         <button data-rot-new style="${BTN_PRI}">${icon(ICONS.plus, 14, "currentColor")}Nova rotina</button>
       </div>
       ${s.error ? `<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid rgba(192,52,28,0.3);border-radius:12px;background:rgba(192,52,28,0.05);margin-bottom:16px;font-size:13px">${icon(ICONS.warn, 14, VERM)}<span style="flex:1">Não consegui falar com o servidor das rotinas (${e(s.error)}). Se a central acabou de ser atualizada, o serviço precisa ser reiniciado.</span><span data-rot-reload style="${BTN_MINI}">Tentar de novo</span></div>` : ""}
+      ${zapFora() && (s.data || []).some(r => r.entrega === "whatsapp") ? zapAviso("<strong>O WhatsApp do ZEUS está desconectado.</strong> As rotinas com entrega por WhatsApp rodam, mas a mensagem não chega até o número ser pareado de novo. A resposta continua salva em Conversas.", 16) : ""}
       ${s.loading && !s.data ? `<div style="padding:30px 0;color:${CINZA};font-size:13px">Carregando rotinas...</div>` : ""}
       ${s.data && !s.data.length ? vazio() : ""}
       ${s.data && s.data.length ? `<div style="display:flex;flex-direction:column;gap:12px">${s.data.map(card).join("")}</div>` : ""}
@@ -120,15 +130,14 @@
     const aberto = s.modelosAberto === undefined ? abrir : s.modelosAberto;
     const cats = []; MODELOS.forEach(m => { if(!cats.includes(m.cat)) cats.push(m.cat); });
     return `<div style="margin-top:${abrir ? 0 : 26}px">
-      <div data-rot-modelos style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;margin-bottom:${aberto ? 14 : 0}px">
-        <span style="${HEAD};font-size:15px;font-weight:600">Modelos prontos</span>
-        <span style="font-size:12px;color:${CINZA}">${MODELOS.length} rotinas que já funcionam com o que está conectado</span>
-        <span style="flex:1"></span>
-        <span style="color:${CINZA};transform:rotate(${aberto ? 180 : 0}deg);display:flex">${icon(ICONS.chevDown, 14, "currentColor")}</span>
+      <div data-rot-modelos style="display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;margin-bottom:${aberto ? 6 : 0}px;padding:14px 18px;border:1px solid #E6E6EA;border-radius:16px;background:#FFFFFF">
+        <span style="width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#FFFFFF;border:1px solid rgba(103,61,230,0.18);display:flex;align-items:center;justify-content:center">${icon(ICONS.sparkle, 16, ROXO)}</span>
+        <span style="flex:1;min-width:0"><span style="display:block;${HEAD};font-size:15px;font-weight:600">Modelos prontos</span><span style="display:block;font-size:12px;color:${CINZA};margin-top:1px">${MODELOS.length} rotinas que já funcionam com o que está conectado</span></span>
+        <span style="color:${CINZA};transform:rotate(${aberto ? 180 : 0}deg);transition:transform .3s;display:flex">${icon(ICONS.chevDown, 15, "currentColor")}</span>
       </div>
       ${aberto ? cats.map(c => `
-        <div style="font-size:10.5px;letter-spacing:0.14em;color:${CINZA};font-weight:700;margin:14px 0 8px">${e(c).toUpperCase()}</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:0.14em;color:${CINZA};font-weight:700;margin:18px 0 10px"><span style="width:6px;height:6px;border-radius:2px;background:${ROXO}"></span>${e(c).toUpperCase()}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">
           ${MODELOS.map((m, i) => m.cat !== c ? "" : `<div data-rot-sug="${i}" data-hover-border style="border:1px solid #E6E6EA;border-radius:13px;background:#FFFFFF;padding:13px 15px;cursor:pointer;display:flex;flex-direction:column;gap:5px">
             <div style="display:flex;align-items:center;gap:8px">${icon(ICONS.rotinas, 14, ROXO)}<strong style="font-size:13.5px;flex:1">${e(m.name)}</strong><span style="font-size:11px;color:${ROXO};font-weight:700">Usar</span></div>
             <div style="font-size:12px;color:${CINZA}">${e(quandoRoda(Object.assign({ dias: [1,2,3,4,5] }, m)))} · ${e((ENTREGAS.find(x => x[0] === m.entrega) || ENTREGAS[0])[1])}${m.skill_id ? " · /" + e(skillNome(m.skill_id)) : ""}</div>
@@ -136,6 +145,13 @@
           </div>`).join("")}
         </div>`).join("") : ""}
     </div>`;
+  }
+  // Resumo do pedido para o cartão: junta as linhas, tira numeração e corta em ~170 caracteres no fim de uma frase
+  function resumoPedido(t){
+    const s = String(t || "").replace(/\s*\n+\s*/g, " ").replace(/\s\d+\.\s/g, " ").replace(/\s{2,}/g, " ").trim();
+    if(s.length <= 170) return s;
+    const corte = s.slice(0, 170), fim = Math.max(corte.lastIndexOf(". "), corte.lastIndexOf(": "));
+    return (fim > 80 ? corte.slice(0, fim + 1) : corte.replace(/\s+\S*$/, "")) + "…";
   }
   function card(r){
     const s = R();
@@ -155,7 +171,7 @@
             ${r.skill_id ? `<span style="${CHIP};background:#F1F1F3;color:#3C3C44">/${e(skillNome(r.skill_id))}</span>` : ""}
             ${(r.tools || []).map(t => `<span style="${CHIP};background:#FFFFFF;border:1px solid #E6E6EA;color:${CINZA};font-weight:500">${e(ferrLabel(t))}</span>`).join("")}
           </div>
-          <div style="font-size:13px;color:#3C3C44;line-height:1.55;white-space:pre-wrap">${e(r.prompt)}</div>
+          <div data-rot-texto="${e(r.id)}" title="${s.inteiro && s.inteiro[r.id] ? "" : "Clique para ver o pedido completo"}" style="font-size:13px;color:#3C3C44;line-height:1.6;max-width:640px;cursor:pointer;${s.inteiro && s.inteiro[r.id] ? "white-space:pre-wrap" : "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"}">${e(s.inteiro && s.inteiro[r.id] ? r.prompt : resumoPedido(r.prompt))}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:${CINZA}">
             <span style="display:inline-flex;align-items:center;gap:6px;color:${stCor};font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>${stTxt}</span>
             <span>${prox}</span>
@@ -167,8 +183,8 @@
           <span data-rot-run="${e(r.id)}" style="${BTN_MINI};${r.rodando ? "opacity:.5;cursor:default" : ""}" title="Executar agora, fora do horário">${icon(ICONS.play, 12, "currentColor")}Executar agora</span>
           <span data-rot-hist="${e(r.id)}" style="${BTN_MINI}" title="Ver execuções">${icon(ICONS.history, 12, "currentColor")}Histórico</span>
           <span data-rot-edit="${e(r.id)}" style="${BTN_MINI}">${icon(ICONS.edit, 12, "currentColor")}Editar</span>
-          <label title="${r.enabled ? "Pausar" : "Ativar"}" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#3C3C44;cursor:pointer;margin-left:4px"><input type="checkbox" data-rot-toggle="${e(r.id)}" ${r.enabled ? "checked" : ""} style="accent-color:${ROXO};width:16px;height:16px">${r.enabled ? "Ativa" : "Pausada"}</label>
-          <span data-rot-del="${e(r.id)}" title="Excluir" style="${BTN_MINI};color:${VERM};border-color:rgba(192,52,28,0.3)">${icon(ICONS.trash, 12, "currentColor")}</span>
+          <label title="${r.enabled ? "Pausar" : "Ativar"}" style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#3C3C44;cursor:pointer;margin-left:6px"><input type="checkbox" class="rot-chave" data-rot-toggle="${e(r.id)}" ${r.enabled ? "checked" : ""}>${r.enabled ? "Ativa" : "Pausada"}</label>
+          <span data-rot-del="${e(r.id)}" title="Excluir rotina" style="width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#9A9AA3">${icon(ICONS.trash, 13, "currentColor")}</span>
         </div>
       </div>
       ${aberto ? historico(r) : ""}
@@ -242,7 +258,7 @@
             <label style="${LBL}">Entregar em</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${ENTREGAS.map(x => `<span data-rot-entrega="${x[0]}" style="${BTN_MINI};${x[0] === f.entrega ? `background:rgba(103,61,230,0.1);border-color:${ROXO};color:${ROXO};font-weight:700` : ""}">${x[1]}</span>`).join("")}</div>
             <div style="font-size:11.5px;color:${CINZA};margin-bottom:${f.entrega === "chat" ? 0 : 8}px">${e(en[2])}${f.entrega !== "chat" ? ". A resposta também fica salva em Conversas." : ""}</div>
-            ${f.entrega === "whatsapp" ? `<input data-rf="destino" value="${e(f.destino)}" placeholder="Número com DDD, ex.: 81999998888" style="${IN};max-width:320px">` : ""}
+            ${f.entrega === "whatsapp" ? `<input data-rf="destino" value="${e(f.destino)}" placeholder="Número com DDD, ex.: 81999998888" style="${IN};max-width:320px">${zapFora() ? `<div style="margin-top:8px;font-size:12px;color:${VERM};line-height:1.5">O WhatsApp do ZEUS está desconectado agora: a mensagem só chega depois que o número for pareado em Conectores › WhatsApp.</div>` : ""}` : ""}
             ${f.entrega === "email" ? `<input data-rf="destino" type="email" value="${e(f.destino)}" placeholder="destino@empresa.com" style="${IN};max-width:360px">` : ""}
           </div>
           ${f.error ? `<div style="font-size:12.5px;color:${VERM}">${e(f.error)}</div>` : ""}
@@ -345,9 +361,18 @@
       catch(err){ alert("Erro: " + err.message); }
       load();
     }));
+    // abre/fecha o pedido inteiro só naquele bloco: redesenhar a tela toda fazia o cabeçalho piscar
+    root.querySelectorAll("[data-rot-texto]").forEach(el => bindOnce(el, "click", ev => {
+      ev.stopPropagation();
+      const s = R(), id = el.dataset.rotTexto, r = (s.data || []).find(x => String(x.id) === id); if(!r) return;
+      s.inteiro = s.inteiro || {}; const aberto = s.inteiro[id] = !s.inteiro[id];
+      el.textContent = aberto ? r.prompt : resumoPedido(r.prompt);
+      el.title = aberto ? "" : "Clique para ver o pedido completo";
+      Object.assign(el.style, aberto ? { display: "block", whiteSpace: "pre-wrap", webkitLineClamp: "", webkitBoxOrient: "", overflow: "" } : { display: "-webkit-box", whiteSpace: "", webkitLineClamp: "2", webkitBoxOrient: "vertical", overflow: "hidden" });
+    }));
     root.querySelectorAll("[data-rot-del]").forEach(el => bindOnce(el, "click", async ev => {
       ev.stopPropagation(); const r = (R().data || []).find(x => x.id === el.dataset.rotDel); if(!r) return;
-      if(!confirm(`Excluir a rotina "${r.name}"? O histórico de execuções some junto (as conversas em Conversas ficam).`)) return;
+      if(!await zConfirm(`Excluir a rotina "${r.name}"? O histórico de execuções some junto (as conversas em Conversas ficam).`)) return;
       try { await api("/" + encodeURIComponent(r.id), { method: "DELETE" }); } catch(err){ alert("Erro: " + err.message); }
       load();
     }));
@@ -357,6 +382,7 @@
     root.querySelectorAll("[data-rot-cancel]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); R().modal = null; repaint(); }));
     root.querySelectorAll("[data-rot-save]").forEach(el => bindOnce(el, "click", ev => { ev.preventDefault(); ev.stopPropagation(); salvar(); }));
     root.querySelectorAll("[data-rot-freq]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const f = syncForm(); if(!f) return; f.freq = el.dataset.rotFreq; repaint(); }));
+    root.querySelectorAll("[data-rot-conectar]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); setState({ screen: "waConnector" }); }));
     root.querySelectorAll("[data-rot-entrega]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const f = syncForm(); if(!f) return; f.entrega = el.dataset.rotEntrega; if(f.entrega === "chat") f.destino = ""; repaint(); }));
     root.querySelectorAll("[data-rot-tool]").forEach(el => bindOnce(el, "click", ev => {
       ev.stopPropagation(); const f = syncForm(); if(!f) return; const t = el.dataset.rotTool;

@@ -1,0 +1,82 @@
+# arquivo	chave	o que o instalador faz
+jeff-worker/.env	NODE_ENV	copiado
+jeff-worker/.env	PORT	copiado
+jeff-worker/.env	HOST	copiado
+jeff-worker/.env	LOG_LEVEL	copiado
+jeff-worker/.env	DB_PATH	copiado
+jeff-worker/.env	AUTH_PATH	copiado
+jeff-worker/.env	MEDIA_PATH	copiado
+jeff-worker/.env	CHROMIUM_PATH	copiado
+jeff-worker/.env	CLIENT_ID	copiado
+jeff-worker/.env	API_TOKEN	segredo novo
+jeff-worker/.env	ADMIN_USER	copiado
+jeff-worker/.env	ADMIN_PASSWORD_HASH	especial
+jeff-worker/.env	JWT_SECRET	segredo novo
+jeff-worker/.env	JWT_TTL_DAYS	copiado
+jeff-worker/.env	WEBHOOK_URL	copiado
+jeff-worker/.env	WEBHOOK_TOKEN	copiado
+jeff-worker/.env	SEND_MIN_DELAY_MS	copiado
+jeff-worker/.env	SEND_MAX_DELAY_MS	copiado
+jeff-worker/.env	SEND_BURST_LIMIT	copiado
+jeff-worker/.env	SEND_BURST_WINDOW_MS	copiado
+jeff-worker/.env	TYPING_PER_CHAR_MS	copiado
+jeff-worker/.env	TYPING_MAX_MS	copiado
+jeff-worker/.env	AUTH_WATCHDOG_MS	copiado
+jeff-worker/.env	RECONNECT_BASE_MS	copiado
+jeff-worker/.env	RECONNECT_MAX_MS	copiado
+jeff-worker/.env	AGENT_WHITELIST	especial
+jeff-worker/.env	ANTHROPIC_API_KEY	fornecedor (preencher)
+jeff-worker/.env	GROQ_API_KEY	fornecedor (preencher)
+jeff-worker/.env	TTS_VOICE	copiado
+jeff-worker/.env	TTS_RATE	copiado
+jeff-worker/.env	TTS_PITCH	copiado
+jeff-apps/jeff-disparador/.env	PORT	copiado
+jeff-apps/jeff-disparador/.env	JWT_SECRET	segredo novo
+jeff-apps/jeff-disparador/.env	NODE_ENV	copiado
+jeff-apps/jeff-evolution/.env	EVOLUTION_API_KEY	segredo novo
+jeff-apps/jeff-evolution/.env	POSTGRES_PASSWORD	segredo novo
+jeff-apps/jeff-mapadocloser/.env	PORT	copiado
+jeff-apps/jeff-mapadocloser/.env	ANTHROPIC_API_KEY	fornecedor (preencher)
+jeff-apps/jeff-mapadocloser/.env	ANTHROPIC_MODEL	copiado
+jeff-apps/jeff-meta-dashboard/.env	PORT	copiado
+jeff-apps/jeff-meta-dashboard/.env	JWT_SECRET	segredo novo
+jeff-apps/jeff-meta-dashboard/.env	ADMIN_EMAIL	especial
+jeff-apps/jeff-meta-dashboard/.env	ADMIN_PASSWORD	especial
+jeff-apps/jeff-meta-dashboard/.env	NODE_ENV	copiado
+jeff-apps/jeff-presenton/.env	CUSTOM_LLM_API_KEY	fornecedor (preencher)
+jeff-apps/jeff-presenton/.env	AUTH_USERNAME	copiado
+jeff-apps/jeff-presenton/.env	AUTH_PASSWORD	especial
+jeff-apps/jeff-sdrs/.env	PORT	copiado
+jeff-apps/jeff-sdrs/.env	JWT_SECRET	segredo novo
+jeff-apps/jeff-sdrs/.env	NODE_ENV	copiado
+jeff-apps/jeff-sdrs/.env	WORKER_URL	copiado
+jeff-apps/jeff-sdrs/.env	WORKER_TOKEN	segredo novo
+jeff-apps/jeff-sdrs/.env	JEFF_PHONE	copiado
+jeff-apps/jeff-sdrs/.env	CRM_URL	copiado
+jeff-apps/jeff-sdrs/.env	ENCRYPTION_KEY	segredo novo
+jeff-apps/jeff-wa-relay/.env	PORT	copiado
+jeff-apps/jeff-wa-relay/.env	NODE_ENV	copiado
+jeff-apps/jeff-wa-relay/.env	API_TOKEN	segredo novo
+jeff-apps/jeff-wa-relay/.env	CHATWOOT_URL	copiado
+jeff-apps/jeff-wa-relay/.env	CHATWOOT_ACCOUNT_ID	copiado
+jeff-apps/jeff-wa-relay/.env	CHATWOOT_API_TOKEN	fornecedor (preencher)
+jeff-apps/jeff-wa-relay/.env	SESSIONS	copiado
+jeff-apps/jeff-wa-relay/.env	SESSION_8614_CHATWOOT_INBOX_ID	copiado
+jeff-apps/jeff-wa-relay/.env	SESSION_8614_CHATWOOT_INBOX_IDENTIFIER	copiado
+jeff-apps/jeff-wa-relay/.env	SESSION_5638_CHATWOOT_INBOX_ID	copiado
+jeff-apps/jeff-wa-relay/.env	SESSION_5638_CHATWOOT_INBOX_IDENTIFIER	copiado
+jeff-apps/zeus-analytics/.env	NODE_ENV	copiado
+jeff-apps/zeus-analytics/.env	ANALYTICS_DB	copiado
+jeff-apps/zeus-analytics/.env	API_PORT	copiado
+jeff-apps/zeus-analytics/.env	JWT_SECRET	segredo novo
+jeff-apps/zeus-analytics/.env	WORKER_POLL_INTERVAL_MS	copiado
+jeff-apps/zeus-analytics/.env	SESSION_DIR	copiado
+jeff-apps/zeus-analytics/.env	ANALYZER_INTERVAL_MS	copiado
+jeff-apps/zeus-analytics/.env	ANALYZER_BATCH_SIZE	copiado
+jeff-apps/zeus-analytics/.env	WEB_PORT	copiado
+jeff-apps/zeus-analytics/.env	PUBLIC_URL	copiado
+jeff-apps/zeus-platform/.env	PORT	copiado
+jeff-apps/zeus-platform/.env	NODE_ENV	copiado
+jeff-apps/zeus-platform/.env	VAULT_SECRET	segredo novo
+jeff-apps/zeus-platform/.env	VAULT_SALT	segredo novo
+jeff-apps/zeus-platform/.env	JWT_SECRET	segredo novo

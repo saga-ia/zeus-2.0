@@ -202,7 +202,7 @@
     const msg = s.origin === "seed" ? `Ocultar a regra padrão "${s.name}"? Você pode restaurar depois.`
       : s.origin === "user-skill" ? `Excluir a skill "${s.name}"? A pasta dela no servidor (/${s.slug}) será apagada. Isso não tem volta.`
       : `Excluir a regra "${s.name}"? Isso não tem volta.`;
-    if(!confirm(msg)) return;
+    if(!await zConfirm(msg)) return;
     try { await apiJ("/" + encodeURIComponent(id), "DELETE"); toast(s.origin === "seed" ? "Regra ocultada." : "Excluída."); recarregar(); }
     catch(err){ toast("Falhou: " + err.message, true); }
   }

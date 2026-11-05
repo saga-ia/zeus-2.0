@@ -1,0 +1,24 @@
+{
+  "evento-teste": {
+    "nome": "Evento Teste (captura)",
+    "sheet_id": "17JW113l2l1bJS0VdQbNUijYXOqraLagUjNNOkejQvu4",
+    "tab": "Leads",
+    "obrigado": "https://central.jefersonhenrike.com/site/evento-teste-obrigado/"
+  },
+  "summit-ia-teste": {
+    "nome": "Summit IA e Marketing Digital (teste)",
+    "sheet_id": "17JW113l2l1bJS0VdQbNUijYXOqraLagUjNNOkejQvu4",
+    "tab": "Leads"
+  },
+  "jh-contato": {
+    "nome": "Minisite Jefferson Henrike (captura nome + WhatsApp)",
+    "sheet_id": "17JW113l2l1bJS0VdQbNUijYXOqraLagUjNNOkejQvu4",
+    "tab": "MinisiteJH",
+    "email": false
+  },
+  "corretor-imoveis": {
+    "nome": "Minisite corretor de imóveis (link da bio) - PENDENTE: confirmar planilha definitiva com o Jeff",
+    "sheet_id": "17JW113l2l1bJS0VdQbNUijYXOqraLagUjNNOkejQvu4",
+    "tab": "CorretorImoveis"
+  }
+}

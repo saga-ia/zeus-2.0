@@ -228,9 +228,12 @@
   const limitePrazo = t => t.due_date ? (t.due_date_time ? t.due_date : (() => { const d = new Date(t.due_date); d.setHours(23, 59, 59, 999); return d.getTime(); })()) : 0;
   function fmtDur(ms){ const m = Math.round((ms || 0) / 60000); if(!m) return "0m"; const h = Math.floor(m / 60); return h ? h + "h" + (m % 60 ? " " + (m % 60) + "m" : "") : m + "m"; }
   function fmtDias(ms){ const d = ms / DIA; return d < 1 ? Math.max(1, Math.round(ms / 3600000)) + "h" : d.toFixed(d < 10 ? 1 : 0).replace(".", ",") + " d"; }
-  function stats(ts, ini){
-    const criadas = ts.filter(t => t.date_created >= ini);
-    const concl = ts.filter(t => !isOpen(t) && fechouEm(t) >= ini);
+  // estatísticas de uma janela [ini, fim)
+  function stats(ts, ini, fim){
+    fim = fim || Infinity;
+    const dentro = v => v >= ini && v < fim;
+    const criadas = ts.filter(t => dentro(t.date_created));
+    const concl = ts.filter(t => !isOpen(t) && dentro(fechouEm(t)));
     const comPrazo = concl.filter(t => t.due_date);
     const noPrazo = comPrazo.filter(t => fechouEm(t) <= limitePrazo(t));
     const temPontos = ts.some(t => t.points != null);
@@ -239,35 +242,103 @@
       validacao: ts.filter(t => isOpen(t) && VALIDACAO.test(norm(t.status))),
       tempo: concl.reduce((s, t) => s + (t.time_spent || 0), 0) };
   }
+  // período anterior de mesmo tipo (ontem, semana passada, mês passado)
+  function iniAnterior(per, ini){
+    const d = new Date(ini);
+    if(per === "hoje") d.setDate(d.getDate() - 1);
+    else if(per === "semana") d.setDate(d.getDate() - 7);
+    else d.setMonth(d.getMonth() - 1);
+    return d.getTime();
+  }
   const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "—";
-  const kpi = (rot, val, sub, cor) => `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;padding:16px 18px;min-width:0"><div style="font-size:12.5px;color:${CINZA};margin-bottom:8px">${rot}</div><div style="${HEAD};font-size:26px;font-weight:600;color:${cor || "#17171A"}">${val}</div>${sub ? `<div style="font-size:11.5px;color:#9A9AA3;margin-top:5px">${sub}</div>` : ""}</div>`;
-  const cardP = (tit, corpo, dir) => `<div style="border:1px solid #E6E6EA;border-radius:14px;background:#FFFFFF;overflow:hidden;margin-top:16px"><div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #F1F1F3"><strong style="font-size:13.5px;font-weight:600;flex:1">${tit}</strong>${dir || ""}</div><div style="padding:16px 18px">${corpo}</div></div>`;
+  const BOXP = "border:1px solid #E6E6EA;border-radius:16px;background:#FFFFFF";
+  const kpi = (rot, val, sub, cor) => `<div style="${BOXP};padding:16px 18px;min-width:0"><div style="font-size:12.5px;color:${CINZA};margin-bottom:8px">${rot}</div><div style="${HEAD};font-size:26px;font-weight:600;color:${cor || "#17171A"}">${val}</div>${sub ? `<div style="font-size:11.5px;color:#9A9AA3;margin-top:5px">${sub}</div>` : ""}</div>`;
+  const cardP = (tit, corpo, dir) => `<div style="${BOXP};overflow:hidden;margin-top:16px"><div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #F1F1F3"><strong style="font-size:13.5px;font-weight:600;flex:1">${tit}</strong>${dir || ""}</div><div style="padding:16px 18px">${corpo}</div></div>`;
+  // variação contra o período anterior
+  function variacao(atual, antes, bomSeSobe, nome){
+    if(antes == null) return "";
+    if(!antes && !atual) return `<span style="color:#9A9AA3">igual ${nome}</span>`;
+    const dif = atual - antes;
+    if(!dif) return `<span style="color:#9A9AA3">igual ${nome}</span>`;
+    const bom = (dif > 0) === bomSeSobe, cor = bom ? VERDE : VERM;
+    return `<span style="color:${cor};font-weight:600">${dif > 0 ? "▲" : "▼"} ${Math.abs(dif)}</span> <span style="color:#9A9AA3">${nome}</span>`;
+  }
+  const ICK = { criadas: '<path d="M12 5v14M5 12h14"/>', concl: '<path d="M5 12l4.5 4.5L19 7"/>', prazo: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>', tempo: '<path d="M9 3h6M12 3v3"/><circle cx="12" cy="14" r="7"/><path d="M12 14l3-2"/>' };
+  const kpiG = (ic, cor, rot, val, rodape, extra) => `<div style="${BOXP};padding:18px 20px;min-width:0;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:10px;background:${cor}14;display:flex;align-items:center;justify-content:center">${icon(ic, 16, cor)}</span><span style="font-size:12.5px;color:${CINZA};font-weight:500">${rot}</span></div>
+      <div style="${HEAD};font-size:30px;font-weight:600;line-height:1;color:#17171A">${val}</div>
+      ${extra || ""}
+      <div style="font-size:11.5px;margin-top:auto">${rodape}</div>
+    </div>`;
+  // gráfico de barras em HTML (altura fixa, texto em tamanho normal em qualquer largura de tela)
   function graficoDias(ts, ini, per){
-    const dias = []; const d0 = new Date(ini); const hoje = hoje0();
-    const inicio = per === "hoje" ? hoje - 6 * DIA : ini; // "Hoje" mostra a última semana para dar contexto
+    const dias = [], hoje = hoje0();
+    const inicio = per === "hoje" ? hoje - 6 * DIA : ini;
     for(let t = new Date(inicio).setHours(0, 0, 0, 0); t <= hoje; t += DIA) dias.push(t);
     const cri = dias.map(t => ts.filter(x => x.date_created >= t && x.date_created < t + DIA).length);
     const con = dias.map(t => ts.filter(x => !isOpen(x) && fechouEm(x) >= t && fechouEm(x) < t + DIA).length);
-    const max = Math.max(1, ...cri, ...con), W = 720, H = 190, x0 = 30, y1 = 160, passo = (W - x0 - 10) / dias.length, bw = Math.max(3, Math.min(16, passo * 0.34));
-    const Y = v => y1 - v / max * 140;
-    const bars = dias.map((t, i) => { const cx = x0 + passo * (i + 0.5); const dt = new Date(t); const rot = String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0");
-      return `<rect x="${(cx - bw - 1).toFixed(1)}" y="${Y(cri[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y1 - Y(cri[i])).toFixed(1)}" rx="2" fill="${AMBAR}" opacity="0.35"><title>${rot}: ${cri[i]} criada(s)</title></rect><rect x="${(cx + 1).toFixed(1)}" y="${Y(con[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y1 - Y(con[i])).toFixed(1)}" rx="2" fill="${VERDE}"><title>${rot}: ${con[i]} concluída(s)</title></rect>${dias.length <= 14 || i % Math.ceil(dias.length / 10) === 0 ? `<text x="${cx.toFixed(1)}" y="178" text-anchor="middle" fill="${CINZA}">${rot}</text>` : ""}`; }).join("");
-    const grade = [0, 0.5, 1].map(f => `<line x1="${x0}" x2="${W - 10}" y1="${Y(max * f)}" y2="${Y(max * f)}" stroke="#F1F1F3"/><text x="${x0 - 6}" y="${Y(max * f) + 3}" text-anchor="end" fill="${CINZA}">${Math.round(max * f)}</text>`).join("");
-    return `<div style="display:flex;gap:14px;font-size:12px;color:${CINZA};margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><i style="width:9px;height:9px;border-radius:3px;background:${AMBAR};opacity:.35;display:block"></i>Criadas</span><span style="display:flex;align-items:center;gap:6px"><i style="width:9px;height:9px;border-radius:3px;background:${VERDE};display:block"></i>Concluídas</span></div>
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-size:10px;font-family:'DM Sans'">${grade}${bars}</svg>`;
+    const max = Math.max(1, ...cri, ...con), topo = Math.ceil(max / 2) * 2 || 2;
+    const nomeDia = t => { const d = new Date(t); return ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][d.getDay()] + " " + String(d.getDate()).padStart(2, "0"); };
+    const mostrarRotulo = i => dias.length <= 10 || i % Math.ceil(dias.length / 10) === 0 || i === dias.length - 1;
+    const bw = dias.length > 20 ? 6 : dias.length > 10 ? 10 : 18;
+    return `<div style="display:flex;gap:16px;font-size:12px;color:${CINZA};margin-bottom:14px"><span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#C9BCF5;display:block"></i>Criadas</span><span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${VERDE};display:block"></i>Concluídas</span></div>
+      <div style="display:flex;gap:8px">
+        <div style="display:flex;flex-direction:column;justify-content:space-between;height:190px;font-size:11px;color:#9A9AA3;text-align:right;min-width:18px">${[topo, topo / 2, 0].map(v => `<span>${v}</span>`).join("")}</div>
+        <div style="flex:1;min-width:0;position:relative;height:190px;border-bottom:1px solid #E6E6EA;background:linear-gradient(#F1F1F3 1px,transparent 1px) 0 0/100% 50%">
+          <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-around">${dias.map((t, i) => `<div title="${nomeDia(t)}: ${cri[i]} criada(s), ${con[i]} concluída(s)" style="display:flex;align-items:flex-end;gap:3px;height:100%">
+            <i style="display:block;width:${bw}px;height:${(cri[i] / topo * 100).toFixed(1)}%;min-height:${cri[i] ? 3 : 0}px;background:#C9BCF5;border-radius:4px 4px 0 0"></i>
+            <i style="display:block;width:${bw}px;height:${(con[i] / topo * 100).toFixed(1)}%;min-height:${con[i] ? 3 : 0}px;background:${VERDE};border-radius:4px 4px 0 0"></i></div>`).join("")}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-around;margin-left:26px;margin-top:8px;font-size:11px;color:${CINZA}">${dias.map((t, i) => `<span style="flex:1;text-align:center;white-space:nowrap">${mostrarRotulo(i) ? nomeDia(t) : ""}</span>`).join("")}</div>`;
   }
   function painelGeral(ts, ini, per){
-    const s = stats(ts, ini);
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-        ${kpi("Criadas no período", s.criadas.length)}
-        ${kpi("Concluídas no período", s.concl.length)}
-        ${kpi("No prazo", pct(s.noPrazo.length, s.comPrazo.length), "das concluídas com prazo" + (s.comPrazo.length ? " (" + s.noPrazo.length + " de " + s.comPrazo.length + ")" : ""), s.comPrazo.length && s.noPrazo.length / s.comPrazo.length < 0.6 ? VERM : null)}
-        ${kpi("Complexidade entregue", s.temPontos ? s.pontos : "—", s.temPontos ? "pts das concluídas" : "ative Sprint Points no ClickUp para medir")}
-        ${kpi("Reabertura", "—", "o ClickUp não informa reaberturas pela API")}
-        ${kpi("Aguardando validação", s.validacao.length, "agora")}
-        ${kpi("Tempo registrado", fmtDur(s.tempo), "lançado nas concluídas do período")}
+    const s = stats(ts, ini), ant = stats(ts, iniAnterior(per, ini), ini);
+    const nomeAnt = per === "hoje" ? "vs. ontem" : per === "semana" ? "vs. semana passada" : "vs. mês passado";
+    const taxaPrazo = s.comPrazo.length ? Math.round(s.noPrazo.length / s.comPrazo.length * 100) : null;
+    const corPrazo = taxaPrazo == null ? CINZA : taxaPrazo >= 80 ? VERDE : taxaPrazo >= 60 ? "#B7791F" : VERM;
+    const agora = Date.now(), abertas = ts.filter(isOpen), atrasadas = abertas.filter(t => t.due_date && limitePrazo(t) < agora);
+    const chip = (rot, n, cor, ic) => `<span style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid #E6E6EA;border-radius:20px;background:#FFFFFF;font-size:12.5px;color:#3C3C44">${icon(ic, 13, cor)}<strong style="color:${n ? cor : "#17171A"}">${n}</strong>${rot}</span>`;
+    // ritmo e quem entregou
+    const diasPer = Math.max(1, Math.round((Math.min(agora, Date.now()) - ini) / DIA) + (per === "hoje" ? 1 : 0));
+    const taxaConc = s.criadas.length ? Math.round(s.concl.length / s.criadas.length * 100) : null;
+    const saldo = s.concl.length - s.criadas.length;
+    const porPessoa = {}; s.concl.forEach(t => t.assignees.forEach(u => { (porPessoa[u.id] = porPessoa[u.id] || { u, n: 0 }).n++; }));
+    const top = Object.values(porPessoa).sort((a, b) => b.n - a.n).slice(0, 4), maxTop = Math.max(1, ...top.map(x => x.n));
+    const linhaRitmo = (rot, val, sub) => `<div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid #F4F4F6"><span style="flex:1;font-size:12.5px;color:${CINZA}">${rot}</span><strong style="${HEAD};font-size:17px;font-weight:600">${val}</strong>${sub ? `<span style="font-size:11px;color:#9A9AA3">${sub}</span>` : ""}</div>`;
+    const periodoTxt = per === "hoje" ? "últimos 7 dias" : per === "semana" ? "esta semana" : "este mês";
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+        ${kpiG(ICK.criadas, AMBAR, "Criadas", s.criadas.length, variacao(s.criadas.length, ant.criadas.length, true, nomeAnt))}
+        ${kpiG(ICK.concl, VERDE, "Concluídas", s.concl.length, variacao(s.concl.length, ant.concl.length, true, nomeAnt))}
+        ${kpiG(ICK.prazo, corPrazo, "Entregues no prazo", taxaPrazo == null ? "—" : taxaPrazo + "%", `<span style="color:#9A9AA3">${s.comPrazo.length ? `${s.noPrazo.length} de ${s.comPrazo.length} com prazo` : "nenhuma concluída com prazo"}</span>`,
+          `<div style="height:6px;border-radius:6px;background:#F1F1F3;overflow:hidden"><i style="display:block;height:100%;width:${taxaPrazo || 0}%;background:${corPrazo};border-radius:6px"></i></div>`)}
+        ${kpiG(ICK.tempo, "#4A6CF7", "Tempo registrado", fmtDur(s.tempo), `<span style="color:#9A9AA3">nas tarefas concluídas</span>`)}
       </div>
-      ${cardP("Criadas vs concluídas", graficoDias(ts, ini, per), `<span style="font-size:12px;color:${CINZA}">${per === "hoje" ? "últimos 7 dias" : per === "semana" ? "esta semana" : "este mês"}</span>`)}`;
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+        ${chip("atrasadas", atrasadas.length, VERM, '<circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/>')}
+        ${chip("aguardando validação", s.validacao.length, "#B7791F", '<path d="M5 12l4 4 10-10"/>')}
+        ${chip("abertas no total", abertas.length, AMBAR, '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/>')}
+        ${s.temPontos ? chip("pontos de complexidade entregues", s.pontos, "#C25FD6", '<path d="M12 3l2.6 5.6L20 9.4l-4 4 1 5.6L12 16.3 7 19l1-5.6-4-4 5.4-.8z"/>') : ""}
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;margin-top:16px">
+        <div style="${BOXP};padding:18px 20px;min-width:0">
+          <div style="display:flex;align-items:center;margin-bottom:6px"><strong style="${HEAD};font-size:15px;font-weight:600;flex:1">Criadas vs concluídas</strong><span style="font-size:12px;color:${CINZA}">${periodoTxt}</span></div>
+          ${graficoDias(ts, ini, per)}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div style="${BOXP};padding:16px 20px">
+            <strong style="${HEAD};font-size:15px;font-weight:600">Ritmo</strong>
+            ${linhaRitmo("Taxa de conclusão", taxaConc == null ? "—" : taxaConc + "%", "concluídas / criadas")}
+            ${linhaRitmo("Entregas por dia", (s.concl.length / diasPer).toFixed(1).replace(".", ","), "média")}
+            <div style="display:flex;align-items:baseline;gap:10px;padding:10px 0 0"><span style="flex:1;font-size:12.5px;color:${CINZA}">Saldo do período</span><strong style="${HEAD};font-size:17px;font-weight:600;color:${saldo > 0 ? VERDE : saldo < 0 ? VERM : "#17171A"}">${saldo > 0 ? "+" : ""}${saldo}</strong><span style="font-size:11px;color:#9A9AA3">${saldo >= 0 ? "backlog diminuindo" : "backlog crescendo"}</span></div>
+          </div>
+          <div style="${BOXP};padding:16px 20px;flex:1">
+            <strong style="${HEAD};font-size:15px;font-weight:600">Quem mais entregou</strong>
+            ${top.length ? `<div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${top.map(x => `<div style="display:flex;align-items:center;gap:10px">${avatar(x.u, 24)}<div style="flex:1;min-width:0"><div style="display:flex;font-size:12.5px;margin-bottom:4px"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(firstName(x.u))}</span><strong>${x.n}</strong></div><div style="height:5px;border-radius:5px;background:#F1F1F3"><i style="display:block;height:100%;width:${(x.n / maxTop * 100).toFixed(0)}%;background:${VERDE};border-radius:5px"></i></div></div></div>`).join("")}</div>`
+              : `<div style="font-size:12.5px;color:#9A9AA3;margin-top:10px">Nenhuma entrega no período.</div>`}
+          </div>
+        </div>
+      </div>`;
   }
   function painelPessoa(ts, ini){
     const d = ac().data, agora = Date.now();
@@ -313,7 +384,7 @@
     const a = ac(), d = a.data;
     const per = a.pPer || "semana", tab = a.pTab || "geral", ini = iniPeriodo(per);
     const ts = d.tasks;
-    const tabs = `<div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;margin-bottom:16px">${PTABS.map(x => { const on = tab === x[0]; return `<span data-ac-ptab="${x[0]}" ${on ? "" : "data-hover"} style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;font-size:13px;cursor:pointer;${on ? "font-weight:600;background:rgba(103,61,230,0.12);color:" + AMBAR : "color:#3C3C44"}">${icon(x[2], 14, "currentColor")}${x[1]}</span>`; }).join("")}</div>`;
+    const tabs = `<div style="display:inline-flex;flex-wrap:wrap;gap:3px;padding:4px;border:1px solid #E6E6EA;border-radius:12px;background:#FFFFFF;margin-bottom:18px">${PTABS.map(x => { const on = tab === x[0]; return `<span data-ac-ptab="${x[0]}" ${on ? "" : "data-hover"} style="display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;font-size:12.5px;cursor:pointer;${on ? "font-weight:600;background:rgba(103,61,230,0.12);color:" + AMBAR : "color:#3C3C44"}">${icon(x[2], 13, "currentColor")}${x[1]}</span>`; }).join("")}</div>`;
     const corpo = tab === "pessoa" ? painelPessoa(ts, ini) : tab === "ciclos" ? painelCiclos(ts, ini) : tab === "carga" ? painelCarga(ts) : painelGeral(ts, ini, per);
     return tabs + corpo;
   }
@@ -386,8 +457,8 @@
 
   function cabecalho(){
     const [tit, sub] = tituloView();
-    return `<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:6px">
-        <div style="flex:1;min-width:0"><h1 style="${HEAD};font-size:23px;font-weight:600;margin:0 0 6px">${e(tit)}</h1>
+    return `<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;margin-bottom:6px">
+        <div style="flex:1 1 220px;min-width:0"><h1 style="${HEAD};font-size:23px;font-weight:600;margin:0 0 6px">${e(tit)}</h1>
         <p style="margin:0 0 18px;color:${CINZA};font-size:13.5px">${e(sub)}</p></div>
         ${ac().view.type === "painel" ? seletorPeriodo() : ""}
               </div>`;
@@ -711,7 +782,7 @@
       } catch(err){ btn.disabled = false; btn.textContent = "Salvar"; toast("Falhou: " + err.message, true); }
     });
     foot.querySelector("[data-ac-del]").addEventListener("click", async () => {
-      if(!confirm("Excluir \"" + t.name + "\"? Isso não tem volta.")) return;
+      if(!await zConfirm("Excluir \"" + t.name + "\"? Isso não tem volta.")) return;
       try {
         await apiJ("/tasks/" + encodeURIComponent(t.id), "DELETE");
         const d = ac().data; if(d) d.tasks = d.tasks.filter(x => x.id !== t.id);
@@ -740,6 +811,18 @@
   }
 
   // ─── plug na Central ────────────────────────────────────────────────────────
+  // Outras telas (ex.: "Seu dia" na home) abrem uma tarefa direto no detalhe daqui
+  window.acoesAbrirTarefa = function(id){
+    if(!id) return;
+    if(state.screen !== "acoes") setState({ screen: "acoes" });
+    setTimeout(() => abrirDetalhe(String(id)), 150);
+  };
+  document.addEventListener("click", ev => {
+    const el = ev.target.closest && ev.target.closest("[data-abrir-tarefa]");
+    if(!el) return;
+    ev.preventDefault(); ev.stopPropagation();
+    window.acoesAbrirTarefa(el.getAttribute("data-abrir-tarefa"));
+  }, true);
   RENDERERS.acoes = function(){
     setTimeout(() => {
       const root = document.getElementById("acoes-root");

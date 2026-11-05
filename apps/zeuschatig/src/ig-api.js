@@ -6,7 +6,7 @@ const { getConfig } = require('./db');
 
 const IG_GRAPH = 'https://graph.instagram.com/v21.0';
 const IG_OAUTH = 'https://www.instagram.com/oauth/authorize';
-const IG_TOKEN = 'https://api.instagram.com/oauth/access_token';
+const IG_TOKEN = '<REDACTED>';
 const IG_LONG = 'https://graph.instagram.com/access_token';
 
 function req(url, method = 'GET', body = null, headers = {}) {

@@ -6,6 +6,25 @@
   // ─── utilitários ───────────────────────────────────────────────────────────
   const e = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const safeUrl = (u) => { const s = String(u || ''); return /^(https?:\/\/|\/)/i.test(s) ? e(s) : ''; };
+  // Mídia de um post pode ser um caminho só ou um JSON com as lâminas do carrossel:
+  // ["/uploads/a.png","/uploads/b.png"]. Sempre devolve lista de URLs seguras.
+  const midias = (v) => {
+    const s = String(v == null ? '' : v).trim();
+    if (!s) return [];
+    let arr = [s];
+    if (s.charAt(0) === '[') { try { arr = JSON.parse(s) || []; } catch (_) { arr = []; } }
+    return arr.map(safeUrl).filter(Boolean);
+  };
+  // A agenda (/schedule) descarta o media_path de carrossel, então o painel guarda
+  // aqui o caminho cru vindo de /posts: post_id → media_path.
+  const mediaMap = {};
+  const midiasDe = (ev) => midias((ev && ev.post_id != null && mediaMap[ev.post_id]) || (ev && (ev.media_url || ev.media_path)) || '');
+  // Carrega o mapa de mídias de /posts (usado pela galeria e pelos carrosséis).
+  async function carregarMidias() {
+    try { (await api.get('/posts')).forEach((p) => { if (p && p.media_path) mediaMap[p.id] = p.media_path; }); }
+    catch (_) {}
+    return mediaMap;
+  }
   const pad = (n) => String(n).padStart(2, '0');
   const dObj = (ts) => new Date(ts * 1000);
   const fmt = {
@@ -74,7 +93,13 @@
       if (!r.ok) throw new Error('Erro ' + r.status);
     }
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || (j && j.error && !j.ok)) throw new Error((j && j.error) || 'Erro ' + r.status);
+    if (!r.ok || (j && j.error && !j.ok)) {
+      // o corpo da resposta segue acessível no erro (ex.: trava de sequência,
+      // que a tela usa pra oferecer "publicar fora de ordem")
+      const err = new Error((j && j.error) || 'Erro ' + r.status);
+      err.status = r.status; err.dados = j || {};
+      throw err;
+    }
     return j;
   }
   const api = {
@@ -99,6 +124,7 @@
   // ─── componentes ───────────────────────────────────────────────────────────
   const STATUS = {
     scheduled: ['Agendado', 'b-amber'], published: ['Publicado', 'b-green'], failed: ['Falhou', 'b-red'], publishing: ['Publicando', 'b-blue'],
+    blocked: ['Travado na sequência', 'b-red'], partial: ['Parcial', 'b-amber'],
     draft: ['Rascunho', ''], paused: ['Pausado', ''], active: ['Ativa', 'b-green'], completed: ['Concluída', 'b-blue'], pending: ['Pendente', 'b-amber'], processing: ['Processando', 'b-blue'],
   };
   const TIPO = { feed: ['Feed', 'image'], reel: ['Reels', 'video'], story: ['Story', 'story'], carousel: ['Carrossel', 'layers'] };
@@ -113,9 +139,10 @@
     note: (kind, html, ic) => `<div class="note ${kind}">${icon(ic || (kind === 'ok' ? 'check' : kind === 'info' ? 'info' : 'alert'), 17)}<div>${html}</div></div>`,
     kpi: (label, value, detail, color) => `<div class="kpi"><div class="l"><i style="background:${color || 'var(--mute)'}"></i>${e(label)}</div><div class="v num">${e(value)}</div>${detail ? `<div class="d">${e(detail)}</div>` : ''}</div>`,
     thumb: (ev) => {
-      const u = ev.media_url || ev.media_path;
-      const isVid = ev.tipo === 'reel' || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(u || '') || String(ev.media_type || '').startsWith('video');
-      if (u && !isVid && safeUrl(u)) return `<span class="thumb"><img src="${safeUrl(u)}" alt="" loading="lazy" onerror="this.remove()"></span>`;
+      const lista = midiasDe(ev), u = lista[0] || '';
+      const isVid = ev.tipo === 'reel' || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(u) || String(ev.media_type || '').startsWith('video');
+      const n = lista.length > 1 ? `<b class="qtd">${lista.length}</b>` : '';
+      if (u && !isVid) return `<span class="thumb"><img src="${u}" alt="" loading="lazy" onerror="this.remove()">${n}</span>`;
       return `<span class="thumb">${icon(isVid ? 'video' : ui.tipoIcon(ev.tipo), 18)}</span>`;
     },
     toast(msg, kind) {
@@ -204,7 +231,7 @@
   // recarrega dados a cada N segundos enquanto a aba está visível (as telas antigas faziam o mesmo)
   function every(seconds, fn) { if (_timer) clearInterval(_timer); _timer = setInterval(() => { if (!document.hidden && !document.querySelector('.ov')) fn(); }, seconds * 1000); }
 
-  window.ZP = { views: {}, api, accounts, accName, avatar, ui, charts, byDay, fmt, e, safeUrl, icon, go, every, route };
+  window.ZP = { views: {}, api, accounts, accName, avatar, ui, charts, byDay, fmt, e, safeUrl, midias, midiasDe, mediaMap, carregarMidias, icon, go, every, route };
   window.addEventListener('hashchange', route);
   window.addEventListener('DOMContentLoaded', route);
 })();

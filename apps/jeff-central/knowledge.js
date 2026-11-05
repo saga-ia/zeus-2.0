@@ -51,14 +51,27 @@ CREATE TABLE IF NOT EXISTS kb_chunks (
   text TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_doc ON kb_chunks(doc_id, seq);
-CREATE VIRTUAL TABLE IF NOT EXISTS kb_fts USING fts5(text, doc_id UNINDEXED, tokenize = 'unicode61 remove_diacritics 2');
+CREATE VIRTUAL TABLE IF NOT EXISTS kb_fts USING fts5(text, doc_id UNINDEXED, tokenize = '<REDACTED>');
+CREATE TABLE IF NOT EXISTS kb_folders (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id TEXT,
+  created_by TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_kb_folders_parent ON kb_folders(parent_id);
 `);
+// Pasta da Biblioteca a que o documento pertence (NULL = raiz)
+if (!db.prepare(`PRAGMA table_info(kb_docs)`).all().some(c => c.name === 'folder_id')) db.exec(`ALTER TABLE kb_docs ADD COLUMN folder_id TEXT`);
 
 const stmt = {
   list: db.prepare(`SELECT * FROM kb_docs ORDER BY updated_at DESC`),
   get: db.prepare(`SELECT * FROM kb_docs WHERE id = ?`),
-  ins: db.prepare(`INSERT INTO kb_docs (id, title, scope, source, tags, notes, content, url, filename, originalname, mime, size, chars, chunks, status, enabled, created_at, updated_at)
-    VALUES (@id, @title, @scope, @source, @tags, @notes, @content, @url, @filename, @originalname, @mime, @size, @chars, 0, @status, 1, @now, @now)`),
+  ins: db.prepare(`INSERT INTO kb_docs (id, title, scope, source, tags, notes, content, url, filename, originalname, mime, size, chars, chunks, status, enabled, folder_id, created_at, updated_at)
+    VALUES (@id, @title, @scope, @source, @tags, @notes, @content, @url, @filename, @originalname, @mime, @size, @chars, 0, @status, 1, @folder_id, @now, @now)`),
+  folders: db.prepare(`SELECT * FROM kb_folders ORDER BY name COLLATE NOCASE`),
+  folder: db.prepare(`SELECT * FROM kb_folders WHERE id = ?`),
   del: db.prepare(`DELETE FROM kb_docs WHERE id = ?`),
   chunksDel: db.prepare(`DELETE FROM kb_chunks WHERE doc_id = ?`),
   ftsDel: db.prepare(`DELETE FROM kb_fts WHERE doc_id = ?`),
@@ -86,8 +99,15 @@ function shape(d) {
     notes: d.notes || '', url: d.url || '', hasContent: !!(d.content && d.content.trim()),
     file: d.filename ? { name: d.originalname, mime: d.mime, size: d.size } : null,
     chars: d.chars || 0, chunks: d.chunks || 0, status: d.status, statusLabel: STATUS[d.status] || d.status, error: d.error || null,
-    enabled: !!d.enabled, indexedAt: d.indexed_at, createdAt: d.created_at, updatedAt: d.updated_at,
+    enabled: !!d.enabled, indexedAt: d.indexed_at, createdAt: d.created_at, updatedAt: d.updated_at, folderId: d.folder_id || null,
   };
+}
+const folderShape = f => ({ id: f.id, name: f.name, parentId: f.parent_id || null, createdBy: f.created_by || '', createdAt: f.created_at, updatedAt: f.updated_at });
+// Caminho da pasta ("Adm-Fin / Ferramentas"), usado no rótulo dos trechos que vão pro prompt
+function folderPath(id) {
+  const nomes = []; let f = id && stmt.folder.get(id), n = 0;
+  while (f && n++ < 20) { nomes.unshift(f.name); f = f.parent_id ? stmt.folder.get(f.parent_id) : null; }
+  return nomes.join(' / ');
 }
 
 // ─── Chunking ─────────────────────────────────────────────────────────────────
@@ -126,9 +146,56 @@ function chunkText(text) {
 
 // ─── Indexação ────────────────────────────────────────────────────────────────
 // Texto de um documento = conteúdo digitado + texto extraído do arquivo (quando houver).
+// ─── Links: baixa a página (ou PDF) e guarda o texto. Só http(s) público, até 3 redirecionamentos e 5 MB.
+const dns = require('dns').promises;
+const net = require('net');
+function ipPrivado(ip) {
+  if (net.isIPv6(ip)) { const v = ip.toLowerCase(); if (v.startsWith('::ffff:')) return ipPrivado(v.slice(7)); return v === '::1' || v === '::' || /^f[cd]/.test(v) || /^fe[89ab]/.test(v); }
+  const [a, b] = ip.split('.').map(Number);
+  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+}
+async function urlSegura(u) {
+  let url; try { url = new URL(u); } catch { throw new Error('link inválido'); }
+  if (!/^https?:$/.test(url.protocol)) throw new Error('só links http ou https');
+  const ips = await dns.lookup(url.hostname, { all: true }).catch(() => { throw new Error('não encontrei o endereço do link'); });
+  if (!ips.length || ips.some(x => ipPrivado(x.address))) throw new Error('link aponta para endereço interno');
+  return url;
+}
+function htmlParaTexto(h) {
+  const titulo = (h.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '';
+  const corpo = h.replace(/<(script|style|noscript|svg|head)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr)[^>]*>/gi, '\n').replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n');
+  return (titulo.trim() ? titulo.trim() + '\n\n' : '') + corpo.trim();
+}
+async function textoDoLink(d) {
+  let url = await urlSegura(d.url);
+  let r;
+  for (let i = 0; i < 4; i++) {
+    r = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(20000), headers: { 'User-Agent': 'Mozilla/5.0 (ZEUS Biblioteca)' } });
+    if (r.status >= 300 && r.status < 400 && r.headers.get('location')) { url = await urlSegura(new URL(r.headers.get('location'), url).href); continue; }
+    break;
+  }
+  if (!r.ok) throw new Error('o link respondeu ' + r.status);
+  const buf = Buffer.from(await r.arrayBuffer()).subarray(0, 5 * 1024 * 1024);
+  const tipo = r.headers.get('content-type') || '';
+  if (/pdf/i.test(tipo)) {
+    const tmp = path.join(docDir(d.id), 'link.pdf');
+    fs.mkdirSync(docDir(d.id), { recursive: true }); fs.writeFileSync(tmp, buf);
+    try { return (await extractText(tmp, 'link.pdf', 'application/pdf')) || ''; } finally { fs.rmSync(tmp, { force: true }); }
+  }
+  const txt = buf.toString('utf8');
+  return /html/i.test(tipo) || /<html/i.test(txt.slice(0, 2000)) ? htmlParaTexto(txt) : txt;
+}
+
 async function fullText(d) {
   const parts = [];
   if (d.content && d.content.trim()) parts.push(d.content.trim());
+  if (d.url && d.source === 'link') {
+    const t = await textoDoLink(d);
+    if (t && t.trim()) parts.push('Fonte: ' + d.url + '\n\n' + t.trim());
+  }
   if (d.filename) {
     const orig = path.join(docDir(d.id), d.filename);
     if (fs.existsSync(orig)) {
@@ -208,7 +275,7 @@ function search(q, limit) {
   const docs = {};
   return rows.map(r => {
     const d = docs[r.doc_id] || (docs[r.doc_id] = shape(stmt.get.get(r.doc_id)));
-    return { docId: r.doc_id, title: d ? d.title : r.doc_id, scope: d ? d.scope : '', seq: r.seq, score: r.score, snippet: r.snip, text: r.text };
+    return { docId: r.doc_id, title: d ? d.title : r.doc_id, scope: d ? (folderPath(d.folderId) || d.scope) : '', folderId: d ? d.folderId : null, seq: r.seq, score: r.score, snippet: r.snip, text: r.text };
   });
 }
 
@@ -275,6 +342,7 @@ function cleanInput(b) {
   if (b.notes !== undefined) o.notes = String(b.notes).slice(0, 2000);
   if (b.content !== undefined) o.content = String(b.content).slice(0, MAX_TEXT);
   if (b.url !== undefined) o.url = String(b.url).trim().slice(0, 1000);
+  if (b.folderId !== undefined) o.folder_id = b.folderId && stmt.folder.get(String(b.folderId)) ? String(b.folderId) : null;
   if (b.enabled !== undefined) o.enabled = (b.enabled === true || b.enabled === 'true' || b.enabled === 1 || b.enabled === '1') ? 1 : 0;
   Object.keys(o).forEach(k => { if (o[k] === undefined) delete o[k]; });
   return o;
@@ -284,7 +352,44 @@ function cleanInput(b) {
 const router = express.Router();
 
 router.get('/', (_req, res) => {
-  res.json({ docs: stmt.list.all().map(shape), stats: stats(), scopes: scopes(), sources: [['upload', 'Upload'], ['texto', 'Texto'], ['link', 'Link']] });
+  res.json({ docs: stmt.list.all().map(shape), folders: stmt.folders.all().map(folderShape), stats: stats(), scopes: scopes(), sources: [['upload', 'Upload'], ['texto', 'Texto'], ['link', 'Link']] });
+});
+
+// ─── Pastas da Biblioteca ─────────────────────────────────────────────────────
+// Vêm antes das rotas /:id. Excluir uma pasta sobe o conteúdo (subpastas e arquivos) para a pasta de cima.
+router.post('/folders', express.json(), (req, res) => {
+  const name = String((req.body || {}).name || '').trim().slice(0, 80);
+  if (!name) return res.status(400).json({ error: 'informe o nome da pasta' });
+  const pai = req.body.parentId && stmt.folder.get(String(req.body.parentId)) ? String(req.body.parentId) : null;
+  if (db.prepare(`SELECT id FROM kb_folders WHERE COALESCE(parent_id, '') = ? AND lower(name) = lower(?)`).get(pai || '', name)) return res.status(400).json({ error: 'já existe uma pasta com esse nome aqui' });
+  const id = newId(), now = Date.now();
+  db.prepare(`INSERT INTO kb_folders (id, name, parent_id, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`).run(id, name, pai, (req.user && (req.user.name || req.user.email)) || '', now, now);
+  res.json({ folder: folderShape(stmt.folder.get(id)) });
+});
+router.patch('/folders/:fid', express.json(), (req, res) => {
+  const f = stmt.folder.get(req.params.fid);
+  if (!f) return res.status(404).json({ error: 'pasta não encontrada' });
+  const b = req.body || {};
+  const name = b.name !== undefined ? String(b.name).trim().slice(0, 80) : f.name;
+  if (!name) return res.status(400).json({ error: 'informe o nome da pasta' });
+  let pai = f.parent_id;
+  if (b.parentId !== undefined) {
+    pai = b.parentId && stmt.folder.get(String(b.parentId)) ? String(b.parentId) : null;
+    // não pode ir para dentro de si mesma nem de uma subpasta sua
+    for (let x = pai, n = 0; x && n < 50; n++) { if (x === f.id) return res.status(400).json({ error: 'a pasta não pode ir para dentro dela mesma' }); x = (stmt.folder.get(x) || {}).parent_id; }
+  }
+  db.prepare(`UPDATE kb_folders SET name = ?, parent_id = ?, updated_at = ? WHERE id = ?`).run(name, pai, Date.now(), f.id);
+  res.json({ folder: folderShape(stmt.folder.get(f.id)) });
+});
+router.delete('/folders/:fid', (req, res) => {
+  const f = stmt.folder.get(req.params.fid);
+  if (!f) return res.status(404).json({ error: 'pasta não encontrada' });
+  db.transaction(() => {
+    db.prepare(`UPDATE kb_folders SET parent_id = ? WHERE parent_id = ?`).run(f.parent_id || null, f.id);
+    db.prepare(`UPDATE kb_docs SET folder_id = ? WHERE folder_id = ?`).run(f.parent_id || null, f.id);
+    db.prepare(`DELETE FROM kb_folders WHERE id = ?`).run(f.id);
+  })();
+  res.json({ ok: true });
 });
 
 router.get('/search', (req, res) => {
@@ -318,15 +423,16 @@ router.post('/', upload.array('files', 20), async (req, res) => {
         const title = files.length === 1 && o.title ? o.title : f.originalname.replace(/\.[^.]+$/, '');
         stmt.ins.run({ id, title, scope: o.scope || 'Geral', source: 'upload', tags: o.tags || '[]', notes: o.notes || '',
           content: files.length === 1 ? (o.content || '') : '', url: o.url || '', filename: f.filename, originalname: f.originalname,
-          mime: f.mimetype, size: f.size, chars: 0, status: 'queued', now });
+          mime: f.mimetype, size: f.size, chars: 0, status: 'queued', folder_id: o.folder_id || null, now });
         created.push(id);
       });
     } else {
       if (!o.title) return res.status(400).json({ error: 'título obrigatório' });
       if (!(o.content || '').trim() && !(o.url || '').trim()) return res.status(400).json({ error: 'escreva o conteúdo ou anexe um arquivo' });
+      if (o.url) { try { await urlSegura(o.url); } catch (e) { return res.status(400).json({ error: e.message }); } }
       const id = newId();
       stmt.ins.run({ id, title: o.title, scope: o.scope || 'Geral', source: o.source || (o.url && !o.content ? 'link' : 'texto'), tags: o.tags || '[]',
-        notes: o.notes || '', content: o.content || '', url: o.url || '', filename: null, originalname: null, mime: null, size: null, chars: 0, status: 'queued', now });
+        notes: o.notes || '', content: o.content || '', url: o.url || '', filename: null, originalname: null, mime: null, size: null, chars: 0, status: 'queued', folder_id: o.folder_id || null, now });
       created.push(id);
     }
     created.forEach(enqueue);
@@ -359,7 +465,7 @@ router.patch('/:id', async (req, res) => {
     db.prepare(`UPDATE kb_docs SET ${keys.map(k => k + ' = @' + k).join(', ')}, updated_at = @now WHERE id = @id`)
       .run(Object.assign({ id: cur.id, now: Date.now() }, o));
   }
-  const reindex = o.content !== undefined && o.content !== (cur.content || '');
+  const reindex = (o.content !== undefined && o.content !== (cur.content || '')) || (o.url !== undefined && o.url !== (cur.url || '') && cur.source === 'link');
   if (reindex) { enqueue(cur.id); await queue; }
   res.json({ doc: shape(stmt.get.get(cur.id)) });
 });
@@ -410,7 +516,40 @@ router.delete('/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// Retoma o que ficou na fila/indexando de uma queda do processo
-stmt.list.all().filter(d => d.status === 'queued' || d.status === 'indexing').forEach(d => enqueue(d.id));
+// Retoma o que ficou na fila/indexando de uma queda do processo (não no CLI do Agente de Design, que só registra arquivos)
+if (!process.env.DESIGN_CLI) stmt.list.all().filter(d => d.status === 'queued' || d.status === 'indexing').forEach(d => enqueue(d.id));
 
-module.exports = { router, search, retrieve, stats, chunkText };
+// ─── Uso por outros módulos (Agente de Design salva as artes na Biblioteca) ─────────────────────────────────────
+// Garante a pasta <nome> dentro de <parentId> (ou na raiz) e devolve o id
+function garantirPasta(nome, parentId, quem) {
+  nome = String(nome || '').trim().slice(0, 80) || 'Sem nome';
+  const pai = parentId && stmt.folder.get(String(parentId)) ? String(parentId) : null;
+  const ex = db.prepare(`SELECT id FROM kb_folders WHERE COALESCE(parent_id, '') = ? AND lower(name) = lower(?)`).get(pai || '', nome);
+  if (ex) return ex.id;
+  const id = newId(), now = Date.now();
+  db.prepare(`INSERT INTO kb_folders (id, name, parent_id, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`).run(id, nome, pai, quem || 'Agente de Design', now, now);
+  return id;
+}
+// Registra um arquivo que já existe no servidor (copia para a pasta do documento). Texto puro entra na busca; imagem fica só guardada.
+function registrarArquivo(o) {
+  const id = newId(), now = Date.now();
+  const dir = docDir(id); fs.mkdirSync(dir, { recursive: true });
+  let filename = null, size = 0, mime = o.mime || 'application/octet-stream', content = null, status = 'notext';
+  if (o.caminho) {
+    const ext = path.extname(o.caminho).toLowerCase() || '';
+    filename = `${now}_${crypto.randomBytes(3).toString('hex')}${ext}`;
+    fs.copyFileSync(o.caminho, path.join(dir, filename));
+    size = fs.statSync(path.join(dir, filename)).size;
+  } else if (o.texto) { content = String(o.texto); size = Buffer.byteLength(content); mime = 'text/plain'; status = 'queued'; }
+  stmt.ins.run({ id, title: String(o.titulo || o.nome || 'Arquivo').slice(0, 160), scope: o.scope || 'empresa', source: o.caminho ? 'upload' : 'texto', tags: JSON.stringify(o.tags || []), notes: o.notas || null,
+    content, url: null, filename, originalname: o.nome || (o.caminho ? path.basename(o.caminho) : null), mime, size, chars: content ? content.length : 0, status, folder_id: o.folderId || null, now });
+  if (content) enqueue(id);
+  return id;
+}
+
+// Renomeia uma pasta criada por outro módulo (ex: estilo renomeado ou excluído no Agente de Design)
+function renomearPasta(id, nome) {
+  db.prepare(`UPDATE kb_folders SET name = ?, updated_at = ? WHERE id = ?`).run(String(nome || '').trim().slice(0, 80) || 'Sem nome', Date.now(), String(id));
+}
+
+module.exports = { router, search, retrieve, stats, chunkText, garantirPasta, registrarArquivo, renomearPasta };

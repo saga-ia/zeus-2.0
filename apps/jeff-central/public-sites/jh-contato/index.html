@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jefferson Henrike · Fale com a equipe</title>
+<meta name="description" content="Deixe nome e WhatsApp e a equipe do Jefferson Henrike entra em contato. Negócio que cresce com marketing, vendas e gestão de verdade.">
+<meta property="og:title" content="Jefferson Henrike · Fale com a equipe">
+<meta property="og:description" content="Deixe nome e WhatsApp e a equipe entra em contato.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tinta:#141414;
+    --tinta-2:#1d1d1d;
+    --neve:#FFFAFA;
+    --vermelho:#FF0000;
+    --linha:rgba(255,250,250,.14);
+    --suave:rgba(255,250,250,.62);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--tinta);
+    color:var(--neve);
+    font-family:"DM Sans",system-ui,sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+  }
+  .brilho{
+    position:fixed;
+    inset:auto -40% 45% -40%;
+    height:70vh;
+    background:radial-gradient(60% 55% at 50% 100%, rgba(255,0,0,.22), transparent 70%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .grade{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--linha) 1px, transparent 1px),linear-gradient(90deg,var(--linha) 1px,transparent 1px);
+    background-size:72px 72px;
+    opacity:.35;
+    mask-image:radial-gradient(70% 60% at 50% 20%, #000 20%, transparent 85%);
+    -webkit-mask-image:radial-gradient(70% 60% at 50% 20%, #000 20%, transparent 85%);
+  }
+  .capa{position:relative;z-index:1;width:100%;max-width:520px;margin:0 auto;padding:40px 22px 56px;flex:1}
+  .selo{
+    display:inline-flex;align-items:center;gap:10px;
+    border:1px solid var(--linha);border-radius:999px;
+    padding:7px 14px 7px 8px;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--suave);
+  }
+  .selo b{
+    display:grid;place-items:center;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--vermelho);color:#fff;
+    font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:0;
+  }
+  h1{
+    font-family:"Oswald",sans-serif;
+    font-weight:700;
+    font-size:clamp(34px,10.5vw,52px);
+    line-height:1.12;
+    letter-spacing:.045em;
+    text-transform:uppercase;
+    margin:26px 0 0;
+  }
+  h1 i{font-style:normal;color:var(--vermelho)}
+  .sub{margin-top:16px;color:var(--suave);font-size:16px;max-width:30ch}
+  .cartao{
+    margin-top:30px;
+    background:linear-gradient(180deg, rgba(255,250,250,.055), rgba(255,250,250,.02));
+    border:1px solid var(--linha);
+    border-radius:20px;
+    padding:26px 20px 22px;
+    backdrop-filter:blur(6px);
+  }
+  .cartao h2{
+    font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:15px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--neve);
+  }
+  .cartao h2::after{content:"";display:block;width:34px;height:3px;background:var(--vermelho);margin-top:12px;border-radius:2px}
+  .campo{position:relative;margin-top:22px}
+  .campo input{
+    width:100%;
+    background:var(--tinta-2);
+    border:1px solid var(--linha);
+    border-radius:13px;
+    color:var(--neve);
+    font-family:"DM Sans",sans-serif;font-size:16px;
+    padding:25px 16px 11px;
+    outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+  .campo input:focus{border-color:var(--vermelho);box-shadow:0 0 0 3px rgba(255,0,0,.16)}
+  .campo label{
+    position:absolute;left:17px;top:17px;
+    color:var(--suave);font-size:15px;
+    pointer-events:none;
+    transition:all .16s ease;
+  }
+  .campo input:focus + label,
+  .campo input:not(:placeholder-shown) + label{
+    top:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,250,.5)
+  }
+  .erro{display:none;color:#ff6a6a;font-size:13px;margin-top:7px}
+  .campo.ruim input{border-color:#ff6a6a}
+  .campo.ruim .erro{display:block}
+  button{
+    width:100%;margin-top:24px;
+    background:var(--vermelho);color:#fff;
+    border:0;border-radius:13px;
+    font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:17px;letter-spacing:.09em;text-transform:uppercase;
+    padding:17px 16px;
+    cursor:pointer;
+    transition:transform .12s ease, filter .18s ease;
+  }
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:translateY(1px)}
+  button[disabled]{opacity:.65;cursor:progress}
+  .aviso{margin-top:14px;font-size:12.5px;color:rgba(255,250,250,.45);text-align:center}
+  .ou{display:flex;align-items:center;gap:12px;margin:30px 0 0;color:rgba(255,250,250,.4);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  .ou::before,.ou::after{content:"";height:1px;flex:1;background:var(--linha)}
+  .site{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-top:18px;
+    border:1px solid var(--linha);border-radius:16px;
+    padding:18px 20px;
+    color:var(--neve);text-decoration:none;
+    background:rgba(255,250,250,.03);
+    transition:border-color .18s ease, background .18s ease, transform .12s ease;
+  }
+  .site:hover{border-color:rgba(255,0,0,.55);background:rgba(255,0,0,.07)}
+  .site:active{transform:translateY(1px)}
+  .site span{font-family:"Oswald",sans-serif;font-size:15px;letter-spacing:.12em;text-transform:uppercase}
+  .site small{display:block;font-family:"DM Sans",sans-serif;letter-spacing:0;text-transform:none;color:var(--suave);font-size:13px;margin-top:4px}
+  .site em{font-style:normal;color:var(--vermelho);font-size:22px;line-height:1}
+  footer{position:relative;z-index:1;text-align:center;padding:0 22px 34px;color:rgba(255,250,250,.35);font-size:12px;letter-spacing:.08em}
+  .pronto{display:none;text-align:center;padding:10px 4px 4px}
+  .pronto b{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 18px;border-radius:50%;background:rgba(255,0,0,.14);border:1px solid rgba(255,0,0,.5);color:var(--vermelho);font-size:26px}
+  .pronto h3{font-family:"Oswald",sans-serif;font-size:24px;letter-spacing:.05em;text-transform:uppercase}
+  .pronto p{color:var(--suave);margin-top:10px;font-size:15px}
+  .mostrar{display:block}
+  .esconder{display:none}
+</style>
+</head>
+<body>
+<div class="brilho"></div>
+<div class="grade"></div>
+
+<main class="capa">
+  <div class="selo"><b>JH</b> Jefferson Henrike</div>
+
+  <h1>Seu negócio<br>cresce com<br><i>decisão</i>, não<br>com sorte</h1>
+  <p class="sub">Deixe nome e WhatsApp. A equipe entra em contato e te mostra o próximo passo.</p>
+
+  <section class="cartao">
+    <div id="bloco-form">
+      <h2>Quero ser chamado</h2>
+      <form id="form" novalidate>
+        <div class="campo" id="c-nome">
+          <input id="nome" name="nome" type="text" placeholder=" " autocomplete="name" required>
+          <label for="nome">Seu nome</label>
+          <div class="erro">Escreva seu nome completo.</div>
+        </div>
+        <div class="campo" id="c-tel">
+          <input id="telefone" name="telefone" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" required>
+          <label for="telefone">WhatsApp com DDD</label>
+          <div class="erro">Informe um WhatsApp válido com DDD.</div>
+        </div>
+        <button type="submit" id="enviar">Falar com a equipe</button>
+        <p class="aviso">Seus dados ficam só com a equipe. Sem spam.</p>
+      </form>
+    </div>
+
+    <div class="pronto" id="bloco-pronto">
+      <b>&check;</b>
+      <h3>Recebido</h3>
+      <p>Obrigado! A equipe vai te chamar no WhatsApp. Enquanto isso, conheça o trabalho por dentro.</p>
+      <a class="site" href="https://jefersonhenrike.com" target="_blank" rel="noopener" data-link="site-pos-form">
+        <span>Ir para o site<small>jefersonhenrike.com</small></span>
+        <em>&rarr;</em>
+      </a>
+    </div>
+  </section>
+
+  <div class="ou">ou</div>
+  <a class="site" href="https://jefersonhenrike.com" target="_blank" rel="noopener" data-link="site-principal">
+    <span>Conhecer o site<small>Conteúdo, método e eventos</small></span>
+    <em>&rarr;</em>
+  </a>
+</main>
+
+<footer>JEFFERSON HENRIKE &middot; GESTÃO, MARKETING E VENDAS</footer>
+
+<script>
+(function(){
+  var qs = new URLSearchParams(location.search);
+  document.querySelectorAll('a[data-link]').forEach(function(a){
+    var u = new URL(a.href);
+    u.searchParams.set('utm_source','minisite');
+    u.searchParams.set('utm_medium','link-bio');
+    u.searchParams.set('utm_content', a.dataset.link);
+    if (qs.get('utm_campaign')) u.searchParams.set('utm_campaign', qs.get('utm_campaign'));
+    a.href = u.toString();
+  });
+
+  var tel = document.getElementById('telefone');
+  tel.addEventListener('input', function(){
+    var d = tel.value.replace(/\D/g,'').slice(0,11);
+    if (d.length > 10) tel.value = d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/,'');
+    else if (d.length > 6) tel.value = d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/,'');
+    else if (d.length > 2) tel.value = d.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    else tel.value = d;
+  });
+
+  var form = document.getElementById('form');
+  var btn = document.getElementById('enviar');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var nome = document.getElementById('nome');
+    var okNome = nome.value.trim().length >= 3 && nome.value.trim().indexOf(' ') > 0;
+    var digitos = tel.value.replace(/\D/g,'');
+    var okTel = digitos.length >= 10;
+    document.getElementById('c-nome').classList.toggle('ruim', !okNome);
+    document.getElementById('c-tel').classList.toggle('ruim', !okTel);
+    if (!okNome) { nome.focus(); return; }
+    if (!okTel) { tel.focus(); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch('https://leads.jefersonhenrike.com/api/lead/jh-contato', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nome: nome.value.trim(),
+        telefone: digitos,
+        pagina: location.href,
+        utm_source: qs.get('utm_source') || '',
+        utm_medium: qs.get('utm_medium') || '',
+        utm_campaign: qs.get('utm_campaign') || '',
+        utm_content: qs.get('utm_content') || '',
+        utm_term: qs.get('utm_term') || ''
+      })
+    }).then(function(r){
+      if (!r.ok) throw new Error('falhou');
+      document.getElementById('bloco-form').classList.add('esconder');
+      document.getElementById('bloco-pronto').classList.add('mostrar');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }).catch(function(){
+      btn.disabled = false;
+      btn.textContent = 'Tentar de novo';
+      var c = document.getElementById('c-tel');
+      c.classList.add('ruim');
+      c.querySelector('.erro').textContent = 'Não consegui enviar agora. Tente de novo em instantes.';
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,40 @@ const HOME = process.env.CLAUDE_HOME || '/root/.claude';
 
 // ─── Nomes e descrições curtas por slug ───────────────────────────────────────
 const CURADO = {
+  'time-nina': ['Time Alpha (Zeus)', 'Nina · Social media', 'Instagram com dado real: pauta, ganchos, carrossel e Reels, pacote pra postar, revisão semanal e análise de perfil.'],
+  'time-otavio': ['Time Alpha (Zeus)', 'Otávio · Comercial', 'Call de diagnóstico, proposta, oferta, funil real e follow-ups pra aprovar.'],
+  'time-tome': ['Time Alpha (Zeus)', 'Tomé · Revisor (QA)', 'Só aprova site, app ou entrega com evidência: prints, fluxo testado, rotas e logs.'],
+  'time-maicom': ['Time Alpha (Zeus)', 'Maicom · Estratégia', 'Diagnóstico, personas, posicionamento, tom de voz, esteira e identidade visual.'],
+  'time-icaro': ['Time Alpha (Zeus)', 'Ícaro · Copy', 'Copy de venda, página, anúncio, e-mail e história de origem.'],
+  'time-sobral': ['Time Alpha (Zeus)', 'Sobral · Tráfego', 'Meta e Google Ads: estratégia, auditoria, BM, tracking, públicos e lançamento.'],
+  'time-gustavo': ['Time Alpha (Zeus)', 'Gustavo · Design', 'Posts premium, carrosséis, capas e infográficos prontos pra print.'],
+  'time-eduardo': ['Time Alpha (Zeus)', 'Eduardo · Minisites', 'Página de links estilo Linktree e minisite de diagnóstico pra call, testados tela a tela e publicados no subdomínio.'],
+  'time-talles': ['Time Alpha (Zeus)', 'Talles · Vídeo', 'Vídeos curtos verticais em lote com gancho, legenda e CTA.'],
+  'time-smith': ['Time Alpha (Zeus)', 'Smith · Engenharia e segurança', 'Revisão de código, bugs e auditoria de segurança de código feito por IA.'],
+  'social-diagnostico': ['Social media (Nina)', 'Diagnóstico do perfil', 'Gargalo, o que parar de postar, padrão vencedor, objetivo de 30 dias, avatar e voz a partir de legendas reais.'],
+  'social-pesquisa': ['Social media (Nina)', 'Pesquisa de pauta', 'Pauta com fonte verificável e swipe file de estruturas que funcionam.'],
+  'social-ideias-gancho': ['Social media (Nina)', 'Ideias e ganchos', '30 ideias em ângulos diferentes e 10 ganchos em 6 famílias.'],
+  'social-peca': ['Social media (Nina)', 'Carrossel e Reels', 'Carrossel de 10 cards ou roteiro de Reels, com legenda e briefing visual.'],
+  'social-pacote': ['Social media (Nina)', 'Pacote pra postar', 'Legenda final, arte, horário, comentário fixado e checklist; publica só com o "vai".'],
+  'social-funil': ['Social media (Nina)', 'Funil de conteúdo', 'Últimos posts por função (atração, preparação, conversão) e plano de 30 dias.'],
+  'social-revisao-semanal': ['Social media (Nina)', 'Revisão semanal', 'PARAR, MANTER, DOBRAR, TESTAR por mediana por mil alcançados.'],
+  'social-perfil-pesquisa': ['Social media (Nina)', 'Análise de perfil', 'Reels transcritos e classificados e carrosséis lidos lâmina a lâmina, cruzados com o desempenho.'],
+  'otavio-call': ['Comercial (Otávio)', 'Call de diagnóstico', 'Roteiro de 30 min com SPIN, Gap e Sandler, objeções e análise de call gravada.'],
+  'otavio-proposta': ['Comercial (Otávio)', 'Proposta comercial', 'Resumo executivo, narrativa em 3 atos e investimento ancorado no custo do problema.'],
+  'otavio-pipeline': ['Comercial (Otávio)', 'Funil e follow-up', 'Lê o funil real, qualifica (MEDDPICC) e escreve follow-ups pra aprovar.'],
+  'otavio-oferta': ['Comercial (Otávio)', 'Oferta e isca', 'Equação de valor, garantia, bônus reais e isca de captação.'],
+  'criativo-anuncio': ['Tráfego pago (Sobral)', 'Criativo de anúncio', 'Criativo pra Meta Ads no padrão PRO: prova real, gancho de contraste, preço antes do clique, 3 variações A/B.'],
+  'arte-por-referencia': ['Sites e páginas', 'Arte a partir de referência', 'Post e carrossel parecidos com o print enviado: IA Google, IA OpenAI, híbrido (IA + HTML) ou HTML, à escolha.'],
+  'minisite': ['Sites e páginas', 'Minisite (links ou diagnóstico)', 'Link da bio da própria marca ou quiz curto que qualifica o lead e leva pro WhatsApp com as respostas.'],
+  'analise-design-post': ['Sites e páginas', 'Análise de design de post', 'Estuda o design de um post (link ou print), salva como modelo e mostra modelos alternativos da biblioteca pra escolher.'],
+  'site-premium': ['Sites e páginas', 'Site sem cara de IA', 'Briefing, direção de arte aprovada, build, print desktop e celular, CRO e deploy.'],
+  'icaro-email': ['Copy (Ícaro)', 'Sequência de e-mail', 'Boas-vindas, nutrição, lançamento, carrinho, pós-compra e reativação, com versão WhatsApp.'],
+  'epiphany-bridge': ['Copy (Ícaro)', 'História de origem', 'Entrevista em 8 perguntas e escreve o "Pra você que não me conhece".'],
+  'smith-auditoria-ia': ['Código e segurança (Smith)', 'Auditoria de código de IA', 'Segredos, rotas sem login, SQL, webhooks e prompt injection, com correção.'],
+  'cro': ['Sites e páginas', 'Conversão de página (CRO)', 'O que mudar primeiro pra uma página converter mais.'],
+  'frontend-design': ['Sites e páginas', 'Direção visual (Anthropic)', 'Escolhas de tipografia, cor e layout sem cara de template.'],
+  'design-taste-frontend': ['Sites e páginas', 'Anti-template (Taste)', 'Leitura do briefing, ajuste de ousadia e lista do que denuncia página de IA.'],
+  'emil-design-eng': ['Sites e páginas', 'Animação e acabamento (Emil)', 'Quando e como animar, easing e detalhes invisíveis de interface.'],
   // Maicom (skills em ~/.claude/skills)
   'maicom-diagnostico': ['Estratégia de marca (Maicom)', 'Diagnóstico do cliente', 'Lê formulário, briefing e redes e entrega diagnóstico em 6 blocos: identidade, presença digital, produtos, público, concorrência e as 3 tensões, alavancas e bloqueios.'],
   'maicom-mercado': ['Estratégia de marca (Maicom)', 'Pesquisa de mercado e concorrência', 'Panorama do mercado, análise da concorrência digital, benchmarking de referências, conteúdo do nicho e mapa de oportunidades.'],
@@ -70,7 +104,7 @@ const CURADO = {
 };
 
 // Ordem dos grupos na tela e no seletor do agente (grupos não listados vão pro fim)
-const GROUP_ORDER = ['Estratégia de marca (Maicom)', 'Posicionamento de marca (Maestro)', 'Tráfego pago (Sobral)', 'Tráfego pago (plugin Sobral)', 'Documentos e arquivos', 'Sistema e produtividade'];
+const GROUP_ORDER = ['Time Alpha (Zeus)', 'Social media (Nina)', 'Comercial (Otávio)', 'Sites e páginas', 'Copy (Ícaro)', 'Código e segurança (Smith)', 'Estratégia de marca (Maicom)', 'Posicionamento de marca (Maestro)', 'Tráfego pago (Sobral)', 'Tráfego pago (plugin Sobral)', 'Documentos e arquivos', 'Sistema e produtividade'];
 
 // ─── Leitura do SKILL.md ──────────────────────────────────────────────────────
 function frontmatter(file) {

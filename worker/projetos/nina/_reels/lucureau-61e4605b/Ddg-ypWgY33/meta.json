@@ -1,0 +1,27 @@
+{
+ "id": "Ddg-ypWgY33",
+ "url": "https://www.instagram.com/p/Ddg-ypWgY33/",
+ "plays": 178997,
+ "curtidas": 5895,
+ "comentarios": 195,
+ "data": "2026-09-20",
+ "duracao_s": 57.1,
+ "cortes": 20,
+ "cortes_por_min": 21.0,
+ "primeiro_corte_s": 2.5,
+ "palavras_por_min": 172,
+ "fala": true,
+ "abertura_falada": "Você sabia que essa cor é proibida de ser usada por qualquer outra marca?",
+ "jev": {
+  "topic": "marketing",
+  "opening": "question",
+  "mechanism": "curiosity",
+  "structure": "explanation",
+  "evidence": "example",
+  "emotion": "surprise",
+  "specificity": "action",
+  "cta": "multiple"
+ },
+ "legenda": "Você sabia que uma empresa pode ser dona de uma COR?\n\nO famoso Azul Tiffany começou a ser usado pela Tiffany & Co. em 1845, na capa do seu catálogo de joias, o Blue Book. \n\nCom o tempo, aquele tom de azul ficou tão associado à marca que passou a funcionar quase como um logotipo: você vê a caixa azul",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/lucureau-61e4605b/Ddg-ypWgY33/folha.jpg"
+}

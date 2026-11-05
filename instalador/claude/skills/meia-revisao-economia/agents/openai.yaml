@@ -1,0 +1,4 @@
+interface:
+  display_name: "Revisão com economia de retrabalho"
+  short_description: "Corrige o trecho certo e reduz retrabalho"
+  default_prompt: "Use $meia-revisao-economia para orientar a edição de [VÍDEO OU PROJETO] conforme o resultado e os arquivos que forneci."

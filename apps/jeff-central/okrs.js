@@ -64,10 +64,25 @@ CREATE TABLE IF NOT EXISTS okr_checkins (
 CREATE INDEX IF NOT EXISTS idx_okr_checkins ON okr_checkins(kr_id, date);
 `);
 
-const ME = process.env.PDI_ME || 'Vinícius Nunes';
+const ME = process.env.PDI_ME || 'Vinícius Nunes'; // dono dos objetivos de demonstração (seed)
+// "Eu" = quem está logado (antes era fixo em PDI_ME)
+const { AsyncLocalStorage } = require('async_hooks');
+const als = new AsyncLocalStorage();
+const eu = () => ((als.getStore() || {}).eu) || ME;
+const acesso = require('./acesso');
+const normNome = s => String(s || '').trim().toLowerCase();
 const PERIODS = ['mensal', 'trimestral', 'semestral', 'anual'];
 const UNITS = ['%', 'R$', 'número', 'pp', 'dias', 'pontos', 'un'];
+// "Sem atualização" segue a cadência de check-in de Configurações > OKRs (semanal 7, quinzenal 14, mensal 30); reserva 10
 const STALE_DAYS = 10;
+function staleDias() {
+  try { const c = require('./config').secao('okrs'); const n = parseInt(c.alertaDias, 10); if (n > 0) return n; return { semanal: 7, quinzenal: 14, mensal: 30 }[c.cadencia] || STALE_DAYS; } catch (_) { return STALE_DAYS; }
+}
+// KRs parados do ciclo ativo, para o sino (notificacoes.js)
+function krsParados() {
+  const p = payload(null);
+  return p.objectives.flatMap(o => o.krs.filter(k => k.stale && k.owner).map(k => ({ id: k.id, title: k.title, owner: k.owner, dias: k.daysSinceUpdate, objetivo: o.title })));
+}
 const newId = () => crypto.randomBytes(8).toString('base64url');
 const parseJSON = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
 const hoje = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10); // BRT
@@ -119,7 +134,7 @@ function krOut(k, d, ciclo) {
   else if (exp !== null && exp - progress > 10) status = 'em_risco';
   else if (progress === 0 && !last) status = 'nao_iniciado';
   return { id: k.id, objectiveId: k.objective_id, title: k.title, from: k.from_value, to: k.to_value, current: k.current_value, unit: k.unit,
-    dueDate: k.due_date, owner: k.owner || '', progress, expected: exp, status, lastUpdate: lastDate, daysSinceUpdate: diasSem, stale: diasSem > STALE_DAYS && progress < 100,
+    dueDate: k.due_date, owner: k.owner || '', progress, expected: exp, status, lastUpdate: lastDate, daysSinceUpdate: diasSem, stale: diasSem > staleDias() && progress < 100,
     updatedAt: k.updated_at };
 }
 // Monta a lista de objetivos do ciclo com progresso, status e árvore (filhos)
@@ -265,7 +280,7 @@ function claudeTexto(prompt, model) {
     const t = setTimeout(() => { try { p.kill('SIGTERM'); } catch (_) {} }, 150000);
     p.stdout.on('data', x => { out += x; });
     p.stderr.on('data', x => { err += x; });
-    p.on('close', code => { clearTimeout(t); if (!out.trim()) return reject(new Error(err.slice(-300) || 'claude saiu com código ' + code)); resolve(out); });
+    p.on('close', code => { clearTimeout(t); const ruim = claudeSpawn.checaSaida(out, err, code); if (ruim) return reject(new Error(ruim)); resolve(out); });
     p.on('error', e => { clearTimeout(t); reject(e); });
     p.stdin.on('error', () => {});
     p.stdin.end(prompt);
@@ -287,6 +302,39 @@ function empresaCtx() {
 // ─── Router ──────────────────────────────────────────────────────────────────
 const router = express.Router();
 const erro = (res, code, msg) => res.status(code).json({ error: msg });
+router.use((req, res, next) => als.run({ eu: (req.user && req.user.name) || ME }, next));
+
+// "Editar OKRs": Total edita tudo; Restrito à equipe edita objetivos cujo responsável está no alcance
+// da pessoa (ela, liderados e mesma equipe) ou que são da equipe dela. Check-in no próprio KR vale para todos.
+function podeObjetivo(user, o) {
+  const v = acesso.nivel(user, 'editar-okrs');
+  if (v === 'total') return true;
+  if (v !== 'equipe' || !o) return false;
+  return (!!o.owner && acesso.alcanca(user, 'editar-okrs', o.owner)) || (!!o.team_id && o.team_id === user.teamId);
+}
+const objDoKr = id => { const k = stmt.kr.get(String(id || '')); return k ? stmt.obj.get(k.objective_id) : null; };
+router.use((req, res, next) => {
+  const u = req.user;
+  if (req.method === 'GET' || !u || u.admin) return next();
+  const p = req.path, b = req.body || {};
+  const nega = () => acesso.negar(res, u, 'editar-okrs');
+  if (req.method === 'POST' && p === '/checkins') {
+    const itens = Array.isArray(b.items) ? b.items : [];
+    return itens.every(it => { const k = stmt.kr.get(String(it.krId || '')); return !k || normNome(k.owner) === normNome(eu()) || podeObjetivo(u, stmt.obj.get(k.objective_id)); }) ? next() : nega();
+  }
+  const v = acesso.nivel(u, 'editar-okrs');
+  if (v === 'total') return next();
+  if (v !== 'equipe') return nega();
+  let alvos = [], m;
+  if (p === '/objectives' && req.method === 'POST') alvos = [{ owner: b.owner, team_id: b.teamId }];
+  else if (p === '/objectives/bulk') alvos = (Array.isArray(b.objectives) ? b.objectives : []).map(o => ({ owner: o.owner || eu(), team_id: o.teamId }));
+  else if ((m = p.match(/^\/objectives\/([^/]+)/))) alvos = [stmt.obj.get(m[1])];
+  else if ((m = p.match(/^\/krs\/([^/]+)/))) alvos = [objDoKr(m[1])];
+  else if ((m = p.match(/^\/checkins\/([^/]+)/))) { const c = db.prepare(`SELECT kr_id FROM okr_checkins WHERE id = ?`).get(m[1]); alvos = [c && objDoKr(c.kr_id)]; }
+  else return next(); // ciclos e IA já passam pela regra do server.js
+  alvos = alvos.filter(Boolean);
+  return alvos.length && alvos.every(o => podeObjetivo(u, o)) ? next() : nega();
+});
 
 function payload(cycleId) {
   const d = hoje();
@@ -304,7 +352,7 @@ function payload(cycleId) {
   const members = stmt.members.all().filter(m => m.status !== 'inativo');
   const units = stmt.units.all();
   return {
-    today: d, me: ME, staleDays: STALE_DAYS, periods: PERIODS, units: UNITS,
+    today: d, me: eu(), staleDays: staleDias(), periods: PERIODS, units: UNITS,
     cycles: ciclos.map(c => cycleOut(c, d)), cycle: ciclo ? cycleOut(ciclo, d) : null,
     objectives: objetivos,
     summary: { ativos: ativos.length, total: objetivos.length, concluidos: objetivos.length - ativos.length, mediaReal, esperado: ciclo ? cycleOut(ciclo, d).expected : null,
@@ -312,7 +360,7 @@ function payload(cycleId) {
       krsTotal: krs.length, krsStale: pendentes.length,
       porStatus: ['nao_iniciado', 'em_andamento', 'em_risco', 'atrasado', 'concluido'].map(s => ({ status: s, n: objetivos.filter(o => o.status === s).length })) },
     attention: atencao, pendingCheckins: pendentes, timeline: timeline(ciclo, objetivos, d),
-    people: [...new Set(members.map(m => m.name).concat([ME]).concat(objetivos.map(o => o.owner).filter(Boolean)))].sort((a, b) => a.localeCompare(b)),
+    people: [...new Set(members.map(m => m.name).concat([eu()]).concat(objetivos.map(o => o.owner).filter(Boolean)))].sort((a, b) => a.localeCompare(b)),
     areas: units.filter(u => u.kind === 'area').map(u => ({ id: u.id, name: u.name })),
     teams: units.filter(u => u.kind === 'equipe').map(u => ({ id: u.id, name: u.name, areaId: u.area_id })),
   };
@@ -427,7 +475,7 @@ router.post('/objectives/bulk', (req, res) => {
     lista.forEach(o => {
       const title = txt(o.title, 200); if (!title) return;
       const id = newId(); ids.push(id);
-      const owner = txt(o.owner, 120) || ME;
+      const owner = txt(o.owner, 120) || eu();
       db.prepare(`INSERT INTO okr_objectives (id, cycle_id, parent_id, title, description, area_id, team_id, owner, period, start_date, end_date, sort, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(id, cycleId, o.parentId && stmt.obj.get(String(o.parentId)) ? String(o.parentId) : null, title, txt(o.description, 2000) || '', txt(o.areaId, 40) || null, txt(o.teamId, 40) || null, owner,
           PERIODS.includes(o.period) ? o.period : 'trimestral', ciclo ? ciclo.start_date : null, ciclo ? ciclo.end_date : null, n++, Date.now(), Date.now());
@@ -502,7 +550,7 @@ router.patch('/krs/:id', (req, res) => {
   const k = Object.keys(o);
   if (k.length) db.prepare(`UPDATE okr_krs SET ${k.map(x => x + ' = @' + x).join(', ')}, updated_at = @now WHERE id = @id`).run(Object.assign({ id: k0.id, now: Date.now() }, o));
   if (o.current_value !== undefined && o.current_value !== k0.current_value) {
-    db.prepare(`INSERT INTO okr_checkins (id, kr_id, date, value, note, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(newId(), k0.id, hoje(), o.current_value, txt(b.note, 1000) || '', txt(b.author, 120) || ME, Date.now());
+    db.prepare(`INSERT INTO okr_checkins (id, kr_id, date, value, note, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(newId(), k0.id, hoje(), o.current_value, txt(b.note, 1000) || '', txt(b.author, 120) || eu(), Date.now());
   }
   const obj = stmt.obj.get(k0.objective_id); touch(k0.objective_id);
   res.json(payload(obj ? obj.cycle_id : null));
@@ -531,9 +579,10 @@ router.post('/checkins', (req, res) => {
       const k = stmt.kr.get(String(it.krId || '')); if (!k) return;
       const v = num(it.value); if (v === undefined) return;
       db.prepare(`UPDATE okr_krs SET current_value = ?, updated_at = ? WHERE id = ?`).run(v, Date.now(), k.id);
-      db.prepare(`INSERT INTO okr_checkins (id, kr_id, date, value, note, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(newId(), k.id, dataOk(it.date) || hoje(), v, txt(it.note, 1000) || '', txt(b.author, 120) || ME, Date.now());
+      db.prepare(`INSERT INTO okr_checkins (id, kr_id, date, value, note, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(newId(), k.id, dataOk(it.date) || hoje(), v, txt(it.note, 1000) || '', txt(b.author, 120) || eu(), Date.now());
       touch(k.objective_id); n++;
       const o = stmt.obj.get(k.objective_id); if (o && !cycleId) cycleId = o.cycle_id;
+      if (o && o.owner && normNome(o.owner) !== normNome(eu())) require('./notificacoes').notificar({ para: o.owner, tipo: 'okr-checkin', titulo: `Check-in em "${k.title}"`, texto: `${eu()} registrou ${v}${k.unit || ''} no objetivo "${o.title}".`, link: '/okrs' });
     });
   })();
   res.json(Object.assign(payload(cycleId), { registered: n }));
@@ -551,6 +600,7 @@ router.delete('/checkins/:id', (req, res) => {
 
 // IA: sugere resultados-chave para um objetivo
 router.post('/generate-krs', async (req, res) => {
+  if (require('./config').secao('okrs').iaSugerir === false) return erro(res, 403, 'A sugestão de resultados-chave pela IA está desligada em Configurações > OKRs.');
   const b = req.body || {};
   const title = txt(b.title, 200);
   if (!title) return erro(res, 400, 'escreva o objetivo antes de gerar os resultados-chave');
@@ -607,4 +657,4 @@ router.post('/generate', async (req, res) => {
   } catch (e) { console.error('[okrs] generate', e.message); erro(res, 500, 'não consegui gerar agora: ' + e.message); }
 });
 
-module.exports = { router, payload };
+module.exports = { router, payload, krsParados };

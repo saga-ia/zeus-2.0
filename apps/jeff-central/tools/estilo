@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+// CLI dos estilos de design salvos por marca (Agente de Design e chat do Zeus). Lógica em ../estilos.js.
+// Até 7 estilos por marca; cada estilo junta várias referências (print ou link de post), a receita, as artes
+// aprovadas e as correções. Só salve estilo novo depois que a pessoa aprovar e disser que quer salvar.
+// Uso: estilo ajuda
+process.env.DESIGN_CLI = '1';
+const fs = require('fs');
+const path = require('path');
+const E = require('../estilos');
+
+const [cmd, ...rest] = process.argv.slice(2);
+const o = { _: [] };
+for (let i = 0; i < rest.length; i++) { const a = rest[i]; if (a.startsWith('--')) { o[a.slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true; } else o._.push(a); }
+
+const AJUDA = `Estilos de design salvos por marca (máximo ${E.MAX_ESTILOS} por marca, até ${E.MAX_REFS} referências por estilo).
+<marca> = nome, id ou @ da marca. <estilo> = nome ou slug do estilo.
+  listar <marca>                               estilos da marca, com a capa pra mostrar no chat
+  ver <marca> <estilo>                         referências (abra com Read), receita, artes aprovadas e correções
+  mostrar <marca> [estilo]                     linhas prontas pra colar na resposta (capa de cada estilo, ou as referências de um)
+  criar <marca> "<nome>" <prints e links...>   salva um estilo novo (só depois que a pessoa aprovar e mandar salvar)
+  add <marca> <estilo> <prints e links...>     junta mais referências a um estilo
+  remover-ref <marca> <estilo> <n>             tira a referência n (vai pra lixeira)
+  receita <marca> <estilo> --arquivo r.md      grava a receita (o que você entendeu do estilo e como montar)
+  exemplo <marca> <estilo> <url da arte>       guarda uma arte aprovada (👍 ou elogio) como exemplo do estilo
+  correcao <marca> <estilo> "<texto>"          guarda uma correção que a pessoa fez nesse estilo
+  usar <marca> <estilo>                        marca que o estilo foi usado agora (rode ao gerar com ele)
+  enviados [dias] [--busca texto]              prints que a pessoa já mandou no chat (caminho, conversa, data): use os caminhos no criar/add
+  renomear <marca> <estilo> "<novo nome>"
+  excluir <marca> <estilo>                     move pra lixeira (só com ok da pessoa)
+Prints: caminho da imagem anexada no chat. Links: post ou carrossel do Instagram (baixa todas as lâminas).`;
+
+const linha = (e, i) => `${i ? i + '. ' : ''}${e.nome} · ${e.referencias.length} referência(s) · ${e.exemplos.length} arte(s) aprovada(s) · usado ${e.usos || 0}x${e.ultimoUso ? ', último ' + e.ultimoUso : ''}${e.receita ? '' : ' · SEM RECEITA'}`;
+
+function ver(e) {
+  const d = E.dirEstilo(e.marcaId, e.slug);
+  console.log(`Estilo "${e.nome}" (${e.slug}) · criado ${e.criado}\n`);
+  console.log('REFERÊNCIAS (abra com Read antes de criar):');
+  e.referencias.forEach((r, i) => console.log(`${i + 1}. ${r.tipo === 'link' ? r.origem + (r.perfil ? ' · @' + r.perfil : '') : 'print ' + r.origem} · ${r.imagens.length} imagem(ns)\n   ${r.imagens.map(x => path.join(d, x)).join('\n   ')}`));
+  console.log(`\nRECEITA:\n${e.receita.trim() || '(vazia: escreva com "estilo receita" depois de abrir as referências)'}`);
+  console.log(`\nARTES APROVADAS NESSE ESTILO (repita a receita delas):${e.exemplos.length ? '' : ' nenhuma ainda'}`);
+  e.exemplos.slice(0, 6).forEach(x => console.log(`- ${x.arquivo}${x.criacao ? ' (criação ' + x.criacao + ')' : ''} · ${x.em}`));
+  console.log(`\nCORREÇÕES (regra, não repetir o erro):${e.correcoes.length ? '' : ' nenhuma'}`);
+  e.correcoes.forEach(c => console.log(`- ${c.em}: ${c.texto}`));
+}
+
+try {
+  const [m, est, ...itens] = o._;
+  if (cmd === 'listar') {
+    const marca = E.exigirMarca(m), l = E.listar(marca.id);
+    if (!l.length) { console.log(`${marca.nome}: nenhum estilo salvo ainda (máximo ${E.MAX_ESTILOS}).`); }
+    else { console.log(`${marca.nome}: ${l.length} de ${E.MAX_ESTILOS} estilos`); l.forEach((e, i) => console.log(linha(e, i + 1) + `\n   chat: ![${e.nome}](${e.capa})`)); }
+  } else if (cmd === 'ver') { const marca = E.exigirMarca(m); ver(E.acharEstilo(marca.id, est)); }
+  else if (cmd === 'mostrar') {
+    const marca = E.exigirMarca(m);
+    if (est) { const e = E.acharEstilo(marca.id, est); console.log(`**${e.nome}**`); e.refsUrl.forEach((u, i) => console.log(`![referência ${i + 1}](${u})`)); }
+    else E.listar(marca.id).forEach(e => console.log(`**${e.nome}** · ${e.referencias.length} ref.\n![${e.nome}](${e.capa})`));
+  } else if (cmd === 'criar') {
+    const e = E.criar(m, est, itens);
+    console.log(`Estilo salvo: "${e.nome}" com ${e.referencias.length} referência(s). Agora escreva a receita: estilo receita ${m} ${e.slug} --arquivo receita.md`);
+    console.log(`chat: ![${e.nome}](${e.capa})`);
+  } else if (cmd === 'add') { const e = E.adicionar(m, est, itens); console.log(`"${e.nome}" agora tem ${e.referencias.length} referência(s). Atualize a receita se mudou algo.\nchat: ![${e.nome}](${e.capa})`); }
+  else if (cmd === 'remover-ref') { const e = E.removerRef(m, est, itens[0]); console.log(`"${e.nome}" ficou com ${e.referencias.length} referência(s).`); }
+  else if (cmd === 'receita') {
+    const txt = typeof o.arquivo === 'string' ? fs.readFileSync(path.resolve(o.arquivo), 'utf8') : itens.join(' ');
+    if (!txt.trim()) throw new Error('informe --arquivo receita.md');
+    const e = E.receita(m, est, txt); console.log(`Receita de "${e.nome}" gravada (${txt.trim().length} caracteres).`);
+  } else if (cmd === 'exemplo') { const e = E.exemplo(m, est, itens[0]); console.log(`Guardado como exemplo de "${e.nome}" (${e.exemplos.length} arte(s) aprovada(s)).`); }
+  else if (cmd === 'correcao') { const e = E.correcao(m, est, itens.join(' ')); console.log(`Correção guardada em "${e.nome}".`); }
+  else if (cmd === 'enviados') {
+    const dias = parseInt(m || '120', 10) || 120, busca = String(o.busca || '').toLowerCase();
+    const l = E.enviados(null, true, dias).filter(x => !busca || (x.conversa + ' ' + x.nome).toLowerCase().includes(busca));
+    if (!l.length) console.log('Nenhum print enviado no chat nesse período.');
+    let atual = '';
+    l.forEach(x => { if (x.conversa !== atual) { atual = x.conversa; console.log(`\n${x.conversa} (${new Date(x.em - 3 * 3600e3).toISOString().slice(0, 16).replace('T', ' ')})`); } console.log(`  ${E.caminhoDaChave(x.chave, null, true)}  (${x.nome})`); });
+  }
+  else if (cmd === 'usar') { const e = E.usar(m, est); console.log(`"${e.nome}" usado ${e.usos}x.`); }
+  else if (cmd === 'renomear') { const e = E.renomear(m, est, itens.join(' ')); console.log(`"${e.antigo}" agora se chama "${e.nome}".`); }
+  else if (cmd === 'excluir') { const r = E.excluir(m, est); console.log(`Estilo "${r.nome}" excluído (guardado na lixeira: ${r.lixeira}).`); }
+  else console.log(AJUDA);
+} catch (e) { console.error('erro: ' + e.message); process.exit(1); }

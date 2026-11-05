@@ -1,0 +1,27 @@
+{
+ "id": "Dd9vrKlTY1l",
+ "url": "https://www.instagram.com/p/Dd9vrKlTY1l/",
+ "plays": 398,
+ "curtidas": 1,
+ "comentarios": 0,
+ "data": "2026-10-01",
+ "duracao_s": 70.4,
+ "cortes": 1,
+ "cortes_por_min": 0.9,
+ "primeiro_corte_s": 44.5,
+ "palavras_por_min": 124,
+ "fala": true,
+ "abertura_falada": "O que eu pedi aqui para o Zeus?",
+ "jev": {
+  "topic": "technology",
+  "opening": "question",
+  "mechanism": "curiosity",
+  "structure": "story",
+  "evidence": "personal",
+  "emotion": "aspiration",
+  "specificity": "none",
+  "cta": "none"
+ },
+ "legenda": "",
+ "folha": "/opt/jeff-worker/projetos/nina/_reels/jeffhenrike-fb5ba86b/Dd9vrKlTY1l/folha.jpg"
+}

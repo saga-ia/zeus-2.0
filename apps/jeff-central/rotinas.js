@@ -237,8 +237,17 @@ async function googleUserKey() {
   _googleUser = linha.split(/\s+/)[0];
   return _googleUser;
 }
+// O Zeus Worker aceita a mensagem e deixa na fila mesmo sem sessão no WhatsApp: a rotina constava "ok" e nada chegava
+// (e a fila despejava tudo de uma vez quando o número voltava). Por isso a entrega só segue com o número pareado.
+async function whatsappPronto() {
+  let st;
+  try { st = JSON.parse(await sh(WAPI, ['GET', '/status'], 15000)).state; }
+  catch (_) { throw new Error('o Zeus Worker, que envia pelo WhatsApp do ZEUS, não respondeu'); }
+  if (st !== 'ready') throw new Error('o WhatsApp do ZEUS está desconectado' + (st === 'qr' ? ' (aguardando a leitura do QR)' : '') + '. Conecte o número em Conectores › WhatsApp e rode a rotina de novo');
+}
 async function entregar(r, texto) {
   if (r.entrega === 'whatsapp') {
+    await whatsappPronto();
     const corpo = `*Rotina: ${r.name}*\n\n` + paraWhatsApp(texto);
     for (const p of partes(corpo, WA_MAX)) {
       await sh(WAPI, ['POST', '/messages/private', JSON.stringify({ to: r.destino, body: p })], 60000);
@@ -284,7 +293,7 @@ async function executar(id, trigger) {
   console.log(`[rotinas] "${r.name}" começou (${trigger})`);
   let status = 'ok', erro = null, texto = '', sid = null;
   try {
-    const res = await require('./chat').runRoutine({ title: r.name, text: r.prompt, agentId: r.agent_id, skillId: r.skill_id, entrega: r.entrega, ferramentas: ferramentasTexto(publica(r).tools) });
+    const res = await require('./chat').runRoutine({ title: r.name, text: r.prompt, agentId: r.agent_id, skillId: r.skill_id, entrega: r.entrega, ferramentas: ferramentasTexto(publica(r).tools), user: r.restrita ? { admin: false } : null, userEmail: r.created_by || null });
     sid = res.sid; texto = res.text || '';
     if (res.error) { status = 'erro'; erro = res.error; }
     else if (r.entrega !== 'chat') {
@@ -294,6 +303,8 @@ async function executar(id, trigger) {
   } catch (e) { status = 'erro'; erro = e.message; }
   const fim = Date.now();
   stmt.runFim.run(fim, status, texto, erro, sid, runId);
+  if (r.created_by) require('./notificacoes').notificar({ para: r.created_by, tipo: status === 'erro' ? 'rotina-erro' : 'rotina-concluida',
+    titulo: status === 'erro' ? `Rotina com erro: ${r.name}` : `Rotina concluída: ${r.name}`, texto: status === 'erro' ? String(erro || '').slice(0, 200) : (texto || '').replace(/\s+/g, ' ').slice(0, 160), link: '/rotinas' });
   // Próxima execução: sempre a partir de agora (rotina de horas conta do fim da última; unica desliga)
   const atual = stmt.get.get(id);
   if (atual) {
@@ -349,15 +360,29 @@ router.post('/diag', express.text({ type: '*/*', limit: '64kb' }), (req, res) =>
   try { require('fs').appendFileSync(path.join(__dirname, 'logs', 'diag.log'), new Date().toISOString() + ' ' + String(req.body || '').replace(/\s+/g, ' ').slice(0, 6000) + '\n'); } catch (_) {}
   res.status(204).end();
 });
-router.get('/', (_req, res) => {
+// Rotina criada ou editada por quem não é admin roda sem terminal/arquivos (ver claude-spawn.bloqueio)
+try { db.exec(`ALTER TABLE rotinas ADD COLUMN restrita INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+// Dono da rotina (e-mail): cada pessoa vê e mexe só nas suas; administradores veem todas.
+// Rotinas antigas (sem dono) foram criadas pela administração.
+try { db.exec(`ALTER TABLE rotinas ADD COLUMN created_by TEXT`); } catch (_) {}
+const marcarRestrita = (id, user) => db.prepare(`UPDATE rotinas SET restrita = ? WHERE id = ?`).run(user && !user.admin ? 1 : 0, id);
+const ehDono = (r, user) => !user || user.admin || (!!r.created_by && r.created_by === user.email);
+router.param('id', (req, res, next, id) => {
+  const r = stmt.get.get(id);
+  if (r && !ehDono(r, req.user)) return res.status(403).json({ error: 'Esta rotina é de outra pessoa.' });
+  next();
+});
+router.get('/', (req, res) => {
   const resumo = {};
   stmt.runsResumo.all().forEach(x => { resumo[x.rotina_id] = x; });
-  res.json({ rotinas: stmt.all.all().map(r => publica(r, resumo)), ferramentas: FERRAMENTAS.map(f => ({ id: f.id, label: f.label })), agora: Date.now() });
+  res.json({ rotinas: stmt.all.all().filter(r => ehDono(r, req.user)).map(r => publica(r, resumo)), ferramentas: FERRAMENTAS.map(f => ({ id: f.id, label: f.label })), agora: Date.now() });
 });
 router.post('/', (req, res) => {
   try {
     const r = normalizar(req.body, null);
     stmt.ins.run(r);
+    marcarRestrita(r.id, req.user);
+    db.prepare(`UPDATE rotinas SET created_by = ? WHERE id = ?`).run((req.user && req.user.email) || null, r.id);
     res.json({ rotina: publica(stmt.get.get(r.id)) });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
 });
@@ -367,6 +392,7 @@ router.put('/:id', (req, res) => {
   try {
     const r = normalizar(req.body, atual);
     stmt.upd.run(r);
+    marcarRestrita(r.id, req.user);
     res.json({ rotina: publica(stmt.get.get(r.id)) });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
 });

@@ -1,0 +1,7 @@
+{
+  "_nota": "Preços em US$. Google: por milhão de tokens (Nano Banana Pro: imagem 1K/2K = 1120 tokens de saída = US$ 0,134). OpenAI: por imagem, estimativa do time (post 4:5 em high). Atualize aqui se a tabela de preço mudar; vale pra Central e pros scripts do worker.",
+  "gemini-3-pro-image": { "usd_milhao_in": 2.0, "usd_milhao_out_imagem": 120.0, "usd_milhao_out_texto": 12.0, "usd_imagem": 0.134 },
+  "gpt-image-2.5-flare": { "usd_imagem": 0.04 },
+  "gpt-image-2.5-sunburst": { "usd_imagem": 0.08 },
+  "gpt-image-2": { "usd_imagem": 0.04, "usd_imagem_high": 0.17 }
+}

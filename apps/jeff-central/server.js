@@ -18,7 +18,9 @@ const WORKER_DB_PATH = process.env.WORKER_DB_PATH || '/opt/jeff-worker/data/work
 const AUTH_SALT = 'jeff-central-2026';
 const AUTH_HASH = 'ed5abdcfb6390b649b9dabba706936f093d3370f70fa0b7fbca2079da1657b2cbe209bc307b0a4184aa0bb86a7d30951ca09c3443cdf63213cf02ac2308b7a7c';
 const sessions = new Map();
-const SESSION_TTL = 30 * 24 * 60 * 60 * 1000;
+// Validade da sessão: Configurações > Segurança > "Sessão expira em" (7/15/30/90 dias); padrão 30
+function sessionDias() { try { const d = parseInt(require('./config').secao('seguranca').sessaoDias, 10); return [7, 15, 30, 90].includes(d) ? d : 30; } catch (_) { return 30; } }
+const SESSION_TTL = 30 * 24 * 60 * 60 * 1000; // só como reserva antes de o config carregar
 // Sessões persistem em disco: reiniciar o PM2 não desloga ninguém (antes, todo restart mandava todo mundo pro /login)
 const SESS_FILE = path.join(process.env.CENTRAL_DATA_DIR || path.join(__dirname, 'data'), 'sessions.json');
 function sessionsLoad() {
@@ -48,7 +50,7 @@ function nextSeguro(v) { v = String(v || ''); return /^\/(?!\/)[\w\-\/?=&%.]*$/.
 // Login pela senha mestra (sem e-mail) vale como administrador.
 function newSession(user) {
   const tok = crypto.randomBytes(32).toString('hex');
-  sessions.set(tok, { exp: Date.now() + SESSION_TTL, email: (user && user.email) || null, role: (user && user.role) || 'admin' });
+  sessions.set(tok, { exp: Date.now() + sessionDias() * 24 * 3600 * 1000, email: (user && user.email) || null, role: (user && user.role) || 'admin' });
   sessionsSave();
   return tok;
 }
@@ -64,18 +66,42 @@ function getSession(req) {
   const s = sessions.get(parseCookies(req).sid);
   return s && s.exp > Date.now() ? s : null;
 }
-function usuarioDaSessao(s) { return { email: s.email || null, role: s.role || 'admin', admin: !s.email || s.role === 'admin' || s.role === 'owner' }; }
-function requireAuth(req, res, next) {
+// Papel e status são lidos de Configurações > Usuários a cada requisição: trocar o papel vale na hora,
+// e quem é desativado ou removido perde a sessão no próximo clique.
+const acesso = require('./acesso');
+function usuarioDaReq(req) {
+  const tok = parseCookies(req).sid;
   const s = getSession(req);
-  if (!s) return res.redirect('/login');
-  req.user = usuarioDaSessao(s);
+  if (!s) return null;
+  const u = acesso.usuario(s, { marcar: true });
+  if (!u) { sessions.delete(tok); sessionsSave(); }
+  return u;
+}
+// Encerra todas as sessões de um e-mail (senha trocada, pessoa removida)
+function derrubarSessoes(email) {
+  const alvo = String(email || '').trim().toLowerCase();
+  let n = 0;
+  for (const [k, v] of sessions) if (v && v.email && v.email.toLowerCase() === alvo) { sessions.delete(k); n++; }
+  if (n) sessionsSave();
+  return n;
+}
+function requireAuth(req, res, next) {
+  const u = usuarioDaReq(req);
+  if (!u) return res.redirect('/login');
+  req.user = u;
   next();
 }
 function apiAuth(req, res, next) {
-  const s = getSession(req);
-  if (!s) return res.status(401).json({ error: 'unauthorized' });
-  req.user = usuarioDaSessao(s);
+  const u = usuarioDaReq(req);
+  if (!u) return res.status(401).json({ error: 'unauthorized' });
+  req.user = u;
   next();
+}
+// Ações que mexem em chaves, servidor, contas externas e configuração: só Proprietário/Admin
+function exigirAdmin(req, res, next) {
+  if (req.user && req.user.admin) return next();
+  console.warn('[central] bloqueado (não é admin):', req.method, req.originalUrl, (req.user && req.user.email) || '');
+  res.status(403).json({ error: 'Só administradores da conta podem fazer isso. Peça a um admin.' });
 }
 
 // ─── DB (app_settings) ────────────────────────────────────────────────────────
@@ -148,10 +174,14 @@ function verifyUserPassword(email, password) {
   } catch {}
   return null;
 }
-function countAdmins() {
+function countUsers() {
   if (!db) return 0;
-  const r = db.prepare(`SELECT COUNT(*) AS c FROM central_users WHERE role = 'admin'`).get();
+  const r = db.prepare(`SELECT COUNT(*) AS c FROM central_users`).get();
   return r ? r.c : 0;
+}
+function setPasswordFor(email, password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return db.prepare('UPDATE central_users SET password_hash = ?, salt = ? WHERE email = ?').run(hashPassword(password, salt), salt, normEmail(email)).changes > 0;
 }
 
 // ─── Inventario apps PM2 ──────────────────────────────────────────────────────
@@ -257,10 +287,58 @@ require('./zeuspost').mount(app, requireAuth);
 
 // Exportar resposta do chat em PDF. Antes do express.json global porque uma resposta
 // longa passa do limite de 256kb; este router usa um limite próprio.
-app.use('/api/export', apiAuth, express.json({ limit: '4mb' }), require('./export').router);
+// Segurança > "Bloquear exportação de conversas": quem não é admin não baixa PDF/PNG
+app.use('/api/export', apiAuth, (req, res, next) => {
+  if (!req.user.admin && require('./config').secao('seguranca').bloquearExportacao) return res.status(403).json({ error: 'A exportação de conversas está bloqueada pela empresa (Configurações > Segurança).' });
+  next();
+}, express.json({ limit: '4mb' }), require('./export').router);
 
+// LinkedIn (tela /linkedin): conectar perfil via OAuth e publicar. Antes do /api/social do Brand Kit, que tem regra de escrita própria.
+// Estratégia do LinkedIn (pilares, ritmo, newsletter) e o plano da semana: antes do router geral do LinkedIn
+app.use('/api/social/linkedin/estrategia', apiAuth, require('./linkedin-estrategia').router);
+app.use('/api/social/linkedin', apiAuth, require('./linkedin').router);
+require('./linkedin').iniciarAgendador(); // posts agendados: confere a cada minuto
+// Social Media (Brand Kit das marcas para o agente de design). Antes do express.json global: logo e
+// referências chegam em base64 (até 5MB cada). Ler é livre; gravar segue "Editar base de conhecimento".
+app.use('/api/social', apiAuth, acesso.regras([['POST', /./, 'editar-conhecimento'], ['PUT', /./, 'editar-conhecimento'], ['DELETE', /./, 'editar-conhecimento']]), express.json({ limit: '8mb' }), require('./social').router);
+// Feedback por imagem das artes (👍/👎 + comentário): qualquer pessoa logada avalia. Antes de /api/design pra não cair na regra de escrita.
+app.use('/api/design/feedback', apiAuth, require('./design-feedback').router);
+app.use('/api/design/gastos', apiAuth, require('./ia-gastos').router);
+// Agente de Design (posts de imagem com IA a partir do Brand Kit). Anexos em base64: limite próprio. Criar/ajustar custa crédito de API: mesma regra de escrita.
+// Estilos salvos por marca (aba Estilos do Agente de Design); mesma permissão do resto do /api/design
+app.use('/api/design/estilos', apiAuth, acesso.regras([['POST', /./, 'editar-conhecimento'], ['PUT', /./, 'editar-conhecimento'], ['DELETE', /./, 'editar-conhecimento']]), require('./estilos').router);
+app.use('/api/design', apiAuth, acesso.regras([['POST', /./, 'editar-conhecimento'], ['PUT', /./, 'editar-conhecimento'], ['DELETE', /./, 'editar-conhecimento']]), express.json({ limit: '32mb' }), require('./design').router);
+
+// Aba WhatsApp: ponte para o motor de SDRs (jeff-sdrs). Antes do express.json: o corpo vai cru em stream (contatos em JSON grande, upload de mídia).
+app.use('/api/whatsapp', apiAuth, require('./whatsapp-sdrs').router);
+// Aba Instagram: ponte para o myIG (zeuschatig), agentes de IA das DMs. Também antes do express.json (corpo cru + SSE).
+app.use('/api/instagram', apiAuth, require('./instagram-myig').router);
+// Busca da base de conhecimento para o myig-dispatcher (agentes do Instagram). Só conexão local + token; ver instagram-myig.js.
+app.post('/api/interno/ig-rag', express.json({ limit: '64kb' }), require('./instagram-myig').ragInterno);
 app.use(express.json({ limit: '256kb' }));
+// Conectores › WhatsApp: estado e pareamento do Zeus bot (número principal, que roda no Zeus Worker). Ver zeus-bot.js.
+app.use('/api/wa/zeus', apiAuth, require('./zeus-bot').router);
+// Jarvis (tela /jarvis): voz do ZEUS pela ElevenLabs (ouvir e pensar usam o chat e a transcrição que já existem)
+app.use('/api/jarvis', apiAuth, require('./jarvis').router);
+// Páginas públicas de venda/anúncio: /site/<slug> serve public-sites/<slug>/index.html sem login (elas rodam em anúncio).
+app.use('/site', express.static(path.join(__dirname, 'public-sites'), { extensions: ['html'] }));
+// Página pública que não existe: 404 próprio (antes caía no login da Central, o que confunde quem vem do anúncio)
+app.use('/site', (req, res) => res.status(404).type('html').send('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Página não encontrada</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#FAFAFA;color:#17171A;text-align:center;padding:24px}h1{font-size:22px;margin:0 0 8px}p{color:#66666F;margin:0}</style></head><body><div><h1>Página não encontrada</h1><p>Este link não existe ou saiu do ar.</p></div></body></html>'));
+// Arquivos da tela só com sessão: sem login, ninguém abre o código do app (index.html, .js do painel etc.).
+// Livre só o que a própria tela de login usa.
+const PUBLICO_SEM_LOGIN = new Set(['/login', '/login.html', '/favicon.svg', '/convite.html']);
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/') || PUBLICO_SEM_LOGIN.has(req.path) || req.path.startsWith('/convite/') || usuarioDaReq(req)) return next();
+  // Página: manda para o login. Arquivo (js, css, imagem...): recusa sem mostrar nada.
+  if (req.method === 'GET' && (/\.html?$/i.test(req.path) || !/\.[a-z0-9]+$/i.test(req.path))) return res.redirect('/login');
+  res.status(401).type('text/plain').send('unauthorized');
+});
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+// Painel do pacote "Máquina de Edição IA" (biblioteca de prompts das skills meia-* de edição de vídeo). Material pago:
+// fica atrás do login acima, nunca em subdomínio aberto. A pasta inteira é servida pro link "Guia rápido" (../COMECE-AQUI.md).
+const MAQUINA_EDICAO = '/opt/jeff-sites/maquina-edicao-ia';
+app.get(['/maquina-edicao', '/maquina-edicao/'], (_req, res) => res.redirect('/maquina-edicao/painel/'));
+app.use('/maquina-edicao', express.static(MAQUINA_EDICAO));
 
 
 // Esqueci minha senha (código via WhatsApp do dono) — módulo compartilhado jeff-shared
@@ -268,69 +346,111 @@ require('/opt/jeff-apps/jeff-shared/password-reset').mount(app, {
   appName: 'Jeff Central',
   needsIdentifier: true,
   identifierLabel: 'E-mail',
-  userExists: (email) => !!getUserByEmail(email),
+  // Só quem está ativo em Configurações > Usuários recupera a senha
+  userExists: (email) => { const m = acesso.pessoaPorEmail(email); return !!getUserByEmail(email) && !!m && m.status === 'ativo'; },
   setPassword: (newPass, email) => {
     if (!db) return false;
-    const salt = crypto.randomBytes(16).toString('hex');
-    const r = db.prepare('UPDATE central_users SET password_hash = ?, salt = ? WHERE email = ?').run(hashPassword(newPass, salt), salt, normEmail(email));
-    if (r.changes > 0) { sessions.clear(); sessionsSave(); }
-    return r.changes > 0;
+    const ok = setPasswordFor(email, newPass);
+    if (ok) derrubarSessoes(email); // só as sessões dessa pessoa, não a central inteira
+    return ok;
   }
 });
 
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, 'public/login.html')));
 
 app.get('/api/signup/status', (_req, res) => {
-  res.json({ hasAdmin: countAdmins() > 0 });
+  res.json({ hasAdmin: countUsers() > 0 });
 });
 
+// Secure só quando a pessoa veio por HTTPS (produção atrás do NPM); teste local em http continua funcionando
+const cookieSessao = (tok, req) => `sid=${tok}; HttpOnly; ${(req && (req.secure || req.headers['x-forwarded-proto'] === 'https')) ? 'Secure; ' : ''}Path=/; Max-Age=${sessionDias() * 24 * 3600}; SameSite=Lax`;
 app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {
   const email = req.body._email || req.body.email || '';
   const password = req.body.password || '';
-  let ok = false, quem = null;
+  let quem = null;
   if (email) {
     quem = verifyUserPassword(email, password);
-    ok = !!quem;
-  } else {
-    ok = verifyPwd(password);
+    if (!quem) return res.redirect('/login?error=1');
+    // Senha certa, mas a pessoa precisa estar ativa na empresa
+    const m = acesso.pessoaPorEmail(quem.email);
+    if (!m || m.status !== 'ativo') {
+      console.warn('[central] login recusado (sem cadastro ativo):', quem.email, m ? m.status : 'sem cadastro');
+      return res.redirect('/login?error=inativo');
+    }
+  } else if (!verifyPwd(password)) {
+    return res.redirect('/login?error=1');
   }
-  if (!ok) return res.redirect('/login?error=1');
-  const tok = newSession(quem ? { email: quem.email, role: quem.role } : null);
-  res.set('Set-Cookie', `sid=${tok}; HttpOnly; Path=/; Max-Age=${30 * 24 * 3600}; SameSite=Lax`);
+  const tok = newSession(quem ? { email: quem.email } : null);
+  res.set('Set-Cookie', cookieSessao(tok, req));
   res.redirect(nextSeguro(req.body && req.body.next));
 });
 
+// Cadastro aberto só existe para o primeiro acesso (central vazia): essa pessoa vira Proprietária.
+// Depois disso, entra quem recebe um link de convite em Configurações > Usuários.
 app.post('/api/signup', express.urlencoded({ extended: false }), (req, res) => {
   const email = normEmail(req.body._email || req.body.email);
   const password = String(req.body.password || '');
   const name = (req.body._name || req.body.name || '').trim();
   const company = (req.body._company || req.body.company || '').trim();
-  const invite = String(req.body.invite || req.query.invite || '');
 
+  if (countUsers() > 0) return res.redirect('/login?error=invite&mode=signup');
   if (!email || !password) return res.redirect('/login?error=missing&mode=signup');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.redirect('/login?error=email&mode=signup');
   if (password.length < 8) return res.redirect('/login?error=weak&mode=signup');
 
-  const alreadyAdmin = countAdmins() > 0;
-  const INVITE_TOKEN = process.env.CENTRAL_INVITE_TOKEN || '';
-  if (alreadyAdmin) {
-    if (!INVITE_TOKEN || invite !== INVITE_TOKEN) {
-      return res.redirect('/login?error=invite&mode=signup');
-    }
-  }
-
-  if (getUserByEmail(email)) return res.redirect('/login?error=exists&mode=signup');
-
   try {
     createUser({ email, password, name, company, role: 'admin' });
+    const agora = Date.now();
+    const existente = acesso.pessoaPorEmail(email);
+    if (existente) acesso.db.prepare(`UPDATE org_members SET role = 'owner', status = 'ativo', accepted_at = ?, updated_at = ? WHERE id = ?`).run(agora, agora, existente.id);
+    else acesso.db.prepare(`INSERT INTO org_members (id, name, email, role, status, accepted_at, created_at, updated_at) VALUES (?, ?, ?, 'owner', 'ativo', ?, ?, ?)`)
+      .run(crypto.randomBytes(8).toString('base64url'), name || email.split('@')[0], email, agora, agora, agora);
   } catch (e) {
     console.error('[central] signup falhou:', e.message);
     return res.redirect('/login?error=server&mode=signup');
   }
 
-  const tok = newSession({ email, role: 'admin' });
-  res.set('Set-Cookie', `sid=${tok}; HttpOnly; Path=/; Max-Age=${30 * 24 * 3600}; SameSite=Lax`);
+  const tok = newSession({ email });
+  res.set('Set-Cookie', cookieSessao(tok, req));
   res.redirect(nextSeguro(req.body && req.body.next));
+});
+
+// ─── Convite: link único por pessoa, gerado em Configurações > Usuários ────────
+app.get('/convite/:token', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public/convite.html'));
+});
+function empresaNome() { return require('./config').empresaInfo().nome; }
+app.get('/api/convite/:token', (req, res) => {
+  const c = acesso.lerConvite(req.params.token);
+  if (c.erro) return res.status(c.erro === 'expirado' ? 410 : 404).json({ error: c.erro });
+  const m = c.m;
+  res.json({ nome: m.name, email: m.email, papel: acesso.PAPEL_NOME[m.role] || 'Membro', empresa: empresaNome(),
+    convidadoPor: m.invited_by || null, expira: m.invite_expires, jaTemSenha: !!getUserByEmail(m.email) });
+});
+app.post('/api/convite/:token', express.json({ limit: '16kb' }), (req, res) => {
+  const c = acesso.lerConvite(req.params.token);
+  if (c.erro) return res.status(c.erro === 'expirado' ? 410 : 404).json({ error: c.erro === 'expirado' ? 'Este convite expirou. Peça um novo link ao administrador.' : 'Convite inválido ou já usado.' });
+  const m = c.m;
+  const b = req.body || {};
+  const password = String(b.password || '');
+  const nome = String(b.name || '').trim().slice(0, 120);
+  if (password.length < 8) return res.status(400).json({ error: 'A senha precisa ter pelo menos 8 caracteres.' });
+  try {
+    // Quem já tinha senha (convite refeito depois de uma remoção) define uma senha nova aqui
+    if (getUserByEmail(m.email)) setPasswordFor(m.email, password);
+    else createUser({ email: m.email, password, name: nome || m.name, company: empresaNome(), role: m.role === 'owner' || m.role === 'admin' ? 'admin' : m.role });
+    acesso.aceitarConvite(m.id, nome);
+    derrubarSessoes(m.email);
+  } catch (e) {
+    console.error('[central] aceitar convite falhou:', e.message);
+    return res.status(500).json({ error: 'Não foi possível concluir o cadastro. Tente de novo.' });
+  }
+  try { require('./config').registrar('Usuários', `${nome || m.name} aceitou o convite (${m.email})`, nome || m.name); } catch (_) {}
+  try { require('./notificacoes').notificar({ para: 'admins', tipo: 'convite-aceito', titulo: `${nome || m.name} entrou na central`, texto: `${m.email} aceitou o convite como ${acesso.PAPEL_NOME[m.role] || 'Membro'}.`, link: '/config/usuarios' }); } catch (_) {}
+  const tok = newSession({ email: m.email });
+  res.set('Set-Cookie', cookieSessao(tok, req));
+  res.json({ ok: true, redirect: '/' });
 });
 app.get('/api/logout', (req, res) => {
   const c = parseCookies(req);
@@ -338,10 +458,21 @@ app.get('/api/logout', (req, res) => {
   res.set('Set-Cookie', 'sid=; HttpOnly; Path=/; Max-Age=0');
   res.redirect('/login');
 });
+// Medidor de travamento: se o processo ficar parado (código síncrono pesado), registra no log quanto e quando.
+// Serve pra achar a causa da próxima lentidão em vez de adivinhar.
+try {
+  const { monitorEventLoopDelay } = require('perf_hooks');
+  const h = monitorEventLoopDelay({ resolution: 20 }); h.enable();
+  setInterval(() => {
+    const max = h.max / 1e6, p99 = h.percentile(99) / 1e6;
+    if (max > 300) console.warn(`[desempenho] servidor travou até ${Math.round(max)} ms no último minuto (p99 ${Math.round(p99)} ms)`);
+    h.reset();
+  }, 60000).unref();
+} catch (e) { console.error('[desempenho] medidor:', e.message); }
+
 app.get('/', requireAuth, (_req, res) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
+  // no-cache (não no-store): o navegador guarda a página (~1 MB) e só confere se mudou (304); versão nova chega na hora
+  res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
@@ -409,18 +540,30 @@ app.get('/api/wa/instances', apiAuth, async (_req, res) => {
   res.json({ instances: enriched });
 });
 
-app.post('/api/wa/instances', apiAuth, async (req, res) => {
+app.post('/api/wa/instances', apiAuth, exigirAdmin, async (req, res) => {
   const { friendly, note } = req.body || {};
   if (!friendly || typeof friendly !== 'string') return res.status(400).json({ error: 'friendly_required' });
   const slug = friendly.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || ('wa-' + Date.now());
   const name = slug + '-' + crypto.randomBytes(3).toString('hex');
-  const r = await evo('POST', '/instance/create', { instanceName: name, qrcode: true, integration: 'WHATSAPP-BAILEYS' });
+  // syncFullHistory: ao ler o QR, o WhatsApp manda o histórico de conversas do aparelho (a Evolution grava com DATABASE_SAVE_DATA_HISTORIC)
+  const r = await evo('POST', '/instance/create', { instanceName: name, qrcode: true, integration: 'WHATSAPP-BAILEYS', syncFullHistory: true });
   if (!r.ok) return res.status(r.status).json({ error: 'create_failed', data: r.data });
   setMeta(name, friendly, note);
   res.json({ name, friendly, qr: (r.data && r.data.qrcode) || null, data: r.data });
 });
 
+// Antes de gerar o QR, liga o histórico completo mantendo as outras configurações do número
+async function garantirHistoricoCompleto(name) {
+  try {
+    const atual = await evo('GET', `/settings/find/${encodeURIComponent(name)}`);
+    const d = (atual.ok && atual.data) || {};
+    if (d.syncFullHistory) return;
+    await evo('POST', `/settings/set/${encodeURIComponent(name)}`, { rejectCall: !!d.rejectCall, msgCall: d.msgCall || '', groupsIgnore: !!d.groupsIgnore,
+      alwaysOnline: !!d.alwaysOnline, readMessages: !!d.readMessages, readStatus: !!d.readStatus, syncFullHistory: true });
+  } catch (e) { console.error('[wa] histórico completo:', e.message); }
+}
 app.get('/api/wa/instances/:name/qr', apiAuth, async (req, res) => {
+  await garantirHistoricoCompleto(req.params.name);
   const r = await evo('GET', `/instance/connect/${encodeURIComponent(req.params.name)}`);
   if (!r.ok) return res.status(r.status).json({ error: 'qr_failed', data: r.data });
   res.json(r.data);
@@ -432,27 +575,33 @@ app.get('/api/wa/instances/:name/state', apiAuth, async (req, res) => {
   res.json(r.data);
 });
 
-app.patch('/api/wa/instances/:name', apiAuth, (req, res) => {
+app.patch('/api/wa/instances/:name', apiAuth, exigirAdmin, (req, res) => {
   const { friendly, note } = req.body || {};
   setMeta(req.params.name, friendly, note);
   res.json({ ok: true });
 });
 
-app.post('/api/wa/instances/:name/logout', apiAuth, async (req, res) => {
+app.post('/api/wa/instances/:name/logout', apiAuth, exigirAdmin, async (req, res) => {
   const r = await evo('DELETE', `/instance/logout/${encodeURIComponent(req.params.name)}`);
   res.json({ ok: r.ok, data: r.data });
 });
 
-app.delete('/api/wa/instances/:name', apiAuth, async (req, res) => {
+app.delete('/api/wa/instances/:name', apiAuth, exigirAdmin, async (req, res) => {
   const r = await evo('DELETE', `/instance/delete/${encodeURIComponent(req.params.name)}`);
   if (db) db.prepare('DELETE FROM wa_instance_meta WHERE instance_name = ?').run(req.params.name);
   res.json({ ok: r.ok, data: r.data });
 });
 
 // API
-app.get('/api/me', apiAuth, (req, res) => res.json({ ok: true, host: PUBLIC_HOST, ip: SERVER_IP, user: req.user }));
+// Quem está logado + o nível de cada permissão: o front usa pra esconder o que a pessoa não pode fazer
+// (a trava de verdade está nas rotas). IP do servidor só para administradores.
+app.get('/api/me', apiAuth, (req, res) => res.json({
+  ok: true, host: PUBLIC_HOST, ip: req.user.admin ? SERVER_IP : undefined,
+  user: Object.assign({}, req.user, { roleLabel: acesso.PAPEL_NOME[req.user.role] || 'Membro' }),
+  empresa: empresaNome(), empresaLogo: require('./config').empresaInfo().logo, perms: acesso.permissoesDe(req.user),
+}));
 
-app.get('/api/apps', apiAuth, async (_req, res) => {
+app.get('/api/apps', apiAuth, exigirAdmin, async (_req, res) => {
   const apps = await computeAppsState();
   const total = apps.length;
   const online = apps.filter(a => a.status === 'online').length;
@@ -463,7 +612,7 @@ app.get('/api/apps', apiAuth, async (_req, res) => {
   res.json({ apps, summary: { total, online, warn, offline, avgMs: avg } });
 });
 
-app.post('/api/apps/:name/restart', apiAuth, async (req, res) => {
+app.post('/api/apps/:name/restart', apiAuth, exigirAdmin, async (req, res) => {
   const name = req.params.name;
   if (!APP_CATALOG.some(a => a.name === name)) return res.status(404).json({ error: 'unknown app' });
   try {
@@ -478,11 +627,11 @@ app.get('/api/whatsapp/status', apiAuth, async (_req, res) => {
   const h = await httpCheck(3002, '/health');
   res.json({ status: h.status === 'ok' && h.code < 400 ? 'connected' : 'disconnected', code: h.code, ms: h.ms });
 });
-app.post('/api/whatsapp/restart', apiAuth, async (_req, res) => {
+app.post('/api/whatsapp/restart', apiAuth, exigirAdmin, async (_req, res) => {
   try { await execP('pm2 restart whatsapp-worker', { timeout: 20000 }); res.json({ ok: true }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/whatsapp/logout', apiAuth, async (_req, res) => {
+app.post('/api/whatsapp/logout', apiAuth, exigirAdmin, async (_req, res) => {
   res.json({ ok: false, note: 'logout do WhatsApp requer ação no worker; use /api/whatsapp/restart e re-pareie via /qr no worker' });
 });
 
@@ -496,7 +645,7 @@ const maskValue = (v) => {
   return v.slice(0, 4) + '••••' + v.slice(-4);
 };
 
-app.get('/api/keys', apiAuth, (_req, res) => {
+app.get('/api/keys', apiAuth, exigirAdmin, (_req, res) => {
   const rows = listSettingKeys();
   const items = rows.map(r => {
     const isSecret = SECRET_PATTERNS.test(r.key);
@@ -511,7 +660,7 @@ app.get('/api/keys', apiAuth, (_req, res) => {
   });
   res.json({ items });
 });
-app.post('/api/keys', apiAuth, (req, res) => {
+app.post('/api/keys', apiAuth, exigirAdmin, (req, res) => {
   const { key, value } = req.body || {};
   if (!key || typeof key !== 'string') return res.status(400).json({ error: 'key obrigatório' });
   if (typeof value !== 'string') return res.status(400).json({ error: 'value deve ser string' });
@@ -570,32 +719,62 @@ app.use('/api/chat', apiAuth, chat.router);
 // "Seu dia" da home: tarefas reais do ClickUp (cache do worker) e do Agente de Ações
 app.use('/api/home', apiAuth, require('./home-dia').router);
 
+// Sino de notificações (eventos da plataforma) e Memória por pessoa (o que o ZEUS lembra de cada um)
+app.use('/api/notificacoes', apiAuth, require('./notificacoes').router);
+app.use('/api/memoria', apiAuth, require('./memoria').router);
+
 // Agentes (ZEUS + próprios): persona, habilidades e base de conhecimento
 const agents = require('./agents');
-app.use('/api/agents', apiAuth, agents.router);
+// Permissões da matriz (Configurações > Permissões). Editar/excluir agente próprio e o workspace são checados em agents.js.
+app.use('/api/agents', apiAuth, acesso.regras([
+  ['POST', /^\/(assist)?$/, 'criar-agente'],
+  ['PUT', /^\/[^/]+\/share$/, 'compartilhar-agente'],
+]), agents.router);
+// Canais dos agentes (WhatsApp dos SDRs e Instagram pelo myIG): ligar/desligar um agente num canal. Só administradores.
+app.use('/api/canais', apiAuth, exigirAdmin, require('./canais').router);
 
 // Base de conhecimento da empresa (tela /conhecimento): documentos, extração, chunks e busca pro RAG
 const knowledge = require('./knowledge');
-app.use('/api/knowledge', apiAuth, knowledge.router);
+app.use('/api/knowledge', apiAuth, acesso.regras([['POST', /./, 'editar-conhecimento'], ['PATCH', /./, 'editar-conhecimento'], ['DELETE', /./, 'editar-conhecimento']]), knowledge.router);
 
 // Motor de Growth: dashboard de mídia paga com dados reais (Meta Ads) e base do Estrategista de Growth IA
 const growth = require('./growth');
-app.use('/api/growth', apiAuth, growth.router);
+app.post('/api/growth/apply', apiAuth, exigirAdmin); // aplicar ação na conta da Meta
+// Criar anúncio (campanha pausada + conjunto + anúncio) direto na Meta: só administradores
+app.use('/api/growth/criar', apiAuth, exigirAdmin, require('./growth-criar').router);
+app.use('/api/growth', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), growth.router);
 
 // Equipes de agentes: orquestrador planeja, distribui entre os agentes e consolida
 const teams = require('./teams');
-app.use('/api/teams', apiAuth, teams.router);
+app.use('/api/teams', apiAuth, acesso.regras([
+  ['POST', /^\/$/, 'criar-equipe-agentes'],
+  ['POST', /^\/[^/]+\/duplicate$/, 'criar-equipe-agentes'],
+  ['PUT', /^\/[^/]+\/share$/, 'compartilhar-agente'],
+  ['PATCH', /^\/(?!runs\/)[^/]+$/, 'editar-equipe-agentes'],
+  ['DELETE', /^\/(?!runs\/)[^/]+$/, 'excluir-equipe-agentes'],
+]), teams.router);
 
 // PDI: planos de desenvolvimento individual, metas 70-20-10, check-ins e templates
 const pdi = require('./pdi');
-app.use('/api/pdi', apiAuth, pdi.router);
+// Quem vê qual PDI (própria pessoa, equipe ou todos) é decidido em pdi.js pelo nível de "Ver PDIs da equipe"
+app.use('/api/pdi', apiAuth, acesso.regras([
+  ['GET', /^\/analytics/, 'ver-pdis', { leitura: true }],
+  ['*', /^\/templates/, 'criar-pdi', { leitura: true }],
+]), pdi.router);
 
 // OKRs (/okrs): ciclos, objetivos desdobrados, resultados-chave, check-ins e criação com IA
 const okrs = require('./okrs');
-app.use('/api/okrs', apiAuth, okrs.router);
+// "Restrito à equipe" em OKRs é checado objetivo a objetivo em okrs.js
+app.use('/api/okrs', apiAuth, acesso.regras([
+  ['GET', /./, 'editar-okrs', { leitura: true }],
+  ['*', /^\/(cycles|generate)/, 'editar-okrs'],
+]), okrs.router);
 
 // Configurações: dados da empresa, marca, preferências, pessoas, estrutura, liderança, permissões e consumo
 const config = require('./config');
+// Cada rota de configuração checa a própria permissão (convidar, remover, desativar, editar permissões...) em config.js
+config.configurar({ temLogin: email => !!getUserByEmail(email), removerLogin: email => { if (db) db.prepare('DELETE FROM central_users WHERE email = ?').run(normEmail(email)); derrubarSessoes(email); },
+  trocarEmailLogin: (de, para) => { if (db && de && para && !getUserByEmail(para)) db.prepare('UPDATE central_users SET email = ? WHERE email = ?').run(normEmail(para), normEmail(de)); derrubarSessoes(de); } });
 app.use('/api/config', apiAuth, config.router);
 
 // Botão flutuante: tarefas do Agente de Ações e chamados de Suporte
@@ -604,22 +783,35 @@ app.use('/api/widget', apiAuth, widget.router);
 
 // Habilidades (/habilidades): regras de prompt e skills do Claude Code, com criação e edição
 const skills = require('./skills');
-app.use('/api/skills', apiAuth, skills.router);
+app.use('/api/skills', apiAuth, acesso.regras([
+  ['POST', /^\/[^/]+\/restore$/, 'publicar-habilidade'],
+  ['DELETE', /./, 'publicar-habilidade'],
+  ['POST', /./, 'criar-habilidade'],
+  ['PUT', /./, 'criar-habilidade'],
+]), skills.router);
 
 // Ações (/acoes): tarefas reais do ClickUp (token em app_settings.clickup_api_token)
 const clickup = require('./clickup');
-app.use('/api/clickup', apiAuth, clickup.router);
+app.delete('/api/clickup/*', apiAuth, exigirAdmin); // apagar tarefa
+app.use('/api/clickup', apiAuth, acesso.regras([['GET', /./, 'editar-tarefas', { leitura: true }], ['*', /./, 'editar-tarefas']]), clickup.router);
 
 // Rotinas (/rotinas): pedidos agendados que o ZEUS executa sozinho e entrega em Conversas, WhatsApp ou e-mail
+// Conectores > "Quero integrar meus sistemas": formulário enviado por e-mail (integracao.js)
+app.use('/api/integracao', apiAuth, require('./integracao').router);
 const rotinas = require('./rotinas');
-app.use('/api/rotinas', apiAuth, rotinas.router);
-rotinas.startScheduler();
+app.use('/api/rotinas', apiAuth, acesso.regras([['POST', /^\/$/, 'criar-rotina']]), rotinas.router);
+// Execução Comercial: fontes de dados de vendas (WhatsApp da Evolution e planilha/CRM). Ler é livre; gravar só admin.
+// Diagnóstico e Auditoria com IA: qualquer pessoa logada gera (a IA é isolada e só lê); contexto, números e planilhas só admin
+app.use('/api/vendas', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), (req, res, next) => (req.method === 'GET' || req.path.startsWith('/diagnostico') || req.path.startsWith('/auditoria') || req.path.startsWith('/analise') ? next() : exigirAdmin(req, res, next)), require('./vendas-ia').router, require('./vendas-dados').router);
+// CENTRAL_SEM_AGENDADORES=1: instância de teste (cópia do banco) não roda rotinas nem transcrição de verdade
+if (process.env.CENTRAL_SEM_AGENDADORES !== '1') rotinas.startScheduler();
+// Transcrição automática dos áudios dos números nas análises de vendas (Diagnóstico e Auditoria leem o que foi falado)
+if (process.env.CENTRAL_SEM_AGENDADORES !== '1') require('./transcricao').start(evo);
 
 // Rotas do app com URL limpa (/okrs, /motor/vendas): tudo que não é /api nem arquivo cai no index
 app.get(/^\/(?!api\/)[^.]*$/, requireAuth, (_req, res) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
+  // no-cache (não no-store): o navegador guarda a página (~1 MB) e só confere se mudou (304); versão nova chega na hora
+  res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 

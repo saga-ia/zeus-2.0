@@ -1,0 +1,20 @@
+{
+  "formato": "9:16",
+  "fps": 30,
+  "clipes": [],
+  "palavras": {},
+  "legenda": { "ativa": true, "maxPalavras": 3, "posicao": 0.68, "tamanho": 92, "fonte": "Anton", "cor": "#FFFFFF", "corAtiva": null, "caixaAlta": true },
+  "destaque": { "cor": "#FF0000", "palavras": [], "escala": 1.18 },
+  "impactos": [],
+  "zooms": [],
+  "zoom": { "modo": "alternado", "intensidade": 1.12 },
+  "foco": [0.5, 0.35],
+  "transicao": "corte",
+  "enquadramento": "preencher",
+  "cobrir": null,
+  "gancho": null,
+  "cta": null,
+  "trilha": null,
+  "barraProgresso": false,
+  "volumeVoz": 1
+}

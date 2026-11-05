@@ -88,6 +88,42 @@ async function killChromeForSlot(slot) {
 const clients = new Map();
 const runtimeStatus = new Map();
 
+// ─── Reconexão automática (2026-10-04) ───────────────────────────────────────────────────────────────────
+// Antes: qualquer queda (Chrome morto, rede, WhatsApp Web recarregando) deixava o slot em 'disconnected' pra sempre,
+// e nem o restart religava. Agora: queda comum reconecta sozinha com espera crescente (sessão do disco, sem QR);
+// LOGOUT (WhatsApp desvinculou o aparelho) avisa Jeff e Vinicius no WhatsApp porque aí só lendo o QR de novo.
+const ALERTA_SH = '/opt/jeff-worker/scripts/wa-alerta.sh';
+const ESPERAS_RECONEXAO = [10, 30, 60, 120, 300, 600]; // segundos; depois fica tentando a cada 10 min
+const tentativasReconexao = new Map(); // slot -> nº de tentativas seguidas
+const reconexaoAgendada = new Map();   // slot -> timer
+const desligandoDeProposito = new Set(); // slots em disconnectSlot/connectSlot(force): a queda é esperada
+function nomeDoSlot(slot) {
+  try { const r = db.prepare('SELECT name FROM sdrs WHERE slot = ?').get(slot); return (r && r.name ? r.name.trim() + ' ' : '') + `(slot ${slot})`; } catch { return `slot ${slot}`; }
+}
+function alertar(chave, texto) {
+  try { require('child_process').execFile('bash', [ALERTA_SH, chave, texto], { timeout: 60000 }, () => {}); } catch {}
+}
+function temSessaoNoDisco(slot) {
+  try { return fs.existsSync(path.join(slotSessionDir(slot), 'Default')); } catch { return false; }
+}
+function agendarReconexao(slot, motivo) {
+  if (reconexaoAgendada.has(slot)) return;
+  const n = tentativasReconexao.get(slot) || 0;
+  const espera = ESPERAS_RECONEXAO[Math.min(n, ESPERAS_RECONEXAO.length - 1)];
+  tentativasReconexao.set(slot, n + 1);
+  console.warn(`[wa slot ${slot}] reconexão automática em ${espera}s (tentativa ${n + 1}, motivo: ${motivo})`);
+  if (n + 1 === 4) alertar(`sdrs-slot-${slot}-instavel`, `WhatsApp SDR ${nomeDoSlot(slot)} caiu e não voltou depois de 3 tentativas automáticas (${motivo}). O sistema continua tentando; se não voltar, reconecte na Central › WhatsApp.`);
+  reconexaoAgendada.set(slot, setTimeout(() => {
+    reconexaoAgendada.delete(slot);
+    if (!temSessaoNoDisco(slot)) { console.warn(`[wa slot ${slot}] sem sessão no disco, reconexão cancelada`); setSlotStatus(slot, 'disconnected'); return; }
+    connectSlot(slot, { force: true }).catch(e => console.error(`[wa slot ${slot}] reconexão falhou:`, e && e.message));
+  }, espera * 1000));
+}
+function cancelarReconexao(slot) {
+  const t = reconexaoAgendada.get(slot); if (t) clearTimeout(t);
+  reconexaoAgendada.delete(slot);
+}
+
 // Mapeia chatId -> hostSlot pra o pipeline conseguir enviar via cliente correto.
 const chatHostSlot = new Map();
 
@@ -511,8 +547,10 @@ async function connectSlot(slot, opts = {}) {
   if (clients.has(slot)) {
     const st = runtimeStatus.get(slot);
     if (opts.force) {
+      desligandoDeProposito.add(slot);
       try { await clients.get(slot).destroy(); } catch {}
       clients.delete(slot);
+      desligandoDeProposito.delete(slot);
     } else if (st === 'connecting' || st === 'qr' || st === 'ready') {
       if (opts.pairPhone) pendingPairPhone.set(slot, String(opts.pairPhone).replace(/\D/g, ''));
       return;
@@ -534,7 +572,7 @@ async function connectSlot(slot, opts = {}) {
     }),
     puppeteer: {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-extensions'],
     },
   });
 
@@ -568,6 +606,10 @@ async function connectSlot(slot, opts = {}) {
     let phone = null;
     try { phone = client.info && client.info.wid && client.info.wid.user; } catch {}
     setSlotStatus(slot, 'ready', { phone });
+    tentativasReconexao.delete(slot); cancelarReconexao(slot); falhasSaude.delete(slot);
+    console.log(`[wa slot ${slot}] conectado${phone ? ' (' + phone + ')' : ''}`);
+    // Espelha no painel as conversas que já existem no chip (um pouco depois, para o WhatsApp Web terminar de carregar)
+    setTimeout(() => { syncChatsForHost(slot).catch(e => console.warn(`[sync-chats] host=${slot}`, e && e.message)); }, 25000);
     try {
       db.prepare('UPDATE sdrs SET zeus_mode = 0, zeus_mode_at = NULL WHERE slot = ? AND zeus_mode = 1').run(slot);
     } catch {}
@@ -621,13 +663,26 @@ async function connectSlot(slot, opts = {}) {
   });
 
   client.on('disconnected', (reason) => {
-    setSlotStatus(slot, 'disconnected');
+    const atual = clients.get(slot) === client;
+    console.warn(`[wa slot ${slot}] desconectado: ${reason}${atual ? '' : ' (cliente antigo, ignorado)'}${desligandoDeProposito.has(slot) ? ' (intencional)' : ''}`);
+    if (!atual) return;
     clients.delete(slot);
+    try { client.destroy().catch(() => {}); } catch {}
+    if (desligandoDeProposito.has(slot)) { setSlotStatus(slot, 'disconnected'); return; }
+    if (/LOGOUT|UNPAIRED|CONFLICT/i.test(String(reason))) {
+      setSlotStatus(slot, 'disconnected');
+      alertar(`sdrs-slot-${slot}-logout`, `WhatsApp SDR ${nomeDoSlot(slot)} foi desconectado pelo WhatsApp (${reason}). Precisa ler o QR de novo na Central › WhatsApp. Se acontecer de novo, confira os aparelhos conectados no celular desse número.`);
+      return;
+    }
+    setSlotStatus(slot, 'connecting');
+    agendarReconexao(slot, String(reason));
   });
 
-  client.on('auth_failure', () => {
+  client.on('auth_failure', (msg) => {
+    console.warn(`[wa slot ${slot}] falha de autenticação: ${msg}`);
     setSlotStatus(slot, 'idle');
     clients.delete(slot);
+    alertar(`sdrs-slot-${slot}-auth`, `WhatsApp SDR ${nomeDoSlot(slot)} perdeu a sessão (falha de autenticação). Precisa ler o QR de novo na Central › WhatsApp.`);
   });
 
   // Fix Smith 2026-07-21 (guarda contra handler duplicado):
@@ -671,6 +726,7 @@ async function connectSlot(slot, opts = {}) {
     if (/already running/i.test(String(e && e.message))) {
       await killChromeForSlot(slot);
     }
+    if (clients.get(slot) === undefined && temSessaoNoDisco(slot)) { setSlotStatus(slot, 'connecting'); agendarReconexao(slot, 'erro ao iniciar: ' + (e && e.message)); }
   });
 }
 
@@ -679,6 +735,9 @@ async function disconnectSlot(slot, opts = {}) {
   //                                E apaga sessao local, forcando novo QR/pair pra reconectar.
   // opts.logout = false: so mata client em memoria, mantem sessao no disco (reconectar sem parear).
   const logout = opts.logout !== false;
+  cancelarReconexao(slot); tentativasReconexao.delete(slot);
+  desligandoDeProposito.add(slot);
+  setTimeout(() => desligandoDeProposito.delete(slot), 30000);
   const client = clients.get(slot);
   if (client) {
     if (logout) {
@@ -753,7 +812,9 @@ async function restoreSlots() {
   // pareamento/connecting, o restart seguinte nao pode simplesmente ignorar. So
   // pula 'idle'/'disconnected' (usuario desconectou intencionalmente).
   // Se o slot tem sessao no disco (LocalAuth), ele deve tentar subir.
-  const slots = db.prepare("SELECT slot FROM sdrs WHERE status IN ('ready','connecting','qr')").all();
+  // 2026-10-04: 'disconnected' com sessão no disco também sobe (queda comum; logout de verdade apaga a pasta)
+  const slots = db.prepare("SELECT slot, status FROM sdrs WHERE status IN ('ready','connecting','qr','disconnected')").all()
+    .filter(r => r.status !== 'disconnected' || temSessaoNoDisco(r.slot));
   for (const { slot } of slots) {
     await killChromeForSlot(slot);
     setSlotStatus(slot, 'connecting');
@@ -1059,16 +1120,50 @@ function startConnectionWatchdog() {
           AND strftime('%s', REPLACE(REPLACE(updated_at,'T',' '),'Z','')) < strftime('%s','now') - 90
       `).all();
       for (const s of stuck) {
+        if (reconexaoAgendada.has(s.slot)) continue; // já tem reconexão marcada
         console.warn(`[wa watchdog] slot ${s.slot} travado em connecting, force reset`);
         killChromeForSlot(s.slot).then(() => {
           try { clients.delete(s.slot); } catch {}
-          setSlotStatus(s.slot, 'idle');
+          if (temSessaoNoDisco(s.slot)) { setSlotStatus(s.slot, 'connecting'); agendarReconexao(s.slot, 'travado em conectando'); }
+          else setSlotStatus(s.slot, 'idle');
         }).catch(() => {});
       }
     } catch (e) {
       console.error('[wa watchdog] err:', e.message);
     }
   }, 30000);
+}
+
+// Checagem de saúde (2026-10-04): slot 'ready' com Chrome morto ficava como zumbi ("conectado" sem funcionar).
+// A cada 2 min pergunta o estado ao WhatsApp Web; 2 falhas seguidas = reconecta pela sessão do disco (sem QR).
+const falhasSaude = new Map();
+let saudeRodando = false;
+async function checarSaude() {
+  if (saudeRodando) return; saudeRodando = true;
+  try {
+    for (const [slot, st] of runtimeStatus) {
+      if (st !== 'ready') continue;
+      const client = clients.get(slot);
+      let estado = null, erro = null;
+      try { estado = client ? await comPrazo(client.getState(), 20000, 'getState') : null; } catch (e) { erro = e && e.message; }
+      if (estado === 'CONNECTED') { falhasSaude.delete(slot); continue; }
+      if (/UNPAIRED/i.test(String(estado))) {
+        console.warn(`[wa saude] slot ${slot} desvinculado (${estado})`);
+        desligandoDeProposito.add(slot);
+        try { await client.destroy(); } catch {}
+        desligandoDeProposito.delete(slot);
+        clients.delete(slot); setSlotStatus(slot, 'disconnected');
+        alertar(`sdrs-slot-${slot}-logout`, `WhatsApp SDR ${nomeDoSlot(slot)} foi desvinculado pelo WhatsApp. Precisa ler o QR de novo na Central › WhatsApp.`);
+        continue;
+      }
+      const n = (falhasSaude.get(slot) || 0) + 1; falhasSaude.set(slot, n);
+      console.warn(`[wa saude] slot ${slot} não respondeu (${estado || erro || 'sem cliente'}), falha ${n}`);
+      if (n >= 2) { falhasSaude.delete(slot); setSlotStatus(slot, 'connecting'); agendarReconexao(slot, 'Chrome não respondia'); }
+    }
+  } finally { saudeRodando = false; }
+}
+function startHealthCheck() {
+  setInterval(() => { checarSaude().catch(e => console.error('[wa saude] err:', e && e.message)); }, 2 * 60 * 1000);
 }
 
 // Reset do cache em memoria de welcomes ja enviados naquele slot.
@@ -1235,4 +1330,83 @@ function startReplayScheduler() {
   setTimeout(() => { tick(); setInterval(tick, 3 * 60 * 1000); }, 60_000);
 }
 
-module.exports = { connectSlot, disconnectSlot, getClient, isReady, sendText, restoreSlots, requestPairingCodeForSlot, reconnectSlot, clients, runtimeStatus, startUploadDispatcher, startConnectionWatchdog, resetWelcomeCache, replayStuckForSlot, startReplayScheduler, syncMissedInboundForSlot };
+// ─── Espelho das conversas do chip (Central: aba WhatsApp › Conversas) ──────────────────────────────────────────
+// O handler on('message') só grava o que chega com o chip conectado. Aqui, ao conectar (ou a pedido), lê os chats
+// mais recentes direto do WhatsApp Web e grava as últimas mensagens de cada um, para o painel mostrar as conversas
+// que já existiam no número. Só espelha: não passa por saveMessage, então não aciona IA, CRM nem gatilhos.
+const _chatSync = new Map(); // hostSlot -> { rodando, inicio, fim, chats, msgs, erro }
+const comPrazo = (p, ms, nome) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(nome + ': tempo esgotado')), ms))]);
+const TIPOS_FORA_DO_ESPELHO = ['e2e_notification', 'notification_template', 'notification', 'gp2', 'protocol', 'call_log', 'ciphertext', 'revoked', 'message_history_notice'];
+async function syncChatsForHost(hostSlot, opts = {}) {
+  const client = clients.get(hostSlot);
+  if (!client || runtimeStatus.get(hostSlot) !== 'ready') return { ok: false, error: 'slot_nao_ready' };
+  const atual = _chatSync.get(hostSlot);
+  if (atual && atual.rodando) return { ok: true, rodando: true };
+  const maxChats = Math.min(Math.max(parseInt(opts.chats, 10) || 200, 1), 500);
+  const maxMsgs = Math.min(Math.max(parseInt(opts.msgs, 10) || 40, 1), 100);
+  const st = { rodando: true, inicio: Date.now(), fim: null, chats: 0, msgs: 0, erro: null };
+  _chatSync.set(hostSlot, st);
+  try {
+    // Na versão atual do WhatsApp Web, client.getChats(), getChatById() e fetchMessages() da biblioteca quebram
+    // (erro de IndexedDB ao montar o modelo do chat). Por isso lê direto a coleção que o WhatsApp Web já tem em
+    // memória: os chats mais recentes, com nome, telefone (chats @lid trazem o número no contato) e as mensagens
+    // que ele já carregou de cada um. Uma chamada só, leve, sem abrir chat nenhum.
+    const chats = await comPrazo(client.pupPage.evaluate((maxChats, maxMsgs) => {
+      const idDe = (id) => { if (!id) return null; try { const t = String(id.toString()); if (/^(true|false)_/.test(t)) return t; } catch (_) {}
+        const rem = id.remote && (id.remote._serialized || String(id.remote)); if (!rem || !id.id) return null;
+        const part = id.participant ? '_' + (id.participant._serialized || String(id.participant)) : '';
+        return `${id.fromMe ? 'true' : 'false'}_${rem}_${id.id}${part}`; };
+      return window.require('WAWebCollections').Chat.getModelsArray()
+        .filter(c => c && c.id && c.id._serialized && c.t && c.id._serialized !== 'status@broadcast' && !/@(newsletter|broadcast)$/.test(c.id._serialized))
+        .sort((a, b) => b.t - a.t).slice(0, maxChats)
+        .map(c => { let fone = null, nome = null;
+          try { const ct = c.contact; if (ct) { nome = ct.name || ct.pushname || ct.verifiedName || null; if (ct.phoneNumber && ct.phoneNumber.user) fone = ct.phoneNumber.user; } } catch (_) {}
+          let msgs = [];
+          try { msgs = c.msgs.getModelsArray().slice(-maxMsgs).map(m => ({ id: idDe(m.id), fromMe: !!(m.id && m.id.fromMe), body: typeof m.body === 'string' && m.type === 'chat' ? m.body : (typeof m.caption === 'string' ? m.caption : ''), t: m.t || 0, type: m.type || 'chat' })); } catch (_) {}
+          return { id: c.id._serialized, t: c.t, unread: c.unreadCount || 0, nome: c.formattedTitle || c.name || nome, fone, msgs }; });
+    }, maxChats, maxMsgs), 90000, 'lista de chats');
+    const insMsg = db.prepare(`INSERT OR IGNORE INTO messages (slot, chat_id, wa_message_id, from_me, body, ts, type) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+    const convDe = db.prepare('SELECT id, slot FROM conversations WHERE chat_id = ? ORDER BY last_ts DESC LIMIT 1');
+    const bindDe = db.prepare('SELECT slot FROM contact_slot_binding WHERE chat_id = ? LIMIT 1');
+    const convUpd = db.prepare(`UPDATE conversations SET contact_name = COALESCE(contact_name, @nome), contact_phone = COALESCE(@fone, contact_phone),
+      last_message = CASE WHEN @ts >= last_ts THEN @body ELSE last_message END, last_from_me = CASE WHEN @ts >= last_ts THEN @fromMe ELSE last_from_me END,
+      last_ts = MAX(last_ts, @ts), updated_at = @agora WHERE id = @id`);
+    const convIns = db.prepare(`INSERT OR IGNORE INTO conversations (slot, chat_id, contact_phone, contact_name, last_message, last_from_me, last_ts, unread) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+    const gravar = db.transaction((lista) => {
+      for (const item of lista) {
+        const chatId = item.id;
+        // a conversa fica no SDR que já a atende (conversa existente ou vínculo); senão, no SDR dono do chip
+        const conv = convDe.get(chatId), bind = conv ? null : bindDe.get(chatId);
+        const slot = conv ? conv.slot : bind ? bind.slot : hostSlot;
+        let ultima = null;
+        for (const m of item.msgs || []) {
+          if (!m.id || !m.t || TIPOS_FORA_DO_ESPELHO.includes(m.type)) continue;
+          const body = m.body || (m.type && m.type !== 'chat' ? `[${m.type}]` : '');
+          if (insMsg.run(slot, chatId, m.id, m.fromMe ? 1 : 0, body, m.t, m.type || 'chat').changes) st.msgs++;
+          if (!ultima || m.t >= ultima.ts) ultima = { ts: m.t, body, fromMe: m.fromMe ? 1 : 0 };
+        }
+        if (!ultima) continue; // chat sem mensagem legível: não cria conversa vazia
+        const fone = item.fone || (/@c\.us$/.test(chatId) ? chatId.split('@')[0] : null);
+        if (conv) convUpd.run({ nome: item.nome || null, fone, ts: ultima.ts, body: ultima.body, fromMe: ultima.fromMe, agora: new Date().toISOString(), id: conv.id });
+        else convIns.run(slot, chatId, fone || chatId.split('@')[0], item.nome || null, ultima.body, ultima.fromMe, ultima.ts, item.unread > 0 ? Math.min(item.unread, 99) : 0);
+        st.chats++;
+      }
+    });
+    gravar(chats || []);
+  } catch (e) { st.erro = (e && e.message) || String(e); console.warn(`[sync-chats] host=${hostSlot} falhou:`, st.erro); }
+  st.rodando = false; st.fim = Date.now();
+  console.log(`[sync-chats] host=${hostSlot} ${st.chats} conversas, ${st.msgs} mensagens novas em ${Math.round((st.fim - st.inicio) / 1000)}s${st.erro ? ' (erro: ' + st.erro + ')' : ''}`);
+  return { ok: !st.erro, chats: st.chats, msgs: st.msgs, erro: st.erro };
+}
+// Dispara o espelho em todos os chips conectados (não espera terminar) e devolve o estado de cada um
+function syncChatsAll(opts) {
+  const hosts = [...clients.keys()].filter(h => runtimeStatus.get(h) === 'ready');
+  hosts.forEach(h => { syncChatsForHost(h, opts).catch(e => console.warn('[sync-chats] host=' + h, e && e.message)); });
+  return syncChatsStatus();
+}
+function syncChatsStatus() {
+  const out = {}; for (const [h, s] of _chatSync) out[h] = Object.assign({}, s);
+  return { conectados: [...clients.keys()].filter(h => runtimeStatus.get(h) === 'ready'), estado: out };
+}
+
+module.exports = { startHealthCheck, connectSlot, disconnectSlot, getClient, isReady, sendText, restoreSlots, requestPairingCodeForSlot, reconnectSlot, clients, runtimeStatus, startUploadDispatcher, startConnectionWatchdog, resetWelcomeCache, replayStuckForSlot, startReplayScheduler, syncMissedInboundForSlot, syncChatsForHost, syncChatsAll, syncChatsStatus };

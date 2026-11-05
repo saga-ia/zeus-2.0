@@ -24,6 +24,18 @@ function isEmailValid(v) {
   return true;
 }
 
+const VALID_DDDS_BR = new Set([11,12,13,14,15,16,17,18,19,21,22,24,27,28,31,32,33,34,35,37,38,41,42,43,44,45,46,47,48,49,51,53,54,61,62,63,64,65,66,67,68,69,71,73,74,75,77,79,81,82,83,84,85,86,87,88,89,91,92,93,94,95,96,97,98,99]);
+
+function validatePhoneBR(raw) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (digits.length !== 11) return { ok: false, error: 'Telefone inválido. Use DDD + 9 + 8 dígitos.' };
+  const ddd = parseInt(digits.substring(0, 2), 10);
+  if (ddd === 55) return { ok: false, error: 'Você digitou 55 no DDD. O 55 é o código do país (DDI), não o DDD. Informe o DDD da sua cidade, ex: 11 pra SP.' };
+  if (!VALID_DDDS_BR.has(ddd)) return { ok: false, error: 'DDD inválido.' };
+  if (digits[2] !== '9') return { ok: false, error: 'Falta o 9 no início do celular.' };
+  return { ok: true };
+}
+
 function detectDevice(ua) {
   if (!ua) return 'Desconhecido';
   if (/iPhone/.test(ua)) return 'iPhone';
@@ -291,6 +303,10 @@ app.post('/submit', async (req, res) => {
     if (!isEmailValid(email)) {
       return res.status(400).json({ ok: false, error: 'E-mail inválido.' });
     }
+    const telCheck = validatePhoneBR(telefone);
+    if (!telCheck.ok) {
+      return res.status(400).json({ ok: false, error: telCheck.error });
+    }
 
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
     const ua = req.headers['user-agent'] || '';
@@ -434,6 +450,10 @@ app.post('/submit-palestras', async (req, res) => {
     }
     if (!isEmailValid(email)) {
       return res.status(400).json({ ok: false, error: 'E-mail inválido.' });
+    }
+    const telCheck = validatePhoneBR(telefone);
+    if (!telCheck.ok) {
+      return res.status(400).json({ ok: false, error: telCheck.error });
     }
 
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();

@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 const { db, getConfig, setConfig } = require('./src/db');
 const auth = require('./src/auth');
 const ig = require('./src/ig-api');
@@ -296,7 +297,8 @@ app.get('/api/threads', auth.requireAuth, (req, res) => {
            th.current_agent_id,
            c.id AS contact_id, c.ig_sender_id, c.ig_username, c.ig_name,
            a.name AS agent_name, a.color AS agent_color,
-           (SELECT text FROM messages WHERE contact_id=c.id ORDER BY id DESC LIMIT 1) AS last_text
+           (SELECT text FROM messages WHERE contact_id=c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_text,
+           (SELECT sent_by FROM messages WHERE contact_id=c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_sent_by
     FROM ig_threads th
     JOIN contacts c ON c.id=th.contact_id
     LEFT JOIN agents a ON a.id=th.current_agent_id
@@ -312,8 +314,9 @@ app.get('/api/threads/:id', auth.requireAuth, (req, res) => {
                          FROM ig_threads th JOIN contacts c ON c.id=th.contact_id
                          WHERE th.id=?`).get(req.params.id);
   if (!th) return res.status(404).json({ error: 'not found' });
-  const messages = db.prepare(`SELECT id, direction, text, created_at, sent_by, ig_message_id
-                               FROM messages WHERE contact_id=? ORDER BY id ASC LIMIT 500`).all(th.contact_id);
+  // as 500 mais recentes, em ordem de horário (ecos e mídias gravados depois entram na posição certa)
+  const messages = db.prepare(`SELECT * FROM (SELECT id, direction, text, media_url, created_at, sent_by, ig_message_id
+                               FROM messages WHERE contact_id=? ORDER BY created_at DESC, id DESC LIMIT 500) ORDER BY created_at ASC, id ASC`).all(th.contact_id);
   const runs = db.prepare(`SELECT id, agent_id, status, input_text, output_text, model, duration_ms, started_at, finished_at
                            FROM agent_runs WHERE thread_id=? ORDER BY id DESC LIMIT 20`).all(th.id);
   db.prepare('UPDATE ig_threads SET unread_count=0 WHERE id=?').run(th.id);
@@ -397,6 +400,119 @@ app.get('/api/dashboard', auth.requireAuth, (req, res) => {
     tenant: { id: t.id, name: t.name, ig_username: t.ig_username, ig_account_type: t.ig_account_type, status: t.status },
     stats: { agents, threads, messagesIn, messagesOut, runsToday, runsErrors },
     recentRuns,
+  });
+});
+
+// ---------- FLUXOS DE CONVERSA (construtor da Central > Instagram > Fluxos; motor em src/flows.js) ----------
+const flowsEngine = require('./src/flows');
+const { execFile } = require('child_process');
+const FLOW_MEDIA = path.join(__dirname, 'data', 'flow-media');
+const PUBLIC_BASE = (process.env.MYIG_PUBLIC_URL || 'https://myig.jefersonhenrike.com').replace(/\/+$/, '');
+fs.mkdirSync(FLOW_MEDIA, { recursive: true });
+// Mídia dos fluxos precisa de link público: a Meta baixa a imagem/áudio pela URL. Nomes aleatórios, só leitura.
+app.use('/m', express.static(FLOW_MEDIA, { index: false, maxAge: '30d', fallthrough: false }));
+
+function flowNovaDefinicao() {
+  return { nodes: [
+    { id: 'g1', type: 'gatilho', x: 80, y: 120, data: { tipo: 'palavra', palavras: [], modo: 'contem' } },
+    { id: 'm1', type: 'mensagem', x: 460, y: 100, data: { texto: 'Oi {{nome}}! Que bom te ver por aqui.', estilo: 'botoes', botoes: [] } },
+  ], edges: [{ de: 'g1', porta: 'proximo', para: 'm1' }] };
+}
+function flowStats(id) {
+  const r = db.prepare(`SELECT COUNT(*) total, SUM(status='done') concluidos, SUM(status IN ('waiting_reply','pending','running')) andamento,
+    SUM(status='error') erros, MAX(started_at) ultimo FROM flow_runs WHERE flow_id=?`).get(id);
+  return { total: r.total || 0, concluidos: r.concluidos || 0, andamento: r.andamento || 0, erros: r.erros || 0, ultimo: r.ultimo || null };
+}
+function flowShape(f, completo) {
+  let d = {}; try { d = JSON.parse(f.definition || '{}'); } catch (_) {}
+  const g = (d.nodes || []).find(n => n.type === 'gatilho');
+  const o = { id: f.id, name: f.name, description: f.description, active: !!f.active, updated_at: f.updated_at,
+    gatilho: g ? g.data : null, blocos: (d.nodes || []).length, stats: flowStats(f.id) };
+  if (completo) o.definition = { nodes: d.nodes || [], edges: d.edges || [] };
+  return o;
+}
+function cleanDef(d) {
+  if (!d || !Array.isArray(d.nodes) || !Array.isArray(d.edges)) throw new Error('definição inválida');
+  if (d.nodes.length > 200) throw new Error('fluxo grande demais (máx. 200 blocos)');
+  const TIPOS = ['gatilho', 'mensagem', 'imagem', 'audio', 'espera', 'pergunta', 'agente'];
+  const nodes = d.nodes.filter(n => n && TIPOS.includes(n.type) && /^[\w-]{1,40}$/.test(String(n.id)))
+    .map(n => ({ id: String(n.id), type: n.type, x: Math.round(+n.x || 0), y: Math.round(+n.y || 0), data: n.data && typeof n.data === 'object' ? n.data : {} }));
+  const ids = new Set(nodes.map(n => n.id));
+  const edges = d.edges.filter(e => e && ids.has(e.de) && ids.has(e.para) && e.de !== e.para)
+    .map(e => ({ de: e.de, porta: String(e.porta || 'proximo').slice(0, 60), para: e.para }));
+  // uma seta por porta
+  const visto = new Set();
+  return { nodes, edges: edges.filter(e => { const k = e.de + '|' + e.porta; if (visto.has(k)) return false; visto.add(k); return true; }) };
+}
+
+app.get('/api/flows', auth.requireAuth, (req, res) => {
+  const t = pickTenant(req); if (!t) return res.json({ flows: [] });
+  res.json({ flows: db.prepare('SELECT * FROM flows WHERE tenant_id=? ORDER BY updated_at DESC').all(t.id).map(f => flowShape(f)) });
+});
+app.post('/api/flows', auth.requireAuth, (req, res) => {
+  const t = pickTenant(req); if (!t) return res.status(400).json({ error: 'no tenant available' });
+  const name = String((req.body || {}).name || 'Novo fluxo').trim().slice(0, 80) || 'Novo fluxo';
+  const info = db.prepare('INSERT INTO flows(tenant_id, name, definition, active) VALUES(?,?,?,0)').run(t.id, name, JSON.stringify(flowNovaDefinicao()));
+  res.json({ flow: flowShape(db.prepare('SELECT * FROM flows WHERE id=?').get(info.lastInsertRowid), true) });
+});
+app.get('/api/flows/:id', auth.requireAuth, (req, res) => {
+  const f = db.prepare('SELECT * FROM flows WHERE id=?').get(req.params.id);
+  if (!f) return res.status(404).json({ error: 'not found' });
+  const agentes = db.prepare('SELECT id, name, active FROM agents WHERE tenant_id=? ORDER BY name').all(f.tenant_id);
+  res.json({ flow: flowShape(f, true), agentes });
+});
+app.put('/api/flows/:id', auth.requireAuth, (req, res) => {
+  const f = db.prepare('SELECT * FROM flows WHERE id=?').get(req.params.id);
+  if (!f) return res.status(404).json({ error: 'not found' });
+  const b = req.body || {};
+  let defin = null;
+  try { if (b.definition !== undefined) defin = cleanDef(b.definition); } catch (e) { return res.status(400).json({ error: e.message }); }
+  const ativo = b.active === undefined ? !!f.active : !!b.active;
+  if (ativo) {
+    const problemas = flowsEngine.validar(defin || JSON.parse(f.definition || '{}'), true);
+    if (problemas.length) return res.status(400).json({ error: (f.active ? 'Fluxo ativo: corrija antes de salvar (ou desative). ' : 'Corrija antes de ativar. ') + problemas.join(' '), problemas });
+  }
+  db.prepare(`UPDATE flows SET name=COALESCE(?,name), definition=COALESCE(?,definition), active=?, updated_at=datetime('now') WHERE id=?`)
+    .run(b.name != null ? String(b.name).trim().slice(0, 80) || null : null, defin ? JSON.stringify(defin) : null, ativo ? 1 : 0, f.id);
+  if (b.active !== undefined && !!b.active !== !!f.active) console.log(`[flows] fluxo ${f.id} ${ativo ? 'ATIVADO' : 'desativado'} por ${req.headers['x-central-user'] || 'myig'}`);
+  // desativar encerra as execuções em andamento
+  if (!ativo) db.prepare(`UPDATE flow_runs SET status='canceled', updated_at=datetime('now') WHERE flow_id=? AND status IN ('pending','waiting_reply','running')`).run(f.id);
+  res.json({ flow: flowShape(db.prepare('SELECT * FROM flows WHERE id=?').get(f.id), true), avisos: flowsEngine.validar(defin || JSON.parse(f.definition || '{}'), false) });
+});
+app.post('/api/flows/:id/duplicar', auth.requireAuth, (req, res) => {
+  const f = db.prepare('SELECT * FROM flows WHERE id=?').get(req.params.id);
+  if (!f) return res.status(404).json({ error: 'not found' });
+  const info = db.prepare('INSERT INTO flows(tenant_id, name, description, definition, active) VALUES(?,?,?,?,0)').run(f.tenant_id, (f.name + ' (cópia)').slice(0, 80), f.description, f.definition);
+  res.json({ flow: flowShape(db.prepare('SELECT * FROM flows WHERE id=?').get(info.lastInsertRowid), true) });
+});
+app.delete('/api/flows/:id', auth.requireAuth, (req, res) => {
+  db.prepare('DELETE FROM flows WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+// Upload: corpo bruto (até 15 MB). Áudio vira M4A (AAC) e imagem WebP vira JPG: formatos que o Instagram aceita.
+app.post('/api/flows/media', auth.requireAuth, express.raw({ type: () => true, limit: '15mb' }), (req, res) => {
+  const tipo = req.query.tipo === 'audio' ? 'audio' : 'imagem';
+  const ct = String(req.headers['content-type'] || '').toLowerCase();
+  const buf = req.body;
+  if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'arquivo vazio' });
+  const base = crypto.randomBytes(12).toString('hex');
+  const ENTRA = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp',
+    'audio/webm': '.webm', 'audio/ogg': '.ogg', 'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/x-m4a': '.m4a', 'audio/aac': '.aac', 'audio/wav': '.wav', 'audio/x-wav': '.wav', 'video/webm': '.webm' };
+  const ext = ENTRA[ct.split(';')[0].trim()];
+  if (!ext || (tipo === 'imagem') !== ct.startsWith('image/')) return res.status(400).json({ error: tipo === 'audio' ? 'formato de áudio não aceito' : 'use PNG, JPG, GIF ou WebP' });
+  const bruto = path.join(FLOW_MEDIA, base + '.orig' + ext);
+  fs.writeFileSync(bruto, buf);
+  const pronto = (nome, dur) => res.json({ url: PUBLIC_BASE + '/m/' + nome, duracao: dur || null });
+  const falhou = (e) => { try { fs.rmSync(bruto, { force: true }); } catch (_) {} res.status(400).json({ error: 'não consegui converter o arquivo: ' + e }); };
+  if (tipo === 'imagem' && ext !== '.webp') { const nome = base + ext; fs.renameSync(bruto, path.join(FLOW_MEDIA, nome)); return pronto(nome); }
+  const nome = base + (tipo === 'audio' ? '.m4a' : '.jpg');
+  const args = tipo === 'audio' ? ['-y', '-loglevel', 'error', '-i', bruto, '-vn', '-ac', '1', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', path.join(FLOW_MEDIA, nome)]
+    : ['-y', '-loglevel', 'error', '-i', bruto, '-q:v', '3', path.join(FLOW_MEDIA, nome)];
+  execFile('ffmpeg', args, { timeout: 60000 }, (err, _o, stderr) => {
+    try { fs.rmSync(bruto, { force: true }); } catch (_) {}
+    if (err) return falhou(String(stderr || err.message).slice(0, 200));
+    if (tipo !== 'audio') return pronto(nome);
+    execFile('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(FLOW_MEDIA, nome)], { timeout: 15000 }, (_e, out) => pronto(nome, Math.round(parseFloat(out) || 0)));
   });
 });
 

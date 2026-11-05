@@ -1,0 +1,17 @@
+{
+  "name": "jeff-video-estudio",
+  "private": true,
+  "description": "Estúdio Remotion da aba Edição de Vídeo da Central. Cada vídeo é uma pasta em projetos/<slug>/ com index.ts próprio.",
+  "scripts": { "render": "remotion render" },
+  "dependencies": {
+    "remotion": "4.0.534",
+    "@remotion/cli": "4.0.534",
+    "@remotion/media-utils": "4.0.534",
+    "@remotion/captions": "4.0.534",
+    "@remotion/transitions": "4.0.534",
+    "@remotion/google-fonts": "4.0.534",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": { "typescript": "5.8.3", "@types/react": "19.1.0" }
+}

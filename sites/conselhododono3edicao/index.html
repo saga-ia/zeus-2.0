@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d14">
+<title>Board Academy · Relatório de Campanha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0d14;
+    --bg2:#0e1220;
+    --panel:#131826;
+    --panel2:#171d2e;
+    --border:#1f2840;
+    --border2:#2a3450;
+    --text:#e8edf8;
+    --muted:#6b7a9e;
+    --accent:#4f8ef7;
+    --accent2:#3a7ae8;
+    --green:#22c55e;
+    --red:#ef4444;
+    --orange:#f59e0b;
+    --purple:#a78bfa;
+  }
+  html{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:16px;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;padding:0 0 60px}
+
+  /* Header */
+  .header{background:linear-gradient(135deg,#0e1625 0%,#111a30 100%);border-bottom:1px solid var(--border);padding:32px 24px 28px}
+  .header-inner{max-width:960px;margin:0 auto}
+  .badge{display:inline-block;background:#1a2440;border:1px solid #2a3a60;color:var(--accent);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:14px}
+  .header h1{font-size:clamp(22px,4vw,32px);font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px}
+  .header p{color:var(--muted);font-size:14px}
+  .period{display:inline-flex;align-items:center;gap:6px;background:#131e38;border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:13px;font-weight:500;color:#9daac8;margin-top:12px}
+  .period svg{flex-shrink:0}
+
+  /* Main */
+  .main{max-width:960px;margin:0 auto;padding:28px 16px 0}
+
+  /* Section header */
+  .section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:32px 0 14px;padding-left:4px;border-left:3px solid var(--accent);padding-left:10px}
+
+  /* KPI grid */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}
+  .kpi{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+  .kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}
+  .kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+  .kpi.orange::before{background:linear-gradient(90deg,var(--orange),transparent)}
+  .kpi.purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+  .kpi-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-value{font-size:clamp(18px,3vw,24px);font-weight:800;color:#fff;line-height:1.1}
+  .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* Large KPIs */
+  .kpi-xl{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .kpi-xl-left .label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:4px}
+  .kpi-xl-left .val{font-size:clamp(26px,4vw,38px);font-weight:800;color:#fff}
+  .kpi-xl-left .sub{font-size:13px;color:var(--muted);margin-top:4px}
+  .kpi-xl-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .kpi-xl-icon.blue{background:#1a2a4a}
+  .kpi-xl-icon.green{background:#0d2a1a}
+  .kpi-xl-icon.red{background:#2a0d0d}
+  .kpi-xl-icon.orange{background:#2a1e0d}
+
+  /* Breakdown bar */
+  .breakdown{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+  .breakdown-title{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+  .breakdown-bar-wrap{background:var(--bg2);border-radius:8px;overflow:hidden;height:12px;display:flex;margin-bottom:16px}
+  .bar-seg{height:100%;transition:width .6s ease}
+  .bar-blue{background:var(--accent)}
+  .bar-purple{background:var(--purple)}
+  .breakdown-legend{display:flex;gap:20px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:8px}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .legend-text{font-size:12px;color:var(--muted)}
+  .legend-val{font-size:12px;font-weight:600;color:#fff;margin-left:2px}
+
+  /* Funnel */
+  .funnel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+  .funnel-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .funnel-row:last-child{border-bottom:none}
+  .funnel-dot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .funnel-info{flex:1}
+  .funnel-info .name{font-size:13px;font-weight:600;color:var(--text)}
+  .funnel-info .desc{font-size:11px;color:var(--muted);margin-top:2px}
+  .funnel-num{font-size:18px;font-weight:800;color:#fff}
+  .funnel-arrow{color:var(--muted);font-size:18px;flex-shrink:0;align-self:center}
+  .funnel-pct{background:#1a2440;border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+
+  /* Mix table */
+  .mix{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .mix table{width:100%;border-collapse:collapse}
+  .mix th{background:var(--panel2);padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left}
+  .mix td{padding:12px 16px;font-size:13px;border-top:1px solid var(--border)}
+  .mix td:first-child{font-weight:600;color:#fff}
+  .mix td:not(:first-child){color:var(--muted)}
+  .mix td.highlight{color:var(--accent);font-weight:700}
+  .mix tr.top-seller{background:#12192e}
+  .mix tr.top-seller td:first-child{color:var(--orange)}
+  .badge-top{display:inline-flex;align-items:center;gap:4px;background:#1e1500;border:1px solid #3a2a00;color:var(--orange);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
+
+  /* Insight box */
+  .insight{background:linear-gradient(135deg,#0f1a30 0%,#101626 100%);border:1px solid var(--border2);border-radius:12px;padding:20px 24px;display:flex;gap:16px;align-items:flex-start}
+  .insight-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+  .insight-body .title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .insight-body p{font-size:13px;color:var(--muted);line-height:1.6}
+  .insight-body strong{color:var(--text)}
+
+  /* 2-col grid */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:580px){.grid-2{grid-template-columns:1fr}}
+
+  /* result box */
+  .result-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 24px;text-align:center}
+  .result-box.negative{border-color:#3a1818}
+  .result-box.positive{border-color:#0d2a1a}
+  .result-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .result-val{font-size:clamp(22px,4vw,32px);font-weight:800}
+  .result-val.red{color:var(--red)}
+  .result-val.green{color:var(--green)}
+  .result-sub{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  /* footer */
+  .footer{max-width:960px;margin:40px auto 0;padding:20px 16px 0;border-top:1px solid var(--border);text-align:center}
+  .footer p{font-size:11px;color:#3a4560}
+
+  /* Responsive */
+  @media(max-width:520px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .header{padding:24px 16px 20px}
+    .breakdown-legend{gap:12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <span class="badge">Alpha Digital · Board Academy</span>
+    <h1>Relatório de Campanha</h1>
+    <p>Meta Ads · Geração de Leads + Distribuição</p>
+    <div class="period">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      01 de setembro a 15 de outubro de 2026
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Investimento -->
+  <div class="section-label">Investimento</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="kpi" style="grid-column:span 3 / span 3">
+      <div class="breakdown">
+        <div class="breakdown-title">Distribuição do Investimento — R$ 13.596,32</div>
+        <div class="breakdown-bar-wrap">
+          <div class="bar-seg bar-blue" style="width:80.7%"></div>
+          <div class="bar-seg bar-purple" style="width:19.3%"></div>
+        </div>
+        <div class="breakdown-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent)"></div>
+            <span class="legend-text">Cadastro (leads) <span class="legend-val">R$ 10.975,71</span></span>
+            <span style="font-size:12px;color:var(--accent);font-weight:700">80,7%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--purple)"></div>
+            <span class="legend-text">Distribuição <span class="legend-val">R$ 2.620,23</span></span>
+            <span style="font-size:12px;color:var(--purple);font-weight:700">19,3%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Meta -->
+  <div class="section-label">Performance Meta Ads</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Impressões</div>
+      <div class="kpi-value">309.409</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Alcance</div>
+      <div class="kpi-value">183.230</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Cliques</div>
+      <div class="kpi-value">7.584</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">CTR</div>
+      <div class="kpi-value">2,45%</div>
+      <div class="kpi-sub">taxa de clique</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">CPC</div>
+      <div class="kpi-value">R$ 1,79</div>
+      <div class="kpi-sub">por clique</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">CPM</div>
+      <div class="kpi-value">R$ 43,94</div>
+      <div class="kpi-sub">por mil impressões</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Frequência</div>
+      <div class="kpi-value">1,69</div>
+      <div class="kpi-sub">vezes por pessoa</div>
+    </div>
+  </div>
+
+  <!-- Conversões -->
+  <div class="section-label">Conversões</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    <div class="kpi blue" style="--accent:#4f8ef7">
+      <div class="kpi-label">Leads gerados (Pixel)</div>
+      <div class="kpi-value">140</div>
+      <div class="kpi-sub">CPL: R$ 78,00</div>
+    </div>
+    <div class="kpi orange" style="--accent:var(--orange)">
+      <div class="kpi-label">Iniciar checkout</div>
+      <div class="kpi-value">198</div>
+    </div>
+    <div class="kpi purple" style="--accent:var(--purple)">
+      <div class="kpi-label">Conversas iniciadas</div>
+      <div class="kpi-value">23</div>
+    </div>
+  </div>
+
+  <!-- Funil -->
+  <div class="section-label">Funil de Conversão</div>
+  <div class="funnel">
+    <div class="funnel-row">
+      <div class="funnel-dot" style="background:#1a2440">👥</div>
+      <div class="funnel-info">
+        <div class="name">Leads captados</div>
+        <div class="desc">Pixel Meta · formulário</div>
+      </div>
+      <div class="funnel-num">140</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:4px 0 4px;"><span style="font-size:11px;color:var(--muted)">↓ 141% chegaram ao checkout (incluindo orgânico)</span></div>
+    <div class="funnel-row">
+      <div class="funnel-dot" style="background:#1e1a2a">🛒</div>
+      <div class="funnel-info">
+        <div class="name">Iniciar checkout</div>
+        <div class="desc">clique no botão de compra</div>
+      </div>
+      <div class="funnel-num">198</div>
+      <div class="funnel-pct">10,6% → venda</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:4px 0 4px;"><span style="font-size:11px;color:var(--muted)">↓ de 140 leads, 15% viraram venda</span></div>
+    <div class="funnel-row" style="border-bottom:none">
+      <div class="funnel-dot" style="background:#0d2a1a">✅</div>
+      <div class="funnel-info">
+        <div class="name">Vendas realizadas</div>
+        <div class="desc">3ª edição Board Academy</div>
+      </div>
+      <div class="funnel-num" style="color:var(--green)">21</div>
+      <div class="funnel-pct" style="color:var(--green);border-color:#0d3a1a;background:#0a2010">15% dos leads</div>
+    </div>
+  </div>
+
+  <!-- Vendas -->
+  <div class="section-label">Vendas · 3ª Edição</div>
+  <div class="grid-2">
+    <div class="kpi green">
+      <div class="kpi-label">Arrecadado (planilha)</div>
+      <div class="kpi-value">R$ 7.768</div>
+      <div class="kpi-sub">21 vendas · ticket médio R$ 369,90</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-label">CAC por venda</div>
+      <div class="kpi-value">R$ 647,44</div>
+      <div class="kpi-sub">investimento / nº vendas</div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px" class="mix">
+    <table>
+      <thead>
+        <tr>
+          <th>Ingresso</th>
+          <th>Qtd</th>
+          <th>Receita</th>
+          <th>% das vendas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="top-seller">
+          <td>R$ 297<span class="badge-top">★ mais vendido</span></td>
+          <td>14</td>
+          <td class="highlight">R$ 4.158,00</td>
+          <td>66,7%</td>
+        </tr>
+        <tr>
+          <td>R$ 497</td>
+          <td>5</td>
+          <td class="highlight">R$ 2.485,00</td>
+          <td>23,8%</td>
+        </tr>
+        <tr>
+          <td>R$ 977</td>
+          <td>1</td>
+          <td class="highlight">R$ 977,00</td>
+          <td>4,8%</td>
+        </tr>
+        <tr>
+          <td>R$ 148</td>
+          <td>1</td>
+          <td class="highlight">R$ 148,00</td>
+          <td>4,8%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resultado -->
+  <div class="section-label">Resultado</div>
+  <div class="grid-2">
+    <div class="result-box negative">
+      <div class="result-label">ROAS</div>
+      <div class="result-val red">0,57x</div>
+      <div class="result-sub">Para cada R$ 1 investido,<br>retornou R$ 0,57 em vendas</div>
+    </div>
+    <div class="result-box negative">
+      <div class="result-label">Resultado líquido</div>
+      <div class="result-val red">- R$ 5.828,32</div>
+      <div class="result-sub">Investimento R$ 13.596<br>Arrecadado R$ 7.768</div>
+    </div>
+  </div>
+
+  <!-- Insight -->
+  <div style="margin-top:16px" class="insight">
+    <div class="insight-icon">💡</div>
+    <div class="insight-body">
+      <div class="title">Leitura da campanha</div>
+      <p>A campanha captou volume expressivo (<strong>140 leads a R$ 78 cada</strong>), mas o ticket médio de <strong>R$ 369,90</strong> está pressionando o ROAS. <strong>76% das vendas</strong> foram no ingresso de R$ 297 — o mais acessível. Para melhorar o retorno na próxima edição, o foco deve estar em elevar o ticket médio (mais conversões no R$ 497 e R$ 977) ou reduzir o custo por lead abaixo de R$ 50.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>Relatório gerado por Alpha Digital · Dados: Meta Ads + planilha de inscrições · 15/10/2026</p>
+</div>
+
+</body>
+</html>

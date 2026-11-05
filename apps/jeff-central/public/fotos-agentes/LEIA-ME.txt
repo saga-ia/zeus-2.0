@@ -1,0 +1,4 @@
+Fotos reais dos agentes do time, usadas nos cartões da tela de voz (/jarvis).
+Nome do arquivo = id do agente, em JPG quadrado (ideal 300x300):
+nina.jpg  sobral.jpg  icaro.jpg  gustavo.jpg  maicom.jpg  otavio.jpg  smith.jpg  tome.jpg  talles.jpg  eduardo.jpg
+Sem o arquivo, o cartão mostra a inicial. Ao trocar uma foto, suba o ?v=1 em zeus-visual.js (TIME.forEach) para o navegador não usar a antiga.
