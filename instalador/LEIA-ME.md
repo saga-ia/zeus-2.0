@@ -2,6 +2,14 @@
 
 Copia o Zeus 2.0 inteiro (worker, todos os apps, sites, agentes e skills) pra VPS do cliente, troca o domínio, gera chaves novas e deixa tudo no ar com HTTPS.
 
+## O que aparece na tela
+
+- **Checagem antes de começar:** sistema, memória, disco (mínimo 25 GB livres), internet (npm, Docker, Google, Cloudflare, Let's Encrypt), portas 80/443 e apt livre. Apache ou Nginx ocupando a porta 80/443 são parados sozinhos.
+- **Progresso:** `[5/18] Copiando o Zeus` com barra, tempo decorrido e uso de RAM e disco. Cada comando longo mostra uma linha viva com o tempo e a última coisa que o comando escreveu.
+- **Travamento:** 8 minutos sem log e sem CPU, ele interrompe e tenta de novo.
+- **Autocorreção:** repete o que falhou por rede (até 3 vezes, com pausa), espera a atualização automática do Ubuntu liberar o apt, conserta o dpkg e limpa o cache do npm.
+- **Verificação final:** reinicia os apps que caíram (até 3 rodadas), religa containers parados, testa a Central, o WhatsApp e o HTTPS, e mostra o último erro de qualquer app que não subiu.
+
 ## Jeito mais fácil: um comando, sempre o mesmo
 
 No **servidor do cliente**, como root:

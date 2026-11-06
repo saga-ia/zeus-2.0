@@ -33,13 +33,14 @@ fora() { [ -f "$FORA" ] && awk -v t="$1" '$1==t{print $2}' "$FORA" || true; }
 fora_tem() { fora "$1" | grep -qxF "$2"; }
 
 mkdir -p "$ESTADO"; chmod 700 "$ESTADO"
+exec 3>&1                              # fd 3 = terminal direto (indicador de progresso não suja o log)
 exec > >(tee -a "$LOG") 2>&1
 
 azul()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 ok()    { printf '\033[1;32m  ok\033[0m %s\n' "$*"; }
 aviso() { printf '\033[1;33m  atenção:\033[0m %s\n' "$*"; echo "$*" >> "$ESTADO/avisos.txt"; }
 erro()  { printf '\033[1;31m  erro:\033[0m %s\n' "$*"; exit 1; }
-trap 'printf "\n\033[1;31mParou na linha %s. Log completo em %s. Corrija e rode de novo: as etapas prontas são puladas.\033[0m\n" "$LINENO" "$LOG"' ERR
+trap 'printf "\n\033[1;31mParou na etapa \"%s\" (linha %s). Log completo: %s\nRode o mesmo comando de novo: ele continua de onde parou.\033[0m\n" "${UI_ETAPA:-início}" "$LINENO" "$LOG"' ERR
 
 [ "$(id -u)" = 0 ] || erro "rode como root"
 [ -d "$REPO/worker" ] && [ -d "$REPO/apps" ] || erro "rode a partir do repositório clonado (ex: /opt/zeus-2.0/instalador/instalar.sh)"
@@ -56,7 +57,9 @@ done
 
 feito()  { [ -f "$ESTADO/feito.$1" ]; }
 marca()  { touch "$ESTADO/feito.$1"; }
-etapa()  { if feito "$1"; then ok "etapa $1 já feita"; return 1; fi; azul "Etapa: $1"; }
+# progresso, rodar/tentar com detecção de travamento, autocorreção, checagem e verificação final
+# shellcheck disable=SC1091
+. "$INST/lib/ui.sh"
 campo()  { python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$RESP" "$1"; }
 
 # ------------------------------------------------------------------------------------
@@ -102,31 +105,32 @@ with os.fdopen(fd,'w') as f: json.dump(d,f,ensure_ascii=False,indent=1)
 PY
 }
 
+export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1   # Ubuntu: sem perguntas do apt no meio
+checagem
+
 if [ ! -f "$RESP" ] || [ "$PERGUNTAR" = 1 ]; then
-  command -v python3 >/dev/null || { apt-get update -qq && apt-get install -y -qq python3; }
+  command -v python3 >/dev/null || apt_inst "Python" "python3"
   perguntar
 else
   ok "usando respostas salvas ($(campo dominio), $(campo cliente)). Pra mudar: --respostas"
 fi
 DOMINIO="$(campo dominio)"; EMAIL="$(campo email)"; SENHA="$(campo senha)"
 
-export DEBIAN_FRONTEND=noninteractive
 export NVM_DIR=/root/.nvm
 carrega_node() { # shellcheck disable=SC1091
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use -s "$NODE_VER" >/dev/null 2>&1 || true; }
 
 # ------------------------------------------------------------------------------------
 if etapa sistema; then
-  apt-get update -qq
-  apt-get install -y -qq ca-certificates curl git rsync jq sqlite3 python3 python3-pip python3-venv ffmpeg \
-    build-essential ufw dnsutils cron gnupg unzip fonts-liberation fonts-noto-color-emoji locales tzdata >/dev/null
+  apt_inst "Pacotes base (curl, git, python, ffmpeg, firewall...)" \
+    "ca-certificates curl git rsync jq sqlite3 python3 python3-pip python3-venv ffmpeg build-essential ufw dnsutils cron gnupg unzip psmisc fonts-liberation fonts-noto-color-emoji locales tzdata"
   # Chromium do sistema (WhatsApp Web). No Ubuntu o pacote é snap, então usa o Chrome .deb.
   if ! command -v chromium >/dev/null && ! [ -x /usr/bin/chromium ]; then
-    if grep -qi debian /etc/os-release && apt-get install -y -qq chromium >/dev/null 2>&1; then :
+    if grep -qi debian /etc/os-release && apt_inst "Chromium (WhatsApp)" "chromium"; then :
     else
-      curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      apt-get install -y -qq /tmp/chrome.deb >/dev/null && rm -f /tmp/chrome.deb
-      ln -sf /usr/bin/google-chrome /usr/bin/chromium
+      tentar 3 "Baixando o Chrome (WhatsApp)" curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      esperar_apt; tentar 3 "Instalando o Chrome" apt-get install -y -q /tmp/chrome.deb
+      rm -f /tmp/chrome.deb; ln -sf /usr/bin/google-chrome /usr/bin/chromium
     fi
   fi
   # swap se tiver pouca memória (npm e Chromium agradecem)
@@ -161,21 +165,22 @@ if etapa dns; then
 fi
 
 if etapa docker; then
-  command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh >/dev/null
+  command -v docker >/dev/null || { esperar_apt; tentar 3 "Instalando o Docker" bash -c 'curl -fsSL https://get.docker.com | sh'; }
   systemctl enable --now docker >/dev/null
   docker compose version >/dev/null || erro "docker compose não disponível"
   marca docker; ok "$(docker --version)"
 fi
 
 if etapa node; then
-  [ -s "$NVM_DIR/nvm.sh" ] || curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash >/dev/null
+  [ -s "$NVM_DIR/nvm.sh" ] || tentar 3 "Instalando o nvm" bash -c 'curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash'
   # shellcheck disable=SC1091
   . "$NVM_DIR/nvm.sh"
-  nvm install "$NODE_VER" >/dev/null && nvm alias default "$NODE_VER" >/dev/null
-  npm i -g pm2@6 @anthropic-ai/claude-code >/dev/null
+  tentar 3 "Node $NODE_VER" nvm install "$NODE_VER"
+  nvm use "$NODE_VER" >/dev/null && nvm alias default "$NODE_VER" >/dev/null
+  tentar 3 "PM2 e Claude Code" npm i -g pm2@6 @anthropic-ai/claude-code
   # Debian/Ubuntu protegem o Python do sistema (PEP 668) e trazem pacotes do apt (blinker, typing_extensions...)
   # que o pip não consegue desinstalar: --ignore-installed instala por cima sem tentar remover
-  pip3 install -q --break-system-packages --ignore-installed gunicorn flask
+  tentar 3 "Python: gunicorn e flask" pip3 install -q --break-system-packages --ignore-installed gunicorn flask
   marca node; ok "node $(node -v), pm2 $(pm2 -v), claude $(claude --version 2>/dev/null | head -1)"
 fi
 carrega_node
@@ -227,22 +232,23 @@ fi
 
 if etapa dependencias; then
   falhas=()
-  instala() {
-    local d="$1"; [ -f "$d/package.json" ] || return 0
-    printf '  npm %s ... ' "${d#/opt/}"
-    if (cd "$d" && { [ -f package-lock.json ] && npm ci --no-audit --no-fund -s || npm install --no-audit --no-fund -s; }) >>"$LOG" 2>&1
-    then echo ok; else echo FALHOU; falhas+=("${d#/opt/}"); fi
-  }
-  instala /opt/jeff-worker
-  for d in /opt/jeff-apps/*/; do instala "${d%/}"; done
+  # npm: ci pelo lockfile; se falhar (cache corrompido, lock velho), limpa o cache e tenta install
+  npm_app() { cd "$1" || return 1
+    if [ -f package-lock.json ]; then npm ci --no-audit --no-fund || { npm cache clean --force; npm install --no-audit --no-fund; }
+    else npm install --no-audit --no-fund; fi; }
+  pip_app() { { [ -x "$1/venv/bin/python" ] || python3 -m venv "$1/venv"; } && "$1/venv/bin/pip" install -r "$1/requirements.txt"; }
+  APPS_NPM=(/opt/jeff-worker); for d in /opt/jeff-apps/*/; do [ -f "$d/package.json" ] && APPS_NPM+=("${d%/}"); done
+  i=0
+  for d in "${APPS_NPM[@]}"; do
+    i=$((i + 1))
+    tentar 2 "npm [$i/${#APPS_NPM[@]}] ${d#/opt/}" npm_app "$d" || falhas+=("${d#/opt/}")
+  done
   # Python: cada app no próprio venv (app/venv), nunca no Python do sistema
   for r in /opt/jeff-apps/*/requirements.txt; do
     [ -f "$r" ] || continue
     d="$(dirname "$r")"; a="$(basename "$d")"
     [[ " $COMPOSE_APPS " == *" $a "* ]] && continue   # roda em container: as dependências vão na imagem
-    printf '  pip %s ... ' "$a"
-    if { [ -x "$d/venv/bin/python" ] || python3 -m venv "$d/venv"; } >>"$LOG" 2>&1 && "$d/venv/bin/pip" install -q -r "$r" >>"$LOG" 2>&1
-    then echo ok; else echo FALHOU; falhas+=("pip $a"); fi
+    tentar 2 "pip $a" pip_app "$d" || falhas+=("pip $a")
   done
   [ ${#falhas[@]} -eq 0 ] || aviso "dependências que falharam (ver $LOG): ${falhas[*]}"
   marca dependencias
@@ -289,7 +295,7 @@ if 'subnet: 172.18.0.0/16' not in s:
 open(p,'w').write(s)
 PY
   mapfile -t SERVICOS < <(docker compose -p labastia-setup config --services | grep -vxF -f <(fora servico; echo '#'))
-  docker compose -p labastia-setup up -d "${SERVICOS[@]}"
+  tentar 3 "Proxy com SSL ($(echo "${SERVICOS[@]}"))" docker compose -p labastia-setup up -d "${SERVICOS[@]}"
   if ! fora_tem servico jeff-sites-nginx; then   # container dos sites estáticos (só se algum site for junto)
     docker rm -f jeff-sites-nginx >/dev/null 2>&1 || true
     docker run -d --name jeff-sites-nginx --restart always --network labastia-setup_labastia \
@@ -297,8 +303,8 @@ PY
   fi
   for a in $COMPOSE_APPS; do
     [ -f "/opt/jeff-apps/$a/docker-compose.yml" ] || continue
-    printf '  container %s ... ' "$a"
-    if (cd "/opt/jeff-apps/$a" && docker compose up -d --build) >>"$LOG" 2>&1; then echo ok; else echo FALHOU; aviso "container $a não subiu (ver $LOG)"; fi
+    tentar 2 "container $a (montar a imagem pode levar alguns minutos)" bash -c "cd /opt/jeff-apps/$a && docker compose up -d --build" \
+      || aviso "container $a não subiu (ver $LOG)"
   done
   cd "$REPO"
   marca containers
@@ -384,6 +390,8 @@ PY
 fi
 
 # ------------------------------------------------------------------------------------
+verificacao || aviso "a verificação final não terminou (ver $LOG)"
+
 ACESSOS=/root/zeus-acessos.txt
 ADMIN_WA="$(sed -n 's/^ADMIN_USER=//p' /opt/jeff-worker/.env 2>/dev/null | tr -d '"'"'"'')"; ADMIN_WA="${ADMIN_WA:-admin}"
 ( umask 077; cat > "$ACESSOS" <<EOF
