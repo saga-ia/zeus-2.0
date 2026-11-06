@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS kb_chunks (
   text TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_doc ON kb_chunks(doc_id, seq);
-CREATE VIRTUAL TABLE IF NOT EXISTS kb_fts USING fts5(text, doc_id UNINDEXED, tokenize = '<REDACTED>');
+CREATE VIRTUAL TABLE IF NOT EXISTS kb_fts USING fts5(text, doc_id UNINDEXED, tokenize = 'unicode61 remove_diacritics 2');
 CREATE TABLE IF NOT EXISTS kb_folders (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

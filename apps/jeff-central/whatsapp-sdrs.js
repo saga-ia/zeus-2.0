@@ -104,7 +104,7 @@ async function crmEntrar() {
   _crmLogin = (async () => {
     const agora = Math.floor(Date.now() / 1000);
     const token = jwtHS256({ uid: SDRS_UID, u: SDRS_USER, purpose: 'crm-sso', via: 'central', iat: agora, exp: agora + 120 }, segredo());
-    const r = await crmPedido({ method: 'GET', path: '/sso?token='<REDACTED>'&target=/' });
+    const r = await crmPedido({ method: 'GET', path: '/sso?token=' + encodeURIComponent(token) + '&target=/' });
     const sc = [].concat(r.headers['set-cookie'] || []).map(c => c.split(';')[0]).find(c => /^connect\.sid=/.test(c));
     if (r.status !== 302 || !sc) throw new Error('o CRM recusou o login único (' + r.status + ')');
     _crmCookie = sc;
