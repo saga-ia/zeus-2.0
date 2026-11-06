@@ -170,7 +170,9 @@ if etapa node; then
   . "$NVM_DIR/nvm.sh"
   nvm install "$NODE_VER" >/dev/null && nvm alias default "$NODE_VER" >/dev/null
   npm i -g pm2@6 @anthropic-ai/claude-code >/dev/null
-  pip3 install -q gunicorn flask 2>/dev/null || pip3 install -q --break-system-packages gunicorn flask
+  # Debian/Ubuntu protegem o Python do sistema (PEP 668) e trazem pacotes do apt (blinker, typing_extensions...)
+  # que o pip não consegue desinstalar: --ignore-installed instala por cima sem tentar remover
+  pip3 install -q --break-system-packages --ignore-installed gunicorn flask
   marca node; ok "node $(node -v), pm2 $(pm2 -v), claude $(claude --version 2>/dev/null | head -1)"
 fi
 carrega_node
@@ -227,9 +229,14 @@ if etapa dependencias; then
   }
   instala /opt/jeff-worker
   for d in /opt/jeff-apps/*/; do instala "${d%/}"; done
+  # Python: cada app no próprio venv (app/venv), nunca no Python do sistema
   for r in /opt/jeff-apps/*/requirements.txt; do
     [ -f "$r" ] || continue
-    pip3 install -q -r "$r" >>"$LOG" 2>&1 || pip3 install -q --break-system-packages -r "$r" >>"$LOG" 2>&1 || falhas+=("pip ${r#/opt/}")
+    d="$(dirname "$r")"; a="$(basename "$d")"
+    [[ " $COMPOSE_APPS " == *" $a "* ]] && continue   # roda em container: as dependências vão na imagem
+    printf '  pip %s ... ' "$a"
+    if { [ -x "$d/venv/bin/python" ] || python3 -m venv "$d/venv"; } >>"$LOG" 2>&1 && "$d/venv/bin/pip" install -q -r "$r" >>"$LOG" 2>&1
+    then echo ok; else echo FALHOU; falhas+=("pip $a"); fi
   done
   [ ${#falhas[@]} -eq 0 ] || aviso "dependências que falharam (ver $LOG): ${falhas[*]}"
   marca dependencias
@@ -241,7 +248,9 @@ if etapa bancos; then
 fi
 
 if etapa chaves; then
-  python3 -I "$INST/lib/chaves.py" "$RESP" "$INST/modelos/chaves.tsv" "$( [ -f "$FORM" ] && echo "$FORM" || echo -)" "$(IP_PUB)"
+  # na instalação não para pra perguntar (chave que faltar fica pra depois); só pergunta no  --refazer chaves
+  SEM_PERG=--sem-perguntas; [ "$REFAZER" = chaves ] && SEM_PERG=""
+  python3 -I "$INST/lib/chaves.py" "$RESP" "$INST/modelos/chaves.tsv" "$( [ -f "$FORM" ] && echo "$FORM" || echo -)" "$(IP_PUB)" $SEM_PERG
   marca chaves
 fi
 
@@ -306,16 +315,19 @@ if etapa pm2; then
     if [ "$eco" != "-" ] && [ -f "$eco" ]; then
       (cd "$(dirname "$eco")" && pm2 start "$eco" --only "$nome") >>"$LOG" 2>&1 || falhas+=("$nome")
     elif [ -f "$script" ]; then
-      extra=(); [ "$args" != "-" ] && read -ra extra <<< "$args"
-      (cd "$cwd" 2>/dev/null || cd /root; pm2 start "$script" --name "$nome" --cwd "$cwd" --interpreter "$interp" -- "${extra[@]}") >>"$LOG" 2>&1 || falhas+=("$nome")
+      # "--" só com argumentos: "pm2 start x.js --" sozinho falha com "ecosystem.config.js not found"
+      cmd=(pm2 start "$script" --name "$nome" --cwd "$cwd" --interpreter "$interp")
+      if [ "$args" != "-" ]; then read -ra extra <<< "$args"; cmd+=(-- "${extra[@]}"); fi
+      (cd "$cwd" 2>/dev/null || cd /root; "${cmd[@]}") >>"$LOG" 2>&1 || falhas+=("$nome")
     else
       falhas+=("$nome (sem o arquivo $script)")
     fi
   done < "$INST/modelos/pm2.tsv"
   pm2 save >/dev/null
   pm2 startup systemd -u root --hp /root >/dev/null 2>&1 || true
-  [ ${#falhas[@]} -eq 0 ] || aviso "processos que não subiram: ${falhas[*]}"
-  marca pm2; ok "$(pm2 jlist | python3 -I -c 'import json,sys;d=json.load(sys.stdin);print(sum(p["pm2_env"]["status"]=="online" for p in d),"de",len(d),"processos online")')"
+  # só marca como feita se tudo subiu: rodar de novo tenta só os que faltaram
+  if [ ${#falhas[@]} -eq 0 ]; then marca pm2; else aviso "processos que não subiram (ver $LOG; rode o instalador de novo): ${falhas[*]}"; fi
+  ok "$(pm2 jlist | python3 -I -c 'import json,sys;d=json.load(sys.stdin);print(sum(p["pm2_env"]["status"]=="online" for p in d),"de",len(d),"processos online")')"
 fi
 
 if etapa central; then
@@ -357,7 +369,7 @@ ACESSOS=/root/zeus-acessos.txt
 ADMIN_WA="$(sed -n 's/^ADMIN_USER=//p' /opt/jeff-worker/.env 2>/dev/null | tr -d '"'"'"'')"; ADMIN_WA="${ADMIN_WA:-admin}"
 ( umask 077; cat > "$ACESSOS" <<EOF
 ZEUS de $(campo cliente), instalado em $(date '+%d/%m/%Y %H:%M')
-Central:            https://central.$DOMINIO   ($EMAIL / $SENHA)
+Central:            https://$DOMINIO   ($EMAIL / $SENHA)
 Painel WhatsApp:    https://sagazeus.$DOMINIO  (usuário $ADMIN_WA / $SENHA)
 n8n:                https://n8n.$DOMINIO       ($EMAIL / $SENHA)
 Proxy (NPM):        ssh -L 81:127.0.0.1:81 root@$DOMINIO  e abrir http://localhost:81  ($EMAIL / $SENHA)

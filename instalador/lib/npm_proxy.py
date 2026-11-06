@@ -41,11 +41,13 @@ if not token:
 # hosts do modelo + extras
 linhas = [l.rstrip('\n').split('\t') for l in open(HOSTS_TSV) if l.strip() and not l.startswith('#')]
 linhas.append(['n8n', 'http', 'n8n', '5678', '1', '1'])
+# domínio principal = Central (mesma porta da linha central do modelo)
+linhas += [['@'] + l[1:] for l in linhas if l[0] == 'central']
 
 existentes = {d: h for h in req('GET', '/nginx/proxy-hosts', token=token) for d in h['domain_names']}
 criados, pulados = 0, []
 for sub, esquema, destino, porta, ws, be in linhas:
-    nome = f'{sub}.{DOM}'
+    nome = DOM if sub == '@' else f'{sub}.{DOM}'
     # IP fixo de container (172.18.0.N, N>1) não se repete em servidor novo
     if destino.startswith('172.18.0.') and destino != '172.18.0.1':
         pulados.append(nome)
@@ -74,7 +76,7 @@ def resolve(nome):
         except Exception: return []
 
 hosts = req('GET', '/nginx/proxy-hosts', token=token)
-prontos = [h for h in hosts if h['domain_names'][0].endswith('.' + DOM)]
+prontos = [h for h in hosts if h['domain_names'][0] == DOM or h['domain_names'][0].endswith('.' + DOM)]
 sem_ssl = [h for h in prontos if not h.get('certificate_id')]
 ok = [h for h in sem_ssl if IP in resolve(h['domain_names'][0])]
 faltando = [h['domain_names'][0] for h in sem_ssl if h not in ok]

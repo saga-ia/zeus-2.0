@@ -79,6 +79,8 @@ for p in arquivos_texto():
         continue
     if b'\0' in b[:8192] or ZONA_ANTIGA.encode() not in b:
         continue
+    # a Central fica no domínio principal do cliente (cliente.zeusia.cloud), sem o central. na frente
+    b = b.replace(b'central.' + ZONA_ANTIGA.encode(), DOM.encode())
     open(p, 'wb').write(b.replace(ZONA_ANTIGA.encode(), DOM.encode()))
     trocados += 1
 print(f'dominio: {ZONA_ANTIGA} -> {DOM} em {trocados} arquivo(s)')
