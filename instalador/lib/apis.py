@@ -86,9 +86,10 @@ if ig_token:
     tenta('Instagram, conta', ig_conta)
     tenta('Instagram, webhook do app', ig_webhook_app)
     tenta('Instagram, assinatura da conta', ig_conta_assina)
+myig = os.path.isdir(os.path.join(OPT, 'jeff-apps', 'zeuschatig'))
 manual.append(f'Meta (developers.facebook.com > app do cliente): Domínios do app = {DOM} ; '
-              f'URI de redirecionamento OAuth = https://myig.{DOM}/oauth/callback ; '
-              f'Webhook do Instagram (se não ficou automático) = {cb_ig} com token de verificação = {verify}')
+              + (f'URI de redirecionamento OAuth = https://myig.{DOM}/oauth/callback ; ' if myig else '')
+              + f'Webhook do Instagram (se não ficou automático) = {cb_ig} com token de verificação = {verify}')
 
 # ---------- Asaas ----------
 asaas = s('asaas_api_key')

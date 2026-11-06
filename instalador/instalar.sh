@@ -319,8 +319,8 @@ if etapa pm2; then
     [[ "$nome" =~ ^# ]] && continue
     [ "$status" = online ] || continue
     fora_tem pm2 "$nome" && continue
-    a_dir="$(echo "$script" | sed -n 's#^/opt/jeff-apps/\([^/]*\)/.*#\1#p')"
-    [ -n "$a_dir" ] && fora_tem app "$a_dir" && continue      # app fora do perfil
+    a_dir="$(printf '%s\n%s\n' "$script" "$cwd/" | sed -n 's#^/opt/jeff-apps/\([^/]*\)/.*#\1#p' | head -1)"
+    [ -n "$a_dir" ] && fora_tem app "$a_dir" && continue      # app fora do perfil (pelo script ou pela pasta)
     pm2 describe "$nome" >/dev/null 2>&1 && continue
     if [ "$eco" != "-" ] && [ -f "$eco" ]; then
       (cd "$(dirname "$eco")" && pm2 start "$eco" --only "$nome") >>"$LOG" 2>&1 || falhas+=("$nome")

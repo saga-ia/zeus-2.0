@@ -66,3 +66,55 @@ cron     farias
 # Alpha Clientes
 app      jeff-alpha-clientes
 host     cliente
+
+# Agenda Turbo Max, Automatik e myIG
+app      jeff-agenda-turbo-max
+app      jeff-automatikinst
+app      zeuschatig
+host     automatikinst
+host     myig
+host     zeuschatig
+site     editaturbomax
+host     editaturbomax
+
+# Apps internos do Jeff (o cliente não usa)
+app      zeus-instalacao
+app      jeff-claude-shim
+app      jeff-asaas-dashboard
+app      jeff-ads-dashboard
+app      jeff-meta-dashboard
+app      jeff-sistemas
+app      jeff-onboarding
+app      jeff-board-org
+app      jeff-board-editor
+app      planejamento-8-anos
+app      jeff-vps-monitor
+pm2      leonora-monitor
+host     asaas
+host     meta
+host     metadash
+host     admin
+host     sistemas
+host     onboarding
+host     org-board
+host     planejamento
+host     instalacao-zeus
+host     zeus-instalacao
+site     instalacao-zeus
+site     zeus-instalacao
+
+# Eventos, Mapa do Closer e EBC
+app      jeff-eventos
+app      jeff-mapadocloser
+app      jeff-ebc-crm
+host     eventos
+host     mapadocloser
+host     eventoslucrativos
+site     mapadocloser
+site     eventoslucrativos
+site     ebc-ebook1
+site     ebc-ebook2
+
+# Postgres e Redis do compose principal: só o Eventos usava
+servico  postgres
+servico  redis
