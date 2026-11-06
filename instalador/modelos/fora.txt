@@ -118,3 +118,23 @@ site     ebc-ebook2
 # Postgres e Redis do compose principal: só o Eventos usava
 servico  postgres
 servico  redis
+
+# Sites estáticos do Jeff: nenhum vai pro cliente (sem sites, o container jeff-sites-nginx não sobe)
+site     alpha
+site     boardsummit2026planilha
+site     carrossel
+site     deniseapresentacao
+site     ganhos
+site     imobiliaria
+site     maquina-edicao-ia
+site     proximo-ciclo
+site     teste
+site     treinamento-claude
+host     alpha
+host     carrossel
+host     deniseapresentacao
+host     imobiliaria
+host     teste
+host     treinamento-claude
+servico  jeff-sites-nginx
+cron     boardsummit

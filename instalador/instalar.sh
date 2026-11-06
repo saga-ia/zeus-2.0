@@ -290,9 +290,11 @@ open(p,'w').write(s)
 PY
   mapfile -t SERVICOS < <(docker compose -p labastia-setup config --services | grep -vxF -f <(fora servico; echo '#'))
   docker compose -p labastia-setup up -d "${SERVICOS[@]}"
-  docker rm -f jeff-sites-nginx >/dev/null 2>&1 || true
-  docker run -d --name jeff-sites-nginx --restart always --network labastia-setup_labastia \
-    -v /opt/jeff-sites/_nginx/default.conf:/etc/nginx/conf.d/default.conf:ro -v /opt/jeff-sites:/sites:ro nginx:alpine >/dev/null
+  if ! fora_tem servico jeff-sites-nginx; then   # container dos sites estáticos (só se algum site for junto)
+    docker rm -f jeff-sites-nginx >/dev/null 2>&1 || true
+    docker run -d --name jeff-sites-nginx --restart always --network labastia-setup_labastia \
+      -v /opt/jeff-sites/_nginx/default.conf:/etc/nginx/conf.d/default.conf:ro -v /opt/jeff-sites:/sites:ro nginx:alpine >/dev/null
+  fi
   for a in $COMPOSE_APPS; do
     [ -f "/opt/jeff-apps/$a/docker-compose.yml" ] || continue
     printf '  container %s ... ' "$a"
