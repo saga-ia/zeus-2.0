@@ -147,7 +147,7 @@ checagem() {
   for s in apache2 nginx httpd lighttpd caddy; do
     if systemctl is-active --quiet "$s" 2>/dev/null; then systemctl disable --now "$s" >>"$LOG" 2>&1 && ok "parei o $s, que ocupava a porta 80/443"; fi
   done
-  ocupado="$(ss -ltnpH 2>/dev/null | awk '$4 ~ /:(80|443)$/' | grep -v docker-proxy | sed -E 's/.*users:\(\("([^"]+)".*/\1/' | sort -u | tr '\n' ' ')"
+  ocupado="$(ss -ltnpH 2>/dev/null | awk '$4 ~ /:(80|443)$/' | grep -v docker-proxy | sed -E 's/.*users:\(\("([^"]+)".*/\1/' | sort -u | tr '\n' ' ' || true)"
   [ -z "$ocupado" ] && ok "portas 80 e 443 livres" || aviso "portas 80/443 ocupadas por: $ocupado(o SSL não vai funcionar enquanto isso rodar)"
   esperar_apt; ok "gerenciador de pacotes livre"
   timedatectl set-ntp true >/dev/null 2>&1 || true   # SSL depende da hora certa
