@@ -26,7 +26,7 @@ NODE_VER=20.20.2                      # caminhos /root/.nvm/versions/node/v20.20
 SUPORTE_WHATS="5511910075450,5585991143501"
 DOMINIO_BASE="zeusia.cloud"           # padrão: <nomecliente>.zeusia.cloud (DNS criado com dns-cliente.sh no servidor do Jeff)
 COMPOSE_APPS="jeff-evolution jeff-omniroute jeff-presenton jeff-moneyprinter"
-ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab"
+ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab atualizacoes"
 FORM="$ESTADO/formulario.json"
 FORA="$INST/modelos/fora.txt"         # perfil enxuto: o que não vai pro cliente
 fora() { [ -f "$FORA" ] && awk -v t="$1" '$1==t{print $2}' "$FORA" || true; }
@@ -190,7 +190,7 @@ if etapa codigo; then
   if [ -d "$REPO/.git" ]; then
     git -C "$REPO" remote set-url origin "$(git -C "$REPO" remote get-url origin | sed -E 's#https://[^@]+@#https://#')" || true
   fi
-  copia() { local o="$1" d="$2"; shift 2; mkdir -p "$d"; rsync -a "$@" "$o/" "$d/"; }
+  copia() { local o="$1" d="$2"; shift 2; mkdir -p "$d"; [ -d "$o" ] || return 0; rsync -a "$@" "$o/" "$d/"; }   # pasta que não veio no pacote: só cria vazia
   excl() { local x; for x in $(fora "$1"); do printf -- '--exclude=/%s/\n' "$x"; done; }
   mapfile -t EX_APPS < <(excl app); mapfile -t EX_SITES < <(excl site); mapfile -t EX_DADOS < <(excl dado)
   copia "$REPO/worker"            /opt/jeff-worker
@@ -198,10 +198,8 @@ if etapa codigo; then
   copia "$REPO/sites"             /opt/jeff-sites    "${EX_SITES[@]}"
   copia "$REPO/projects"          /opt/jeff-projects "${EX_DADOS[@]}"
   copia "$REPO/data/jeff-data"    /opt/jeff-data
-  fora_tem dado jeff-cigc || copia "$REPO/data/jeff-cigc" /opt/jeff-cigc
   copia "$REPO/data/jeff-ideias"  /opt/jeff-ideias
   ok "fora do perfil: $(fora app | wc -l) apps, $(fora site | wc -l) sites (lista em $FORA)"
-  copia "$REPO/infra/zeus-backup" /opt/zeus-backup
   copia "$REPO/infra/labastia-docker" /root/labastia-setup
   mkdir -p /opt/jeff-worker/logs /opt/jeff-worker/data
   marca codigo; ok "código em /opt/jeff-* (layout igual ao servidor original)"
@@ -387,6 +385,24 @@ for l in open(sys.argv[1]):
     print('# fora do perfil: '+l if l and not l.startswith('#') and any(t in l for t in termos) else l)
 PY
   marca crontab; ok "crontab instalado ($(crontab -l | grep -cE '^[0-9*@]') tarefas)"
+fi
+
+if etapa atualizacoes; then
+  # atualizações aprovadas pelo Jeff no painel (instalador/atualizar.sh, a cada 15 min)
+  ATU="$ESTADO/atualizacao.json"
+  if [ -f "$ATU" ]; then
+    python3 -I - "$ATU" "$(tr -cd '0-9' < "$REPO/VERSAO" 2>/dev/null)" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+if sys.argv[2]: d['versao_instalada']=sys.argv[2]
+json.dump(d,open(sys.argv[1],'w'))
+PY
+    LINHA="*/15 * * * * bash $INST/atualizar.sh >/dev/null 2>&1"
+    { crontab -l 2>/dev/null | grep -vF 'instalador/atualizar.sh' || true; echo "$LINHA"; } | crontab -
+    marca atualizacoes; ok "atualizações automáticas ligadas (versão $(tr -cd '0-9' < "$REPO/VERSAO" 2>/dev/null || echo '?'); só chega o que o Jeff aprovar)"
+  else
+    aviso "servidor sem registro de atualizações ($ATU): instale pelo comando /instalar ou por um link de gerar-link.sh pra receber as melhorias"
+  fi
 fi
 
 # ------------------------------------------------------------------------------------

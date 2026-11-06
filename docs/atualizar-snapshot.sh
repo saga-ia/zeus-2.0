@@ -45,7 +45,10 @@ for raiz in ('worker','apps','sites','projects','data','infra'):
             p=os.path.join(d,f)
             try: s=open(p,encoding='utf-8').read()
             except Exception: continue
-            novo=ATRIB.sub(lambda m: m.group(1)+m.group(2)+'<REDACTED>'+m.group(2) if 'process.env' not in m.group(3) else m.group(0), s)
+            # segredo de verdade não tem espaço nem é URL/caminho (ex: tokenize = 'unicode61 ...', TOKEN_URL = 'https://...',
+            # "hash-password": "node src/...", '/sso?token=' + x + '&...' quebravam o código no cliente quando mascarados)
+            nao_segredo=lambda v: 'process.env' in v or re.search(r'\s', v) or v.startswith(('http://','https://','/','./'))
+            novo=ATRIB.sub(lambda m: m.group(0) if nao_segredo(m.group(3)) else m.group(1)+m.group(2)+'<REDACTED>'+m.group(2), s)
             novo=SESSAO.sub(lambda m: m.group(1)+m.group(2)+'<REDACTED>'+m.group(2), novo)
             if novo!=s:
                 open(p,'w',encoding='utf-8').write(novo); n+=1

@@ -19,9 +19,11 @@ curl -fsSL https://zeus-instalacao.jefersonhenrike.com/instalar | bash
 ```
 
 Ele pede a **senha do admin do formulário**, mostra os clientes que preencheram o formulário, você escolhe o número e ele instala. Ele baixa:
-- o Zeus, montado na hora a partir do último commit de `/root/zeus-2.0` no servidor do Jeff (o que não tem commit não vai);
+- o Zeus: a **última versão publicada** com `publicar.sh` (pacote limpo, só o produto; ver "Versões e atualizações");
 - a resposta do formulário escolhida;
 - o token da Cloudflare.
+
+O servidor do cliente também fica **registrado pras atualizações** (aparece em `/admin/versoes`).
 
 Não precisa de token do GitHub nem de passar pelo servidor do Jeff antes. O instalador abre dentro do `tmux`: se a conexão cair, entre de novo e rode `tmux attach -t zeus`.
 
@@ -97,3 +99,28 @@ O dono informado no instalador tem autorização total. Jeferson e Vinicius fica
 ## Manutenção (no servidor do Jeff)
 
 `docs/atualizar-snapshot.sh --push` atualiza o repo e os modelos do instalador (`gerar-modelos.sh`). Os modelos não guardam nenhum valor secreto, só os nomes das chaves e placeholders.
+
+## Versões e atualizações dos clientes
+
+Melhorou alguma coisa no Zeus do servidor do Jeff e quer levar pros clientes:
+
+```bash
+bash /root/zeus-2.0/instalador/publicar.sh "o que mudou"
+```
+
+1. Copia a produção (`/opt/jeff-*`) pro repositório com os segredos mascarados e faz o commit (`--sem-producao` pula isso).
+2. Monta o pacote limpo (`lib/pacote.py`): só o produto. O que é só do Jeff fica de fora pelas regras do `modelos/fora.txt`
+   (`app`, `site`, `host`, `cron`... e `arquivo` pra caminhos que nem saem do servidor). Se aparecer nome de cliente do Jeff
+   (linhas `sigilo`) fora das pendências conhecidas (`aceito`), **não publica**.
+3. Registra a versão. **Nenhum cliente recebe nada** até você aprovar em
+   https://zeus-instalacao.jefersonhenrike.com/admin/versoes (por cliente ou pra todos).
+
+No servidor do cliente, `instalador/atualizar.sh` roda a cada 15 minutos. Quando há versão aprovada, ele baixa (confere o
+sha256), personaliza numa pasta à parte, copia por cima **sem apagar nada** e guardando o que trocou
+(`/opt/zeus-atualizacao/backup-*`), instala dependências e reinicia só os apps que mudaram. Se algum processo não ficar de
+pé, desfaz sozinho e o painel mostra "falhou" com o motivo. Nunca toca em `.env`, bancos, `data/`, logs e sessão do WhatsApp.
+Arquivo que no repositório ainda tem `<REDACTED>` não substitui o do cliente.
+
+No cliente: `bash /opt/zeus-2.0/instalador/atualizar.sh --status` mostra a situação; `--forcar` tenta de novo uma versão que falhou.
+Fica de fora da atualização automática (fazer à mão se mudar): `docker-compose.yml` do proxy e a imagem dos apps em
+container (Evolution, MoneyPrinter).

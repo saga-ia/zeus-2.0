@@ -20,6 +20,7 @@ ui_nome() {
     firewall) echo "Firewall" ;;                   pm2) echo "Subindo os apps" ;;
     central) echo "Dono da Central" ;;             proxy) echo "Subdomínios e SSL" ;;
     apis) echo "APIs no domínio novo" ;;           crontab) echo "Rotinas agendadas" ;;
+    atualizacoes) echo "Atualizações automáticas" ;;
     verificacao) echo "Verificação final" ;;       *) echo "$1" ;;
   esac
 }

@@ -17,10 +17,11 @@ ROOT = R.get('raiz_root', '/root')
 MODELOS = R['modelos']
 ESTADO = R['estado']
 ZONA_ANTIGA = 'jefersonhenrike.com'
+EMAIL_ANTIGO = b'jefersonhenrike1@gmail.com'   # conta Google padrão nos scripts: vira o e-mail do cliente
 DOM = R['dominio']
 
 PASTAS_TEXTO = [os.path.join(OPT, p) for p in ('jeff-worker', 'jeff-apps', 'jeff-sites', 'jeff-projects', 'jeff-data',
-                                                'jeff-cigc', 'jeff-ideias', 'zeus-backup')]
+                                                'jeff-ideias')]
 PASTAS_TEXTO += [os.path.join(ROOT, 'labastia-setup'), os.path.join(ROOT, '.claude', 'agents'),
                  os.path.join(ROOT, '.claude', 'skills'), os.path.join(ROOT, '.claude', 'CLAUDE.md')]
 PULAR = {'node_modules', '.git', '.next', 'venv', '.venv', '__pycache__'}
@@ -77,8 +78,9 @@ for p in arquivos_texto():
         b = open(p, 'rb').read()
     except OSError:
         continue
-    if b'\0' in b[:8192] or ZONA_ANTIGA.encode() not in b:
+    if b'\0' in b[:8192] or (ZONA_ANTIGA.encode() not in b and EMAIL_ANTIGO not in b):
         continue
+    b = b.replace(EMAIL_ANTIGO, R['email'].encode())
     # a Central fica no domínio principal do cliente (cliente.zeusia.cloud), sem o central. na frente
     b = b.replace(b'central.' + ZONA_ANTIGA.encode(), DOM.encode())
     open(p, 'wb').write(b.replace(ZONA_ANTIGA.encode(), DOM.encode()))

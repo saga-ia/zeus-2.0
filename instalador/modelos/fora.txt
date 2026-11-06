@@ -138,3 +138,126 @@ host     teste
 host     treinamento-claude
 servico  jeff-sites-nginx
 cron     boardsummit
+
+# Apps que o Jeff usa e o cliente não (decisão de 06/11/2026)
+app      aula-agente
+app      ebc-campaign-2026-05-03
+app      jeff-spec-kit-teste
+app      jeff-sdrs
+app      jeff-sdrs-crm
+app      jeff-financeiro
+app      jeff-llm-council
+app      jeff-wpp-mirror
+host     sdrs
+host     sdrs-crm
+
+# Rotinas que são só do Jeff
+cron     /opt/zeus-backup/
+cron     backup-zeus-to-drive.sh
+cron     nina-weekly.sh
+cron     /opt/jeff-sites/
+
+# ---------------------------------------------------------------------------------
+# PACOTE: o que nem sai do servidor do Jeff (lido por lib/pacote.py ao publicar versão).
+# Fora destas pastas de raiz nada entra: instalador, worker, apps, infra/labastia-docker
+# e docs/crontab-snapshot.txt (sites/, data/, projects/, agentes/, design-system/ ficam aqui).
+# ---------------------------------------------------------------------------------
+arquivo  worker/projetos
+arquivo  worker/Inscricao-IV-Congresso-2025.xlsx
+arquivo  worker/CLAUDE.md.zeus_new_backup
+arquivo  worker/docs/cigc-2026.md
+arquivo  worker/docs/mapa-servidor.md
+arquivo  worker/docs/criar-site-jeff.md
+arquivo  apps/jeff-voz/modelos/pt_BR-*
+arquivo  apps/jeff-voz/amostras
+arquivo  apps/jeff-video/estudio/saidas
+arquivo  apps/jeff-video/estudio/projetos
+arquivo  worker/projetos/design-modelos/estruturas/_coleta
+arquivo  worker/projetos/design-modelos/marcas
+arquivo  worker/scripts/board-campaign-schedule.sh
+arquivo  worker/scripts/farias-daily-report.sh
+arquivo  worker/scripts/chase-glauco-cadastro.sh
+arquivo  worker/scripts/cigc-crm-health.sh
+arquivo  worker/scripts/cigc-monitor.sh
+arquivo  worker/scripts/farias-monitor.sh
+arquivo  worker/scripts/leonora-monitor.py
+arquivo  worker/scripts/remind-*.sh
+arquivo  worker/scripts/backup-zeus-to-drive.sh
+arquivo  worker/reset-zeus.sh
+arquivo  worker/public/dash-ss
+arquivo  worker/public/inscricao
+arquivo  worker/public/marketing-edson
+arquivo  worker/docs/meta-ads.md
+arquivo  worker/docs/team-roster.md
+arquivo  apps/agencia-orquestrador/ESTRUTURA.md
+arquivo  apps/agencia-orquestrador/INVENTARIO.md
+arquivo  apps/agencia-orquestrador/PLANO.md
+arquivo  apps/agencia-orquestrador/decisoes
+arquivo  **/*.bak*
+arquivo  **/*.bak_*
+arquivo  instalador/gerar-modelos.sh
+arquivo  instalador/gerar-link.sh
+arquivo  instalador/dns-cliente.sh
+arquivo  instalador/lib/gerar_modelos.py
+arquivo  instalador/lib/gerar_extras.py
+arquivo  instalador/lib/pacote.py
+arquivo  instalador/publicar.sh
+mantem   worker/projetos/clientes/_modelo
+mantem   worker/projetos/clientes/README.md
+mantem   worker/projetos/nina/_modelo
+mantem   worker/projetos/nina/README.md
+mantem   worker/projetos/minisites/_modelos
+mantem   worker/projetos/design-modelos
+
+# SIGILO: se um destes textos aparecer no pacote, a versão não é publicada
+sigilo   cigc
+sigilo   congresso internacional
+sigilo   farias
+sigilo   conselho do dono
+sigilo   conselhododono
+sigilo   board academy
+sigilo   boardsummit
+sigilo   board summit
+sigilo   propostaebcmkt
+sigilo   editaturbomax
+sigilo   deniseapresentacao
+sigilo   labastie
+sigilo   lucureau
+sigilo   leandroferrari
+sigilo   cristophergaki
+sigilo   luizenderle
+sigilo   tay.ldantas
+
+# PENDÊNCIA: código que ainda cita cliente do Jeff e não pode só sair do pacote (quebraria o Zeus).
+# A publicação avisa, mas não para. Tirar a linha quando o código for limpo em produção.
+aceito   worker/src/server.js
+aceito   worker/src/routes/cigc-leads.js
+aceito   worker/src/routes/farias-leads.js
+aceito   worker/src/routes/inscricao.js
+aceito   worker/src/db/migrations/012_agencia.sql
+aceito   worker/src/db/migrations/013_cigc_leads.sql
+aceito   worker/src/db/migrations/015_proximo_ciclo.sql
+aceito   worker/src/wa/client.js
+aceito   worker/src/agent/sdr-reply.js
+aceito   worker/src/agent/api-reply.js
+aceito   worker/src/agent/mchat_poller.js
+aceito   worker/ecosystem.config.js
+aceito   worker/CLAUDE.md
+aceito   worker/docs/INDEX.md
+aceito   worker/docs/system-architecture.md
+aceito   worker/docs/design-system-zeus.md
+aceito   worker/docs/cloudflare.md
+aceito   worker/zeus/06_estetica_voz.md
+aceito   worker/zeus/operacao/sites_e_dns.md
+aceito   worker/scripts/npm.sh
+aceito   worker/scripts/cloudflare.sh
+aceito   worker/scripts/apify.sh
+aceito   worker/scripts/server-map.sh
+aceito   worker/projetos/design-modelos/estruturas
+aceito   apps/agencia-orquestrador/CLAUDE.md
+aceito   apps/jeff-central/server.js
+aceito   apps/jeff-central/agents.js
+aceito   apps/jeff-central/growth-data.js
+aceito   apps/jeff-central/public/growth-dash.js
+aceito   instalador/modelos/bancos/jeff-worker__data__worker.db.sql
+aceito   instalador/claude
