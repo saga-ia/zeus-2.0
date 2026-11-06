@@ -5,7 +5,7 @@ Um certificado só, com todos os subdomínios que já apontam pro servidor (até
 pra não estourar o limite do Let's Encrypt (50 certificados por domínio por semana).
 Pode rodar várias vezes: o que já existe é reaproveitado.
 
-Uso: python3 -I npm_proxy.py <respostas.json> <hosts.tsv> <ip_publico>
+Uso: python3 -I npm_proxy.py <respostas.json> <hosts.tsv> <ip_publico> [subdominios,fora,do,perfil]
 """
 import json, socket, subprocess, sys, time, urllib.error, urllib.request
 
@@ -43,6 +43,9 @@ linhas = [l.rstrip('\n').split('\t') for l in open(HOSTS_TSV) if l.strip() and n
 linhas.append(['n8n', 'http', 'n8n', '5678', '1', '1'])
 # domínio principal = Central (mesma porta da linha central do modelo)
 linhas += [['@'] + l[1:] for l in linhas if l[0] == 'central']
+# perfil enxuto: subdomínios fora (4º argumento, separados por vírgula)
+FORA = {x for x in (sys.argv[4] if len(sys.argv) > 4 else '').split(',') if x}
+linhas = [l for l in linhas if l[0] not in FORA]
 
 existentes = {d: h for h in req('GET', '/nginx/proxy-hosts', token=token) for d in h['domain_names']}
 criados, pulados = 0, []

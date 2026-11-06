@@ -28,6 +28,9 @@ DOMINIO_BASE="zeusia.cloud"           # padrão: <nomecliente>.zeusia.cloud (DNS
 COMPOSE_APPS="jeff-evolution jeff-omniroute jeff-presenton jeff-moneyprinter"
 ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab"
 FORM="$ESTADO/formulario.json"
+FORA="$INST/modelos/fora.txt"         # perfil enxuto: o que não vai pro cliente
+fora() { [ -f "$FORA" ] && awk -v t="$1" '$1==t{print $2}' "$FORA" || true; }
+fora_tem() { fora "$1" | grep -qxF "$2"; }
 
 mkdir -p "$ESTADO"; chmod 700 "$ESTADO"
 exec > >(tee -a "$LOG") 2>&1
@@ -182,14 +185,17 @@ if etapa codigo; then
   if [ -d "$REPO/.git" ]; then
     git -C "$REPO" remote set-url origin "$(git -C "$REPO" remote get-url origin | sed -E 's#https://[^@]+@#https://#')" || true
   fi
-  copia() { mkdir -p "$2"; rsync -a "$1/" "$2/"; }
+  copia() { local o="$1" d="$2"; shift 2; mkdir -p "$d"; rsync -a "$@" "$o/" "$d/"; }
+  excl() { local x; for x in $(fora "$1"); do printf -- '--exclude=/%s/\n' "$x"; done; }
+  mapfile -t EX_APPS < <(excl app); mapfile -t EX_SITES < <(excl site); mapfile -t EX_DADOS < <(excl dado)
   copia "$REPO/worker"            /opt/jeff-worker
-  copia "$REPO/apps"              /opt/jeff-apps
-  copia "$REPO/sites"             /opt/jeff-sites
-  copia "$REPO/projects"          /opt/jeff-projects
+  copia "$REPO/apps"              /opt/jeff-apps     "${EX_APPS[@]}"
+  copia "$REPO/sites"             /opt/jeff-sites    "${EX_SITES[@]}"
+  copia "$REPO/projects"          /opt/jeff-projects "${EX_DADOS[@]}"
   copia "$REPO/data/jeff-data"    /opt/jeff-data
-  copia "$REPO/data/jeff-cigc"    /opt/jeff-cigc
+  fora_tem dado jeff-cigc || copia "$REPO/data/jeff-cigc" /opt/jeff-cigc
   copia "$REPO/data/jeff-ideias"  /opt/jeff-ideias
+  ok "fora do perfil: $(fora app | wc -l) apps, $(fora site | wc -l) sites (lista em $FORA)"
   copia "$REPO/infra/zeus-backup" /opt/zeus-backup
   copia "$REPO/infra/labastia-docker" /root/labastia-setup
   mkdir -p /opt/jeff-worker/logs /opt/jeff-worker/data
@@ -282,7 +288,8 @@ if 'subnet: 172.18.0.0/16' not in s:
     s=s.replace('  labastia:\n    driver: bridge','  labastia:\n    driver: bridge\n    ipam:\n      config:\n        - subnet: 172.18.0.0/16\n          gateway: 172.18.0.1')
 open(p,'w').write(s)
 PY
-  docker compose -p labastia-setup up -d
+  mapfile -t SERVICOS < <(docker compose -p labastia-setup config --services | grep -vxF -f <(fora servico; echo '#'))
+  docker compose -p labastia-setup up -d "${SERVICOS[@]}"
   docker rm -f jeff-sites-nginx >/dev/null 2>&1 || true
   docker run -d --name jeff-sites-nginx --restart always --network labastia-setup_labastia \
     -v /opt/jeff-sites/_nginx/default.conf:/etc/nginx/conf.d/default.conf:ro -v /opt/jeff-sites:/sites:ro nginx:alpine >/dev/null
@@ -311,6 +318,9 @@ if etapa pm2; then
   while IFS=$'\t' read -r nome status cwd script interp args eco; do
     [[ "$nome" =~ ^# ]] && continue
     [ "$status" = online ] || continue
+    fora_tem pm2 "$nome" && continue
+    a_dir="$(echo "$script" | sed -n 's#^/opt/jeff-apps/\([^/]*\)/.*#\1#p')"
+    [ -n "$a_dir" ] && fora_tem app "$a_dir" && continue      # app fora do perfil
     pm2 describe "$nome" >/dev/null 2>&1 && continue
     if [ "$eco" != "-" ] && [ -f "$eco" ]; then
       (cd "$(dirname "$eco")" && pm2 start "$eco" --only "$nome") >>"$LOG" 2>&1 || falhas+=("$nome")
@@ -343,7 +353,7 @@ fi
 if etapa proxy; then
   IP="$(IP_PUB)"
   echo "  IP público deste servidor: $IP"
-  if python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP"; then
+  if python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP" "$(fora host | paste -sd, -)"; then
     marca proxy
   else
     if [[ "$DOMINIO" == *".$DOMINIO_BASE" ]]; then
@@ -360,7 +370,14 @@ if feito proxy && etapa apis; then
 fi
 
 if etapa crontab; then
-  crontab "$REPO/docs/crontab-snapshot.txt"
+  # linhas de clientes fora do perfil vão comentadas
+  python3 -I - "$REPO/docs/crontab-snapshot.txt" "$(fora cron | paste -sd, -)" <<'PY' | crontab -
+import sys
+termos=[t for t in sys.argv[2].split(',') if t]
+for l in open(sys.argv[1]):
+    l=l.rstrip('\n')
+    print('# fora do perfil: '+l if l and not l.startswith('#') and any(t in l for t in termos) else l)
+PY
   marca crontab; ok "crontab instalado ($(crontab -l | grep -cE '^[0-9*@]') tarefas)"
 fi
 
@@ -371,7 +388,7 @@ ADMIN_WA="$(sed -n 's/^ADMIN_USER=//p' /opt/jeff-worker/.env 2>/dev/null | tr -d
 ZEUS de $(campo cliente), instalado em $(date '+%d/%m/%Y %H:%M')
 Central:            https://$DOMINIO   ($EMAIL / $SENHA)
 Painel WhatsApp:    https://sagazeus.$DOMINIO  (usuário $ADMIN_WA / $SENHA)
-n8n:                https://n8n.$DOMINIO       ($EMAIL / $SENHA)
+$(fora_tem servico n8n || echo "n8n:                https://n8n.$DOMINIO       ($EMAIL / $SENHA)")
 Proxy (NPM):        ssh -L 81:127.0.0.1:81 root@$DOMINIO  e abrir http://localhost:81  ($EMAIL / $SENHA)
 Chaves internas:    $ESTADO/chaves.json
 EOF

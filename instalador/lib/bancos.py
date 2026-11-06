@@ -10,6 +10,9 @@ for sql in sorted(glob.glob(os.path.join(MODELOS, 'bancos', '*.sql'))):
     destino = os.path.join(OPT, os.path.basename(sql)[:-4].replace('__', '/'))
     if os.path.exists(destino):
         continue
+    partes = os.path.relpath(destino, OPT).split(os.sep)
+    if partes[0] == 'jeff-apps' and not os.path.isdir(os.path.join(OPT, partes[0], partes[1])):
+        continue  # app fora do perfil (não foi copiado)
     os.makedirs(os.path.dirname(destino), exist_ok=True)
     con = sqlite3.connect(destino)
     con.executescript(open(sql).read())

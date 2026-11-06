@@ -1,0 +1,68 @@
+# O que NÃO vai pro Zeus do cliente (perfil enxuto). Apague a linha pra voltar a instalar.
+# tipo      nome
+#   app      pasta em apps/ (não copia, não instala, não sobe no PM2 nem em container)
+#   site     pasta em sites/
+#   pm2      processo do PM2 que mora fora de apps/ (ex: scripts do worker)
+#   host     subdomínio no proxy
+#   servico  serviço do docker-compose principal (infra/labastia-docker)
+#   dado     pasta em data/ ou projects/
+#   cron     linha do crontab que contém este texto (vai comentada)
+
+# n8n e Presenton (editor de apresentações): sem uso
+servico  n8n
+host     n8n
+app      jeff-presenton
+host     apresentacoes
+
+# Omniroute: nenhum código do Zeus usa
+app      jeff-omniroute
+host     omniroute
+
+# CIGC
+app      jeff-cigc-clientarea
+app      jeff-cigc-comercial
+app      jeff-cigc-congresso
+app      jeff-cigc-crm
+app      jeff-cigc-forms
+pm2      cigc-monitor
+site     cigc
+site     cigc-ads-30d
+site     cigc-capture
+site     cigc-dashboard
+site     cigc-relatorio
+host     cigc
+host     cigc-ads-30d
+host     cigc-comercial
+host     cigc-dashboard
+host     cigc-relatorio
+dado     jeff-cigc
+dado     cigc-2026
+cron     cigc
+
+# Farias Souza e O Conselho do Dono
+app      jeff-farias-clientarea
+app      jeff-farias-crm
+app      jeff-farias-forms
+app      jeff-conselho-do-dono
+pm2      farias-monitor
+site     farias
+site     farias-souza
+site     fs
+site     sitefariasteste1
+site     conselhododono3edicao
+site     oconselhododono
+site     conf-ocd
+site     bonusocd
+site     obrigado-ocd
+host     farias
+host     farias-crm
+host     farias-souza
+host     fariassouza
+host     sitefariasteste1
+host     conselho
+host     conselhododono3edicao
+cron     farias
+
+# Alpha Clientes
+app      jeff-alpha-clientes
+host     cliente
