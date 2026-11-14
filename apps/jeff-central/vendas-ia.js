@@ -481,4 +481,4 @@ router.delete('/analise/conversa/:id', (req, res) => {
   db.prepare('DELETE FROM vendas_chat WHERE conversa = ?').run(id); res.json({ ok: true });
 });
 
-module.exports = { router, TIPOS, _encomenda: encomenda, _extrairJSON: extrairJSON, _parteFixa: PARTE_FIXA };
+module.exports = { router, TIPOS, _encomenda: encomenda, _extrairJSON: extrairJSON, _parteFixa: PARTE_FIXA, iniciarAuditoria, jobs };

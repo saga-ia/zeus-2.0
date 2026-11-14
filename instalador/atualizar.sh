@@ -126,6 +126,29 @@ EOF
 ( cd "$STG/opt" && grep -rlI --exclude-dir=node_modules -F '<REDACTED>' jeff-worker jeff-apps 2>/dev/null || true ) |
   while read -r f; do [ -e "/opt/$f" ] && echo "/${f#*/}"; done >> "$EXC"
 
+# Personalizações do cliente que o pacote sobrescreveria (feitas no suporte, direto no servidor dele):
+#  - CLAUDE.md do worker: regras e integrações do cliente; o do servidor fica como está
+#  - .claude/settings.json do worker: as permissões dele somam com as do produto (nada é tirado)
+#  - números que estavam fixos no agent-runner.sh antigo: vão pra data/agent-whitelist-extra.txt (o novo lê de lá)
+echo "/CLAUDE.md" >> "$EXC"
+W=/opt/jeff-worker
+if [ -f "$W/scripts/agent-runner.sh" ] && grep -q "contact_phone IN ('" "$W/scripts/agent-runner.sh"; then
+  mkdir -p "$W/data"
+  { cat "$W/data/agent-whitelist-extra.txt" 2>/dev/null; grep -oE "contact_phone IN \([^)]*\)" "$W/scripts/agent-runner.sh" | grep -oE "[0-9]{10,13}"; } |
+    sort -u > "$W/data/agent-whitelist-extra.txt.novo" && mv "$W/data/agent-whitelist-extra.txt.novo" "$W/data/agent-whitelist-extra.txt"
+  log "  whitelist do agent-runner antigo guardada em data/agent-whitelist-extra.txt"
+fi
+if [ -f "$W/.claude/settings.json" ] && [ -f "$STG/opt/jeff-worker/.claude/settings.json" ]; then
+  python3 -I - "$W/.claude/settings.json" "$STG/opt/jeff-worker/.claude/settings.json" <<'PYSET' || log "  aviso: não deu pra somar as permissões do settings.json"
+import json,sys
+vivo=json.load(open(sys.argv[1])); novo=json.load(open(sys.argv[2]))
+a=novo.setdefault('permissions',{}).setdefault('allow',[])
+for x in vivo.get('permissions',{}).get('allow',[]):
+    if x not in a: a.append(x)
+json.dump(novo,open(sys.argv[2],'w'),ensure_ascii=False,indent=2)
+PYSET
+fi
+
 # 3) aplica por cima (sem apagar nada), guardando o que foi trocado
 sinc() {  # sinc <origem> <destino> <nome no backup>
   rsync -rlptD --checksum --itemize-changes --exclude-from="$EXC" --backup --backup-dir="$BK/$3" "$1/" "$2/" |

@@ -19,6 +19,9 @@ RUN_TIMEOUT=600 # max seconds per claude -p run (10min)
 # Autorizados: AGENT_WHITELIST do .env (dono, suporte e equipe), comparando os 8 últimos dígitos
 # (o WhatsApp às vezes entrega celular brasileiro sem o 9: 558591143501 x 5585991143501).
 WL_RAW="$(sed -n 's/^AGENT_WHITELIST=//p' "$WORKER_DIR/.env" 2>/dev/null | tail -n1 | tr -d "\"' ")"
+# + números guardados de versões antigas (a atualização copia pra cá os que eram fixos no código)
+WL_EXTRA="$(tr -cs '0-9' ',' < "$WORKER_DIR/data/agent-whitelist-extra.txt" 2>/dev/null || true)"
+WL_RAW="$(printf '%s,%s' "$WL_RAW" "$WL_EXTRA" | tr -s ',' | sed 's/^,//; s/,$//')"
 WL_SQL="$(printf '%s' "$WL_RAW" | tr ',' '\n' | tr -cd '0-9\n' | awk 'length>=8{printf "%s\x27%s\x27", (n++?",":""), substr($0,length-7)}')"
 [ -n "$WL_SQL" ] || WL_SQL="'--sem-whitelist--'"
 WL_TEXTO="$(printf '%s' "$WL_RAW" | tr ',' ' ')"

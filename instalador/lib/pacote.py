@@ -16,7 +16,7 @@ Uso:
   pacote.py checar <repo> <rev>                              só lista os achados de sigilo (sai 2 se houver)
   pacote.py lista  <repo> <rev>                              lista os arquivos que entrariam no pacote
 """
-import gzip, io, json, os, re, subprocess, sys, tarfile
+import gzip, hashlib, io, json, os, re, subprocess, sys, tarfile
 
 PREFIXO = 'zeus-2.0/'
 RAIZ = ['instalador/', 'worker/', 'apps/', 'infra/labastia-docker/', 'docs/crontab-snapshot.txt', 'docs/rsync-exclude.txt']
@@ -80,6 +80,14 @@ class Regras:
                    for a in self.apps)
 
     def reescreve(self, p, dados):
+        if p in self.literais:
+            # segredo real do Jeff escrito no código (ex: chave da Evolution como valor padrão): sai como marcador
+            # {{S:grupo:tamanho:tipo}}; o personalizar.py do cliente troca pelo valor do cliente
+            for grp, tam, ph in self.literais[p]:
+                dados = re.sub(rb'[A-Za-z0-9_\-+/=.]{8,}', lambda t: ph.encode() if len(t.group(0)) == tam and
+                               hashlib.sha256(t.group(0)).hexdigest()[:12] == grp else t.group(0), dados)
+            if p not in self.REESCRITOS:
+                return dados
         txt = dados.decode('utf-8')
         linhas = txt.splitlines(keepends=True)
         if p == 'instalador/modelos/fora.txt':
@@ -118,6 +126,16 @@ def arquivos(repo, rev):
     fora_txt = subprocess.run(['git', '-C', repo, 'show', f'{rev}:instalador/modelos/fora.txt'],
                               capture_output=True, check=True).stdout.decode()
     r = Regras(ler_fora(fora_txt))
+    seg = subprocess.run(['git', '-C', repo, 'show', f'{rev}:instalador/modelos/segredos.tsv'],
+                         capture_output=True).stdout.decode()
+    r.literais = {}
+    for l in seg.splitlines():
+        c = l.split('\t')
+        if len(c) == 4 and c[0] == 'literal':
+            m = re.match(r'\{\{S:([0-9a-f]{12}):(\d+):', c[3])
+            rel = c[1].replace('jeff-apps/', 'apps/', 1) if c[1].startswith('jeff-apps/') else c[1].replace('jeff-worker/', 'worker/', 1)
+            if m:
+                r.literais.setdefault(rel, []).append((m.group(1), int(m.group(2)), c[3]))
     proc = subprocess.Popen(['git', '-C', repo, 'archive', '--format=tar', rev], stdout=subprocess.PIPE)
     with tarfile.open(fileobj=proc.stdout, mode='r|') as t:
         for m in t:
@@ -127,7 +145,7 @@ def arquivos(repo, rev):
             if not r.entra(p):
                 continue
             dados = t.extractfile(m).read() if m.isfile() else None
-            if dados is not None and p in Regras.REESCRITOS:
+            if dados is not None and (p in Regras.REESCRITOS or p in r.literais):
                 dados = r.reescreve(p, dados)
                 m.size = len(dados)
             yield r, m, dados

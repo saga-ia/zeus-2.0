@@ -121,6 +121,7 @@ for linha in open(os.path.join(MODELOS, 'segredos.tsv')):
         grp, tam = m.group(1), int(m.group(2))
         novo = TOKEN.sub(lambda t: valor.encode() if len(t.group(0)) == tam and
                          hashlib.sha256(t.group(0)).hexdigest()[:12] == grp else t.group(0), s)
+        novo = novo.replace(ph.encode(), valor.encode())  # pacote novo já vem com o marcador no lugar do valor
     if novo != s:
         open(p, 'wb').write(novo)
         aplicados += 1
