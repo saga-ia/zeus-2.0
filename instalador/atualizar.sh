@@ -197,6 +197,11 @@ python3 -I "$NOVO/instalador/lib/bancos.py" "$NOVO/instalador/modelos" >>"$LOG" 
 
 # 6) reinicia só os processos dos apps que mudaram; sobe os processos novos
 declare -A REINICIOS
+# Integrações que só funcionam com a chave do cliente (mesma lista do instalar.sh): sem a chave, o processo
+# fica parado em vez de entrar em loop de erro e derrubar a atualização na conferência.
+declare -A PRECISA=( [jeff-zapsign-webhook]=zapsign_api_token [jeff-clickup-webhook]=clickup_api_token )
+tem_chave() { [ -n "$(sqlite3 /opt/jeff-worker/data/worker.db "SELECT value FROM app_settings WHERE key='$1' AND trim(value)<>''" 2>/dev/null)" ]; }
+sem_chave() { local k="${PRECISA[$1]:-}"; [ -n "$k" ] && ! tem_chave "$k"; }
 if [ ${#APPS_MUDARAM[@]} -gt 0 ]; then
   mapfile -t AFETADOS < <(pm2 jlist | python3 -I -c '
 import json,sys
@@ -210,6 +215,7 @@ fi
 while IFS=$'\t' read -r nome status cwd script interp args eco; do
   [[ "$nome" =~ ^# ]] || [ "$status" != online ] && continue
   pm2 describe "$nome" >/dev/null 2>&1 && continue
+  if sem_chave "$nome"; then log "  $nome fica desligado: falta ${PRECISA[$nome]}"; continue; fi
   a_dir="$(printf '%s\n%s\n' "$script" "$cwd/" | sed -n 's#^/opt/jeff-apps/\([^/]*\)/.*#\1#p' | head -1)"
   [ -z "$a_dir" ] || [ -d "/opt/jeff-apps/$a_dir" ] || continue
   log "  processo novo: $nome"
@@ -224,6 +230,16 @@ done < "$NOVO/instalador/modelos/pm2.tsv"
 
 reinicios() { pm2 jlist | python3 -I -c 'import json,sys; [print(p["name"], (p.get("pm2_env") or {}).get("restart_time",0)) for p in json.load(sys.stdin)]'; }
 while read -r n r; do REINICIOS[$n]=$r; done < <(reinicios)
+SOBE=()
+for n in "${AFETADOS[@]}"; do
+  if sem_chave "$n"; then
+    log "  $n parado: falta ${PRECISA[$n]} (cadastre a chave e rode pm2 restart $n)"
+    pm2 stop "$n" >>"$LOG" 2>&1 || true
+    continue
+  fi
+  SOBE+=("$n")
+done
+AFETADOS=("${SOBE[@]}")
 for n in "${AFETADOS[@]}"; do
   log "  reiniciando $n"
   pm2 restart "$n" >>"$LOG" 2>&1 || desfaz "pm2 não reiniciou $n"
