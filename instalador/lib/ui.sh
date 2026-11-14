@@ -17,6 +17,7 @@ ui_nome() {
     personalizar) echo "Personalizando (domínio, dono, chaves internas)" ;;
     dependencias) echo "Dependências dos apps" ;;  bancos) echo "Bancos de dados" ;;
     chaves) echo "Chaves do cliente" ;;            containers) echo "Containers (proxy, Evolution, MoneyPrinter)" ;;
+    vendas) echo "Base de vendas da Central" ;;
     firewall) echo "Firewall" ;;                   pm2) echo "Subindo os apps" ;;
     central) echo "Dono da Central" ;;             proxy) echo "Subdomínios e SSL" ;;
     apis) echo "APIs no domínio novo" ;;           crontab) echo "Rotinas agendadas" ;;

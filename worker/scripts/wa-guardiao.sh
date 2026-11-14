@@ -9,7 +9,9 @@
 # Alerta de WhatsApp só quando o restart FALHA (uma vez por dia por app). Restart que dá certo fica só no log.
 # (Até 15/10/2026 o cron não achava o pm2: nenhum restart acontecia e o alerta "reiniciado" saía a cada 30 min.)
 set -u
-PM2=/usr/local/bin/pm2
+# pm2 do nvm (no cliente não existe /usr/local/bin/pm2 se o instalador antigo não criou o link)
+PM2="$(command -v pm2 2>/dev/null || true)"; [ -x "$PM2" ] || PM2=/usr/local/bin/pm2
+[ -x "$PM2" ] || PM2="$(ls -1d /root/.nvm/versions/node/*/bin/pm2 2>/dev/null | tail -n1)"
 LOG="/opt/jeff-worker/logs/wa-guardiao.log"
 STATE="/opt/jeff-worker/data/wa-guardiao"
 ALERTA="/opt/jeff-worker/scripts/wa-alerta.sh"

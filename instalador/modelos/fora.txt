@@ -227,6 +227,10 @@ sigilo   leandroferrari
 sigilo   cristophergaki
 sigilo   luizenderle
 sigilo   tay.ldantas
+# família do Jeff (dados pessoais): a montagem do pacote para se aparecer em qualquer arquivo
+sigilo   5562996438359
+sigilo   5511984413737
+sigilo   5562999101633
 
 # PENDÊNCIA: código que ainda cita cliente do Jeff e não pode só sair do pacote (quebraria o Zeus).
 # A publicação avisa, mas não para. Tirar a linha quando o código for limpo em produção.

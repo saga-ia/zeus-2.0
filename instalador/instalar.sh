@@ -26,11 +26,20 @@ NODE_VER=20.20.2                      # caminhos /root/.nvm/versions/node/v20.20
 SUPORTE_WHATS="5511910075450,5585991143501"
 DOMINIO_BASE="zeusia.cloud"           # padrão: <nomecliente>.zeusia.cloud (DNS criado com dns-cliente.sh no servidor do Jeff)
 COMPOSE_APPS="jeff-evolution jeff-omniroute jeff-presenton jeff-moneyprinter"
-ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers firewall pm2 central proxy apis crontab atualizacoes"
+CHROME_VER=131.0.6778.204              # Chrome for Testing fixo; o user-agent do worker sai desta versão (não trocar sem testar o pareamento)
+CHROME_DIR="/opt/zeus-chrome/$CHROME_VER"
+ETAPAS="sistema dns docker node codigo claude personalizar dependencias bancos chaves containers vendas firewall pm2 central proxy apis crontab atualizacoes"
 FORM="$ESTADO/formulario.json"
 FORA="$INST/modelos/fora.txt"         # perfil enxuto: o que não vai pro cliente
 fora() { [ -f "$FORA" ] && awk -v t="$1" '$1==t{print $2}' "$FORA" || true; }
 fora_tem() { fora "$1" | grep -qxF "$2"; }
+# Integrações que só funcionam com a chave do cliente: sem a chave, o app/rotina não sobe (antes ficava em loop de erro).
+# app ou trecho do cron -> chave em app_settings do worker. Depois de cadastrar a chave: --refazer pm2 / --refazer crontab
+declare -A PRECISA=( [jeff-zapsign-webhook]=zapsign_api_token [jeff-clickup-webhook]=clickup_api_token
+  [clickup-sync]=clickup_api_token [clickup-cobranca]=clickup_api_token [clickup-asaas-bridge]=clickup_api_token
+  [asaas-dunning]=asaas_api_key )
+tem_chave() { [ -n "$(sqlite3 /opt/jeff-worker/data/worker.db "SELECT value FROM app_settings WHERE key='$1' AND trim(value)<>''" 2>/dev/null)" ]; }
+sem_chave() { local k="${PRECISA[$1]:-}"; [ -n "$k" ] && ! tem_chave "$k"; }
 
 mkdir -p "$ESTADO"; chmod 700 "$ESTADO"
 exec 3>&1                              # fd 3 = terminal direto (indicador de progresso não suja o log)
@@ -69,8 +78,9 @@ form() { [ -f "$FORM" ] && python3 -I -c 'import json,sys; d=json.load(open(sys.
 perguntar() {
   azul "Dados da instalação"
   [ -f "$FORM" ] && echo "  (sugestões vindas do formulário; Enter confirma)"
-  local dominio cliente dono whats email senha senha2 autorizados
+  local dominio cliente dono whats bot email senha senha2 autorizados
   local f_whats; f_whats="$(form whats | tr -cd '0-9')"; [ ${#f_whats} -ge 10 ] && [ ${#f_whats} -le 11 ] && f_whats="55$f_whats"
+  local f_bot; f_bot="$(form wa_num | tr -cd '0-9')"; [ ${#f_bot} -ge 10 ] && [ ${#f_bot} -le 11 ] && f_bot="55$f_bot"
   while :; do read -erp "  Nome da empresa do cliente: " -i "$(form empresa)" cliente; [ -n "$cliente" ] && break; done
   local sugestao; sugestao="$(echo "$cliente" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9')"
   while :; do read -erp "  Nome do cliente no domínio (fica NOME.$DOMINIO_BASE): " -i "$sugestao" dominio
@@ -80,6 +90,10 @@ perguntar() {
   while :; do read -erp "  Nome do dono (quem manda no Zeus): " -i "$(form nome)" dono; [ -n "$dono" ] && break; done
   while :; do read -erp "  WhatsApp do dono, com 55 e DDD (ex: 5511999998888): " -i "$f_whats" whats
     whats="$(echo "$whats" | tr -cd '0-9')"; [[ "$whats" =~ ^55[0-9]{10,11}$ ]] && break; echo "  número inválido"; done
+  # o número do bot NÃO é o do dono: com o do bot no lugar do dono, o Zeus não reconhece quem manda nele
+  while :; do read -erp "  Número do WhatsApp do ZEUS (o chip do bot, não o do dono): " -i "$f_bot" bot
+    bot="$(echo "$bot" | tr -cd '0-9')"; [[ "$bot" =~ ^55[0-9]{10,11}$ ]] || { echo "  número inválido"; continue; }
+    [ "${bot: -8}" = "${whats: -8}" ] && { echo "  é o mesmo número do dono: o Zeus precisa de um chip só dele"; continue; }; break; done
   read -erp "  Outros números autorizados a falar com o Zeus (vírgula; Enter = nenhum): " -i "$(form autorizados)" autorizados
   autorizados="$(echo "$autorizados" | tr -c '0-9\n' ' ' | xargs -n1 2>/dev/null | awk 'length>=10{ if(length<=11) $0="55"$0; print }' | paste -sd, -)"
   while :; do read -erp "  E-mail de acesso (Central, painel do proxy e SSL): " -i "$(form email)" email
@@ -89,15 +103,15 @@ perguntar() {
     [ ${#senha} -ge 8 ] || { echo "  mínimo 8 caracteres"; continue; }
     read -rsp "  Repita a senha: " senha2; echo; [ "$senha" = "$senha2" ] && break; echo "  não confere"; done
 
-  echo; echo "  Domínio: $dominio | Cliente: $cliente | Dono: $dono ($whats) | Acesso: $email"
+  echo; echo "  Domínio: $dominio | Cliente: $cliente | Dono: $dono ($whats) | Zeus: $bot | Acesso: $email"
   read -rp "  Confere? [S/n] " c; [[ "${c:-S}" =~ ^[Ss]$ ]] || { perguntar; return; }
 
-  DOMINIO="$dominio" CLIENTE="$cliente" DONO="$dono" WHATS="$whats" EMAIL="$email" SENHA="$senha" AUTORIZADOS="$autorizados" \
+  DOMINIO="$dominio" CLIENTE="$cliente" DONO="$dono" WHATS="$whats" BOT="$bot" EMAIL="$email" SENHA="$senha" AUTORIZADOS="$autorizados" \
   SUPORTE="$SUPORTE_WHATS" ESTADO="$ESTADO" MODELOS="$INST/modelos" python3 -I - "$RESP" <<'PY'
 import json,os,sys
 e=os.environ
-wl=[x for x in [e['WHATS']]+e['AUTORIZADOS'].split(',')+e['SUPORTE'].split(',') if x]
-d={'dominio':e['DOMINIO'],'cliente':e['CLIENTE'],'dono_nome':e['DONO'],'dono_whats':e['WHATS'],
+wl=[x for x in [e['WHATS']]+e['AUTORIZADOS'].split(',')+e['SUPORTE'].split(',') if x and x[-8:]!=e['BOT'][-8:]]
+d={'dominio':e['DOMINIO'],'cliente':e['CLIENTE'],'dono_nome':e['DONO'],'dono_whats':e['WHATS'],'bot_whats':e['BOT'],
    'email':e['EMAIL'],'senha':e['SENHA'],'whitelist':','.join(dict.fromkeys(wl)),
    'estado':e['ESTADO'],'modelos':e['MODELOS']}
 fd=os.open(sys.argv[1],os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
@@ -115,6 +129,17 @@ else
   ok "usando respostas salvas ($(campo dominio), $(campo cliente)). Pra mudar: --respostas"
 fi
 DOMINIO="$(campo dominio)"; EMAIL="$(campo email)"; SENHA="$(campo senha)"
+# Uma senha por painel: Central = a escolhida; painel do WhatsApp e proxy (NPM) ganham senhas geradas, próprias.
+# Instalação antiga (painel/proxy já criados com a senha da Central) continua com ela, pra não trancar ninguém fora.
+WA_LEGADO=0; feito personalizar && WA_LEGADO=1; NPM_LEGADO=0; feito containers && NPM_LEGADO=1
+python3 -I - "$RESP" "$WA_LEGADO" "$NPM_LEGADO" <<'PYSENHAS'
+import json,secrets,sys
+f=sys.argv[1]; d=json.load(open(f)); mudou=False
+for k,legado in (('senha_wa',sys.argv[2]=='1'),('senha_npm',sys.argv[3]=='1')):
+    if not d.get(k): d[k]=d['senha'] if legado else secrets.token_urlsafe(12); mudou=True
+if mudou: json.dump(d,open(f,'w'),ensure_ascii=False,indent=1)
+PYSENHAS
+SENHA_WA="$(campo senha_wa)"; SENHA_NPM="$(campo senha_npm)"
 
 export NVM_DIR=/root/.nvm
 carrega_node() { # shellcheck disable=SC1091
@@ -124,15 +149,23 @@ carrega_node() { # shellcheck disable=SC1091
 if etapa sistema; then
   apt_inst "Pacotes base (curl, git, python, ffmpeg, firewall...)" \
     "ca-certificates curl git rsync jq sqlite3 python3 python3-pip python3-venv ffmpeg build-essential ufw dnsutils cron gnupg unzip psmisc fonts-liberation fonts-noto-color-emoji locales tzdata"
-  # Chromium do sistema (WhatsApp Web). No Ubuntu o pacote é snap, então usa o Chrome .deb.
-  if ! command -v chromium >/dev/null && ! [ -x /usr/bin/chromium ]; then
-    if grep -qi debian /etc/os-release && apt_inst "Chromium (WhatsApp)" "chromium"; then :
-    else
-      tentar 3 "Baixando o Chrome (WhatsApp)" curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      esperar_apt; tentar 3 "Instalando o Chrome" apt-get install -y -q /tmp/chrome.deb
-      rm -f /tmp/chrome.deb; ln -sf /usr/bin/google-chrome /usr/bin/chromium
-    fi
+  # Navegador do WhatsApp Web: Chrome for Testing em versão FIXA (a mesma do user-agent do worker). Chromium do apt
+  # (Debian) ou do snap (Ubuntu) muda de versão sozinho, e user-agent diferente do navegador real faz o celular recusar
+  # o pareamento. /usr/bin/chromium vira link pra ele (é o CHROMIUM_PATH do worker e do relay).
+  CFT="$CHROME_DIR/chrome-linux64/chrome"
+  if ! "$CFT" --version 2>/dev/null | grep -q "${CHROME_VER%%.*}\."; then
+    tentar 3 "Baixando o Chrome $CHROME_VER (WhatsApp)" curl -fsSL -o /tmp/cft.zip "https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VER/linux64/chrome-linux64.zip"
+    rm -rf "$CHROME_DIR" && mkdir -p "$CHROME_DIR" && unzip -q /tmp/cft.zip -d "$CHROME_DIR" && rm -f /tmp/cft.zip
+    # dependências que o próprio pacote lista (no Ubuntu 24 algumas ganharam o sufixo t64, ex: libasound2t64)
+    DEPS="$(sed -E 's/[ (].*//' "$CHROME_DIR/chrome-linux64/deb.deps" 2>/dev/null | sort -u | while read -r d; do
+      [ -n "$d" ] || continue
+      if apt-cache show "${d}t64" >/dev/null 2>&1; then echo "${d}t64"; elif apt-cache show "$d" >/dev/null 2>&1; then echo "$d"; fi
+    done | paste -sd' ')"
+    [ -n "$DEPS" ] && apt_inst "Bibliotecas do Chrome" "$DEPS"
   fi
+  ln -sfn "$CFT" /usr/bin/chromium
+  /usr/bin/chromium --version 2>&1 | grep -q "${CHROME_VER%%.*}\." || erro "o Chrome $CHROME_VER não abriu (/usr/bin/chromium --version: $(/usr/bin/chromium --version 2>&1 | head -n1)). Sem ele o WhatsApp não conecta."
+  ok "Chrome $(/usr/bin/chromium --version 2>&1 | grep -oE '[0-9.]+' | head -n1) em /usr/bin/chromium"
   # swap se tiver pouca memória (npm e Chromium agradecem)
   if [ "$(awk '/MemTotal/{print int($2/1024/1024)}' /proc/meminfo)" -lt 8 ] && ! swapon --show | grep -q .; then
     fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
@@ -184,6 +217,23 @@ if etapa node; then
   marca node; ok "node $(node -v), pm2 $(pm2 -v), claude $(claude --version 2>/dev/null | head -1)"
 fi
 carrega_node
+# Sempre (idempotente): pm2, claude e node também fora do nvm. Cron e scripts sem shell interativo
+# (wa-guardiao.sh, agent-runner) não carregam o nvm e procuravam /usr/local/bin/pm2, que não existia.
+for b in pm2 claude node npx; do p="$(command -v "$b" 2>/dev/null || true)"; [ -n "$p" ] && [ "$p" != "/usr/local/bin/$b" ] && ln -sfn "$p" "/usr/local/bin/$b"; done
+# Pasta do Zeus confiável no Claude Code: sem isso o claude -p ignora o .claude/settings.json do worker
+# (as permissões dos scripts) e responde "preciso de permissão" em vez de agir.
+python3 -I - /root/.claude.json /opt/jeff-worker <<'PY2'
+import json,os,sys
+f,pasta=sys.argv[1],sys.argv[2]
+try: d=json.load(open(f))
+except Exception: d={}
+pr=d.setdefault('projects',{}).setdefault(pasta,{})
+if pr.get('hasTrustDialogAccepted') is not True:
+    pr['hasTrustDialogAccepted']=True
+    tmp=f+'.tmp'; fd=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+    with os.fdopen(fd,'w') as h: json.dump(d,h,indent=2)
+    os.replace(tmp,f); print('  ok pasta /opt/jeff-worker marcada como confiável no Claude Code')
+PY2
 
 if etapa codigo; then
   # remove token do remote, se o clone foi feito com ele
@@ -218,7 +268,7 @@ fi
 if etapa personalizar; then
   # hash bcrypt da senha pro painel do WhatsApp (bcryptjs puro, sem compilar)
   TMPB="$(mktemp -d)"; (cd "$TMPB" && npm i -s bcryptjs@2 >/dev/null 2>&1)
-  HASH="$(cd "$TMPB" && SENHA="$SENHA" node -e 'console.log(require("bcryptjs").hashSync(process.env.SENHA,12))')"
+  HASH="$(cd "$TMPB" && SENHA="$SENHA_WA" node -e 'console.log(require("bcryptjs").hashSync(process.env.SENHA,12))')"
   rm -rf "$TMPB"
   python3 -I - "$RESP" "$HASH" <<'PY'
 import json,sys
@@ -278,7 +328,7 @@ N8N_BASIC_AUTH_PASSWORD=$SENHA
 N8N_ENCRYPTION_KEY=$(openssl rand -hex 32)
 TZ=America/Sao_Paulo
 INITIAL_ADMIN_EMAIL=$EMAIL
-INITIAL_ADMIN_PASSWORD=$SENHA
+INITIAL_ADMIN_PASSWORD=$SENHA_NPM
 EOF
     )
   fi
@@ -308,6 +358,26 @@ PY
   marca containers
 fi
 
+# Base de vendas da Central (schema zv + papel zeus_ro) no Postgres da Evolution. Sem ela a Central mostra
+# "relation zv.instancia does not exist" e a IA de vendas não lê nada. As views dependem das tabelas que a
+# Evolution cria ao subir, então espera a tabela "Message" aparecer.
+if etapa vendas; then
+  SQLV="/opt/jeff-apps/jeff-central/vendas/schema.sql"
+  if fora_tem app jeff-evolution || [ ! -f "$SQLV" ]; then ok "base de vendas: Evolution ou Central fora deste perfil"; marca vendas
+  else
+    pronto=0
+    for _ in $(seq 1 36); do
+      docker exec jeff-evolution-postgres psql -U evolution -d evolution -tAc "SELECT to_regclass('public.\"Message\"') IS NOT NULL" 2>/dev/null | grep -qx t && { pronto=1; break; }
+      sleep 10
+    done
+    if [ "$pronto" != 1 ]; then aviso "base de vendas: a Evolution não criou as tabelas em 6 min. Rode depois: --refazer vendas"
+    elif docker exec -i jeff-evolution-postgres psql -U evolution -d evolution -q -v ON_ERROR_STOP=1 < "$SQLV" >>"$LOG" 2>&1 \
+         && node /opt/jeff-apps/jeff-central/bin/consulta-sql "SELECT count(*) AS n FROM zv.instancia" >>"$LOG" 2>&1; then
+      marca vendas; ok "base de vendas (schema zv) criada e lida pelo papel zeus_ro"
+    else aviso "base de vendas: o schema.sql falhou (ver $LOG). Rode depois: --refazer vendas"; fi
+  fi
+fi
+
 if etapa firewall; then
   SSH_PORTA="$(ss -tlnp 2>/dev/null | awk '/sshd/{split($4,a,":"); print a[length(a)]; exit}')"; SSH_PORTA="${SSH_PORTA:-22}"
   ufw --force reset >/dev/null
@@ -328,6 +398,7 @@ if etapa pm2; then
     a_dir="$(printf '%s\n%s\n' "$script" "$cwd/" | sed -n 's#^/opt/jeff-apps/\([^/]*\)/.*#\1#p' | head -1)"
     [ -n "$a_dir" ] && fora_tem app "$a_dir" && continue      # app fora do perfil (pelo script ou pela pasta)
     pm2 describe "$nome" >/dev/null 2>&1 && continue
+    if sem_chave "$nome"; then ok "$nome fica desligado: falta ${PRECISA[$nome]} (cadastre e rode --refazer pm2)"; continue; fi
     if [ "$eco" != "-" ] && [ -f "$eco" ]; then
       (cd "$(dirname "$eco")" && pm2 start "$eco" --only "$nome") >>"$LOG" 2>&1 || falhas+=("$nome")
     elif [ -f "$script" ]; then
@@ -359,7 +430,15 @@ fi
 if etapa proxy; then
   IP="$(IP_PUB)"
   echo "  IP público deste servidor: $IP"
-  if python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP" "$(fora host | paste -sd, -)"; then
+  # DNS recém-criado demora a propagar (e o resolvedor do VPS às vezes trava): tenta por até ~8 min antes de desistir.
+  # O npm_proxy.py sai com 3 quando algum subdomínio ainda não aponta pra cá; os que já apontam ganham SSL a cada volta.
+  rc=1
+  for t in 1 2 3 4 5 6 7 8; do
+    python3 -I "$INST/lib/npm_proxy.py" "$RESP" "$INST/modelos/hosts.tsv" "$IP" "$(fora host | paste -sd, -)" && rc=0 || rc=$?
+    [ "$rc" = 3 ] || break
+    [ "$t" -lt 8 ] && { echo "  DNS ainda propagando (tentativa $t de 8): nova checagem em 60 s"; sleep 60; }
+  done
+  if [ "$rc" = 0 ]; then
     marca proxy
   else
     if [[ "$DOMINIO" == *".$DOMINIO_BASE" ]]; then
@@ -377,12 +456,17 @@ fi
 
 if etapa crontab; then
   # linhas de clientes fora do perfil vão comentadas
-  python3 -I - "$REPO/docs/crontab-snapshot.txt" "$(fora cron | paste -sd, -)" <<'PY' | crontab -
+  # e rotinas de integração sem a chave do cliente vão comentadas também (ClickUp, Asaas...)
+  SEMCHAVE="$(for k in "${!PRECISA[@]}"; do sem_chave "$k" && echo "$k"; done | paste -sd, -)"
+  python3 -I - "$REPO/docs/crontab-snapshot.txt" "$(fora cron | paste -sd, -)" "$SEMCHAVE" <<'PY' | crontab -
 import sys
 termos=[t for t in sys.argv[2].split(',') if t]
+semchave=[t for t in sys.argv[3].split(',') if t]
 for l in open(sys.argv[1]):
     l=l.rstrip('\n')
-    print('# fora do perfil: '+l if l and not l.startswith('#') and any(t in l for t in termos) else l)
+    if l and not l.startswith('#') and any(t in l for t in termos): print('# fora do perfil: '+l)
+    elif l and not l.startswith('#') and any(t in l for t in semchave): print('# sem a chave da integração: '+l)
+    else: print(l)
 PY
   marca crontab; ok "crontab instalado ($(crontab -l | grep -cE '^[0-9*@]') tarefas)"
 fi
@@ -413,9 +497,9 @@ ADMIN_WA="$(sed -n 's/^ADMIN_USER=//p' /opt/jeff-worker/.env 2>/dev/null | tr -d
 ( umask 077; cat > "$ACESSOS" <<EOF
 ZEUS de $(campo cliente), instalado em $(date '+%d/%m/%Y %H:%M')
 Central:            https://$DOMINIO   ($EMAIL / $SENHA)
-Painel WhatsApp:    https://sagazeus.$DOMINIO  (usuário $ADMIN_WA / $SENHA)
+Painel WhatsApp:    https://sagazeus.$DOMINIO  (usuário $ADMIN_WA / $SENHA_WA)
 $(fora_tem servico n8n || echo "n8n:                https://n8n.$DOMINIO       ($EMAIL / $SENHA)")
-Proxy (NPM):        ssh -L 81:127.0.0.1:81 root@$DOMINIO  e abrir http://localhost:81  ($EMAIL / $SENHA)
+Proxy (NPM):        ssh -L 81:127.0.0.1:81 root@$DOMINIO  e abrir http://localhost:81  ($EMAIL / $SENHA_NPM)
 Chaves internas:    $ESTADO/chaves.json
 EOF
 )
@@ -430,4 +514,8 @@ Falta fazer na chamada com o cliente:
   Chave nova ou trocada depois:  bash $INST/instalar.sh --refazer chaves && bash $INST/instalar.sh --refazer apis
 EOF
 [ -f "$ESTADO/avisos.txt" ] && { echo; echo "Atenções desta instalação:"; sort -u "$ESTADO/avisos.txt" | sed 's/^/  - /'; }
+# relatório de diagnóstico pro servidor do Jeff (sem segredos: o coletor filtra antes de enviar)
+echo; echo "Enviando o relatório da instalação pro suporte..."
+bash "$INST/relatorio.sh" "fim do instalar.sh${REFAZER:+ (--refazer $REFAZER)}" || true
+echo "Se algo der errado depois:  bash $INST/relatorio.sh \"o que aconteceu\""
 true

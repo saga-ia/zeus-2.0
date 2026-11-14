@@ -68,7 +68,7 @@ for k, gerar in [('jeff_meta_ig_webhook_verify_token', lambda: secrets.token_hex
                  ('mirror_token', lambda: secrets.token_hex(24))]:
     if not atual(k):
         grava(k, gerar())
-for k, v in [('jeff_npm_email', R['email']), ('jeff_npm_password', R['senha']), ('jeff_npm_url', 'http://127.0.0.1:81'),
+for k, v in [('jeff_npm_email', R['email']), ('jeff_npm_password', R.get('senha_npm') or R['senha']), ('jeff_npm_url', 'http://127.0.0.1:81'),
              ('jeff_server_ipv4', IP), ('jeff_zeus_vps_ip', IP)]:
     grava(k, v)
 con.commit()

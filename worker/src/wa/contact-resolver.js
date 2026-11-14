@@ -30,10 +30,18 @@ function withTimeout(promise, ms, label) {
   });
 }
 
+// Celular brasileiro sem o 9 (o WhatsApp ainda entrega assim para números antigos): 55 + DDD + 8 dígitos
+// começando em 6-9 vira 55 + DDD + 9 + 8 dígitos. Fixo (começa em 2-5) e outros países ficam como estão.
+function normBR(d) {
+  if (!d) return d;
+  if (/^55\d{2}[6-9]\d{7}$/.test(d)) return d.slice(0, 4) + '9' + d.slice(4);
+  return d;
+}
+
 function phoneFromCus(jid) {
   if (typeof jid !== 'string' || !jid.endsWith('@c.us')) return null;
   const d = digits(jid.split('@')[0]);
-  return d || null;
+  return d ? normBR(d) : null;
 }
 
 function phoneFromAliasTable(jid) {
@@ -76,9 +84,16 @@ async function resolvePhone(client, jid) {
 
   try {
     const contact = await withTimeout(client.getContactById(jid), RESOLVE_TIMEOUT_MS, `getContactById(${jid})`);
-    const phone = contact?.number ? digits(contact.number) : (contact?.id?.user ? digits(contact.id.user) : null);
-    const cUs = contact?.id?._serialized && contact.id._serialized.endsWith('@c.us') ? contact.id._serialized : null;
+    const idSer = contact?.id?._serialized || contact?.id?.$1 || '';
+    const cUs = idSer.endsWith('@c.us') ? idSer : null;
     const lid = jid.endsWith('@lid') ? jid : null;
+    const lidDigits = lid ? digits(lid.split('@')[0]) : null;
+    // Para @lid, contact.number costuma ser o próprio LID (não é telefone): prefere o @c.us e descarta número igual ao LID.
+    let phone = cUs ? phoneFromCus(cUs) : null;
+    if (!phone) {
+      const cand = contact?.number ? digits(contact.number) : (!lid && contact?.id?.user ? digits(contact.id.user) : null);
+      if (cand && cand !== lidDigits) phone = normBR(cand);
+    }
     const name = contact?.name || contact?.pushname || null;
 
     if (phone) {
@@ -107,4 +122,4 @@ function phoneFromJidSync(jid) {
   return phoneFromAliasTable(jid);
 }
 
-module.exports = { resolvePhone, phoneFromJidSync, phoneFromAliasTable };
+module.exports = { resolvePhone, phoneFromJidSync, phoneFromAliasTable, normBR };

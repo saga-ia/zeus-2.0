@@ -33,6 +33,17 @@ function alertarQueda(texto) {
 fs.mkdirSync(config.authPath, { recursive: true });
 fs.mkdirSync(config.mediaPath, { recursive: true });
 
+// User-agent com a versão REAL do navegador instalado: versão diferente da do Chrome que roda faz o celular recusar o
+// pareamento ("Não foi possível conectar o aparelho"). Se não der pra ler, usa a 131 (a que o instalador fixa).
+const USER_AGENT = (() => {
+  let major = '131';
+  try {
+    const v = execSync(`${JSON.stringify(config.chromiumPath)} --version`, { timeout: 15000 }).toString();
+    const m = /(\d+)\.\d+\.\d+/.exec(v); if (m) major = m[1];
+  } catch { /* fica a 131 */ }
+  return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`;
+})();
+
 function killZombieChrome() {
   try {
     const pattern = `chromium.*${config.authPath}`;
@@ -334,6 +345,11 @@ function createWAManager({ onMessage, onStateChange }) {
   let destroyed = false;
   let busy = false;
   let externalQueue = null; // injetado via setQueue após createQueue()
+  // Sessão morta: o WhatsApp desvinculou o aparelho, mas o perfil salvo faz o inject do whatsapp-web.js esperar pra
+  // sempre (a Central nunca recebe o QR). Só separa a sessão com prova: a página mostrando a tela de login em
+  // WA_SESSION_RESET_AFTER falhas seguidas (queda de internet não conta, porque aí a página nem carrega).
+  let falhasComTelaDeLogin = 0;
+  const RESET_APOS = Math.max(1, parseInt(process.env.WA_SESSION_RESET_AFTER || '2', 10));
 
   const inboundSeen = new TimedSet(60_000);
 
@@ -344,10 +360,12 @@ function createWAManager({ onMessage, onStateChange }) {
 
   function attachHandlers(c) {
     c.on('qr', (qr) => {
+      falhasComTelaDeLogin = 0;
       state.transition('qr', { qr });
     });
 
     c.on('authenticated', () => {
+      falhasComTelaDeLogin = 0;
       state.transition('authenticated', { qr: null });
     });
 
@@ -382,6 +400,8 @@ function createWAManager({ onMessage, onStateChange }) {
     });
 
     c.on('message', async (msg) => {
+      // Status (stories) dos contatos chegam como mensagem de status@broadcast: nunca entram na fila do agente.
+      if (msg.isStatus || msg.from === 'status@broadcast' || msg.to === 'status@broadcast') return;
       const key = msg.id?._serialized;
       if (key && inboundSeen.has(key)) return;
       if (key) inboundSeen.add(key);
@@ -732,11 +752,11 @@ function createWAManager({ onMessage, onStateChange }) {
           '--disable-infobars',
           '--window-size=1366,768',
           '--lang=pt-BR,pt',
-          '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          '--user-agent=' + USER_AGENT,
         ],
       },
       webVersionCache: { type: 'local' },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      userAgent: USER_AGENT,
     });
   }
 
@@ -750,10 +770,44 @@ function createWAManager({ onMessage, onStateChange }) {
     } catch (err) {
       logger.error({ err }, 'initialize failed');
       state.transition('disconnected', { lastError: String(err) });
+      try { await talvezSepararSessao(err); } catch (e) { logger.warn({ err: e }, 'session reset check failed'); }
       scheduleReconnect('initialize_error');
     } finally {
       busy = false;
     }
+  }
+
+  // A página está na tela de login (QR / "Scan to log in") enquanto o inject esperou e estourou o tempo?
+  async function paginaEmTelaDeLogin() {
+    const pg = client && client.pupPage;
+    if (!pg || pg.isClosed?.()) return false;
+    return pg.evaluate(() => {
+      const t = (document.body && document.body.innerText) || '';
+      const temQr = !!document.querySelector('canvas[aria-label], div[data-ref] canvas');
+      return temQr || /Scan to log in|Link with phone number|Escaneie|Conectar com número de telefone|Use o WhatsApp no seu computador/i.test(t);
+    }).catch(() => false);
+  }
+
+  async function talvezSepararSessao(err) {
+    if (!/TimeoutError|Waiting failed|auth timeout/i.test(String(err && (err.stack || err)))) return;
+    if (!(await paginaEmTelaDeLogin())) { falhasComTelaDeLogin = 0; return; }
+    falhasComTelaDeLogin += 1;
+    logger.warn({ falhas: falhasComTelaDeLogin, limite: RESET_APOS }, 'init travou com a tela de login aberta (sessão morta?)');
+    if (falhasComTelaDeLogin < RESET_APOS) return;
+    falhasComTelaDeLogin = 0;
+    await destroyQuiet('session_reset');
+    killZombieChrome();
+    const dir = path.join(config.authPath, `session-${config.clientId}`);
+    if (!fs.existsSync(dir)) return;
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '');
+    const destino = `${dir}-quebrada-${stamp}`;
+    fs.renameSync(dir, destino);
+    // guarda só as 2 últimas sessões separadas
+    const antigas = fs.readdirSync(config.authPath).filter((n) => n.startsWith(`session-${config.clientId}-quebrada-`)).sort();
+    for (const n of antigas.slice(0, -2)) fs.rmSync(path.join(config.authPath, n), { recursive: true, force: true });
+    reconnectDelay = config.reconnectBaseMs;
+    logger.error({ destino }, 'sessão do WhatsApp separada: o WhatsApp desvinculou o aparelho; próximo início gera QR novo');
+    alertarQueda('O WhatsApp do ZEUS foi desvinculado e a sessão antiga travava a reconexão. Ela foi separada automaticamente: leia o QR novo na Central › Conectores › WhatsApp.');
   }
 
   function scheduleReconnect(reason) {

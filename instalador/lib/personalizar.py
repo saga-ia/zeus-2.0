@@ -133,6 +133,7 @@ bloco = f"""{MARCA}
 ## Neste servidor (instalação do cliente)
 
 - Este ZEUS pertence a **{R['cliente']}**. Dono com autorização total: **{R['dono_nome']} ({R['dono_whats']})**.
+- Número do próprio ZEUS (o chip do bot): **{R.get('bot_whats') or 'não informado'}**. Nunca trate esse número como o dono.
 - Onde este arquivo, os agentes ou as memórias disserem "Jeff", "Jeferson" ou "o dono" no sentido de quem manda no negócio, leia **{R['dono_nome']}**.
 - **Jeferson (5511910075450) e Vinicius (5585991143501)** são o suporte técnico da Alpha Digital: acesso total para manutenção e recebem os alertas de saúde do sistema.
 - Domínio deste servidor: **{DOM}**. Acesso à Central: {R['email']}.
@@ -142,7 +143,11 @@ for p in (os.path.join(OPT, 'jeff-worker', 'CLAUDE.md'), os.path.join(ROOT, '.cl
     if not os.path.isfile(p):
         continue
     s = open(p, encoding='utf-8').read()
-    if MARCA in s:
+    if MARCA in s:  # já tem: troca o bloco (corrige dono/número de instalações antigas no --refazer personalizar)
+        s2 = re.sub(re.escape(MARCA) + r'.*?<!-- /zeus-instalador:dono -->\n?', bloco, s, count=1, flags=re.S)
+        if s2 != s:
+            open(p, 'w', encoding='utf-8').write(s2)
+            print(f'dono atualizado em {p}')
         continue
     linhas = s.split('\n')
     i = 1 if linhas and linhas[0].startswith('#') else 0

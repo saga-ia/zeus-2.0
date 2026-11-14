@@ -23,7 +23,8 @@ if [ ${#ARQS[@]} -gt 0 ]; then
   for f in "${ARQS[@]}"; do
     python3 -I -c 'import json,sys
 d=json.load(open(sys.argv[1])); x=d.get("dados",{})
-print(f"  {sys.argv[2]:>2}) {x.get(\"empresa\",\"?\")}  ({x.get(\"nome\",\"\")}, enviado {d.get(\"recebido_em\",\"\")[:10]})")' "$f" "$i"
+emp=x.get("empresa","?"); nome=x.get("nome",""); quando=d.get("recebido_em","")[:10]
+print(f"  {sys.argv[2]:>2}) {emp}  ({nome}, enviado {quando})")' "$f" "$i"
     i=$((i + 1))
   done
   echo "   0) sem formulário (o instalador pergunta tudo)"

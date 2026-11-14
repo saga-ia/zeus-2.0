@@ -31,7 +31,7 @@ def req(metodo, caminho, corpo=None, token=None, timeout=60):
 token = None
 for _ in range(60):
     try:
-        token = req('POST', '/tokens', {'identity': R['email'], 'secret': R['senha']})['token']
+        token = req('POST', '/tokens', {'identity': R['email'], 'secret': R.get('senha_npm') or R['senha']})['token']
         break
     except Exception:
         time.sleep(5)
