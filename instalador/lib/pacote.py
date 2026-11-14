@@ -111,12 +111,16 @@ class Regras:
         if p == 'worker/CLAUDE.md':
             # dados pessoais do Jeff (família) nunca vão pro servidor do cliente
             return re.sub(r'## Família Jeff.*?(?=\n---|\n## )', '', txt, count=1, flags=re.S).encode()
+        if p == 'worker/zeus/04_protocolos_relacionamento.md':
+            # nomes da família do Jeff nunca vão pro servidor do cliente; a seção fica genérica
+            return re.sub(r'(### Membros conhecidos\n).*?(?=\n### )',
+                          r'\1- (o dono cadastra aqui os familiares dele)\n', txt, count=1, flags=re.S).encode()
         if p == 'docs/crontab-snapshot.txt':
             return ''.join(l for l in linhas if not any(t in l for t in self.crons)
                            and not (l.startswith('#') and self.sigilo and self.sigilo.search(l))).encode()
         return dados
 
-    REESCRITOS = {'instalador/modelos/fora.txt', 'instalador/modelos/hosts.tsv', 'instalador/modelos/pm2.tsv',
+    REESCRITOS = {'worker/zeus/04_protocolos_relacionamento.md', 'instalador/modelos/fora.txt', 'instalador/modelos/hosts.tsv', 'instalador/modelos/pm2.tsv',
                   'instalador/modelos/segredos.tsv', 'instalador/modelos/env-classificacao.tsv', 'docs/crontab-snapshot.txt',
                   'worker/CLAUDE.md'}
 
