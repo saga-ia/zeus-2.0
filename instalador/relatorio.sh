@@ -20,6 +20,10 @@ OUT="$TMP/relatorio.txt"
 
 [ "$(id -u)" = 0 ] || { echo "Rode como root."; exit 1; }
 
+jv() { python3 -I -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get(sys.argv[2]) or "")
+except Exception: print("")' "$1" "$2" 2>/dev/null; }
+URL="$(jv "$ATU" url)"; URL="${URL:-$URL_PADRAO}"; TOKEN="$(jv "$ATU" token)"
 # --arquivos [caminho...]: manda pro suporte uma cópia dos arquivos de código mexidos neste servidor (pra levar a
 # correção pro instalador). Nunca vai .env, banco, sessão do WhatsApp nem pasta data/; valores de segredo escritos
 # no código viram [oculto]. Precisa do token deste servidor.
@@ -58,10 +62,7 @@ PYARQ
   printf '%s' "$R" | grep -q '"ok":true' && echo "Arquivos enviados: $(printf '%s' "$R" | python3 -I -c 'import json,sys;print(json.load(sys.stdin).get("id",""))' 2>/dev/null)" || { echo "Falhou: $R"; exit 1; }
   exit 0
 fi
-jv() { python3 -I -c 'import json,sys
-try: print(json.load(open(sys.argv[1])).get(sys.argv[2]) or "")
-except Exception: print("")' "$1" "$2" 2>/dev/null; }
-URL="$(jv "$ATU" url)"; URL="${URL:-$URL_PADRAO}"; TOKEN="$(jv "$ATU" token)"
+
 sec() { printf '\n===== %s =====\n' "$*"; }
 run() { timeout "${T:-20}" bash -c "$*" 2>&1 | tail -n "${N:-200}"; }
 
