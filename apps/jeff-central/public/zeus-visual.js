@@ -225,7 +225,7 @@
     rotinas: { sec: "operar", crumb: "Operar · Rotinas", ic: "rotinas" },
     agentes: GRUPO_AGENTES, catalogo: GRUPO_AGENTES, equipes: GRUPO_AGENTES, habilidades: GRUPO_AGENTES, conhecimento: GRUPO_AGENTES,
     motores: GRUPO_GESTAO,
-    motorVendas: Object.assign({}, GRUPO_GESTAO, { abas: "", fora: true, desc: "Habilidades de IA que apoiam gestão, execução, treinamento e pré-vendas da operação comercial." }),
+    motorVendas: Object.assign({}, GRUPO_GESTAO, { fora: true, desc: "Habilidades de IA que apoiam gestão, execução, treinamento e pré-vendas da operação comercial." }),
     acoes: { sec: "operar", crumb: "Operar · Atividades", ic: "acoes", titulo: "Atividades", desc: "Todas as ações da equipe, sincronizadas com o ClickUp e agrupadas por status.", fora: true, abas: "acoes" },
     whatsapp: { sec: "canais", crumb: "Canais · WhatsApp", ic: "whatsapp", titulo: "WhatsApp", desc: "Conversas, funil e o atendimento do ZEUS no WhatsApp.", origem: "#wa-top > div", abasDe: "[data-wa-view]", mover: "[data-wa-sdrbox],[data-wa-lead-novo]", alto: true },
     instagram: { sec: "canais", crumb: "Canais · Instagram", ic: "instagram", titulo: "Instagram", desc: "Direct com atendimento do ZEUS, publicações e automações da conta.", origem: "#ig-top > div", abasDe: "[data-ig-view]", moverDepois: true, alto: true },

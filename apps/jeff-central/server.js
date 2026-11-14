@@ -808,7 +808,13 @@ const rotinas = require('./rotinas');
 app.use('/api/rotinas', apiAuth, acesso.regras([['POST', /^\/$/, 'criar-rotina']]), rotinas.router);
 // Execução Comercial: fontes de dados de vendas (WhatsApp da Evolution e planilha/CRM). Ler é livre; gravar só admin.
 // Diagnóstico e Auditoria com IA: qualquer pessoa logada gera (a IA é isolada e só lê); contexto, números e planilhas só admin
-app.use('/api/vendas', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), (req, res, next) => (req.method === 'GET' || req.path.startsWith('/diagnostico') || req.path.startsWith('/auditoria') || req.path.startsWith('/analise') ? next() : exigirAdmin(req, res, next)), require('./vendas-ia').router, require('./vendas-dados').router, ...(fs.existsSync(path.join(__dirname, 'vendas-crm.js')) ? [require('./vendas-crm').router] : []), require('./vendas-qualidade').router);
+// Módulos de vendas feitos para um cliente específico (ex: ligação com o CRM dele). Não vêm no pacote do produto:
+// existem só no servidor daquele cliente e a atualização não mexe neles. Cada um exporta { router }.
+const modulosDoCliente = ['vendas-crm.js', 'vendas-qualidade.js']
+  .filter((f) => fs.existsSync(path.join(__dirname, f)))
+  .map((f) => { try { return require('./' + f).router; } catch (e) { console.error('[central] módulo do cliente ' + f + ':', e.message); return null; } })
+  .filter(Boolean);
+app.use('/api/vendas', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), (req, res, next) => (req.method === 'GET' || req.path.startsWith('/diagnostico') || req.path.startsWith('/auditoria') || req.path.startsWith('/analise') ? next() : exigirAdmin(req, res, next)), require('./vendas-ia').router, require('./vendas-dados').router, ...modulosDoCliente);
 // CENTRAL_SEM_AGENDADORES=1: instância de teste (cópia do banco) não roda rotinas nem transcrição de verdade
 if (process.env.CENTRAL_SEM_AGENDADORES !== '1') rotinas.startScheduler();
 // Transcrição automática dos áudios dos números nas análises de vendas (Diagnóstico e Auditoria leem o que foi falado)

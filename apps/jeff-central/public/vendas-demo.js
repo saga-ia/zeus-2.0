@@ -1,6 +1,4 @@
-// Execução Comercial › Gestão Comercial: negócios REAIS do CRM do cliente + WhatsApp comercial (GET /api/vendas/negocios,
-// servido por vendas-crm.js, que é específico de cada cliente: sem ele a tela diz que o CRM não está conectado).
-// A aba Qualidade continua com a base ILUSTRATIVA abaixo (notas de atendimento ainda não existem na base real).
+// Execução Comercial › Gestão Comercial e Qualidade: base ILUSTRATIVA de negócios do CRM para demonstração.
 // Gera ~1.500 negócios fictícios (semente fixa: os números não mudam entre recarregamentos) e todos os cartões
 // do dashboard são calculados a partir dela, então os filtros (funil, período, status, vendedor, etapa e canal) funcionam de verdade.
 // O bloco "Leads por canal" (vendas-canais.js) continua com os dados reais e não é afetado.
@@ -107,77 +105,6 @@
     return (_base = L);
   }
 
-  // ─── Base REAL da Gestão Comercial (CRM + WhatsApp comercial) ───────────────
-  const RV = { negocios: null, vendedores: [], canais: [], etapas: [], motivos: [], erro: "", em: 0, carregando: false, fonte: null };
-  const ORDEM_ETAPAS = ["Novo Lead", "Quente", "Morno", "Frio", "Contato Feito", "Proposta Enviada", "Negociação", "Fechado", "Perdido", "Arquivado", "Em aberto"];
-  async function carregaReal(forca){
-    if(RV.carregando) return;
-    RV.carregando = true;
-    try {
-      const r = await fetch("/api/vendas/negocios" + (forca ? "?atualizar=1" : ""));
-      const j = await r.json().catch(() => ({}));
-      if(r.status === 404) throw new Error("CRM não conectado neste servidor (fale com o suporte para ligar o CRM da empresa)");
-      if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
-      const agora = Date.now();
-      RV.negocios = (j.negocios || []).map(n => Object.assign(n, { idade: (agora - n.criado) / DIA }));
-      const freq = f => { const c = {}; RV.negocios.forEach(n => { const k = f(n); if(k) c[k] = (c[k] || 0) + 1; }); return Object.keys(c).sort((a, b) => c[b] - c[a]); };
-      const pos = x => { const i = ORDEM_ETAPAS.indexOf(x); return i < 0 ? 50 : i; };
-      RV.vendedores = freq(n => n.vendedor).map(nome => ({ nome }));
-      RV.canais = freq(n => n.canal).map(c => [c]);
-      RV.etapas = freq(n => n.etapa).sort((a, b) => pos(a) - pos(b));
-      RV.motivos = freq(n => n.motivo).map(m => [m]);
-      RV.em = j.atualizado_em || agora; RV.fonte = j.fonte || null; RV.erro = j.aviso || "";
-    } catch(err){ RV.erro = err.message; if(!RV.negocios) RV.negocios = []; }
-    RV.carregando = false;
-    S.sync = { em: RV.em || Date.now(), rodando: false };
-    sincronizaDATA(); pintaCrm(); pintar();
-  }
-  function baseV(){ if(RV.negocios === null){ carregaReal(); return []; } return RV.negocios; }
-
-  // ─── Base REAL da Qualidade (conversas do WhatsApp comercial + nota da IA) ──
-  const CRIT_REAIS = [
-    ["resp", "Velocidade de resposta", "Respondeu rápido e não deixou o cliente esperando"],
-    ["diag", "Qualificação", "Entendeu a necessidade, o prazo e quem decide"],
-    ["valor", "Apresentação de valor", "Mostrou a solução certa para a necessidade, na linguagem do ramo"],
-    ["objecao", "Tratamento de objeções", "Acolheu a objeção e perguntou antes de responder"],
-    ["fechamento", "Condução ao próximo passo", "Propôs o próximo passo do funil com data"],
-    ["follow", "Retomada / follow-up", "Voltou a falar quando o cliente sumiu"]
-  ];
-  const RQ = { conversas: null, vendedores: [], status: null, erro: "", carregando: false, trechos: {}, em: 0 };
-  const num = a => a.filter(x => x != null && isFinite(x));
-  const respTxt = m => m == null ? "—" : minTxt(m);
-  async function carregaQ(){
-    if(RQ.carregando) return;
-    RQ.carregando = true;
-    try {
-      const r = await fetch("/api/vendas/qualidade");
-      const j = await r.json().catch(() => ({}));
-      if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
-      RQ.conversas = (j.conversas || []).map(c => {
-        const a = c.auditoria, crit = {};
-        if(a) CRIT_REAIS.forEach(([k], i) => { const x = a.criterios[i]; crit[k] = x && x.nota != null ? +x.nota : null; });
-        return Object.assign(c, { criado: c.ultima, canal: "WhatsApp", nivel: 1, pessoa: c.nome, crit, nota: a && a.nota != null ? +a.nota : null, aud: a });
-      });
-      const c = {}; RQ.conversas.forEach(n => { c[n.vendedor] = (c[n.vendedor] || 0) + 1; });
-      RQ.vendedores = Object.keys(c).sort((x, y) => c[y] - c[x]).map(nome => ({ nome }));
-      RQ.status = j.status || null; RQ.erro = ""; RQ.em = Date.now();
-    } catch(err){ RQ.erro = err.message; if(!RQ.conversas) RQ.conversas = []; }
-    RQ.carregando = false;
-    pintar();
-  }
-  function todasQ(){ if(RQ.conversas === null){ carregaQ(); return []; } return RQ.conversas; }
-  function baseQ(){ return todasQ().filter(n => n.nota != null); }
-  async function carregaTrecho(n){
-    const k = n.instancia + "|" + n.jid;
-    if(RQ.trechos[k]) return;
-    RQ.trechos[k] = { carregando: true, msgs: [] };
-    try {
-      const r = await fetch("/api/vendas/qualidade/conversa?instancia=" + encodeURIComponent(n.instancia) + "&jid=" + encodeURIComponent(n.jid));
-      const j = await r.json(); RQ.trechos[k] = { msgs: j.mensagens || [], erro: j.error || "" };
-    } catch(err){ RQ.trechos[k] = { msgs: [], erro: err.message }; }
-    pintar("corpo");
-  }
-
   // ─── Formatação ───────────────────────────────────────────────────────────
   const virg = x => String(x).replace(".", ",");
   const d1 = x => virg((Math.round(x * 10) / 10).toFixed(1)).replace(/,0$/, "");
@@ -211,16 +138,16 @@
     return { ini, fim, prev: p === "ano" ? null : [ini - (fim - ini), ini] };
   }
   const S = {
-    v: { funil: "Funil de vendas", periodo: "ano", status: "", vendedor: "", etapa: "", canal: "" },
+    v: { funil: "Funil de vendas", periodo: "30d", status: "", vendedor: "", etapa: "", canal: "" },
     q: { periodo: "30d", vendedor: "", canal: "", lista: "todas", limite: 10, aberta: 0 },
     menu: "", sync: { em: AGORA - 2 * 60000, rodando: false }, steps: null
   };
-  const PADRAO = { v: { funil: "Funil de vendas", periodo: "ano", status: "", vendedor: "", etapa: "", canal: "" }, q: { periodo: "30d", vendedor: "", canal: "" } };
+  const PADRAO = { v: { funil: "Funil de vendas", periodo: "30d", status: "", vendedor: "", etapa: "", canal: "" }, q: { periodo: "30d", vendedor: "", canal: "" } };
   const STATUS = [["", "Todos"], ["aberto", "Em aberto"], ["ganho", "Ganhos"], ["perdido", "Perdidos"]];
   const nomeDe = (ops, v) => (ops.find(o => o[0] === v) || ["", v])[1];
 
   function filtra(F, ini, fim, ignora){
-    return baseV().filter(n => n.criado >= ini && n.criado < fim
+    return base().filter(n => n.criado >= ini && n.criado < fim
       && (ignora === "funil" || !F.funil || n.funil === F.funil)
       && (ignora === "status" || !F.status || n.status === F.status)
       && (ignora === "vendedor" || !F.vendedor || n.vendedor === F.vendedor)
@@ -230,23 +157,24 @@
   // conversas avaliadas (Qualidade): todo negócio que teve pelo menos um contato do time
   const canalConversa = n => n.canal === "Instagram" ? "Instagram" : "WhatsApp";
   function filtraQ(F, ini, fim, ignora){
-    return baseQ().filter(n => n.nivel >= 1 && n.criado >= ini && n.criado < fim
+    return base().filter(n => n.nivel >= 1 && n.criado >= ini && n.criado < fim
       && (ignora === "vendedor" || !F.vendedor || n.vendedor === F.vendedor)
       && (ignora === "canal" || !F.canal || canalConversa(n) === F.canal));
   }
   function defsV(){
     return [
-      { k: "funil", rot: v => v || "Todos os funis", ops: [["", "Todos os funis"], ["Funil de vendas", "Funil de vendas"]] },
+      { k: "funil", rot: v => v || "Todos os funis", ops: [["", "Todos os funis"]].concat(FUNIS.map(f => [f[0], f[0]])) },
       { k: "periodo", rot: v => nomeDe(periodos(), v), ops: periodos() },
       { k: "status", rot: v => "Status: " + (v ? nomeDe(STATUS, v).toLowerCase() : "todos"), ops: STATUS },
-      { k: "vendedor", rot: v => "Vendedor: " + (v || "todos"), ops: [["", "Todos"]].concat(RV.vendedores.map(x => [x.nome, x.nome])) },
-      { k: "etapa", rot: v => "Etapa: " + (v ? v.toLowerCase() : "todas"), ops: [["", "Todas"]].concat(RV.etapas.map(x => [x, x])) }
+      { k: "vendedor", rot: v => "Vendedor: " + (v || "todos"), ops: [["", "Todos"]].concat(VENDEDORES.map(x => [x.nome, x.nome])) },
+      { k: "etapa", rot: v => "Etapa: " + (v ? v.toLowerCase() : "todas"), ops: [["", "Todas"]].concat(ETAPAS.map(x => [x, x])) }
     ];
   }
   function defsQ(){
     return [
       { k: "periodo", rot: v => nomeDe(periodos(), v), ops: periodos() },
-      { k: "vendedor", rot: v => "Número: " + (v || "todos"), ops: [["", "Todos"]].concat(RQ.vendedores.map(x => [x.nome, x.nome])) }
+      { k: "vendedor", rot: v => "Vendedor: " + (v || "todos"), ops: [["", "Todos"]].concat(VENDEDORES.map(x => [x.nome, x.nome])) },
+      { k: "canal", rot: v => "Canal: " + (v || "todos"), ops: [["", "Todos"], ["WhatsApp", "WhatsApp"], ["Instagram", "Instagram"]] }
     ];
   }
   // quantos itens cada opção do filtro traria, mantendo os outros filtros
@@ -277,17 +205,17 @@
 
   // ─── Faixa "Conexão direta com o CRM" (topo das abas) ─────────────────────────────
   function crmHTML(){
-    const s = S.sync, B = baseV(), seg = Math.round((Date.now() - s.em) / 1000);
+    const s = S.sync, B = base(), seg = Math.round((Date.now() - s.em) / 1000);
     const quando = s.rodando ? "sincronizando..." : seg < 60 ? "agora há pouco" : "há " + Math.round(seg / 60) + " min";
     return `<div data-mvd-crm style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid rgba(15,122,104,0.32);border-radius:12px;background:rgba(15,122,104,0.06);margin-bottom:22px">
       <span style="width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:rgba(15,122,104,0.14);display:flex;align-items:center;justify-content:center">${icon(ICONS.connectors, 18, VERDE)}</span>
       <div style="flex:1 1 320px;min-width:0">
         <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
-          <strong style="${HEAD};font-size:14.5px;font-weight:600">Conexão direta com o CRM</strong>
-          ${(RV.negocios && RV.negocios.length && !RV.erro) ? `<span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;color:${VERDE};border:1px solid rgba(15,122,104,0.35);background:#FFFFFF;padding:2px 9px;border-radius:20px"><span class="mvd-pulso" style="width:6px;height:6px;border-radius:50%;background:${VERDE}"></span>CONECTADO</span>` : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;color:#B42318;border:1px solid rgba(180,35,24,0.35);background:#FFFFFF;padding:2px 9px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#B42318"></span>${RV.negocios === null || RV.carregando ? "CONECTANDO" : "NÃO CONECTADO"}</span>`}
+          <strong style="${HEAD};font-size:14.5px;font-weight:600">CRM ainda não conectado</strong>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;color:#B54708;border:1px solid rgba(181,71,8,0.35);background:#FFFFFF;padding:2px 9px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#B54708"></span>DADOS DE EXEMPLO</span>
         </div>
-        <div style="font-size:12.5px;color:#3C3C44;line-height:1.55;margin-top:4px">Os dados desta aba vêm do CRM: negócios, etapas, valores, vendedores, canais e motivos de perda são lidos direto da base, e os filtros recortam esses dados na hora.</div>
-        <div style="font-size:11.5px;color:${CINZA};margin-top:5px">${RV.negocios === null || RV.carregando && !B.length ? "carregando os negócios do CRM..." : `${B.length.toLocaleString("pt-BR")} negócios · ${RV.vendedores.length} vendedores · ${RV.canais.length} canais de origem${RV.fonte ? ` · ${RV.fonte.com_whatsapp} ligados ao WhatsApp comercial` : ""}`}${RV.erro ? ` · <span style="color:${VERM}">${e(RV.erro)}</span>` : ""}</div>
+        <div style="font-size:12.5px;color:#3C3C44;line-height:1.55;margin-top:4px">Os números desta aba são ilustrativos, só para mostrar como a tela funciona: não são negócios da empresa. Para ver os dados reais, peça ao suporte para ligar o CRM da empresa a esta tela.</div>
+        <div style="font-size:11.5px;color:${CINZA};margin-top:5px">${B.length.toLocaleString("pt-BR")} negócios · ${FUNIS.length} funis · ${VENDEDORES.length} vendedores · ${CANAIS.length} canais de origem</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
         <div style="text-align:right"><div style="font-size:11px;color:${CINZA}">Última sincronização</div><div style="font-size:12.5px;font-weight:600;color:#17171A">${quando}</div></div>
@@ -308,12 +236,11 @@
     const paradoOrc = orc.filter(n => n.status === "aberto");
     const valoresOrc = orc.map(n => n.valor), valoresG = ganhos.map(n => n.valor);
     const perdOrc = orc.filter(n => n.status === "perdido");
-    const motivos = RV.motivos.map(([m]) => { const c = perdOrc.filter(n => n.motivo === m).length; return { name: m, count: c, pct: Math.round(pctNum(c, perdOrc.length)) }; }).filter(x => x.count).sort((a, b) => b.count - a.count);
-    const resp = L.map(n => n.respMin).filter(x => x != null), respP = P ? P.map(n => n.respMin).filter(x => x != null) : [];
-    const comW = L.filter(n => n.temWhatsapp), orcW = orc.filter(n => n.temWhatsapp);
+    const motivos = MOTIVOS.map(([m]) => { const c = perdOrc.filter(n => n.motivo === m).length; return { name: m, count: c, pct: Math.round(pctNum(c, perdOrc.length)) }; }).filter(x => x.count).sort((a, b) => b.count - a.count);
+    const notas = L.filter(n => n.nivel >= 1).map(n => n.nota), notasP = P ? P.filter(n => n.nivel >= 1).map(n => n.nota) : [];
     const abertos = L.filter(n => n.status === "aberto" && n.nivel >= 2).sort((a, b) => b.valor - a.valor);
     const conv = pctNum(ganhos.length, L.length), convP = P ? pctNum(gP.length, P.length) : null;
-    const canais = RV.canais.map(([c]) => { const q = L.filter(n => n.canal === c), g = q.filter(n => n.status === "ganho"), o = q.filter(n => n.nivel >= 3); return { name: c, leads: q.length, quoted: o.length, closed: g.length, sold: g.length ? brl(soma(g)) : "", quotedValue: o.length ? brl(soma(o)) : "" }; }).sort((a, b) => b.leads - a.leads);
+    const canais = CANAIS.map(([c]) => { const q = L.filter(n => n.canal === c), g = q.filter(n => n.status === "ganho"), o = q.filter(n => n.nivel >= 3); return { name: c, leads: q.length, quoted: o.length, closed: g.length, sold: g.length ? brl(soma(g)) : "", quotedValue: o.length ? brl(soma(o)) : "" }; }).sort((a, b) => b.leads - a.leads);
     return {
       L, ganhos, orc, steps, pior, vazou, paradoOrc, motivos, abertos, canais,
       kpis: [
@@ -321,19 +248,19 @@
         { label: "Taxa de conversão", value: d1(conv), unit: "%", delta: P ? delta(conv, convP) : "", note: `${ganhos.length} ${ganhos.length === 1 ? "venda" : "vendas"} entre os ${L.length} leads que entraram` },
         { label: "Faturamento", value: brl(soma(ganhos)), delta: P ? delta(soma(ganhos), soma(gP)) : "", note: "somando a proposta de cada venda confirmada" },
         { label: "Ticket médio vendido", value: brl(media(valoresG)), delta: P && gP.length ? delta(media(valoresG), media(gP.map(n => n.valor))) : "", note: "mediana " + brl(quantil(valoresG, 0.5)) },
-        { label: "Resposta no WhatsApp", value: resp.length ? minTxt(quantil(resp, 0.5)) : "—", delta: "", note: resp.length ? `mediana de ${resp.length} negócios com conversa no número comercial` : "nenhum negócio do recorte com conversa no WhatsApp comercial" }
+        { label: "Nota do atendimento", value: d1(media(notas)), unit: "/10", delta: P && notasP.length ? delta(media(notas), media(notasP)) : "", note: `média de ${notas.length} conversas avaliadas, de 0 a 10` }
       ],
       stats: [
         { label: "Parado sem fechar", value: mil(soma(paradoOrc))[0], unit: mil(soma(paradoOrc))[1], note: "receberam preço e não sinalizaram fechar" },
         { label: "Ticket mediano", value: brl(quantil(valoresOrc, 0.5)), note: "10% passam de " + brl(quantil(valoresOrc, 0.9)) },
-        { label: "Ligados ao WhatsApp", value: String(comW.length), unit: "negócios", note: "com conversa no número comercial (pelo telefone)" },
+        { label: "Até o orçamento", value: d1(media(orc.map(n => n.horasOrc))), unit: "h", note: "do 1º contato até sair um valor" },
         { label: "Até o fechamento", value: d1(media(ganhos.map(n => n.ciclo))), unit: "d", note: "do 1º contato ao sinal do cliente" },
         { label: "Maior gargalo", value: String(vazou), unit: "conversas", note: `saem entre ${steps[pior].name} e ${steps[pior + 1].name}` },
         { label: "Fecha do topo", value: d1(conv), unit: "%", note: `${orc.length} orçamentos para ${ganhos.length} clientes` }
       ],
       speed: [
         { value: d1(quantil(ganhos.map(n => n.ciclo), 0.5)), unit: "d", label: "ciclo de venda", note: "média " + d1(media(ganhos.map(n => n.ciclo))) + " d" },
-        { value: orcW.length ? d1(media(orcW.map(n => n.followups))) : "—", unit: "", label: "mensagens nossas por orçamento", note: orcW.length ? `nos ${orcW.length} orçamentos com WhatsApp` : "sem orçamento ligado ao WhatsApp" }
+        { value: d1(media(orc.map(n => n.followups))), unit: "", label: "follow-ups por orçamento", note: "falas depois da proposta" }
       ],
       loss: { rate: Math.round(pctNum(perdOrc.length, orc.length)) + "%", rateNote: `${perdOrc.length} de ${orc.length} orçamentos` },
       risco: abertos.filter(n => n.nivel >= 3 && n.parado >= 5).slice(0, 6)
@@ -353,7 +280,6 @@
     const c = calcVendas(); S.steps = c.steps;
     const pct = Math.round(pctNum(c.vazou, c.steps[c.pior].count));
     const onde = c.L.length ? `<strong style="color:#17171A">Onde agir:</strong> maior vazamento do funil entre <strong>${e(c.steps[c.pior].name)} → ${e(c.steps[c.pior + 1].name)}</strong> (${pct}% saem). <strong>${e(milTxt(soma(c.paradoOrc)))}</strong> parados sem fechar.${c.motivos.length ? ` Motivo de perda nº 1: <strong>${e(c.motivos[0].name)}</strong>.` : ""}`
-      : RV.negocios === null || RV.carregando ? `<strong style="color:#17171A">Carregando</strong> os negócios do CRM...`
       : `<strong style="color:#17171A">Nenhum negócio</strong> com esses filtros no CRM. Mude o período ou limpe os filtros.`;
     return `<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-bottom:20px">
         <div style="flex:1;min-width:220px">
@@ -369,7 +295,6 @@
       </div>`;
   }
   function corpoV(){
-    if(RV.negocios === null || (RV.carregando && !RV.negocios.length)) return `<div style="padding:50px 20px;text-align:center;border:1px dashed #DADADF;border-radius:14px;color:${CINZA};font-size:13.5px"><span class="mvd-pulso">Carregando os negócios do CRM e as conversas do WhatsApp... pode levar alguns segundos na primeira vez.</span></div>`;
     const c = calcVendas();
     if(!c.L.length) return `<div style="padding:50px 20px;text-align:center;border:1px dashed #DADADF;border-radius:14px;color:${CINZA};font-size:13.5px">Nenhum negócio do CRM bate com esses filtros. <span data-mvd-limpar="v" style="color:${ROXO};cursor:pointer;text-decoration:underline">Limpar filtros</span></div>`;
     const linhaNeg = (n, cols) => `<div data-mvd-negocio="${n.id}" data-hover style="display:grid;grid-template-columns:${cols};gap:12px;min-width:760px;padding:13px 20px;border-bottom:1px solid #F1F1F3;align-items:center;font-size:13px;cursor:pointer">`;
@@ -462,15 +387,15 @@
 
   // Ficha do negócio (abre ao clicar numa oportunidade)
   function abrirNegocio(id){
-    const n = baseV().find(x => x.id === +id); if(!n) return;
+    const n = base().find(x => x.id === +id); if(!n) return;
     fecharNegocio();
     const st = { ganho: ["Ganho", VERDE], perdido: ["Perdido", VERM], aberto: ["Em aberto", ROXO] }[n.status];
-    const ev = [[n.criado, "Lead entrou", `Origem: ${n.canal}${n.produto ? " · " + n.produto : ""}${n.area_m2 ? " · " + n.area_m2.toLocaleString("pt-BR") + " m²" : ""}`]];
-    if(n.temWhatsapp && n.ultimoContato) ev.push([n.ultimoContato, "Última conversa no WhatsApp", `${n.followups} mensagens nossas e ${n.msgsCliente} do cliente${n.respMin != null ? " · resposta mediana " + minTxt(n.respMin) : ""}`]);
-    if(n.status === "ganho") ev.push([n.atualizado, "Venda fechada", `Ciclo de ${n.ciclo} ${n.ciclo === 1 ? "dia" : "dias"}`]);
-    else if(n.status === "perdido") ev.push([n.atualizado, "Marcado como perdido", n.motivo_texto || n.motivo]);
-    else ev.push([n.atualizado, "Última atualização no CRM", `Etapa: ${n.etapa}${n.numero_proposta ? " · proposta " + n.numero_proposta : ""}`]);
-    ev.sort((a, b) => a[0] - b[0]);
+    const ev = [[n.criado, "Lead entrou", `Origem: ${n.canal} · ${n.funil}`]];
+    if(n.nivel >= 1) ev.push([n.criado + n.respMin * 60000, "Primeiro contato", `${n.vendedor.split(" ")[0]} respondeu em ${minTxt(n.respMin)}`]);
+    if(n.nivel >= 2) ev.push([n.criado + Math.min(n.horasOrc * 0.5, 6) * HORA, "Qualificado", "Dor, prazo e orçamento registrados no CRM"]);
+    if(n.nivel >= 3) ev.push([n.criado + n.horasOrc * HORA, "Proposta enviada", `${brl(n.valor)} · ${n.followups} follow-ups depois`]);
+    if(n.status === "ganho") ev.push([n.criado + n.ciclo * DIA, "Venda fechada", `Ciclo de ${n.ciclo} ${n.ciclo === 1 ? "dia" : "dias"}`]);
+    if(n.status === "perdido") ev.push([Math.min(AGORA, n.criado + 18 * DIA), "Marcado como perdido", n.motivo]);
     const proximo = n.status === "ganho" ? "Venda fechada. Próximo passo: onboarding e pedido de indicação em 30 dias."
       : n.status === "perdido" ? `Perdido por "${n.motivo.toLowerCase()}". Entra na lista de reativação em 60 dias.`
       : n.parado >= 5 ? `Parado há ${n.parado} dias. Retomar hoje com uma pergunta direta: "Ficou alguma dúvida sobre a proposta que eu possa resolver agora?"`
@@ -491,7 +416,7 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:18px">
         ${campo("VALOR", brl(n.valor))}${campo("ETAPA", e(n.etapa))}${campo("VENDEDOR", e(n.vendedor))}
-        ${campo("CANAL", e(n.canal))}${campo("TEMPERATURA", e({ hot: "Quente", warm: "Morno", cold: "Frio" }[n.temperatura] || "—"))}${campo("ENTROU EM", dataBr(n.criado))}
+        ${campo("CANAL", e(n.canal))}${campo("NOTA DO ATENDIMENTO", `<span style="color:${notaCor(n.nota)}">${d1(n.nota)}/10</span>`)}${campo(n.previsao ? "PREVISÃO" : "ENTROU EM", n.previsao ? dataCurta(n.previsao) : dataBr(n.criado))}
       </div>
       <div style="font-size:10.5px;letter-spacing:0.12em;font-weight:700;color:${CINZA};margin-bottom:10px">LINHA DO TEMPO</div>
       <div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px">
@@ -515,13 +440,12 @@
   // ─── Qualidade ────────────────────────────────────────────────────────────
   function calcQ(){
     const F = S.q, p = faixa(F.periodo), L = filtraQ(F, p.ini, p.fim), P = p.prev ? filtraQ(F, p.prev[0], p.prev[1]) : null;
-    const crit = CRIT_REAIS.map(([k, nome, desc]) => ({ k, nome, desc, nota: media(num(L.map(n => n.crit[k]))) }));
-    const erros = CRIT_REAIS.map(([k]) => k).filter(k => ERROS[k]).map(k => ({ k, nome: ERROS[k], q: L.filter(n => n.crit[k] != null && n.crit[k] < 5).length })).filter(x => x.q).sort((a, b) => b.q - a.q);
-    const time = RQ.vendedores.map(v => {
+    const crit = CRITERIOS.map(([k, nome, desc]) => ({ k, nome, desc, nota: media(L.map(n => n.crit[k])) }));
+    const erros = Object.keys(ERROS).map(k => ({ k, nome: ERROS[k], q: L.filter(n => n.crit[k] < 5).length })).filter(x => x.q).sort((a, b) => b.q - a.q);
+    const time = VENDEDORES.map(v => {
       const q = L.filter(n => n.vendedor === v.nome); if(!q.length) return null;
-      const cs = CRIT_REAIS.map(([k, nome]) => [nome, media(num(q.map(n => n.crit[k])))]).sort((a, b) => b[1] - a[1]);
-      const rs = num(q.map(n => n.respMin));
-      return { nome: v.nome, nota: media(q.map(n => n.nota)), q: q.length, resp: rs.length ? quantil(rs, 0.5) : null, forte: cs[0][0], fraco: cs[cs.length - 1][0] };
+      const cs = CRITERIOS.map(([k, nome]) => [nome, media(q.map(n => n.crit[k]))]).sort((a, b) => b[1] - a[1]);
+      return { nome: v.nome, nota: media(q.map(n => n.nota)), q: q.length, resp: quantil(q.map(n => n.respMin), 0.5), forte: cs[0][0], fraco: cs[cs.length - 1][0] };
     }).filter(Boolean).sort((a, b) => b.nota - a.nota);
     return { L, P, crit, erros, time };
   }
@@ -529,22 +453,13 @@
     return `<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-bottom:20px">
         <div style="flex:1;min-width:240px">
           <h1 style="${HEAD};font-size:24px;font-weight:600;margin:0 0 5px">Qualidade do atendimento</h1>
-          <p style="margin:0;color:${CINZA};font-size:13px;max-width:620px;line-height:1.55">A IA do ZEUS lê as conversas do WhatsApp comercial e dá nota de 0 a 10 em 6 critérios de venda consultiva, com trechos reais como evidência. Clique numa conversa para ver as mensagens, o que foi bem, o que faltou e a mensagem sugerida.</p>
+          <p style="margin:0;color:${CINZA};font-size:13px;max-width:620px;line-height:1.55">O ZEUS lê as conversas ligadas a cada negócio do CRM e dá nota de 0 a 10 em 7 critérios de venda consultiva. Clique num vendedor ou numa conversa para ver os detalhes.</p>
         </div>
         ${chipsHTML("q")}
       </div>
-      ${filtrosAtivosHTML("q")}
-      ${filaHTML()}`;
+      ${filtrosAtivosHTML("q")}`;
   }
-  function filaHTML(){
-    const T = todasQ(), av = T.filter(n => n.nota != null).length, st = RQ.status || {};
-    if(RQ.conversas === null) return "";
-    const fila = st.pendentes ? `A IA está avaliando as conversas dos últimos 30 dias: <strong>${st.pendentes}</strong> na fila${st.avaliando ? ` (agora: ${e(st.avaliando)})` : ""}. As notas aparecem aqui conforme ficam prontas.` : "Fila de avaliação em dia. Conversas novas são avaliadas automaticamente de hora em hora.";
-    return `<div style="display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border:1px solid rgba(103,61,230,0.24);border-radius:12px;background:rgba(103,61,230,0.05);margin-bottom:18px;font-size:13px;color:#3C3C44;line-height:1.55">
-      ${icon(ICONS.sparkle, 15, ROXO)}<span><strong style="color:#17171A">${av.toLocaleString("pt-BR")} de ${T.length.toLocaleString("pt-BR")}</strong> conversas dos últimos 90 dias já têm nota. ${fila}${st.ultimo_erro ? ` <span style="color:${VERM}">Último erro: ${e(st.ultimo_erro)}</span>` : ""}${RQ.erro ? ` <span style="color:${VERM}">${e(RQ.erro)}</span>` : ""}</span>
-    </div>`;
-  }
-  function conversaHTML_demo(n){
+  function conversaHTML(n){
     const tom = n.nota >= 8 ? "bom" : n.nota >= 6 ? "medio" : "ruim";
     const msgs = CONVERSAS[tom][n.conversa % CONVERSAS[tom].length];
     const vend = n.vendedor.split(" ")[0], lead = n.pessoa.split(" ")[0];
@@ -570,42 +485,15 @@
       </div>
     </div>`;
   }
-  function conversaHTML(n){
-    const k = n.instancia + "|" + n.jid, t = RQ.trechos[k];
-    if(!t) carregaTrecho(n);
-    const a = n.aud || {}, cs = CRIT_REAIS.map(([kk, nome], i) => [kk, (a.criterios && a.criterios[i] && a.criterios[i].nome) || nome, n.crit[kk], a.criterios && a.criterios[i] && a.criterios[i].evidencia]).filter(x => x[2] != null);
-    const msgs = t && t.msgs ? t.msgs.slice(-14) : [];
-    const lista = (cor, tit, itens) => itens && itens.length ? `<div style="padding:11px 13px;border-radius:11px;background:${cor}0F;border:1px solid ${cor}38;font-size:12.5px;line-height:1.5"><strong style="color:${cor}">${tit}</strong><ul style="margin:6px 0 0;padding-left:18px">${itens.map(x => `<li>${e(x)}</li>`).join("")}</ul></div>` : "";
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;padding:4px 20px 18px">
-      <div style="border:1px solid #EEEEF1;border-radius:12px;background:#F7F7F8;padding:14px;display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto">
-        <div style="font-size:10.5px;letter-spacing:0.12em;font-weight:700;color:${CINZA};margin-bottom:2px">ÚLTIMAS MENSAGENS · WHATSAPP · ${e(n.vendedor.toUpperCase())}</div>
-        ${!t || t.carregando ? `<div class="mvd-pulso" style="font-size:12.5px;color:${CINZA}">Carregando a conversa...</div>` : t.erro ? `<div style="font-size:12.5px;color:${VERM}">${e(t.erro)}</div>` : msgs.map(m => `<div style="display:flex;${m.nossa ? "justify-content:flex-end" : ""}">
-          <div style="max-width:85%;padding:8px 11px;border-radius:12px;font-size:12.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word;${m.nossa ? "background:#E6DEFC;border-bottom-right-radius:4px" : "background:#FFFFFF;border:1px solid #E6E6EA;border-bottom-left-radius:4px"}">
-            <div style="font-size:10.5px;font-weight:700;color:${m.nossa ? ROXO : CINZA};margin-bottom:2px">${m.nossa ? "Equipe" : e(n.nome)} · ${dataBr(m.ts)} ${horaBr(m.ts)}</div>${e(m.texto)}</div>
-        </div>`).join("")}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${a.resumo ? `<div style="font-size:12.5px;line-height:1.55;color:#3C3C44"><strong style="color:#17171A">Resumo da IA:</strong> ${e(a.resumo)}${a.etapa ? ` <span style="color:${CINZA}">· Etapa: ${e(a.etapa)}</span>` : ""}</div>` : ""}
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px">
-          ${cs.map(([kk, nome, v, ev]) => `<div title="${e(ev || nome)}" style="padding:7px 9px;border-radius:9px;border:1px solid #EEEEF1"><div style="font-size:10.5px;color:${CINZA};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(nome)}</div><div style="${HEAD};font-size:15px;font-weight:600;color:${notaCor(v)}">${d1(v)}</div></div>`).join("")}
-        </div>
-        ${lista(VERDE, "O que foi bem:", a.acertos)}
-        ${lista(VERM, "O que faltou:", a.erros)}
-        ${a.proximo_passo || a.mensagem_sugerida ? `<div style="padding:11px 13px;border-radius:11px;background:rgba(103,61,230,0.06);border:1px solid rgba(103,61,230,0.2);font-size:12.5px;line-height:1.5"><strong style="color:${ROXO}">Próximo passo:</strong> ${e(a.proximo_passo || "")}${a.mensagem_sugerida ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:#FFFFFF;border:1px dashed rgba(103,61,230,0.35);white-space:pre-wrap">${e(a.mensagem_sugerida)}</div>` : ""}</div>` : ""}
-      </div>
-    </div>`;
-  }
   function corpoQ(){
     const c = calcQ(), F = S.q;
-    if(RQ.conversas === null) return `<div style="padding:50px 20px;text-align:center;border:1px dashed #DADADF;border-radius:14px;color:${CINZA};font-size:13.5px"><span class="mvd-pulso">Carregando as conversas do WhatsApp comercial...</span></div>`;
-    if(!c.L.length && !todasQ().some(n => n.nota != null)) return `<div style="padding:50px 20px;text-align:center;border:1px dashed #DADADF;border-radius:14px;color:${CINZA};font-size:13.5px;line-height:1.6">Nenhuma conversa avaliada ainda. A IA está lendo as conversas dos últimos 30 dias, uma por vez: as primeiras notas aparecem em alguns minutos. Atualize a página daqui a pouco.</div>`;
     if(!c.L.length) return `<div style="padding:50px 20px;text-align:center;border:1px dashed #DADADF;border-radius:14px;color:${CINZA};font-size:13.5px">Nenhuma conversa avaliada com esses filtros. <span data-mvd-limpar="q" style="color:${ROXO};cursor:pointer;text-decoration:underline">Limpar filtros</span></div>`;
     const nota = media(c.L.map(n => n.nota)), notaP = c.P && c.P.length ? media(c.P.map(n => n.nota)) : null;
     const comPasso = c.L.filter(n => n.crit.fechamento >= 6).length, criticas = c.L.filter(n => n.nota < 5).length;
     const kpis = [
       { label: "Nota média", value: d1(nota), unit: "/10", delta: notaP ? delta(nota, notaP) : "", note: "vs. período anterior" },
       { label: "Conversas avaliadas", value: c.L.length.toLocaleString("pt-BR"), delta: c.P ? delta(c.L.length, c.P.length) : "", note: "lidas pelo ZEUS" },
-      { label: "Tempo de resposta", value: respTxt(num(c.L.map(n => n.respMin)).length ? quantil(num(c.L.map(n => n.respMin)), 0.5) : null), note: "mediana do tempo até o time responder" },
+      { label: "1ª resposta", value: minTxt(quantil(c.L.map(n => n.respMin), 0.5)), note: "mediana do tempo até o time responder" },
       { label: "Com próximo passo", value: String(Math.round(pctNum(comPasso, c.L.length))), unit: "%", note: "conversas que terminaram com data marcada" },
       { label: "Alertas", value: String(criticas), tone: criticas ? "warn" : "", note: "conversas com nota abaixo de 5" }
     ];
@@ -644,7 +532,7 @@
           <span style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:50%;background:rgba(103,61,230,0.12);color:${ROXO};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">${e(iniciais(t.nome))}</span><span style="${sel ? `color:${ROXO};font-weight:600` : ""}">${i === 0 && c.time.length > 1 ? "🏆 " : ""}${e(t.nome)}</span></span>
           <strong style="text-align:right;${HEAD};font-size:15px;color:${notaCor(t.nota)}">${d1(t.nota)}</strong>
           <span style="text-align:right">${t.q}</span>
-          <span style="text-align:right;color:${t.resp > 60 ? VERM : "#3C3C44"}">${respTxt(t.resp)}</span>
+          <span style="text-align:right;color:${t.resp > 60 ? VERM : "#3C3C44"}">${minTxt(t.resp)}</span>
           <span style="color:${VERDE};font-size:12.5px">${e(t.forte)}</span>
           <span style="color:${VERM};font-size:12.5px">${e(t.fraco)}</span>
         </div>`; }).join("")}
@@ -663,9 +551,9 @@
             <span style="width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:flex;align-items:center;justify-content:center;${HEAD};font-size:16px;font-weight:600;color:${notaCor(n.nota)};background:${notaCor(n.nota)}14;border:1px solid ${notaCor(n.nota)}40">${d1(n.nota)}</span>
             <div style="flex:1 1 260px;min-width:0">
               <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(n.nome)}</div>
-              <div style="font-size:12px;color:${CINZA};margin-top:2px">${e(n.vendedor)} · WhatsApp · última mensagem ${dataBr(n.criado)} · resposta mediana ${respTxt(n.respMin)}</div>
+              <div style="font-size:12px;color:${CINZA};margin-top:2px">${e(n.vendedor)} · ${e(canalConversa(n))} · ${dataBr(n.criado)} · 1ª resposta em ${minTxt(n.respMin)}</div>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">${CRIT_REAIS.filter(([k]) => n.crit[k] != null && n.crit[k] < 5).slice(0, 2).map(([k]) => `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(192,52,28,0.07);color:${VERM}">${e(ERROS[k])}</span>`).join("") || `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(15,122,104,0.08);color:${VERDE}">Sem erros graves</span>`}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${CRITERIOS.filter(([k]) => n.crit[k] < 5).slice(0, 2).map(([k]) => `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(192,52,28,0.07);color:${VERM}">${e(ERROS[k])}</span>`).join("") || `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(15,122,104,0.08);color:${VERDE}">Sem erros graves</span>`}</div>
             ${icon(ab ? ICONS.chevUp : ICONS.chevDown, 14, CINZA)}
           </div>
           ${ab ? conversaHTML(n) : ""}
@@ -681,7 +569,7 @@
       <div style="padding:26px 30px 60px;max-width:1240px">
         <div data-mvd-crm-slot>${crmHTML()}</div>
         <div id="mvd-topo">${topoV()}</div>
-        ${""/* "Leads por canal" (SDRs do Jeff + Instagram) desligado: não existe nesta instalação */}
+        ${typeof vendasCanaisHTML === "function" ? vendasCanaisHTML() : ""}
         <div id="mvd-corpo">${corpoV()}</div>
       </div></div>`;
   };
@@ -717,7 +605,7 @@
     if((el = q("[data-mvd-op]"))){ const s = S[el.dataset.mvdEscopo]; s[el.dataset.mvdOp] = el.dataset.mvdVal; if(el.dataset.mvdEscopo === "q"){ s.aberta = 0; s.limite = 10; } S.menu = ""; pintar(); return; }
     if((el = q("[data-mvd-chip]"))){ const k = el.dataset.mvdEscopo + ":" + el.dataset.mvdChip; S.menu = S.menu === k ? "" : k; pintar("topo"); return; }
     if(S.menu && !q("[data-mvd-menu]")){ S.menu = ""; pintar("topo"); }
-    if(q("[data-mvd-sync]")){ S.sync.rodando = true; pintaCrm(); carregaReal(true).then(() => { if(typeof cfgToast === "function") cfgToast(RV.erro ? "CRM: " + RV.erro : "CRM sincronizado. Painel atualizado com os dados mais recentes."); }); return; }
+    if(q("[data-mvd-sync]")){ S.sync.rodando = true; pintaCrm(); setTimeout(() => { S.sync = { em: Date.now(), rodando: false }; pintaCrm(); if(typeof cfgToast === "function") cfgToast("CRM sincronizado. Painel atualizado com os dados mais recentes."); }, 1300); return; }
     if((el = q("[data-mvd-limpar]"))){ const k = el.dataset.mvdLimpar; Object.assign(S[k], PADRAO[k]); if(k === "q"){ S.q.aberta = 0; S.q.limite = 10; } pintar(); return; }
     if((el = q("[data-mvd-tira]"))){ S[el.dataset.mvdEscopo][el.dataset.mvdTira] = ""; pintar(); return; }
     if((el = q("[data-mvd-vend]"))){ ev.stopPropagation(); S.v.vendedor = S.v.vendedor === el.dataset.mvdVend ? "" : el.dataset.mvdVend; pintar(); return; }
@@ -749,8 +637,6 @@
   });
   // "Última sincronização: há N min" anda sozinho
   setInterval(() => { if(telaMvd() && !S.sync.rodando) pintaCrm(); }, 30000);
-  // Qualidade: enquanto a IA avalia a fila, recarrega as notas a cada 2 min
-  setInterval(() => { if(state.screen === "motorQualidade" && RQ.status && RQ.status.pendentes && !S.q.aberta) carregaQ(); }, 120000);
 
   sincronizaDATA();
   if(telaMvd() || state.screen === "motorLeads"){ const slot = document.getElementById("main-slot"); if(slot) slot.innerHTML = RENDERERS[state.screen](); }

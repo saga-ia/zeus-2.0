@@ -131,6 +131,12 @@ EOF
 #  - .claude/settings.json do worker: as permissões dele somam com as do produto (nada é tirado)
 #  - números que estavam fixos no agent-runner.sh antigo: vão pra data/agent-whitelist-extra.txt (o novo lê de lá)
 echo "/CLAUDE.md" >> "$EXC"
+# Arquivos do produto que o suporte adaptou só pra este cliente: um caminho por linha em
+# /root/.zeus-instalador/preservar.txt (ex: /opt/jeff-apps/jeff-central/public/vendas-demo.js). Nunca são sobrescritos.
+if [ -f "$ESTADO/preservar.txt" ]; then
+  sed -nE 's#^[[:space:]]*/opt/jeff-(apps|worker)(/[^[:space:]]+)[[:space:]]*$#\2#p' "$ESTADO/preservar.txt" >> "$EXC"
+  log "  preservando $(grep -c '^/opt/' "$ESTADO/preservar.txt") arquivo(s) adaptado(s) deste cliente"
+fi
 W=/opt/jeff-worker
 if [ -f "$W/scripts/agent-runner.sh" ] && grep -q "contact_phone IN ('" "$W/scripts/agent-runner.sh"; then
   mkdir -p "$W/data"
