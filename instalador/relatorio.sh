@@ -19,6 +19,45 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 OUT="$TMP/relatorio.txt"
 
 [ "$(id -u)" = 0 ] || { echo "Rode como root."; exit 1; }
+
+# --arquivos [caminho...]: manda pro suporte uma cópia dos arquivos de código mexidos neste servidor (pra levar a
+# correção pro instalador). Nunca vai .env, banco, sessão do WhatsApp nem pasta data/; valores de segredo escritos
+# no código viram [oculto]. Precisa do token deste servidor.
+if [ "$NOTA" = "--arquivos" ]; then
+  shift
+  W=/opt/jeff-worker; C=/opt/jeff-apps/jeff-central
+  LISTA=("$W/src/wa/contact-resolver.js" "$W/src/wa/client.js" "$W/scripts/agent-runner.sh" "$W/CLAUDE.md" "$W/.claude/settings.json"
+    "$W/scripts/atendimento.sh" "$W/scripts/crm.sh" "$W/scripts/rh.sh" "$W/scripts/reembolso.sh" "$W/scripts/comercial-wpp.sh"
+    /opt/jeff-apps/jeff-google-oauth/server.js
+    "$C/server.js" "$C/vendas-ia.js" "$C/whatsapp-sdrs.js" "$C/vendas-crm.js" "$C/vendas-qualidade.js" "$C/whatsapp-evo.js"
+    "$C/vendas/crm-etapas.json" "$C/public/index.html" "$C/public/vendas-demo.js" "$C/public/whatsapp.js" "$C/public/zeus-visual.js" "$@")
+  [ -n "$TOKEN" ] || { echo "Este servidor não tem o token de atualização ($ATU): não dá pra enviar arquivos."; exit 1; }
+  mkdir -p "$TMP/arq"; n=0
+  for f in "${LISTA[@]}"; do
+    [ -f "$f" ] || continue
+    case "$f" in *.env|*/.env*|*.db|*.sqlite*|*/data/*|*/.wwebjs*|*/node_modules/*|/root/.ssh/*|/etc/*) echo "  pulado (sigilo): $f"; continue ;; esac
+    mkdir -p "$TMP/arq$(dirname "$f")" && cp -p "$f" "$TMP/arq$f" && n=$((n + 1))
+  done
+  [ "$n" -gt 0 ] || { echo "Nenhum dos arquivos existe neste servidor."; exit 1; }
+  python3 -I - "$TMP/arq" <<'PYARQ'
+import os,re,sys
+pad=[(re.compile(r'''(?i)((?:token|secret|senha|password|passwd|api[_-]?key|apikey|client_secret|access_token|refresh_token|authorization)[\w-]*["']?\s*[:=]\s*["'])([^"'\s]{8,})(["'])'''), r'\1[oculto]\3'),
+     (re.compile(r'(?i)\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{16,}'), r'\1 [oculto]'),
+     (re.compile(r'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{5,}'), '[oculto]'),
+     (re.compile(r'\b(?:sk-ant-|sk-|gsk_|sb_secret_|sb_publishable_|crm_sk_|AIza|EAA|IGAA|ghp_|xox[abpr]-)[A-Za-z0-9_-]{12,}'), '[oculto]'),
+     (re.compile(r'(?<![A-Za-z0-9])[a-f0-9]{32,}(?![A-Za-z0-9])'), '[oculto]')]
+for raiz,_,arqs in os.walk(sys.argv[1]):
+    for a in arqs:
+        p=os.path.join(raiz,a); t=open(p,encoding='utf-8',errors='surrogateescape').read()
+        for r,s in pad: t=r.sub(s,t)
+        open(p,'w',encoding='utf-8',errors='surrogateescape').write(t)
+PYARQ
+  tar -czf "$TMP/arquivos.tar.gz" -C "$TMP/arq" . || exit 1
+  echo "Enviando $n arquivo(s) ($(( $(wc -c < "$TMP/arquivos.tar.gz") / 1024 )) KB)..."
+  R="$(curl -sS -m 120 -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/gzip" --data-binary @"$TMP/arquivos.tar.gz" "$URL/relatorio/arquivos" 2>&1)"
+  printf '%s' "$R" | grep -q '"ok":true' && echo "Arquivos enviados: $(printf '%s' "$R" | python3 -I -c 'import json,sys;print(json.load(sys.stdin).get("id",""))' 2>/dev/null)" || { echo "Falhou: $R"; exit 1; }
+  exit 0
+fi
 jv() { python3 -I -c 'import json,sys
 try: print(json.load(open(sys.argv[1])).get(sys.argv[2]) or "")
 except Exception: print("")' "$1" "$2" 2>/dev/null; }
