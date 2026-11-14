@@ -17,7 +17,7 @@ const upsertAlias = db.prepare(`
     updated_at = datetime('now')
 `);
 
-const selectPhoneByLid = db.prepare(`SELECT phone FROM contact_aliases WHERE lid = ? LIMIT 1`);
+const selectPhoneByLid = db.prepare(`SELECT phone, c_us FROM contact_aliases WHERE lid = ? LIMIT 1`);
 const selectPhoneByCus = db.prepare(`SELECT phone FROM contact_aliases WHERE c_us = ? LIMIT 1`);
 
 function withTimeout(promise, ms, label) {
@@ -47,7 +47,13 @@ function phoneFromCus(jid) {
 function phoneFromAliasTable(jid) {
   if (typeof jid !== 'string') return null;
   try {
-    if (jid.endsWith('@lid')) return selectPhoneByLid.get(jid)?.phone || null;
+    if (jid.endsWith('@lid')) {
+      const row = selectPhoneByLid.get(jid);
+      if (!row) return null;
+      // Registros antigos gravaram o próprio LID como telefone: nesse caso usa o @c.us (ou não sabe).
+      if (row.phone === digits(jid.split('@')[0])) return row.c_us ? phoneFromCus(row.c_us) : null;
+      return row.phone || null;
+    }
     if (jid.endsWith('@c.us')) return selectPhoneByCus.get(jid)?.phone || null;
   } catch (err) {
     logger.warn({ err, jid }, 'alias table lookup failed');
