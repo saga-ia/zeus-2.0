@@ -1,5 +1,6 @@
 import { AbsoluteFill, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Anton";
+import { BarraProgresso, Flash, Headline, Impacto } from "./Extras";
 
 const { fontFamily } = loadFont();
 
@@ -11,6 +12,9 @@ export type Props = {
   duracao: number; // duração do vídeo final em segundos (o Root calcula os quadros a partir daqui)
   palavras: { texto: string; inicio: number; fim: number; cor: string }[];
   destaque: string;
+  headline?: { linha1: string; linha2: string; destaque?: string; de: number; ate: number };
+  impactos?: { texto: string; em: number; dur?: number }[];
+  barraProgresso?: boolean;
 };
 
 type Chunk = { inicio: number; fim: number; palavras: Props["palavras"] };
@@ -88,7 +92,15 @@ const Legenda: React.FC<{ bloco: Chunk; inicioVideo: number }> = ({ bloco, inici
   );
 };
 
-export const VideoLegendado: React.FC<Props> = ({ video, inicio, palavras, destaque }) => {
+export const VideoLegendado: React.FC<Props> = ({
+  video,
+  inicio,
+  palavras,
+  destaque,
+  headline,
+  impactos = [],
+  barraProgresso = false,
+}) => {
   void destaque;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -97,7 +109,18 @@ export const VideoLegendado: React.FC<Props> = ({ video, inicio, palavras, desta
   // Zoom contínuo e suave (Ken Burns em ciclo de 8s) pra dar dinamismo numa gravação de tela estática.
   const cicloFrames = fps * 8;
   const t = (frame % cicloFrames) / cicloFrames;
-  const escalaVideo = 1 + 0.05 * Math.sin(t * Math.PI);
+  const base = 1 + 0.05 * Math.sin(t * Math.PI);
+
+  // Soco de câmera alternado: a cada bloco de índice par, um pulso curto de zoom que decai.
+  let pulso = 0;
+  for (let i = 0; i < blocos.length; i += 2) {
+    const de = Math.round((blocos[i].inicio - inicio) * fps);
+    if (frame >= de && frame - de < fps * 0.5) {
+      pulso = 0.045 * Math.exp(-((frame - de) / (fps * 0.14)));
+      break;
+    }
+  }
+  const escalaVideo = base + pulso;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
@@ -118,6 +141,28 @@ export const VideoLegendado: React.FC<Props> = ({ video, inicio, palavras, desta
           </Sequence>
         );
       })}
+      {headline ? (
+        <Sequence
+          from={Math.round(headline.de * fps)}
+          durationInFrames={Math.max(1, Math.round((headline.ate - headline.de) * fps))}
+        >
+          <Headline linha1={headline.linha1} linha2={headline.linha2} destaque={headline.destaque} />
+        </Sequence>
+      ) : null}
+      {impactos.map((im, i) => {
+        const de = Math.round((im.em - inicio) * fps);
+        const dur = Math.max(1, Math.round((im.dur ?? 1.9) * fps));
+        if (de + dur <= 0) return null;
+        return (
+          <Sequence key={`im${i}`} from={Math.max(0, de)} durationInFrames={dur}>
+            <Sequence durationInFrames={Math.round(fps * 0.25)}>
+              <Flash />
+            </Sequence>
+            <Impacto texto={im.texto} />
+          </Sequence>
+        );
+      })}
+      {barraProgresso ? <BarraProgresso /> : null}
     </AbsoluteFill>
   );
 };

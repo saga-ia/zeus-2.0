@@ -17,7 +17,7 @@ const upsertAlias = db.prepare(`
     updated_at = datetime('now')
 `);
 
-const selectPhoneByLid = db.prepare(`SELECT phone, c_us FROM contact_aliases WHERE lid = ? LIMIT 1`);
+const selectPhoneByLid = db.prepare(`SELECT phone FROM contact_aliases WHERE lid = ? LIMIT 1`);
 const selectPhoneByCus = db.prepare(`SELECT phone FROM contact_aliases WHERE c_us = ? LIMIT 1`);
 
 function withTimeout(promise, ms, label) {
@@ -30,30 +30,16 @@ function withTimeout(promise, ms, label) {
   });
 }
 
-// Celular brasileiro sem o 9 (o WhatsApp ainda entrega assim para números antigos): 55 + DDD + 8 dígitos
-// começando em 6-9 vira 55 + DDD + 9 + 8 dígitos. Fixo (começa em 2-5) e outros países ficam como estão.
-function normBR(d) {
-  if (!d) return d;
-  if (/^55\d{2}[6-9]\d{7}$/.test(d)) return d.slice(0, 4) + '9' + d.slice(4);
-  return d;
-}
-
 function phoneFromCus(jid) {
   if (typeof jid !== 'string' || !jid.endsWith('@c.us')) return null;
   const d = digits(jid.split('@')[0]);
-  return d ? normBR(d) : null;
+  return d || null;
 }
 
 function phoneFromAliasTable(jid) {
   if (typeof jid !== 'string') return null;
   try {
-    if (jid.endsWith('@lid')) {
-      const row = selectPhoneByLid.get(jid);
-      if (!row) return null;
-      // Registros antigos gravaram o próprio LID como telefone: nesse caso usa o @c.us (ou não sabe).
-      if (row.phone === digits(jid.split('@')[0])) return row.c_us ? phoneFromCus(row.c_us) : null;
-      return row.phone || null;
-    }
+    if (jid.endsWith('@lid')) return selectPhoneByLid.get(jid)?.phone || null;
     if (jid.endsWith('@c.us')) return selectPhoneByCus.get(jid)?.phone || null;
   } catch (err) {
     logger.warn({ err, jid }, 'alias table lookup failed');
@@ -90,16 +76,9 @@ async function resolvePhone(client, jid) {
 
   try {
     const contact = await withTimeout(client.getContactById(jid), RESOLVE_TIMEOUT_MS, `getContactById(${jid})`);
-    const idSer = contact?.id?._serialized || contact?.id?.$1 || '';
-    const cUs = idSer.endsWith('@c.us') ? idSer : null;
+    const phone = contact?.number ? digits(contact.number) : (contact?.id?.user ? digits(contact.id.user) : null);
+    const cUs = contact?.id?._serialized && contact.id._serialized.endsWith('@c.us') ? contact.id._serialized : null;
     const lid = jid.endsWith('@lid') ? jid : null;
-    const lidDigits = lid ? digits(lid.split('@')[0]) : null;
-    // Para @lid, contact.number costuma ser o próprio LID (não é telefone): prefere o @c.us e descarta número igual ao LID.
-    let phone = cUs ? phoneFromCus(cUs) : null;
-    if (!phone) {
-      const cand = contact?.number ? digits(contact.number) : (!lid && contact?.id?.user ? digits(contact.id.user) : null);
-      if (cand && cand !== lidDigits) phone = normBR(cand);
-    }
     const name = contact?.name || contact?.pushname || null;
 
     if (phone) {
@@ -128,4 +107,4 @@ function phoneFromJidSync(jid) {
   return phoneFromAliasTable(jid);
 }
 
-module.exports = { resolvePhone, phoneFromJidSync, phoneFromAliasTable, normBR };
+module.exports = { resolvePhone, phoneFromJidSync, phoneFromAliasTable };

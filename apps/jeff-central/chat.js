@@ -132,6 +132,8 @@ function busEmit(sid, ev, data) {
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
     const sid = req.params.sid;
+    // Segurança (14/11/2026): sid vinha sem validação e "..%2F" gravava arquivo em qualquer pasta do servidor
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(String(sid || '')) || !stmt.sessGet.get(sid)) return cb(new Error('conversa inválida'));
     const dir = path.join(UPLOADS_ROOT, sid);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
@@ -194,15 +196,47 @@ async function extractFrames(srcPath, count = 4) {
   return fs.readdirSync(dir).filter(f => f.endsWith('.jpg')).map(f => path.join(dir, f));
 }
 
-async function transcribeAudio(audioPath) {
+// O Whisper "inventa" frases de fim de vídeo quando recebe ruído sem fala ("Acesse o nosso site www...", "Legendas pela
+// comunidade Amara.org"). Medido em 15/11/2026: ruído puro vem com avg_logprob -0,68 a -0,74; fala real, -0,11.
+// Descarta os trechos com cara de silêncio ou de frase inventada.
+const ALUCINACAO_WHISPER = /acesse o nosso site|www\.|\.(com|org|gov|net)(\.br)?\b|amara\.org|legendas pela|legendado por|inscreva-se|ative o sininho|obrigad[oa] por assistir|até o próximo vídeo|até a próxima/i;
+function semAlucinacao(segmentos) {
+  const ok = segmentos.filter(sg => {
+    const t = String(sg.text || '').trim(), ns = +sg.no_speech_prob || 0, lp = +sg.avg_logprob || 0;
+    const ruim = !t || ns > 0.6 || lp < -0.6 || (ns > 0.3 && lp < -0.4) || ALUCINACAO_WHISPER.test(t);
+    if (ruim && t) console.log('[transcrição] descartado (provável invenção do Whisper): ' + JSON.stringify(t.slice(0, 80)) + ' sem_fala=' + ns.toFixed(2) + ' confiança=' + lp.toFixed(2));
+    return !ruim;
+  });
+  return ok.map(sg => String(sg.text || '').trim()).join(' ').trim();
+}
+
+// Portão de voz humana (Silero VAD no jeff-voz): sem fala de verdade, o áudio nem vai para o Whisper e nada é inventado.
+// Se o jeff-voz estiver fora, segue para o Whisper e o filtro de confiança acima continua valendo.
+const FALA_MINIMA_MS = 300;
+async function temFala(audioPath) {
+  try {
+    const r = await fetch((process.env.JEFF_VOZ_URL || 'http://127.0.0.1:3072') + '/tem-fala', { method: 'POST', signal: AbortSignal.timeout(5000),
+      headers: { 'content-type': 'application/octet-stream' }, body: fs.readFileSync(audioPath) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) { console.error('[transcrição] detector de voz indisponível (' + e.message + '), seguindo só com o filtro do Whisper'); return null; }
+}
+
+// opts.preciso: whisper-large-v3 (um pouco mais preciso em fala real, ~0,1 s a mais); opts.prompt: vocabulário (nomes próprios)
+async function transcribeAudio(audioPath, opts = {}) {
+  if (opts.preciso) {
+    const v = await temFala(audioPath);
+    if (v && v.fala_ms < FALA_MINIMA_MS) { console.log('[transcrição] sem voz humana (' + v.fala_ms + ' ms de fala em ' + v.duracao_ms + ' ms): ignorado'); return ''; }
+  }
   const key = getGroqKey();
   if (!key) throw new Error('groq_api_key não configurada em Chaves — necessária para transcrever áudio');
   const FormData = require('form-data');
   const form = new FormData();
   form.append('file', fs.createReadStream(audioPath));
-  form.append('model', 'whisper-large-v3-turbo');
-  form.append('response_format', 'json');
+  form.append('model', opts.preciso ? 'whisper-large-v3' : 'whisper-large-v3-turbo');
+  form.append('response_format', opts.preciso ? 'verbose_json' : 'json');
   form.append('language', 'pt');
+  if (opts.prompt) form.append('prompt', String(opts.prompt).slice(0, 800));
   const headers = form.getHeaders();
   headers['Authorization'] = 'Bearer ' + key;
   const https = require('https');
@@ -219,6 +253,7 @@ async function transcribeAudio(audioPath) {
         try {
           const j = JSON.parse(body);
           if (res.statusCode >= 300) return reject(new Error('groq: ' + (j.error?.message || body.slice(0, 200))));
+          if (opts.preciso && Array.isArray(j.segments)) return resolve(semAlucinacao(j.segments));
           resolve(j.text || '');
         } catch (e) { reject(e); }
       });
@@ -781,7 +816,8 @@ router.post('/transcribe', uploadVoz.single('audio'), async (req, res) => {
   const f = req.file;
   if (!f) return res.status(400).json({ error: 'nenhum áudio recebido' });
   try {
-    const text = (await transcribeAudio(f.path)).trim();
+    const b = req.body || {};
+    const text = (await transcribeAudio(f.path, { preciso: b.preciso === '1', prompt: b.prompt })).trim();
     res.json({ text });
   } catch (e) {
     res.status(500).json({ error: e.message });

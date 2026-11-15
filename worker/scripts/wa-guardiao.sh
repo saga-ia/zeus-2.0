@@ -9,12 +9,7 @@
 # Alerta de WhatsApp só quando o restart FALHA (uma vez por dia por app). Restart que dá certo fica só no log.
 # (Até 15/10/2026 o cron não achava o pm2: nenhum restart acontecia e o alerta "reiniciado" saía a cada 30 min.)
 set -u
-# pm2 do nvm (no cliente não existe /usr/local/bin/pm2 se o instalador antigo não criou o link)
-PM2="$(command -v pm2 2>/dev/null || true)"; [ -x "$PM2" ] || PM2=/usr/local/bin/pm2
-[ -x "$PM2" ] || PM2="$(ls -1d /root/.nvm/versions/node/*/bin/pm2 2>/dev/null | tail -n1)"
-# o pm2 é um script node: no cron (sem nvm) o node também precisa estar no PATH
-PM2_REAL="$(readlink -f "$PM2" 2>/dev/null || echo "$PM2")"
-export PATH="$(dirname "$PM2"):$(dirname "$(dirname "$PM2_REAL")")/bin:/root/.nvm/versions/node/$(ls /root/.nvm/versions/node 2>/dev/null | tail -n1)/bin:$PATH"
+PM2=/usr/local/bin/pm2
 LOG="/opt/jeff-worker/logs/wa-guardiao.log"
 STATE="/opt/jeff-worker/data/wa-guardiao"
 ALERTA="/opt/jeff-worker/scripts/wa-alerta.sh"
@@ -73,8 +68,6 @@ linha="livre=${LIVRE}MB"
 maior_app=""; maior_mem=0
 
 while IFS='|' read -r app pasta limite janela; do
-  # app que não existe neste servidor (ex: jeff-sdrs no cliente): nem mede nem reinicia (antes alertava todo dia às 04h)
-  "$PM2" describe "$app" >/dev/null 2>&1 || continue
   m=$(mem_app "$pasta"); linha="$linha $app=${m}MB"
   [ "$m" -gt "$maior_mem" ] && { maior_mem=$m; maior_app=$app; }
   if [ "$m" -gt "$limite" ]; then

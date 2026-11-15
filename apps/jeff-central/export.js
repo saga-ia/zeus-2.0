@@ -12,12 +12,18 @@ const TIMEOUT_MS = 30000;
 
 // Tira do HTML tudo que poderia executar ou buscar rede dentro do chromium.
 // O conteúdo vem da própria tela do usuário, mas o navegador headless roda como root.
-function limpar(html) {
+// Segurança (14/11/2026): uma passada só deixava "<ifr<iframe>ame" virar <iframe file://...> e ler arquivo do servidor.
+// Agora repete até estabilizar, e a página leva CSP que proíbe file:, script e frame mesmo que algo escape.
+const CSP_PDF = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; font-src data: https:">`;
+const CSP_INFO = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src data: https://fonts.gstatic.com">`;
+const ateEstabilizar = (fn) => (html) => { let s = String(html || '').slice(0, LIMITE_HTML), antes; let n = 0; do { antes = s; s = fn(s); } while (s !== antes && ++n < 20); return s; };
+const limpar = ateEstabilizar(limparUmaVez);
+function limparUmaVez(html) {
   let s = String(html || '').slice(0, LIMITE_HTML);
   s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
   s = s.replace(/<style[\s\S]*?<\/style>/gi, '');
   s = s.replace(/<\/?(iframe|object|embed|link|meta|base|form|input|button)\b[^>]*>/gi, '');
-  s = s.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  s = s.replace(/[\s/]on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
   s = s.replace(/javascript:/gi, '');
   return s;
 }
@@ -33,7 +39,7 @@ function nomeArquivo(titulo) {
 
 function pagina(titulo, corpo) {
   const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${escapar(titulo)}</title>
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">${CSP_PDF}<title>${escapar(titulo)}</title>
 <style>
   @page { size: A4; margin: 18mm 16mm; }
   * { box-sizing: border-box; }
@@ -79,18 +85,19 @@ function gerar(arquivoHtml, arquivoPdf) {
 // ─── Infográfico (bloco zeus-infografico do chat) → PNG ───────────────────────
 // Mantém <style> e fontes do Google (o visual depende disso); tira scripts, iframes, eventos e URLs javascript:.
 const INFO_MAX = 4096;
-function limparInfografico(html) {
+const limparInfografico = ateEstabilizar(limparInfograficoUmaVez);
+function limparInfograficoUmaVez(html) {
   let s = String(html || '').slice(0, LIMITE_HTML);
   s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
   s = s.replace(/<\/?(iframe|object|embed|meta|base|form|input|button|html|head|body)\b[^>]*>/gi, '');
   s = s.replace(/<!doctype[^>]*>/gi, '');
   s = s.replace(/<link\b(?![^>]*href=["']https:\/\/fonts\.googleapis\.com\/)[^>]*>/gi, '');
-  s = s.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  s = s.replace(/[\s/]on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
   s = s.replace(/javascript:/gi, '');
   return s;
 }
 function paginaInfografico(conteudo, w, h) {
-  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#FFFFFF}#zi-wrap{width:${w}px;height:${h}px;overflow:hidden;position:relative}</style></head><body><div id="zi-wrap">${conteudo}</div></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8">${CSP_INFO}<style>html,body{margin:0;padding:0;background:#FFFFFF}#zi-wrap{width:${w}px;height:${h}px;overflow:hidden;position:relative}</style></head><body><div id="zi-wrap">${conteudo}</div></body></html>`;
 }
 function gerarPng(arquivoHtml, arquivoPng, w, h) {
   return new Promise((ok, erro) => {

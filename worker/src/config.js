@@ -41,7 +41,7 @@ const config = {
   typingPerCharMs: num(process.env.TYPING_PER_CHAR_MS, 30),
   typingMaxMs: num(process.env.TYPING_MAX_MS, 10000),
 
-  authWatchdogMs: num(process.env.AUTH_WATCHDOG_MS, 600000), // 10 min: a primeira sincronização depois do QR (conversas e contatos) passa fácil de 2 min
+  authWatchdogMs: num(process.env.AUTH_WATCHDOG_MS, 120000),
   reconnectBaseMs: num(process.env.RECONNECT_BASE_MS, 5000),
   reconnectMaxMs: num(process.env.RECONNECT_MAX_MS, 120000),
 

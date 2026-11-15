@@ -168,6 +168,7 @@ arquivo  worker/docs/mapa-servidor.md
 arquivo  worker/docs/criar-site-jeff.md
 arquivo  apps/jeff-voz/modelos/pt_BR-*
 arquivo  apps/jeff-voz/amostras
+arquivo  apps/jeff-voz/teste_rapido.py
 arquivo  apps/jeff-video/estudio/saidas
 arquivo  apps/jeff-video/estudio/projetos
 arquivo  worker/projetos/design-modelos/estruturas/_coleta

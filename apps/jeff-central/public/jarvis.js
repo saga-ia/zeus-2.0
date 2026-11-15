@@ -13,9 +13,8 @@
     ["financeiro", "Financeiro"], ["google", "Google"], ["web", "Web"], ["dados", "Banco de dados"], ["servidor", "Servidor"]];
   const FASE = { ocioso: "Toque em conversar e fale",  ouvindo: "Ouvindo...", transcrevendo: "Entendendo o que você disse...", pensando: "Pensando...", falando: "Falando" };
 
-  const SDK = "https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm";
-  // modo padrão: tempo real (ElevenLabs, responde em < 1 s). O modo por botão (link na tela) fala com a voz grátis do
-  // jeff-voz, mas leva ~10 s por resposta; testado e descartado como padrão pelo Jeff em 29/10/2026.
+  // modo padrão: tempo real, 100% grátis desde 15/11/2026 (antes: agente pago da ElevenLabs). O navegador ouve e percebe
+  // quando você parou de falar; Whisper (Groq) transcreve, /api/jarvis/pensar (Groq) responde e a voz do jeff-voz fala.
   const J = { modo: "tempo-real", conv: null, conectando: false, pendente: null, zeusOcupado: false, sid: null, es: null, fase: "ocioso", continuo: false, status: "", legenda: "", voce: "", resposta: "", trabalho: {}, fontes: {}, paineis: [],
     historico: [], verHistorico: false, rec: null, stream: null, ctx: null, analyser: null, audio: null, raf: null, particulas: null, vadT: null };
   const set = (k, v) => { J[k] = v; pintar(); };
@@ -186,8 +185,7 @@
     }, AVISO_MS);
   }
 
-  // ─── conversa em tempo real (ElevenLabs): a voz chama pedir_ao_zeus para dados e tarefas ─
-  // A ferramenta responde NA HORA (a ElevenLabs abandona a espera se a pessoa fala por cima e o resultado se perdia).
+  // ─── conversa em tempo real (grátis): a voz chama pedir_ao_zeus para dados e tarefas ─
   // Cada pedido vira uma tarefa em paralelo (até 3); quando termina, o resultado volta para a conversa como "RESULTADO DO ZEUS".
   function zeusTarefa(tarefa){
     tarefa = String(tarefa || "").trim(); if(!tarefa) return "Pedido vazio.";
@@ -202,25 +200,127 @@
     if(J.conv){ try { J.conv.sendUserMessage("RESULTADO DO ZEUS para o pedido \"" + tarefa.slice(0, 200) + "\": " + r); return; } catch(err){} }
     J.legenda = String(r || "").slice(0, 400); pintarLegenda(); // conversa já encerrada: fica na tela e no histórico
   }
+  // Conversa em tempo real grátis: mesma interface que o resto da tela já usa em J.conv (sendUserMessage,
+  // sendContextualUpdate, setMicMuted, endSession, get*ByteFrequencyData).
+  // O microfone fica aberto o tempo todo, inclusive enquanto o Zeus fala: se você falar por cima, ele para e escuta
+  // (o eco da própria voz é tirado pelo navegador e, por segurança, durante a fala o limiar é mais alto).
+  // Detecção de fim de fala que se ajusta ao barulho do ambiente: mede o "piso" de ruído e considera fala só o que
+  // passa bem acima dele (com limiar fixo, ventilador ou ar-condicionado faziam a gravação nunca terminar).
+  const VAD = { minimo: 0.045, folga: 0.035, fator: 1.5, silencioMs: 750, minFalaMs: 400, ruidoMs: 1200, reciclaMs: 20000, maxMs: 25000,
+    interromperMs: 350, interromperFator: 1.8, interromperFolga: 0.09 };
+  const ALUCINACAO = /acesse o nosso site|www\.|amara\.org|legendas pela|inscreva-se|obrigad[oa] por assistir|^\W*(tchau|obrigad[oa])\W*$/i;
+  const VOCABULARIO = "Conversa com o Zeus, assistente da empresa. Nomes: Zeus, Jeff, Vinicius, Nina, Sobral, Ícaro, Gustavo, Maicom, Otávio, Smith, Tomé, Talles, Eduardo. Ferramentas: Asaas, ClickUp, Meta Ads, Instagram, WhatsApp, LinkedIn, Google Agenda, Central, CRM, carrossel, reels, briefing.";
   async function conversar(){
     if(J.conv){ try { await J.conv.endSession(); } catch(err){} return; }
     if(J.conectando) return;
     J.conectando = true; pintar();
-    try {
-      const pedir = async tipo => { const r = await fetch("/api/jarvis/voz/sessao" + (tipo ? "?tipo=" + tipo : ""), { method: "POST" }); const j = await r.json(); if(!r.ok) throw new Error(j.error || "HTTP " + r.status); return j; };
-      const [{ Conversation }, s] = await Promise.all([import(SDK), pedir()]);
-      const opcoes = { dynamicVariables: { nome: s.nome, empresa: s.empresa },
-        clientTools: { pedir_ao_zeus: p => zeusTarefa((p && p.tarefa) || ""), mostrar_quadro: p => quadro(p || {}) },
-        onConnect: () => { J.conectando = false; J.fase = "ouvindo"; pintar(); },
-        onDisconnect: () => { J.conv = null; J.conectando = false; J.fase = "ocioso"; J.legenda = ""; pintar(); },
-        onError: m => { cfgToast("Conversa: " + m, true); },
-        onModeChange: ({ mode }) => { J.fase = mode === "speaking" ? "falando" : "ouvindo"; if(mode !== "speaking") setTimeout(() => { if(J.fase === "ouvindo"){ J.legenda = ""; pintarLegenda(); } }, 2500); pintar(); },
-        onMessage: m => { const eu = (m.role || m.source) === "user"; const t = String(m.message || "").trim(); if(!t || (eu && /^RESULTADO DO ZEUS/.test(t))) return; /* o resultado injetado não é fala sua */ J.historico.push({ eu, texto: t }); if(eu) J.voce = t; else J.legenda = t; pintarLegenda(); const h = porId("jv-hist-box"); if(h && J.verHistorico) h.innerHTML = historicoHTML(); } };
-      try { J.conv = await Conversation.startSession(Object.assign({ conversationToken: s.conversationToken, connectionType: "webrtc" }, opcoes)); }
-      catch(err){ const w = await pedir("ws"); J.conv = await Conversation.startSession(Object.assign({ signedUrl: w.signedUrl, connectionType: "websocket" }, opcoes)); } // rede que bloqueia WebRTC
-    } catch(err){ J.conv = null; J.conectando = false; J.fase = "ocioso"; pintar(); cfgToast("Não consegui abrir a conversa: " + err.message, true); }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch(err){ J.conectando = false; pintar(); cfgToast("O navegador não liberou o microfone.", true); return; }
+    // estado: "ouvindo" (gravando, esperando você), "ocupado" (entendendo/pensando), "falando" (Zeus fala; gravando para interrupção)
+    const C = { ativo: true, mudo: false, fila: [], rec: null, estado: "ocupado", falou: 0, silencio: 0, piso: null, iniRec: 0, vez: 0 };
+    const mic = ctxAudio().createAnalyser(); mic.fftSize = 128; mic.smoothingTimeConstant = 0.6; ctxAudio().createMediaStreamSource(stream).connect(mic);
+    const micBuf = new Uint8Array(mic.frequencyBinCount);
+    const nivelMic = () => { mic.getByteFrequencyData(micBuf); let s = 0; for(const v of micBuf) s += v; return s / micBuf.length / 255; };
+    const tipo = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
+    const dados = () => { const a = C.estado === "falando" && J.analyser ? J.analyser : mic; const d = new Uint8Array(a.frequencyBinCount); a.getByteFrequencyData(d); return d; };
+    const T = {};
+    const medir = (k) => { T[k] = Date.now(); };
+    function relatar(){ if(!T.fim) return; const d = { espera: T.fim - T.calou, ouvir: T.ouviu - T.fim, pensar: T.pensou - T.ouviu, voz: T.tocou - T.pensou };
+      d.total = T.tocou - T.calou; console.log("[jarvis] tempos (ms)", d);
+      fetch("/api/jarvis/tempo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) }).catch(() => {}); }
+    function gravar(){
+      pararRec(true);
+      const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined), partes = []; C.rec = rec; C.iniRec = Date.now();
+      rec.ondataavailable = ev => { if(ev.data && ev.data.size) partes.push(ev.data); };
+      rec.onstop = () => { if(rec.descartar || !C.ativo) return; processar(new Blob(partes, { type: (rec.mimeType || "audio/webm").split(";")[0] })); };
+      rec.start(250);
+    }
+    function pararRec(descartar){ const r = C.rec; C.rec = null; if(r && r.state !== "inactive"){ r.descartar = !!descartar; r.stop(); } }
+    function escutar(){
+      if(!C.ativo) return;
+      C.estado = "ouvindo"; C.falou = 0; C.silencio = 0; J.fase = "ouvindo"; pintar();
+      if(C.fila.length && proximo()) return;
+      gravar();
+    }
+    // Um laço só, a cada 50 ms, para a conversa inteira
+    const laco = setInterval(() => {
+      if(!C.ativo) return clearInterval(laco);
+      if(C.mudo || J.ditando || C.estado === "ocupado"){ C.falou = 0; C.silencio = 0; return; }
+      const n = nivelMic(), falando = C.estado === "falando";
+      if(C.piso == null) C.piso = n;
+      if(!falando){ if(n < C.piso) C.piso = n; else if(!C.falou || C.silencio) C.piso += (n - C.piso) * 0.02; } // acompanha o ruído, devagar
+      let limiar = Math.max(VAD.minimo, C.piso + VAD.folga, C.piso * VAD.fator);
+      if(falando) limiar = Math.max(limiar * VAD.interromperFator, C.piso + VAD.interromperFolga);
+      if(n > limiar){ C.falou += 50; C.silencio = 0; } else if(C.falou){ if(!C.silencio) T.calou = Date.now(); C.silencio += 50; }
+      if(falando){
+        if(C.falou >= VAD.interromperMs){ // você falou por cima: o Zeus para e escuta (a gravação já pegou o começo da sua fala)
+          C.vez++; pararFala(); J.legenda = ""; C.estado = "ouvindo"; J.fase = "ouvindo"; T.fim = 0; C.iniRec = Date.now(); pintar();
+        } else if(C.falou && C.silencio >= VAD.ruidoMs){ C.falou = 0; C.silencio = 0; }
+        return;
+      }
+      const tempo = Date.now() - C.iniRec;
+      if(C.falou >= VAD.minFalaMs && (C.silencio >= VAD.silencioMs || tempo > VAD.maxMs)){ if(!C.silencio) T.calou = Date.now(); medir("fim"); C.estado = "ocupado"; pararRec(false); return; }
+      if(C.falou && C.falou < VAD.minFalaMs && C.silencio >= VAD.ruidoMs){ C.falou = 0; C.silencio = 0; } // barulho curto, não era fala
+      if(!C.falou && tempo > VAD.reciclaMs){ gravar(); if(C.fila.length) proximo(); } // só silêncio: recomeça a gravação para não acumular
+    }, 50);
+    async function processar(blob){
+      C.estado = "ocupado"; J.fase = "transcrevendo"; pintar();
+      let texto = "";
+      try {
+        const fd = new FormData(); fd.append("audio", blob, "voz." + (blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm"));
+        fd.append("preciso", "1"); fd.append("prompt", VOCABULARIO);
+        const r = await fetch("/api/chat/transcribe", { method: "POST", body: fd }), j = await r.json();
+        if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
+        texto = String(j.text || "").trim();
+      } catch(err){ cfgToast("Não consegui entender o áudio: " + err.message, true); }
+      if(!C.ativo) return;
+      if(!texto || ALUCINACAO.test(texto) || texto === VOCABULARIO){ T.fim = 0; return escutar(); }
+      medir("ouviu"); responder(texto, false);
+    }
+    async function responder(texto, sistema){
+      C.estado = "ocupado"; pararRec(true);
+      const historico = J.historico.slice(-14).map(m => ({ eu: m.eu, texto: m.texto }));
+      if(!sistema){ J.voce = texto; J.historico.push({ eu: true, texto }); }
+      J.fase = "pensando"; J.legenda = ""; pintar();
+      let r = {};
+      try {
+        const res = await fetch("/api/jarvis/pensar", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto, historico, tarefas: ativas().map(t => t.texto) }) });
+        r = await res.json(); if(!res.ok) throw new Error(r.error || "HTTP " + res.status);
+      } catch(err){ cfgToast("O Zeus não respondeu agora: " + err.message, true); r = {}; }
+      if(!C.ativo) return;
+      medir("pensou");
+      (r.acoes || []).forEach(a => { try { if(a.ferramenta === "pedir_ao_zeus") zeusTarefa((a.args || {}).tarefa || ""); else if(a.ferramenta === "mostrar_quadro") quadro(a.args || {}); } catch(err){} });
+      const fala = String(r.fala || "").trim();
+      if(!fala) return escutar();
+      J.historico.push({ eu: false, texto: fala });
+      const h = porId("jv-hist-box"); if(h && J.verHistorico) h.innerHTML = historicoHTML();
+      dizer(fala, !sistema);
+    }
+    // Zeus fala com o microfone aberto: grava de novo do zero para pegar uma interrupção desde o começo
+    function dizer(fala, medirTempo){
+      const vez = ++C.vez;
+      C.estado = "falando"; C.falou = 0; C.silencio = 0; gravar();
+      falar(fala, () => { if(C.ativo && vez === C.vez) escutar(); }, () => { if(medirTempo){ medir("tocou"); relatar(); } T.fim = 0; });
+    }
+    // Mensagem do sistema (resultado do Zeus, clique na tela): fala assim que você não estiver falando
+    function proximo(){
+      if(!C.ativo || !C.fila.length || C.estado !== "ouvindo" || J.audio || C.falou) return false;
+      responder(C.fila.shift(), true); return true;
+    }
+    const injetar = t => { C.fila.push(String(t || "")); if(proximo()) return; const k = setInterval(() => { if(!C.ativo || !C.fila.length) return clearInterval(k); proximo(); }, 700); };
+    J.conv = {
+      sendUserMessage: injetar, sendContextualUpdate: injetar,
+      setMicMuted: m => { C.mudo = !!m; },
+      getInputByteFrequencyData: dados, getOutputByteFrequencyData: dados,
+      endSession: async () => { C.ativo = false; clearInterval(laco); pararRec(true); pararFala(); stream.getTracks().forEach(t => t.stop()); J.conv = null; J.analyser = null; J.fase = "ocioso"; J.legenda = ""; pintar(); },
+    };
+    J.conectando = false;
+    const nome = meuNome(), oi = nome ? `Fala, ${nome}! Pode falar.` : "Fala! Pode falar.";
+    J.historico.push({ eu: false, texto: oi });
+    dizer(oi, false);
   }
-
   // ─── responder: painéis, legenda e voz ───────────────────────────────────────
   // Blocos da resposta: números (zeus-kpi/zeus-grafico), site publicado (zeus-site), artes (zeus-imagens), ação feita (zeus-feito)
   // e briefing (zeus-quadro). Imagem markdown de arte e link de página publicada viram tela mesmo sem bloco.
@@ -247,21 +347,28 @@
       if(tipo === "zeus-quadro") return " Quadro atualizado na tela. ";
       return " Dados mostrados na tela: " + c.replace(/\s+/g, " ").slice(0, 1200) + " "; }).replace(/!\[[^\]]*\]\([^)]*\)/g, " (imagem na tela) ").trim().slice(0, 4000);
   }
-  function pararFala(){ if(J.audio){ try { J.audio.pause(); } catch(err){} J.audio = null; } clearTimeout(J.legT); }
-  async function falar(txt){
-    try {
-      const r = await fetch("/api/jarvis/falar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ texto: txt }) });
-      if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.error || "HTTP " + r.status); }
-      const falado = decodeURIComponent(r.headers.get("x-jarvis-texto") || ""), url = URL.createObjectURL(await r.blob());
-      const a = new Audio(url); J.audio = a; a.crossOrigin = "anonymous";
-      try { novoAnalisador(ctxAudio().createMediaElementSource(a)); J.analyser.connect(ctxAudio().destination); } catch(err){}
-      set("fase", "falando");
-      a.onloadedmetadata = () => legendar(falado, a.duration);
-      a.onended = () => { URL.revokeObjectURL(url); J.audio = null; J.analyser = null; J.legenda = ""; set("fase", "ocioso");
-        if(J.falas.length) setTimeout(proximaFala, 300); // resultado pronto esperando: fala antes de voltar a ouvir
-        else if(J.continuo && document.getElementById("jv-root")) setTimeout(ouvir, 400); };
-      await a.play();
-    } catch(err){ set("fase", "ocioso"); J.legenda = String(txt || "").replace(/```[\s\S]*?```/g, "").slice(0, 300); pintarLegenda(); cfgToast("Sem voz agora (" + err.message + "). A resposta está na legenda.", true); }
+  function pararFala(){ const a = J.audio; J.audio = null; if(a){ try { a.onended = null; a.onerror = null; a.pause(); a.removeAttribute("src"); a.load(); } catch(err){} } clearTimeout(J.legT); }
+  // Texto falado: sem markdown, blocos, links (o servidor limpa igual; aqui é para a legenda e para caber na URL)
+  const limparFala = t => String(t || "").replace(/```[\s\S]*?```/g, " ").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "")
+    .replace(/[*_#>`|]/g, "").replace(/^\s*[-•]\s+/gm, "").replace(/[—–]/g, ",").replace(/\s+,/g, ",").replace(/\s+/g, " ").trim().slice(0, 1500);
+  // A voz toca enquanto ainda está sendo gerada (o <audio> lê o áudio em fluxo do /api/jarvis/falar)
+  async function falar(txt, aoAcabar, aoTocar){
+    const falado = limparFala(txt);
+    const falhou = err => { if(J.audio !== a) return; J.audio = null; set("fase", "ocioso"); J.legenda = falado.slice(0, 300); pintarLegenda(); cfgToast("Sem voz agora (" + (err && err.message || "erro") + "). A resposta está na legenda.", true); if(aoAcabar) setTimeout(aoAcabar, 2500); };
+    pararFala();
+    const a = new Audio(); J.audio = a; a.crossOrigin = "anonymous"; a.preload = "auto";
+    if(!falado){ J.audio = null; if(aoAcabar) aoAcabar(); return; }
+    try { novoAnalisador(ctxAudio().createMediaElementSource(a)); J.analyser.connect(ctxAudio().destination); } catch(err){}
+    a.onerror = () => falhou(new Error("a voz não carregou"));
+    a.onended = () => { if(J.audio !== a) return; J.audio = null; J.analyser = null; J.legenda = ""; J.fase = "ocioso";
+      if(aoAcabar){ aoAcabar(); return; }
+      pintar();
+      if(J.falas.length) setTimeout(proximaFala, 300); // resultado pronto esperando: fala antes de voltar a ouvir
+      else if(J.continuo && document.getElementById("jv-root")) setTimeout(ouvir, 400); };
+    a.src = "/api/jarvis/falar?t=" + encodeURIComponent(falado);
+    set("fase", "falando");
+    try { await a.play(); if(J.audio !== a) return; if(aoTocar) aoTocar(); legendar(falado, isFinite(a.duration) ? a.duration : falado.length * 0.062); }
+    catch(err){ falhou(err); }
   }
   // Legenda frase a frase, no ritmo da fala (tempo proporcional ao tamanho de cada frase)
   function legendar(texto, dur){
@@ -673,7 +780,7 @@
     if(J.modo === "tempo-real"){
       if(J.conectando) return "Conectando...";
       if(J.zeusOcupado){ const n = J.tarefas.filter(t => t.estado === "trabalhando").length; return n > 1 ? `Zeus em ${n} tarefas ao mesmo tempo` : "Zeus trabalhando" + ((J.tarefas.find(t => t.estado === "trabalhando") || {}).status ? ": " + J.tarefas.find(t => t.estado === "trabalhando").status : "..."); }
-      if(J.conv) return J.fase === "falando" ? "Falando" : "Ouvindo, pode falar";
+      if(J.conv) return J.fase === "falando" ? "Falando" : J.fase === "transcrevendo" ? "Entendendo..." : J.fase === "pensando" ? "Pensando..." : "Ouvindo, pode falar";
       return FASE.ocioso;
     }
     const esp = J.tarefas.find(t => t.esperando), n = ativas().length;

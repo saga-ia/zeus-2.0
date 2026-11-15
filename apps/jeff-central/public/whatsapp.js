@@ -65,7 +65,7 @@
   // ─── carga e polling ─────────────────────────────────────────────────────────
   async function loadSdrs(silencioso){
     const w = W(); if(!silencioso){ w.loading = true; repaint(); }
-    try { w.sdrs = (await api("/sdrs")).sdrs; w.error = null; } catch(err){ w.error = err.message; setTimeout(() => { if(state.screen === "whatsapp" && (!W().sdrs || !W().sdrs.length)) loadSdrs(true); }, 5000); }
+    try { w.sdrs = (await api("/sdrs")).sdrs; w.error = null; } catch(err){ w.error = err.message; }
     w.loading = false; repaint();
   }
   async function loadConv(silencioso){
@@ -836,7 +836,7 @@
     const q = sel => root.querySelectorAll(sel);
     q("[data-wa-view]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); ir(el.dataset.waView); }));
     // topo: seletor de SDR (filtra conversas e funil)
-    q("[data-wa-sdrmenu]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const w = W(); w.sdrMenu = !w.sdrMenu; if(w.sdrMenu && (!w.sdrs || !w.sdrs.length)) loadSdrs(true); const top = document.getElementById("wa-top"); if(top){ top.innerHTML = topo(); bind(top); } }));
+    q("[data-wa-sdrmenu]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const w = W(); w.sdrMenu = !w.sdrMenu; const top = document.getElementById("wa-top"); if(top){ top.innerHTML = topo(); bind(top); } }));
     q("[data-wa-sdr-pick]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); const w = W(); w.sdrFiltro = el.dataset.waSdrPick; w.sdrMenu = false; w.conv.lista = null; w.conv.aberta = null; w.conv.msgs = null; repaint(); loadConv(true); }));
     // conversas: filtro, painel do lead, IA do SDR e etapa
     q("[data-wa-cf]").forEach(el => bindOnce(el, "click", ev => { ev.stopPropagation(); W().conv.cf = el.dataset.waCf; repaint(); }));
@@ -936,14 +936,4 @@
     return `<div id="wa-root">${page()}</div>`;
   };
   if(state.screen === "whatsapp"){ const slot = document.getElementById("main-slot"); if(slot){ slot.innerHTML = RENDERERS.whatsapp(); } }
-})();
-
-// O menu "Todos os SDRs" mora dentro da faixa do topo (que corta o que passa da borda): abre fixo na tela, logo abaixo do botão.
-(function(){
-  new MutationObserver(() => {
-    const p = document.getElementById("wa-sdr-pop"); if(!p || p.dataset.fixo) return;
-    const b = document.querySelector("[data-wa-sdrmenu]"); if(!b) return;
-    const r = b.getBoundingClientRect(); p.dataset.fixo = "1";
-    Object.assign(p.style, { color: "#17171A", position: "fixed", top: Math.round(r.bottom + 6) + "px", right: Math.max(8, Math.round(window.innerWidth - r.right)) + "px", zIndex: "2000" });
-  }).observe(document.body, { childList: true, subtree: true });
 })();

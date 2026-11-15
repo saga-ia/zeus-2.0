@@ -4,6 +4,7 @@ const { getDb } = require('../db');
 const drive = require('./drive');
 const captions = require('./captions');
 const { publishPost } = require('../publisher');
+const { normalizeIfNeeded } = require('./normalize-video');
 
 const PUBLIC_BASE = process.env.PUBLIC_BASE_URL || 'https://zeus-post.jefersonhenrike.com';
 const UPLOAD_DIR = path.join(__dirname, '..', 'data', 'uploads');
@@ -308,6 +309,24 @@ async function processItem(item, campaign, db) {
     mediaPath = d.url;
     postType = resolvePostType(campaign.post_format);
     filesToCleanup.push(d.path);
+  }
+
+  // Normaliza vídeo pro formato que a Graph API aceita (H.264/AAC, ≤1080x1920,
+  // Reels ≤90s). Só vale pra mídia única; carrossel segue sem tocar.
+  const looksVideoByUrl = /\.(mp4|mov|m4v|webm)(\?|$)/i.test(typeof mediaPath === 'string' ? mediaPath : '');
+  if (campaign.post_format !== 'carousel' && (isVideoMime(meta.mimeType) || looksVideoByUrl)) {
+    const localVideoPath = filesToCleanup[filesToCleanup.length - 1];
+    if (localVideoPath && fs.existsSync(localVideoPath)) {
+      try {
+        const norm = await normalizeIfNeeded(localVideoPath, { postType });
+        if (norm.changed) {
+          mediaPath = norm.url;
+          filesToCleanup.push(norm.path);
+        }
+      } catch (err) {
+        throw new Error(`Normalização falhou: ${err.message}`);
+      }
+    }
   }
 
   // Retry reaproveita o post existente do item (evita duplicar linha em posts)

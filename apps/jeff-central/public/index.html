@@ -3500,7 +3500,7 @@ function renderWaConnector(){
                 <span data-wa-refresh-qr="${e(modal.name)}" data-hover-border style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid #DADADF;border-radius:9px;font-size:12.5px;cursor:pointer">${icon(ICONS.refresh, 12, "currentColor")}Novo QR</span>
                 <span data-wa-close data-hover-border style="padding:9px 14px;border:1px solid #DADADF;border-radius:9px;font-size:12.5px;cursor:pointer">Fechar</span>
               </div>
-            ` : `<div style="padding:60px 20px;text-align:center;color:#66666F;font-size:13px">${e(modal.state && !/^gerando QR\.\.\.$/i.test(modal.state) ? modal.state : "Gerando QR code...")}</div>`}
+            ` : `<div style="padding:60px 20px;text-align:center;color:#66666F;font-size:13px">Gerando QR code...</div>`}
           ` : modal.step === "rename" ? `
             <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin-bottom:14px">Renomear WhatsApp</div>
             <div style="font-size:12px;color:#66666F;margin-bottom:7px">Novo nome amigável</div>
@@ -9394,31 +9394,19 @@ async function waCreate(friendly){
     const r = await fetch("/api/wa/instances", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ friendly }) });
     const j = await r.json();
     if(!r.ok) throw new Error(j.error || "criacao_falhou");
-    const qr = (j.qr && j.qr.base64 && String(j.qr.base64).startsWith("data:")) ? j.qr.base64 : null;
-    waLoad();
-    if(!qr){ waSetModal({ step: "qr", name: j.name, friendly, qr: null, state: "Gerando QR code... (pode levar até 1 minuto)" }); return waConnect(j.name, friendly); }
+    const qr = (j.qr && (j.qr.base64 || j.qr.code)) || null;
     waSetModal({ step: "qr", name: j.name, friendly, qr, state: "aguardando escaneamento..." });
     waPollState(j.name);
+    waLoad();
   } catch(e){ alert("Erro ao criar: " + e.message); }
 }
-async function waConnect(name, friendlyNovo){
-  const cur = (state.wa && state.wa.instances || []).find(i=>i.name===name) || (friendlyNovo ? { friendly: friendlyNovo } : {});
+async function waConnect(name){
+  const cur = (state.wa && state.wa.instances || []).find(i=>i.name===name) || {};
   waSetModal({ step: "qr", name, friendly: cur.friendly || name, qr: null, state: "gerando QR..." });
   try {
-    // Instância presa em "close" devolve sem QR: tenta de novo algumas vezes antes de desistir.
-    let qr = null;
-    for(let t = 1; t <= 12 && !qr; t++){
-      if(!state.wa || !state.wa.modal || state.wa.modal.name !== name) return;
-      if(t > 1) waSetModal({ step: "qr", name, friendly: cur.friendly || name, qr: null, state: "Gerando QR code... (tentativa "+t+" de 12)" });
-      try {
-        const r = await fetch("/api/wa/instances/"+encodeURIComponent(name)+"/qr");
-        const j = await r.json();
-        qr = (j.base64 || (j.qrcode && j.qrcode.base64) || null);
-        if(qr && !String(qr).startsWith("data:")) qr = null;
-      } catch {}
-      if(!qr) await new Promise(ok => setTimeout(ok, 5000));
-    }
-    if(!qr){ waSetModal({ step: "qr", name, friendly: cur.friendly || name, qr: null, state: "Este número travou e não gera mais QR. Feche, exclua este número e clique em \"Conectar novo número\" para criar outro." }); return; }
+    const r = await fetch("/api/wa/instances/"+encodeURIComponent(name)+"/qr");
+    const j = await r.json();
+    const qr = (j.base64 || j.code || (j.qrcode && (j.qrcode.base64 || j.qrcode.code))) || null;
     waSetModal({ step: "qr", name, friendly: cur.friendly || name, qr, state: "aguardando escaneamento..." });
     waPollState(name);
   } catch(e){ alert("Erro ao gerar QR: " + e.message); }
@@ -10739,7 +10727,7 @@ render();
 <script src="/pdi.js?v=1"></script>
 <script src="/organograma.js?v=2"></script>
 <script src="/wa-zeus.js?v=2"></script>
-<script src="/jarvis.js?v=16"></script>
+<script src="/jarvis.js?v=19"></script>
 <script src="/agente-canais.js?v=1"></script>
 <script src="/conectores-destaque.js?v=1"></script>
 <script src="/vendas-canais.js?v=2"></script>

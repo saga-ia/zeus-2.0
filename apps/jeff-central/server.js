@@ -364,13 +364,24 @@ app.get('/api/signup/status', (_req, res) => {
 
 // Secure só quando a pessoa veio por HTTPS (produção atrás do NPM); teste local em http continua funcionando
 const cookieSessao = (tok, req) => `sid=${tok}; HttpOnly; ${(req && (req.secure || req.headers['x-forwarded-proto'] === 'https')) ? 'Secure; ' : ''}Path=/; Max-Age=${sessionDias() * 24 * 3600}; SameSite=Lax`;
+// Segurança (14/11/2026): limite de tentativas de login. 10 erros por IP em 15 min bloqueiam o IP;
+// a senha mestra (login sem e-mail) tem um limite global de 10 erros em 15 min.
+const _falhasLogin = new Map(), JANELA_LOGIN = 15 * 60 * 1000;
+const loginBloqueado = (k) => { const f = _falhasLogin.get(k); return !!f && f.n >= 10 && Date.now() - f.t < JANELA_LOGIN; };
+const loginFalhou = (k) => { if (_falhasLogin.size > 5000) _falhasLogin.clear(); const f = _falhasLogin.get(k);
+  if (!f || Date.now() - f.t >= JANELA_LOGIN) _falhasLogin.set(k, { n: 1, t: Date.now() }); else f.n++; };
 app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {
   const email = req.body._email || req.body.email || '';
   const password = req.body.password || '';
+  const ipLogin = 'ip:' + String(req.headers['x-real-ip'] || req.socket.remoteAddress || '');
+  if (loginBloqueado(ipLogin) || (!email && loginBloqueado('mestra'))) {
+    console.warn('[central] login bloqueado por excesso de tentativas', ipLogin);
+    return res.redirect('/login?error=1');
+  }
   let quem = null;
   if (email) {
     quem = verifyUserPassword(email, password);
-    if (!quem) return res.redirect('/login?error=1');
+    if (!quem) { loginFalhou(ipLogin); return res.redirect('/login?error=1'); }
     // Senha certa, mas a pessoa precisa estar ativa na empresa
     const m = acesso.pessoaPorEmail(quem.email);
     if (!m || m.status !== 'ativo') {
@@ -378,6 +389,7 @@ app.post('/api/login', express.urlencoded({ extended: false }), (req, res) => {
       return res.redirect('/login?error=inativo');
     }
   } else if (!verifyPwd(password)) {
+    loginFalhou(ipLogin); loginFalhou('mestra');
     return res.redirect('/login?error=1');
   }
   const tok = newSession(quem ? { email: quem.email } : null);
@@ -562,14 +574,8 @@ async function garantirHistoricoCompleto(name) {
       alwaysOnline: !!d.alwaysOnline, readMessages: !!d.readMessages, readStatus: !!d.readStatus, syncFullHistory: true });
   } catch (e) { console.error('[wa] histórico completo:', e.message); }
 }
-// O /settings/find da Evolution chega a levar 20s; o syncFullHistory já é ligado no create.
-// Então a conferência roda em segundo plano, uma vez por número, sem segurar o QR.
-const historicoConferido = new Set();
 app.get('/api/wa/instances/:name/qr', apiAuth, async (req, res) => {
-  if (!historicoConferido.has(req.params.name)) {
-    historicoConferido.add(req.params.name);
-    garantirHistoricoCompleto(req.params.name).catch(() => {});
-  }
+  await garantirHistoricoCompleto(req.params.name);
   const r = await evo('GET', `/instance/connect/${encodeURIComponent(req.params.name)}`);
   if (!r.ok) return res.status(r.status).json({ error: 'qr_failed', data: r.data });
   res.json(r.data);
@@ -808,13 +814,7 @@ const rotinas = require('./rotinas');
 app.use('/api/rotinas', apiAuth, acesso.regras([['POST', /^\/$/, 'criar-rotina']]), rotinas.router);
 // Execução Comercial: fontes de dados de vendas (WhatsApp da Evolution e planilha/CRM). Ler é livre; gravar só admin.
 // Diagnóstico e Auditoria com IA: qualquer pessoa logada gera (a IA é isolada e só lê); contexto, números e planilhas só admin
-// Módulos de vendas feitos para um cliente específico (ex: ligação com o CRM dele). Não vêm no pacote do produto:
-// existem só no servidor daquele cliente e a atualização não mexe neles. Cada um exporta { router }.
-const modulosDoCliente = ['vendas-crm.js', 'vendas-qualidade.js']
-  .filter((f) => fs.existsSync(path.join(__dirname, f)))
-  .map((f) => { try { return require('./' + f).router; } catch (e) { console.error('[central] módulo do cliente ' + f + ':', e.message); return null; } })
-  .filter(Boolean);
-app.use('/api/vendas', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), (req, res, next) => (req.method === 'GET' || req.path.startsWith('/diagnostico') || req.path.startsWith('/auditoria') || req.path.startsWith('/analise') ? next() : exigirAdmin(req, res, next)), require('./vendas-ia').router, require('./vendas-dados').router, ...modulosDoCliente);
+app.use('/api/vendas', apiAuth, acesso.regras([['*', /./, 'ver-motores', { leitura: true }]]), (req, res, next) => (req.method === 'GET' || req.path.startsWith('/diagnostico') || req.path.startsWith('/auditoria') || req.path.startsWith('/analise') ? next() : exigirAdmin(req, res, next)), require('./vendas-ia').router, require('./vendas-dados').router);
 // CENTRAL_SEM_AGENDADORES=1: instância de teste (cópia do banco) não roda rotinas nem transcrição de verdade
 if (process.env.CENTRAL_SEM_AGENDADORES !== '1') rotinas.startScheduler();
 // Transcrição automática dos áudios dos números nas análises de vendas (Diagnóstico e Auditoria leem o que foi falado)

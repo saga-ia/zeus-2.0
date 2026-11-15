@@ -17,16 +17,7 @@
       "Bash(wc *)",
       "Bash(date *)",
       "Bash(awk *)",
-      "Bash(sed *)",
-      "Bash(scripts/wapi.sh *)",
-      "Bash(./scripts/wapi.sh *)",
-      "Bash(bash scripts/wapi.sh *)",
-      "Bash(bash */scripts/wapi.sh *)",
-      "Bash(*/scripts/google.sh *)",
-      "Bash(scripts/google.sh *)",
-      "Bash(./scripts/google.sh *)",
-      "Bash(bash scripts/google.sh *)",
-      "Bash(bash */scripts/google.sh *)"
+      "Bash(sed *)"
     ]
   },
   "model": "claude-opus-4-7"
