@@ -67,11 +67,10 @@ cron     farias
 app      jeff-alpha-clientes
 host     cliente
 
-# Agenda Turbo Max e Automatik
-# (o myIG VAI pro cliente: a aba Instagram da Central e os agentes de DM dependem dele)
+# Agenda Turbo Max
+# (myIG e Automatik VÃO pro cliente: a aba Instagram, os agentes de DM e a publicação de posts da Central dependem deles;
+#  o subdomínio zeus-post do cliente aponta pro Automatik, ver pacote.py e npm_proxy.py)
 app      jeff-agenda-turbo-max
-app      jeff-automatikinst
-host     automatikinst
 host     zeuschatig
 site     editaturbomax
 host     editaturbomax

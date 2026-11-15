@@ -58,6 +58,11 @@ for sub, esquema, destino, porta, ws, be in linhas:
     if destino == '127.0.0.1':
         destino = '172.17.0.1'
     if nome in existentes:
+        # zeus-post de instalação antiga apontava pro app velho (3070); a Central publica pelo Automatik (3080)
+        h = existentes[nome]
+        if sub == 'zeus-post' and int(h.get('forward_port') or 0) != int(porta):
+            req('PUT', f"/nginx/proxy-hosts/{h['id']}", {'forward_host': destino, 'forward_port': int(porta)}, token=token)
+            print(f'proxy: {nome} agora aponta pra porta {porta}')
         continue
     req('POST', '/nginx/proxy-hosts', {
         'domain_names': [nome], 'forward_scheme': esquema, 'forward_host': destino, 'forward_port': int(porta),

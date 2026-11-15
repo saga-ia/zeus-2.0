@@ -98,9 +98,17 @@ class Regras:
                 cab.append(l)
             return ''.join(cab + ['\n'] + [f'servico  {s}\n' for s in self.f.get('servico', [])]).encode()
         if p == 'instalador/modelos/hosts.tsv':
-            # 172.18.0.1 é a ponte de uma rede Docker que só existe aqui; no cliente o host é sempre 172.17.0.1
-            return ''.join((l if l.startswith('#') else l.replace('\t172.18.0.1\t', '\t172.17.0.1\t'))
-                           for l in linhas if l.startswith('#') or l.split('\t', 1)[0] not in self.hosts).encode()
+            # 172.18.0.1 é a ponte de uma rede Docker que só existe aqui; no cliente o host é sempre 172.17.0.1.
+            # zeus-post: aqui aponta pro app antigo (3070); no cliente aponta pro Automatik (3080), que é quem a
+            # Central usa e quem recebe o retorno do login da Meta (zeus-post.<dominio>/oauth/...).
+            def ajusta(l):
+                if l.startswith('#'):
+                    return l
+                l = l.replace('\t172.18.0.1\t', '\t172.17.0.1\t')
+                if l.startswith('zeus-post\t'):
+                    l = l.replace('\t3070\t', '\t3080\t')
+                return l
+            return ''.join(ajusta(l) for l in linhas if l.startswith('#') or l.split('\t', 1)[0] not in self.hosts).encode()
         if p == 'instalador/modelos/pm2.tsv':
             def ok(l):
                 if l.startswith('#'):
