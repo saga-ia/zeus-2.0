@@ -67,12 +67,11 @@ cron     farias
 app      jeff-alpha-clientes
 host     cliente
 
-# Agenda Turbo Max, Automatik e myIG
+# Agenda Turbo Max e Automatik
+# (o myIG VAI pro cliente: a aba Instagram da Central e os agentes de DM dependem dele)
 app      jeff-agenda-turbo-max
 app      jeff-automatikinst
-app      zeuschatig
 host     automatikinst
-host     myig
 host     zeuschatig
 site     editaturbomax
 host     editaturbomax

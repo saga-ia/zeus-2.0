@@ -194,6 +194,7 @@ done
 
 # 5) bancos de app novo e configurações padrão novas (o que já existe não é tocado)
 python3 -I "$NOVO/instalador/lib/bancos.py" "$NOVO/instalador/modelos" >>"$LOG" 2>&1 || log "  atenção: bancos.py falhou (ver log)"
+bash "$NOVO/instalador/lib/myig_admin.sh" "$RESP" >>"$LOG" 2>&1 || log "  atenção: admin do myIG não foi criado (ver log)"
 
 # 6) reinicia só os processos dos apps que mudaram; sobe os processos novos
 declare -A REINICIOS

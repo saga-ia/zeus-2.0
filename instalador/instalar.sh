@@ -304,6 +304,7 @@ fi
 
 if etapa bancos; then
   python3 -I "$INST/lib/bancos.py" "$INST/modelos"
+  bash "$INST/lib/myig_admin.sh" "$RESP" || aviso "admin do myIG não foi criado: a aba Instagram da Central não abre até rodar  bash $INST/lib/myig_admin.sh $RESP"
   marca bancos
 fi
 

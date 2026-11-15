@@ -98,7 +98,9 @@ class Regras:
                 cab.append(l)
             return ''.join(cab + ['\n'] + [f'servico  {s}\n' for s in self.f.get('servico', [])]).encode()
         if p == 'instalador/modelos/hosts.tsv':
-            return ''.join(l for l in linhas if l.startswith('#') or l.split('\t', 1)[0] not in self.hosts).encode()
+            # 172.18.0.1 é a ponte de uma rede Docker que só existe aqui; no cliente o host é sempre 172.17.0.1
+            return ''.join((l if l.startswith('#') else l.replace('\t172.18.0.1\t', '\t172.17.0.1\t'))
+                           for l in linhas if l.startswith('#') or l.split('\t', 1)[0] not in self.hosts).encode()
         if p == 'instalador/modelos/pm2.tsv':
             def ok(l):
                 if l.startswith('#'):
