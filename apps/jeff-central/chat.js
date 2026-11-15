@@ -132,8 +132,6 @@ function busEmit(sid, ev, data) {
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
     const sid = req.params.sid;
-    // Segurança (14/11/2026): sid vinha sem validação e "..%2F" gravava arquivo em qualquer pasta do servidor
-    if (!/^[A-Za-z0-9_-]{1,64}$/.test(String(sid || '')) || !stmt.sessGet.get(sid)) return cb(new Error('conversa inválida'));
     const dir = path.join(UPLOADS_ROOT, sid);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);

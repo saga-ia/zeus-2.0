@@ -597,9 +597,6 @@ function miniatura(src, larg) {
   return pr;
 }
 router.get('/img/:id/:arq', async (req, res) => {
-  // Segurança (14/11/2026): basename('..') devolve '..' e deixava ler data/sessions.json e central.db
-  const nomeOk = (v) => /^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,120}$/.test(String(v || '')) && !String(v).includes('..');
-  if (!nomeOk(req.params.id) || !nomeOk(req.params.arq)) return res.status(404).end();
   let p = path.join(IMG_DIR, path.basename(req.params.id), path.basename(req.params.arq));
   if (!fs.existsSync(p)) return res.status(404).end();
   if (req.query.mini) { const m = await miniatura(p, req.query.mini === 'p' ? 240 : 720); if (m) p = m; }

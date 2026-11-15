@@ -2,7 +2,7 @@
 # Reinício seguro da jeff-central: só reinicia quando NADA estiver em andamento (resposta do Zeus no chat, rotina,
 # publicação no LinkedIn, arte sendo gerada, time rodando, chat de vendas, ou qualquer processo filho como claude/ffmpeg).
 # Se ficar ocupada além do limite, desiste e NÃO reinicia.
-# Motivo: em 15/11/2026 um reinício cortou uma resposta do chat no meio ("isso não pode ocorrer" - Jeff).
+# Motivo: em 15/11/2026 um reinício direto cortou uma resposta do chat no meio.
 #
 # Uso: scripts/reinicio-seguro.sh [espera_max_segundos=900]
 #   --checar   só mostra o que está rodando agora, não reinicia

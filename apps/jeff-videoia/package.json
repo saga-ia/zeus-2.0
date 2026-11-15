@@ -1,7 +1,0 @@
-{
-  "name": "jeff-videoia",
-  "private": true,
-  "description": "Editor de vídeo com IA (videoia.jefersonhenrike.com). Prévia ao vivo com o Remotion do estúdio jeff-video.",
-  "scripts": { "build": "node web/build.js", "start": "node server.js" },
-  "dependencies": { "express": "4.22.2", "multer": "2.2.0", "better-sqlite3": "11.10.0" }
-}

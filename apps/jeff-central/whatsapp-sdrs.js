@@ -56,6 +56,9 @@ router.get('/sso', (req, res) => {
 });
 
 // Repasse cru (corpo em stream: serve para JSON grande de contatos e para upload multipart de mídia/planilha)
+// Sem o jeff-sdrs nesta instalação: a tela usa os números comerciais da Central (Evolution) — whatsapp-evo.js
+if (!fs.existsSync(SDRS_ENV)) require('./whatsapp-evo');
+router.use('/p', (req, res, next) => (fs.existsSync(SDRS_ENV) ? next() : require('./whatsapp-evo').router(req, res, next)));
 router.use('/p', (req, res) => {
   let cookie;
   try { cookie = cookieSessao(); } catch (e) { return res.status(500).json({ error: e.message }); }
@@ -113,6 +116,8 @@ async function crmEntrar() {
   try { return await _crmLogin; } finally { _crmLogin = null; }
 }
 router.use('/crm', (req, res) => {
+  // CRM de SDRs (jeff-sdrs) não existe nesta instalação: responde sem tentar e sem encher o log de erro
+  if (!fs.existsSync(SDRS_ENV)) return res.status(404).json({ error: 'CRM de SDRs não instalado neste servidor', desligado: true });
   const caminho = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
   if (/\/(password-reset|internal)\//.test(caminho)) return res.status(403).json({ error: 'Esse recurso não é exposto pela Central.' });
   const partes = [];

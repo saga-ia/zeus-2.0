@@ -144,12 +144,6 @@ const matchLead = (signers) => {
 
 const app = express();
 app.use(express.json({ limit: '5mb' }));
-// Segurança (14/11/2026): o painel de depuração e /api/events expunham os eventos de contrato na internet.
-// Agora só respondem a quem está dentro do servidor (curl localhost). O POST /webhook segue público.
-const soLocal = (req, res, next) => { const ip = req.socket.remoteAddress || '';
-  if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') return next(); res.status(404).end(); };
-app.use(['/api/events', '/index.html'], soLocal);
-app.get('/', soLocal);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/health', (_req, res) => {

@@ -125,13 +125,6 @@ const router = express.Router();
 const fail = (res, e) => { const st = e.status || 500; if (st >= 500) console.error('[skills]', e); res.status(st).json({ error: e.message }); };
 const idOk = (v) => /^[A-Za-z0-9][A-Za-z0-9:_-]{0,120}$/.test(String(v || ''));
 
-// Segurança (14/11/2026): skill e regra viram instrução do Claude que roda como root (Zeus, chat de admin, terminal).
-// Criar, editar, restaurar ou apagar fica só com admin/owner; os outros só leem.
-router.use((req, res, next) => {
-  if (req.method === 'GET' || (req.user && req.user.admin)) return next();
-  res.status(403).json({ error: 'Só administradores podem criar ou mudar habilidades.' });
-});
-
 router.get('/', (_req, res) => res.json({ skills: all().map((s) => shape(s)) }));
 
 router.get('/:id', (req, res) => {

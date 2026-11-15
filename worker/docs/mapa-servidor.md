@@ -1,8 +1,8 @@
 # Mapa do servidor
 
-Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só leitura, sem valores de segredo). Não editar à mão: rodar o script de novo.
+Gerado automaticamente em 06/11/2026 01:30 BRT por `scripts/server-map.sh` (só leitura, sem valores de segredo). Não editar à mão: rodar o script de novo.
 
-**Resumo:** 0 apps no PM2 (0 online) | 59 pastas de app | 31 sites estáticos | 75 domínios no proxy | 16 containers | 19 crons | 96 alertas
+**Resumo:** 0 apps no PM2 (0 online) | 58 pastas de app | 31 sites estáticos | 75 domínios no proxy | 15 containers | 19 crons | 95 alertas
 
 ## Alertas
 
@@ -28,8 +28,8 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 - GRAVE: porta 3012 escuta em todas as interfaces e não há firewall no servidor: `/` abre direto em http://IP:3012 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3011 escuta em todas as interfaces e não há firewall no servidor: `/` abre direto em http://IP:3011 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3041 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/jeff-sdrs` abre direto em http://IP:3041 sem HTTPS e sem passar pelo proxy
-- GRAVE: porta 4000 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/zeus-platform` abre direto em http://IP:4000 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3040 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/zeus-analytics` abre direto em http://IP:3040 sem HTTPS e sem passar pelo proxy
+- GRAVE: porta 4000 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/zeus-platform` abre direto em http://IP:4000 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3070 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/jeff-zeus-post` abre direto em http://IP:3070 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3066 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-apps/jeff-conselho-do-dono` abre direto em http://IP:3066 sem HTTPS e sem passar pelo proxy
 - GRAVE: porta 3002 escuta em todas as interfaces e não há firewall no servidor: `/opt/jeff-worker` abre direto em http://IP:3002 sem HTTPS e sem passar pelo proxy
@@ -86,7 +86,6 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 - pasta `/opt/jeff-apps/jeff-sistemas` não roda no PM2 (parada, antiga ou Docker?)
 - pasta `/opt/jeff-apps/jeff-spec-kit-teste` não roda no PM2 (parada, antiga ou Docker?)
 - pasta `/opt/jeff-apps/jeff-video` não roda no PM2 (parada, antiga ou Docker?)
-- pasta `/opt/jeff-apps/jeff-videoia` não roda no PM2 (parada, antiga ou Docker?)
 - pasta `/opt/jeff-apps/jeff-voz` não roda no PM2 (parada, antiga ou Docker?)
 - pasta `/opt/jeff-apps/jeff-vps-monitor` não roda no PM2 (parada, antiga ou Docker?)
 - pasta `/opt/jeff-apps/jeff-wa-relay` não roda no PM2 (parada, antiga ou Docker?)
@@ -155,7 +154,6 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 - `/opt/jeff-apps/jeff-sistemas`: sem descrição
 - `/opt/jeff-apps/jeff-spec-kit-teste`: sem descrição
 - `/opt/jeff-apps/jeff-video`: sem descrição
-- `/opt/jeff-apps/jeff-videoia`: Editor de vídeo com IA (videoia.jefersonhenrike.com). Prévia ao vivo com o Remotion do estúdio jeff-video.
 - `/opt/jeff-apps/jeff-voz`: sem descrição
 - `/opt/jeff-apps/jeff-vps-monitor`: ─── Auth ─────────────────────────────────────────────────────────────────────
 - `/opt/jeff-apps/jeff-wa-relay`: sem descrição
@@ -211,18 +209,18 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 | evolution.jefersonhenrike.com | docker jeff-evolution-api:8080 | sim |
 | farias-crm.jefersonhenrike.com | porta 3050 (jeff-farias-crm) | sim |
 | farias-souza.jefersonhenrike.com | site:/opt/jeff-sites/farias-souza | sim |
-| farias.jefersonhenrike.com | porta 3016 (pid 1093074) | sim |
+| farias.jefersonhenrike.com | porta 3016 (pid 2861830) | sim |
 | fariassouza.jefersonhenrike.com | porta 3023 (jeff-farias-clientarea) | sim |
 | google.jefersonhenrike.com | porta 3018 (jeff-google-oauth) | sim |
 | imobiliaria.jefersonhenrike.com | site:/opt/jeff-sites/imobiliaria | sim |
 | instagram.jefersonhenrike.com | porta 3019 (jeff-instagram-webhook) | sim |
-| instalacao-zeus.jefersonhenrike.com | porta 3071 (pid 1093074) | sim |
+| instalacao-zeus.jefersonhenrike.com | porta 3071 (pid 2861830) | sim |
 | mapadocloser.jefersonhenrike.com | site:/opt/jeff-sites/mapadocloser | sim |
-| meta.jefersonhenrike.com | porta 3011 (pid 1093074) | sim |
-| metadash.jefersonhenrike.com | porta 3025 (pid 1093074) | sim |
+| meta.jefersonhenrike.com | porta 3011 (pid 2861830) | sim |
+| metadash.jefersonhenrike.com | porta 3025 (pid 2861830) | sim |
 | myig.jefersonhenrike.com | porta 3060 (zeuschatig) | sim |
 | omniroute.jefersonhenrike.com | docker jeff-omniroute:20128 | sim |
-| onboarding.jefersonhenrike.com | porta 3016 (pid 1093074) | sim |
+| onboarding.jefersonhenrike.com | porta 3016 (pid 2861830) | sim |
 | org-board.jefersonhenrike.com | porta 3030 (jeff-eventos) | sim |
 | planejamento.jefersonhenrike.com | porta 7180 (planejamento-8-anos) | sim |
 | sagazeus.jefersonhenrike.com | porta 3002 (jeff-worker) | sim |
@@ -234,11 +232,11 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 | treinamento-claude.jefersonhenrike.com | porta 80 (pid 2530) | sim |
 | wa-relay.jefersonhenrike.com | porta 3032 (jeff-wa-relay) | sim |
 | zapsign.jefersonhenrike.com | porta 3014 (jeff-zapsign-webhook) | sim |
-| zeus-instalacao.jefersonhenrike.com | porta 3071 (pid 1093074) | sim |
+| zeus-instalacao.jefersonhenrike.com | porta 3071 (pid 2861830) | sim |
 | zeus-post.jefersonhenrike.com | porta 3070 (jeff-zeus-post) | sim |
 | zeus.jefersonhenrike.com | porta 4000 (zeus-platform) | sim |
 | zeuschatig.jefersonhenrike.com | porta 3060 (zeuschatig) | sim |
-| ads.propostaebcmkt2026.shop | porta 3011 (pid 1093074) | sim |
+| ads.propostaebcmkt2026.shop | porta 3011 (pid 2861830) | sim |
 | agente.propostaebcmkt2026.shop | porta 3002 (jeff-worker) | sim |
 | ebc-crm.propostaebcmkt2026.shop | porta 3015 (jeff-clickup-webhook) | sim |
 | ebc-ebook1.propostaebcmkt2026.shop | site:/opt/jeff-sites/ebc-ebook1 | sim |
@@ -247,7 +245,7 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 | evolution.propostaebcmkt2026.shop | docker evolution:8080 | sim |
 | manager.propostaebcmkt2026.shop | docker n8n:5678 | sim |
 | teste.propostaebcmkt2026.shop | site:/opt/jeff-sites/teste | sim |
-| vps.propostaebcmkt2026.shop | porta 3012 (pid 1093074) | sim |
+| vps.propostaebcmkt2026.shop | porta 3012 (pid 2861830) | sim |
 | zeus.propostaebcmkt2026.shop | porta 3010 (zeus-contacts) | sim |
 
 ## Sites estáticos (/opt/jeff-sites)
@@ -288,22 +286,21 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 
 ## Docker
 
-- `jv-legenda-zeus-mwezavif` (jeff-remotion:1): Exited (1) 39 hours ago | -
-- `jv-zzoom-mvin7k7d` (jeff-remotion:1): Exited (0) 3 weeks ago | -
-- `jv-farias-teaser-v2-mv1p1moh` (jeff-remotion:1): Exited (0) 5 weeks ago | -
-- `jv-teaser-farias-v2-mv12segw` (jeff-remotion:1): Exited (0) 5 weeks ago | -
-- `jeff-evolution-api` (evoapicloud/evolution-api:v2.3.7): Up 2 weeks | 8080/tcp
-- `jeff-presenton` (ghcr.io/presenton/presenton:latest): Up 2 weeks | 127.0.0.1:5001->80/tcp, 172.17.0.1:5001->80/tcp
-- `jeff-evolution-postgres` (postgres:15-alpine): Up 2 weeks | 5432/tcp
-- `jeff-evolution-redis` (redis:7-alpine): Up 2 weeks | 6379/tcp
-- `jeff-omniroute` (diegosouzapw/omniroute:latest): Up 2 weeks (healthy) | 127.0.0.1:20128->20128/tcp
-- `moneyprinterturbo-api` (jeff-moneyprinter-api): Up 2 weeks | 127.0.0.1:8080->8080/tcp, 8501/tcp
-- `moneyprinterturbo-webui` (jeff-moneyprinter-webui): Up 2 weeks | 127.0.0.1:8501->8501/tcp
-- `jeff-sites-nginx` (nginx:alpine): Up 2 weeks | 80/tcp
-- `labastia-setup-n8n-1` (n8nio/n8n:latest): Up 2 weeks | 5678/tcp
-- `labastia-setup-nginx-proxy-manager-1` (jc21/nginx-proxy-manager:latest): Up 2 weeks | 0.0.0.0:80-81->80-81/tcp, [::]:80-81->80-81/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
-- `labastia-setup-postgres-1` (09e4f20b14dd): Up 2 weeks | 5432/tcp
-- `labastia-setup-redis-1` (7aec734b2bb2): Up 2 weeks | 6379/tcp
+- `jv-zzoom-mvin7k7d` (jeff-remotion:1): Exited (0) 2 weeks ago | -
+- `jv-farias-teaser-v2-mv1p1moh` (jeff-remotion:1): Exited (0) 3 weeks ago | -
+- `jv-teaser-farias-v2-mv12segw` (jeff-remotion:1): Exited (0) 3 weeks ago | -
+- `jeff-evolution-api` (evoapicloud/evolution-api:v2.3.7): Up 9 days | 8080/tcp
+- `jeff-presenton` (ghcr.io/presenton/presenton:latest): Up 9 days | 127.0.0.1:5001->80/tcp, 172.17.0.1:5001->80/tcp
+- `jeff-evolution-postgres` (postgres:15-alpine): Up 9 days | 5432/tcp
+- `jeff-evolution-redis` (redis:7-alpine): Up 9 days | 6379/tcp
+- `jeff-omniroute` (diegosouzapw/omniroute:latest): Up 9 days (healthy) | 127.0.0.1:20128->20128/tcp
+- `moneyprinterturbo-api` (jeff-moneyprinter-api): Up 9 days | 127.0.0.1:8080->8080/tcp, 8501/tcp
+- `moneyprinterturbo-webui` (jeff-moneyprinter-webui): Up 9 days | 127.0.0.1:8501->8501/tcp
+- `jeff-sites-nginx` (nginx:alpine): Up 9 days | 80/tcp
+- `labastia-setup-n8n-1` (n8nio/n8n:latest): Up 9 days | 5678/tcp
+- `labastia-setup-nginx-proxy-manager-1` (jc21/nginx-proxy-manager:latest): Up 9 days | 0.0.0.0:80-81->80-81/tcp, [::]:80-81->80-81/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+- `labastia-setup-postgres-1` (09e4f20b14dd): Up 9 days | 5432/tcp
+- `labastia-setup-redis-1` (7aec734b2bb2): Up 9 days | 6379/tcp
 
 ## Crons (horário do servidor: Europe/Berlin)
 
@@ -419,12 +416,7 @@ Gerado automaticamente em 15/11/2026 01:30 BRT por `scripts/server-map.sh` (só 
 | 8501 | 127.0.0.1 | / |
 | 8787 | 172.17.0.1 | /opt/jeff-apps/jeff-claude-shim |
 | 20128 | 127.0.0.1 | / |
-| 33186 | 127.0.0.1 | /root |
-| 35585 | 127.0.0.1 | /root |
-| 35859 | 127.0.0.1 | /opt/jeff-apps/jeff-wa-relay |
-| 37343 | 127.0.0.1 | /opt/jeff-worker |
-| 37925 | 127.0.0.1 | /root |
-| 38145 | 127.0.0.1 | /root |
-| 38317 | 127.0.0.1 | /opt/jeff-apps/jeff-sdrs |
-| 42259 | 127.0.0.1 | /opt/jeff-apps/jeff-wa-relay |
+| 41909 | 127.0.0.1 | /opt/jeff-apps/jeff-wa-relay |
 | 44515 | 127.0.0.1 | /root |
+| 45345 | 127.0.0.1 | /opt/jeff-worker |
+| 45457 | 127.0.0.1 | /opt/jeff-apps/jeff-wa-relay |

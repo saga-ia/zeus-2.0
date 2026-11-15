@@ -1,7 +1,7 @@
 // Jarvis (tela /jarvis): conversa por voz com o ZEUS, 100% grátis desde 15/11/2026 (antes: agente pago da ElevenLabs).
 // Ouvir: Whisper da Groq (/api/chat/transcribe). Pensar: POST /api/jarvis/pensar -> GPT-OSS 120B na Groq (~0,6 s), com as
 // ferramentas pedir_ao_zeus (dados e tarefas vão para o chat do ZEUS completo) e mostrar_quadro. Falar: POST /api/jarvis/falar
-// -> voz grátis do jeff-voz (Piper, voz cadu, ~1 s, roda no próprio servidor em 127.0.0.1:3072). Frases curtas repetidas
+// -> voz grátis do jeff-voz (Edge TTS da Microsoft, voz Antonio, com reserva local; roda em 127.0.0.1:3072). Frases curtas repetidas
 // ("Deixa comigo", "Pronto") saem do cache em data/jarvis-voz/.
 const express = require('express');
 const crypto = require('crypto');

@@ -33,6 +33,17 @@ function alertarQueda(texto) {
 fs.mkdirSync(config.authPath, { recursive: true });
 fs.mkdirSync(config.mediaPath, { recursive: true });
 
+// User-agent com a versão REAL do navegador instalado: versão diferente da do Chrome que roda faz o celular recusar o
+// pareamento ("Não foi possível conectar o aparelho"). Se não der pra ler, usa a 131 (a que o instalador fixa).
+const USER_AGENT = (() => {
+  let major = '131';
+  try {
+    const v = execSync(`${JSON.stringify(config.chromiumPath)} --version`, { timeout: 15000 }).toString();
+    const m = /(\d+)\.\d+\.\d+/.exec(v); if (m) major = m[1];
+  } catch { /* fica a 131 */ }
+  return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`;
+})();
+
 function killZombieChrome() {
   try {
     const pattern = `chromium.*${config.authPath}`;
@@ -389,6 +400,8 @@ function createWAManager({ onMessage, onStateChange }) {
     });
 
     c.on('message', async (msg) => {
+      // Status (stories) dos contatos chegam como mensagem de status@broadcast: nunca entram na fila do agente.
+      if (msg.isStatus || msg.from === 'status@broadcast' || msg.to === 'status@broadcast') return;
       const key = msg.id?._serialized;
       if (key && inboundSeen.has(key)) return;
       if (key) inboundSeen.add(key);
@@ -739,11 +752,11 @@ function createWAManager({ onMessage, onStateChange }) {
           '--disable-infobars',
           '--window-size=1366,768',
           '--lang=pt-BR,pt',
-          '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          '--user-agent=' + USER_AGENT,
         ],
       },
       webVersionCache: { type: 'local' },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      userAgent: USER_AGENT,
     });
   }
 

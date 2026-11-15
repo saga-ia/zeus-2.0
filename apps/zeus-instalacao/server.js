@@ -120,7 +120,7 @@ function telaLista() {
 <td><a href="/admin/r/${esc(r.id)}">Abrir</a></td></tr>`;
   }).join('');
   return moldura('Admin · Instalação ZEUS', `<div class="topo"><h1>Respostas de instalação</h1>
-<div class="acoes"><a class="bt" href="/admin/relatorios">Relatórios</a><a class="bt" href="/admin/versoes">Versões e clientes</a><form method="post" action="/admin/sair"><button type="submit">Sair</button></form></div></div>
+<div class="acoes"><a class="bt" href="/admin/versoes">Versões e clientes</a><form method="post" action="/admin/sair"><button type="submit">Sair</button></form></div></div>
 <div class="card">${itens.length ? `<table><thead><tr><th>Recebido (BRT)</th><th>Empresa</th><th>WhatsApp</th><th>Situação</th><th></th></tr></thead><tbody>${linhas}</tbody></table>`
     : '<p class="vazio">Nenhum envio ainda. Quando um cliente enviar o formulário em zeus-instalacao.jefersonhenrike.com, ele aparece aqui.</p>'}</div>`);
 }
@@ -147,7 +147,6 @@ const servidor = http.createServer(async (req, res) => {
     if (rota.startsWith('/i/')) return require('./links').tratar(req, res, rota, ip, enviar);
     if (rota === '/instalar' || rota.startsWith('/instalar/')) return require('./links').instalar(req, res, rota, ip, { enviar, senhaOk, limite, lerCorpo });
     if (rota.startsWith('/atualizar/')) return require('./versoes').rota(req, res, rota, ip, { enviar, limite, lerCorpo });
-    if (rota === '/relatorio' || rota === '/relatorio.sh' || rota === '/relatorio/arquivos') return require('./relatorios').rota(req, res, rota, ip, { enviar, limite });
 
     if (req.method === 'GET' && (rota === '/' || rota === '/index.html')) {
       return enviar(res, 200, 'text/html; charset=utf-8', fs.readFileSync(PAGINA));
@@ -186,10 +185,6 @@ const servidor = http.createServer(async (req, res) => {
       if (rota === '/admin' && req.method === 'GET') return enviar(res, 200, 'text/html; charset=utf-8', telaLista());
       if (rota.startsWith('/admin/versoes')) {
         const feito = await require('./versoes').admin(req, res, rota, { enviar, lerCorpo, redir, esc, brt, moldura });
-        if (feito !== null) return;
-      }
-      if (rota.startsWith('/admin/relatorios')) {
-        const feito = await require('./relatorios').admin(req, res, rota, { enviar, redir, esc, brt, moldura });
         if (feito !== null) return;
       }
       if (rota === '/admin/sair' && req.method === 'POST') {

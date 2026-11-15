@@ -209,7 +209,8 @@
   const VAD = { minimo: 0.045, folga: 0.035, fator: 1.5, silencioMs: 750, minFalaMs: 400, ruidoMs: 1200, reciclaMs: 20000, maxMs: 25000,
     interromperMs: 350, interromperFator: 1.8, interromperFolga: 0.09 };
   const ALUCINACAO = /acesse o nosso site|www\.|amara\.org|legendas pela|inscreva-se|obrigad[oa] por assistir|^\W*(tchau|obrigad[oa])\W*$/i;
-  const VOCABULARIO = "Conversa com o Zeus, assistente da empresa. Nomes: Zeus, Jeff, Vinicius, Nina, Sobral, Ícaro, Gustavo, Maicom, Otávio, Smith, Tomé, Talles, Eduardo. Ferramentas: Asaas, ClickUp, Meta Ads, Instagram, WhatsApp, LinkedIn, Google Agenda, Central, CRM, carrossel, reels, briefing.";
+  // Vocabulário que ajuda o Whisper com nomes próprios: o nome de quem está falando + o time e as ferramentas do Zeus
+  const vocabulario = () => "Conversa com o Zeus, assistente da empresa. Nomes: Zeus" + (meuNome() ? ", " + meuNome() : "") + ", Nina, Sobral, Ícaro, Gustavo, Maicom, Otávio, Smith, Tomé, Talles, Eduardo. Ferramentas: Asaas, ClickUp, Meta Ads, Instagram, WhatsApp, LinkedIn, Google Agenda, Central, CRM, carrossel, reels, briefing.";
   async function conversar(){
     if(J.conv){ try { await J.conv.endSession(); } catch(err){} return; }
     if(J.conectando) return;
@@ -269,13 +270,13 @@
       let texto = "";
       try {
         const fd = new FormData(); fd.append("audio", blob, "voz." + (blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm"));
-        fd.append("preciso", "1"); fd.append("prompt", VOCABULARIO);
+        fd.append("preciso", "1"); fd.append("prompt", vocabulario());
         const r = await fetch("/api/chat/transcribe", { method: "POST", body: fd }), j = await r.json();
         if(!r.ok) throw new Error(j.error || "HTTP " + r.status);
         texto = String(j.text || "").trim();
       } catch(err){ cfgToast("Não consegui entender o áudio: " + err.message, true); }
       if(!C.ativo) return;
-      if(!texto || ALUCINACAO.test(texto) || texto === VOCABULARIO){ T.fim = 0; return escutar(); }
+      if(!texto || ALUCINACAO.test(texto) || texto === vocabulario()){ T.fim = 0; return escutar(); }
       medir("ouviu"); responder(texto, false);
     }
     async function responder(texto, sistema){
