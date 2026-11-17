@@ -9393,7 +9393,7 @@ async function waCreate(friendly){
   try {
     const r = await fetch("/api/wa/instances", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ friendly }) });
     const j = await r.json();
-    if(!r.ok) throw new Error(j.error || "criacao_falhou");
+    if(!r.ok) throw new Error(j.message || j.error || "criacao_falhou");
     const qr = (j.qr && j.qr.base64 && String(j.qr.base64).startsWith("data:")) ? j.qr.base64 : null;
     waLoad();
     if(!qr){ waSetModal({ step: "qr", name: j.name, friendly, qr: null, state: "Gerando QR code... (pode levar até 1 minuto)" }); return waConnect(j.name, friendly); }
@@ -9413,7 +9413,8 @@ async function waConnect(name, friendlyNovo){
       try {
         const r = await fetch("/api/wa/instances/"+encodeURIComponent(name)+"/qr");
         const j = await r.json();
-        qr = (j.base64 || (j.qrcode && j.qrcode.base64) || null);
+        if(r.status === 409 && j.error === "limite_whatsapp"){ waSetModal({ step: "qr", name, friendly: cur.friendly || name, qr: null, state: j.message }); return; }
+        qr =(j.base64 || (j.qrcode && j.qrcode.base64) || null);
         if(qr && !String(qr).startsWith("data:")) qr = null;
       } catch {}
       if(!qr) await new Promise(ok => setTimeout(ok, 5000));

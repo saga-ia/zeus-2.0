@@ -6,6 +6,7 @@ const http = require('http');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const Database = require('better-sqlite3');
+const waLimite = require('/opt/jeff-apps/jeff-shared/wa-limite');
 
 const execP = promisify(exec);
 
@@ -545,6 +546,14 @@ app.post('/api/wa/instances', apiAuth, exigirAdmin, async (req, res) => {
   if (!friendly || typeof friendly !== 'string') return res.status(400).json({ error: 'friendly_required' });
   const slug = friendly.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || ('wa-' + Date.now());
   const name = slug + '-' + crypto.randomBytes(3).toString('hex');
+  // Limite base do Zeus: no máximo 3 WhatsApps contando o próprio Zeus (jeff-shared/wa-limite.js)
+  try {
+    const lim = await waLimite.estado();
+    if (lim.livres <= 0) return res.status(409).json({ error: 'limite_whatsapp', message: waLimite.mensagemLimite(lim), limite: lim.limite, usados: lim.usados });
+  } catch (e) {
+    console.error('[wa] limite: não deu pra contar as conexões:', e.message);
+    return res.status(503).json({ error: 'limite_indisponivel', message: 'Não consegui conferir quantos WhatsApps já estão conectados. Tente de novo em instantes.' });
+  }
   // syncFullHistory: ao ler o QR, o WhatsApp manda o histórico de conversas do aparelho (a Evolution grava com DATABASE_SAVE_DATA_HISTORIC)
   const r = await evo('POST', '/instance/create', { instanceName: name, qrcode: true, integration: 'WHATSAPP-BAILEYS', syncFullHistory: true });
   if (!r.ok) return res.status(r.status).json({ error: 'create_failed', data: r.data });
@@ -566,6 +575,11 @@ async function garantirHistoricoCompleto(name) {
 // Então a conferência roda em segundo plano, uma vez por número, sem segurar o QR.
 const historicoConferido = new Set();
 app.get('/api/wa/instances/:name/qr', apiAuth, async (req, res) => {
+  // Número já cadastrado ocupa vaga e pode reconectar; só bloqueia se a instalação já passou do limite
+  try {
+    const lim = await waLimite.estado();
+    if (lim.usados > lim.limite) return res.status(409).json({ error: 'limite_whatsapp', message: waLimite.mensagemLimite(lim), limite: lim.limite, usados: lim.usados });
+  } catch (e) { console.error('[wa] limite (qr):', e.message); }
   if (!historicoConferido.has(req.params.name)) {
     historicoConferido.add(req.params.name);
     garantirHistoricoCompleto(req.params.name).catch(() => {});

@@ -76,6 +76,10 @@ log() { echo "[$(ts)] $*" >> "$LOG"; }
 export PATH="/root/.nvm/versions/node/v20.20.2/bin:$PATH"
 export HOME="/root"
 
+# Alerta de login do Claude (WhatsApp + email pro suporte e pro dono). Ver scripts/alerta-login.sh.
+# shellcheck source=alerta-login.sh
+. "$WORKER_DIR/scripts/alerta-login.sh"
+
 log "agent-runner started (pid $$, claude $($CLAUDE_BIN --version 2>/dev/null | head -1))"
 
 while true; do
@@ -124,6 +128,7 @@ while true; do
     echo "{\"ts\":\"$(ts)\",\"count\":$PENDING2,\"ids\":\"$MSG_IDS\",\"model\":\"$CLAUDE_MODEL\",\"words\":$WORD_COUNT}" >> "$TRIGGER_LOG"
     log "spawning claude -p ($PENDING2 pending, ids=$MSG_IDS, model=$CLAUDE_MODEL, words=$WORD_COUNT)"
     cd "$WORKER_DIR"
+    RUN_OUT=$(mktemp /tmp/agent-run.XXXXXX)
     timeout "$RUN_TIMEOUT" "$CLAUDE_BIN" -p \
       --model "$CLAUDE_MODEL" \
       --strict-mcp-config \
@@ -134,9 +139,19 @@ REGRA DE LATÊNCIA (crítica): tente responder em até 30s no caso simples. Se s
 
 Whitelist (sem pedir confirmação): o dono e a equipe deste servidor (AGENT_WHITELIST: $WL_TEXTO), o suporte técnico e a equipe autorizada. Seja conciso. Termine quando todas estiverem processadas." \
       < /dev/null \
-      >> "$LOG" 2>&1
+      > "$RUN_OUT" 2>&1
     EC=$?
+    cat "$RUN_OUT" >> "$LOG"
     log "claude -p finished exit=$EC"
+    if [ "$EC" != "0" ] && grep -qiE "$AUTH_RE" "$RUN_OUT"; then
+      rm -f "$RUN_OUT"
+      log "falha de autenticação do Claude: alerta + espera 60s"
+      auth_fail "$PENDING2" "$MSG_IDS"
+      sleep 60
+      continue
+    fi
+    rm -f "$RUN_OUT"
+    [ "$EC" = "0" ] && auth_ok
 
     # Fail-safe contra loop infinito: se o claude -p timou (exit=124), assume
     # que ele provavelmente ja mandou resposta (5min e tempo suficiente pra

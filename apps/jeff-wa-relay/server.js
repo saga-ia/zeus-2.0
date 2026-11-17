@@ -13,27 +13,43 @@ if (!TOKEN) { console.error('API_TOKEN ausente no .env'); process.exit(1); }
 const SESSION_SLUGS = String(process.env.SESSIONS || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
-if (!SESSION_SLUGS.length) { console.error('SESSIONS ausente no .env'); process.exit(1); }
+// SESSIONS vazio é válido (cliente novo): o relay sobe só com o /health, sem sessão de WhatsApp.
+if (!SESSION_SLUGS.length) console.log('[boot] SESSIONS vazio: relay sem sessões de WhatsApp');
 
-const DEFAULT_SLUG = SESSION_SLUGS[0];
+let DEFAULT_SLUG = null;
 const sessions = new Map();
-
-for (const slug of SESSION_SLUGS) {
-  const inboxId = process.env[`SESSION_${slug}_CHATWOOT_INBOX_ID`];
-  const inboxIdent = process.env[`SESSION_${slug}_CHATWOOT_INBOX_IDENTIFIER`];
-  const chatwoot = createChatwoot({ inboxId, inboxIdent, cacheKey: slug });
-  const session = createSession({
-    slug,
-    dataPath: path.join(__dirname, 'session'),
-    chatwoot,
-  });
-  sessions.set(slug, session);
-  console.log(`[boot] sessao ${slug} inicializada (chatwoot=${chatwoot.enabled ? `inbox ${chatwoot.inboxId}` : 'off'})`);
-}
-
 const inboxToSlug = new Map();
-for (const [slug, s] of sessions) {
-  if (s.chatwoot.enabled) inboxToSlug.set(s.chatwoot.inboxId, slug);
+
+// Limite base do Zeus: no máximo 3 WhatsApps por instalação, contando o próprio Zeus (jeff-shared/wa-limite.js).
+// O relay só sobe as sessões que cabem nas vagas livres; as outras ficam bloqueadas (sem QR, sem reinício em loop).
+// Se não der pra contar, não sobe nenhuma.
+async function iniciarSessoes() {
+  let vagas = 0;
+  try {
+    const lim = await require('/opt/jeff-apps/jeff-shared/wa-limite').estado({ ignorar: ['relay'] });
+    vagas = lim.livres;
+    console.log(`[limite] ${lim.usados} de ${lim.limite} WhatsApps já em uso fora do relay; vagas pro relay: ${vagas}`);
+  } catch (e) {
+    console.error(`[limite] não deu pra contar as conexões (${e.message}); nenhuma sessão vai subir`);
+  }
+  const permitidas = SESSION_SLUGS.slice(0, vagas);
+  const bloqueadas = SESSION_SLUGS.slice(vagas);
+  if (bloqueadas.length) console.warn(`[limite] sessões bloqueadas pelo limite de WhatsApps: ${bloqueadas.join(', ')}`);
+  DEFAULT_SLUG = permitidas[0] || null;
+  for (const slug of permitidas) {
+    const inboxId = process.env[`SESSION_${slug}_CHATWOOT_INBOX_ID`];
+    const inboxIdent = process.env[`SESSION_${slug}_CHATWOOT_INBOX_IDENTIFIER`];
+    const chatwoot = createChatwoot({ inboxId, inboxIdent, cacheKey: slug });
+    const session = createSession({
+      slug,
+      dataPath: path.join(__dirname, 'session'),
+      chatwoot,
+    });
+    sessions.set(slug, session);
+    if (chatwoot.enabled) inboxToSlug.set(chatwoot.inboxId, slug);
+    console.log(`[boot] sessao ${slug} inicializada (chatwoot=${chatwoot.enabled ? `inbox ${chatwoot.inboxId}` : 'off'})`);
+  }
+  console.log(`[http] jeff-wa-relay porta ${PORT} | sessoes: ${permitidas.join(', ') || 'nenhuma'} | default: ${DEFAULT_SLUG || '-'}`);
 }
 
 function pickSession(req) {
@@ -316,7 +332,7 @@ app.post('/logout', auth, requireSession, async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[http] jeff-wa-relay porta ${PORT} | sessoes: ${SESSION_SLUGS.join(', ')} | default: ${DEFAULT_SLUG}`);
+  iniciarSessoes().catch(e => console.error('[boot] falha ao iniciar sessões:', e.message));
 });
 
 process.on('SIGTERM', async () => {
