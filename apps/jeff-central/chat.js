@@ -132,6 +132,8 @@ function busEmit(sid, ev, data) {
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
     const sid = req.params.sid;
+    // Segurança (14/11/2026): sid vinha sem validação e "..%2F" gravava arquivo em qualquer pasta do servidor
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(String(sid || '')) || !stmt.sessGet.get(sid)) return cb(new Error('conversa inválida'));
     const dir = path.join(UPLOADS_ROOT, sid);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
@@ -198,10 +200,12 @@ async function extractFrames(srcPath, count = 4) {
 // comunidade Amara.org"). Medido em 15/11/2026: ruído puro vem com avg_logprob -0,68 a -0,74; fala real, -0,11.
 // Descarta os trechos com cara de silêncio ou de frase inventada.
 const ALUCINACAO_WHISPER = /acesse o nosso site|www\.|\.(com|org|gov|net)(\.br)?\b|amara\.org|legendas pela|legendado por|inscreva-se|ative o sininho|obrigad[oa] por assistir|até o próximo vídeo|até a próxima/i;
-function semAlucinacao(segmentos) {
+// rigoroso: o detector de voz não achou fala; aí só passa trecho com confiança alta (fala real ~ -0,1; invenção ~ -0,7)
+function semAlucinacao(segmentos, rigoroso) {
   const ok = segmentos.filter(sg => {
     const t = String(sg.text || '').trim(), ns = +sg.no_speech_prob || 0, lp = +sg.avg_logprob || 0;
-    const ruim = !t || ns > 0.6 || lp < -0.6 || (ns > 0.3 && lp < -0.4) || ALUCINACAO_WHISPER.test(t);
+    const ruim = !t || ns > 0.6 || lp < -0.6 || (ns > 0.3 && lp < -0.4) || ALUCINACAO_WHISPER.test(t)
+      || (rigoroso && (lp < -0.35 || ns > 0.3));
     if (ruim && t) console.log('[transcrição] descartado (provável invenção do Whisper): ' + JSON.stringify(t.slice(0, 80)) + ' sem_fala=' + ns.toFixed(2) + ' confiança=' + lp.toFixed(2));
     return !ruim;
   });
@@ -221,10 +225,27 @@ async function temFala(audioPath) {
 }
 
 // opts.preciso: whisper-large-v3 (um pouco mais preciso em fala real, ~0,1 s a mais); opts.prompt: vocabulário (nomes próprios)
+// Em 16/11/2026 o detector marcou como "sem voz" gravações reais do navegador (0 ms de fala em 2 a 11 s) e o Jarvis
+// parou de entender. Agora ele não bloqueia sozinho: sem voz detectada, o Whisper roda com o filtro rigoroso e, com
+// JARVIS_DEBUG_VOZ=1, o áudio fica guardado em data/_debug-voz (até 15 arquivos) para descobrir por que o detector errou.
+const DEBUG_VOZ = path.join(__dirname, 'data', '_debug-voz');
+// Só com JARVIS_DEBUG_VOZ=1 no ambiente: guarda a voz das pessoas, então fica desligado por padrão (e nos clientes).
+function guardarDebugVoz(audioPath, v, texto) {
+  if (process.env.JARVIS_DEBUG_VOZ !== '1') return;
+  try {
+    fs.mkdirSync(DEBUG_VOZ, { recursive: true });
+    const ja = fs.readdirSync(DEBUG_VOZ).filter(f => !f.endsWith('.json'));
+    if (ja.length >= 15) return;
+    const base = path.join(DEBUG_VOZ, Date.now() + '-' + path.basename(audioPath));
+    fs.copyFileSync(audioPath, base);
+    fs.writeFileSync(base + '.json', JSON.stringify({ detector: v, whisper: texto }));
+  } catch (e) { console.error('[transcrição] debug voz:', e.message); }
+}
 async function transcribeAudio(audioPath, opts = {}) {
+  let semVoz = null;
   if (opts.preciso) {
     const v = await temFala(audioPath);
-    if (v && v.fala_ms < FALA_MINIMA_MS) { console.log('[transcrição] sem voz humana (' + v.fala_ms + ' ms de fala em ' + v.duracao_ms + ' ms): ignorado'); return ''; }
+    if (v && v.fala_ms < FALA_MINIMA_MS) semVoz = v;
   }
   const key = getGroqKey();
   if (!key) throw new Error('groq_api_key não configurada em Chaves — necessária para transcrever áudio');
@@ -251,7 +272,11 @@ async function transcribeAudio(audioPath, opts = {}) {
         try {
           const j = JSON.parse(body);
           if (res.statusCode >= 300) return reject(new Error('groq: ' + (j.error?.message || body.slice(0, 200))));
-          if (opts.preciso && Array.isArray(j.segments)) return resolve(semAlucinacao(j.segments));
+          if (opts.preciso && Array.isArray(j.segments)) {
+            const t = semAlucinacao(j.segments, !!semVoz);
+            if (semVoz) { console.log('[transcrição] detector não achou voz (' + semVoz.fala_ms + ' ms em ' + semVoz.duracao_ms + ' ms); Whisper rigoroso: ' + (t ? 'aceitou' : 'descartou')); guardarDebugVoz(audioPath, semVoz, t); }
+            return resolve(t);
+          }
           resolve(j.text || '');
         } catch (e) { reject(e); }
       });

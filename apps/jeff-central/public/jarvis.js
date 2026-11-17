@@ -206,8 +206,16 @@
   // (o eco da própria voz é tirado pelo navegador e, por segurança, durante a fala o limiar é mais alto).
   // Detecção de fim de fala que se ajusta ao barulho do ambiente: mede o "piso" de ruído e considera fala só o que
   // passa bem acima dele (com limiar fixo, ventilador ou ar-condicionado faziam a gravação nunca terminar).
-  const VAD = { minimo: 0.045, folga: 0.035, fator: 1.5, silencioMs: 750, minFalaMs: 400, ruidoMs: 1200, reciclaMs: 20000, maxMs: 25000,
-    interromperMs: 350, interromperFator: 1.8, interromperFolga: 0.09 };
+  // Volume medido em dB (RMS do sinal). Medido em 16/11/2026 nas gravações reais: chiado de fundo fica entre -55 e
+  // -80 dB e disparava a medida antiga (média das frequências), gravando "silêncio" e perdendo o começo da fala de verdade.
+  // Fala: acima de -45 dB e pelo menos 14 dB acima do fundo. Enquanto o Zeus fala: acima de -32 dB e 24 dB acima do
+  // fundo, para o resto do eco da caixa de som não contar como interrupção.
+  // Interrupção com eco: em 16/11/2026 o eco da voz do Zeus na caixa de som (-20 a -38 dB) era tomado como você falando;
+  // o Zeus parava no meio e o "áudio" era só o eco. Agora a tela compara o microfone com o que o Zeus está tocando
+  // naquele instante e aprende o nível normal do eco: só é interrupção se o microfone passar 12 dB acima disso.
+  // E na dúvida o Zeus só abaixa o volume: se a transcrição vier vazia, ele volta e termina a frase.
+  const VAD = { minimoDb: -45, folgaDb: 14, silencioMs: 750, minFalaMs: 400, ruidoMs: 1200, reciclaMs: 20000, maxMs: 25000,
+    interromperMs: 400, ecoFolgaDb: 12, pausaMinimoDb: -40, pausaFolgaDb: 18, volumeAbaixado: 0.15 };
   const ALUCINACAO = /acesse o nosso site|www\.|amara\.org|legendas pela|inscreva-se|obrigad[oa] por assistir|^\W*(tchau|obrigad[oa])\W*$/i;
   // Vocabulário que ajuda o Whisper com nomes próprios: o nome de quem está falando + o time e as ferramentas do Zeus
   const vocabulario = () => "Conversa com o Zeus, assistente da empresa. Nomes: Zeus" + (meuNome() ? ", " + meuNome() : "") + ", Nina, Sobral, Ícaro, Gustavo, Maicom, Otávio, Smith, Tomé, Talles, Eduardo. Ferramentas: Asaas, ClickUp, Meta Ads, Instagram, WhatsApp, LinkedIn, Google Agenda, Central, CRM, carrossel, reels, briefing.";
@@ -220,10 +228,13 @@
     catch(err){ J.conectando = false; pintar(); cfgToast("O navegador não liberou o microfone.", true); return; }
     // estado: "ouvindo" (gravando, esperando você), "ocupado" (entendendo/pensando), "falando" (Zeus fala; gravando para interrupção)
     const C = { ativo: true, mudo: false, fila: [], rec: null, estado: "ocupado", falou: 0, silencio: 0, piso: null, iniRec: 0, vez: 0 };
-    const mic = ctxAudio().createAnalyser(); mic.fftSize = 128; mic.smoothingTimeConstant = 0.6; ctxAudio().createMediaStreamSource(stream).connect(mic);
-    const micBuf = new Uint8Array(mic.frequencyBinCount);
-    const nivelMic = () => { mic.getByteFrequencyData(micBuf); let s = 0; for(const v of micBuf) s += v; return s / micBuf.length / 255; };
+    const mic = ctxAudio().createAnalyser(); mic.fftSize = 2048; mic.smoothingTimeConstant = 0.6; ctxAudio().createMediaStreamSource(stream).connect(mic);
+    const micOnda = new Float32Array(mic.fftSize);
+    const dbMic = () => { mic.getFloatTimeDomainData(micOnda); let s = 0; for(const v of micOnda) s += v * v; return 20 * Math.log10(Math.sqrt(s / micOnda.length) + 1e-9); };
     const tipo = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
+    const saidaOnda = new Float32Array(2048);
+    const dbSaida = () => { const a = J.audio && J.medidorSaida; if(!a) return -100;
+      a.getFloatTimeDomainData(saidaOnda); let s = 0; for(const v of saidaOnda) s += v * v; return 20 * Math.log10(Math.sqrt(s / saidaOnda.length) + 1e-9); };
     const dados = () => { const a = C.estado === "falando" && J.analyser ? J.analyser : mic; const d = new Uint8Array(a.frequencyBinCount); a.getByteFrequencyData(d); return d; };
     const T = {};
     const medir = (k) => { T[k] = Date.now(); };
@@ -240,7 +251,7 @@
     function pararRec(descartar){ const r = C.rec; C.rec = null; if(r && r.state !== "inactive"){ r.descartar = !!descartar; r.stop(); } }
     function escutar(){
       if(!C.ativo) return;
-      C.estado = "ouvindo"; C.falou = 0; C.silencio = 0; J.fase = "ouvindo"; pintar();
+      C.interrompeu = null; C.estado = "ouvindo"; C.falou = 0; C.silencio = 0; J.fase = "ouvindo"; pintar();
       if(C.fila.length && proximo()) return;
       gravar();
     }
@@ -248,18 +259,28 @@
     const laco = setInterval(() => {
       if(!C.ativo) return clearInterval(laco);
       if(C.mudo || J.ditando || C.estado === "ocupado"){ C.falou = 0; C.silencio = 0; return; }
-      const n = nivelMic(), falando = C.estado === "falando";
-      if(C.piso == null) C.piso = n;
-      if(!falando){ if(n < C.piso) C.piso = n; else if(!C.falou || C.silencio) C.piso += (n - C.piso) * 0.02; } // acompanha o ruído, devagar
-      let limiar = Math.max(VAD.minimo, C.piso + VAD.folga, C.piso * VAD.fator);
-      if(falando) limiar = Math.max(limiar * VAD.interromperFator, C.piso + VAD.interromperFolga);
-      if(n > limiar){ C.falou += 50; C.silencio = 0; } else if(C.falou){ if(!C.silencio) T.calou = Date.now(); C.silencio += 50; }
+      const n = dbMic(), falando = C.estado === "falando", tocandoAinda = !!J.audio;
+      if(C.piso == null) C.piso = Math.min(n, -50);
+      if(!tocandoAinda && n < -20){ if(n < C.piso) C.piso = C.piso + (n - C.piso) * 0.3; else if(!C.falou || C.silencio) C.piso += (n - C.piso) * 0.01; } // fundo do ambiente, acompanha devagar
+      const limiarPausa = Math.max(VAD.pausaMinimoDb, C.piso + VAD.pausaFolgaDb); // Zeus entre frases ou com volume abaixado
       if(falando){
-        if(C.falou >= VAD.interromperMs){ // você falou por cima: o Zeus para e escuta (a gravação já pegou o começo da sua fala)
-          C.vez++; pararFala(); J.legenda = ""; C.estado = "ouvindo"; J.fase = "ouvindo"; T.fim = 0; C.iniRec = Date.now(); pintar();
+        const out = dbSaida(); C.outEma = C.outEma == null ? out : C.outEma * 0.6 + out * 0.4;
+        let voz;
+        if(C.outEma > -60){ // Zeus tocando agora: compara com o eco que volta da caixa de som
+          const acopl = n - C.outEma;
+          if(C.acopl == null) C.acopl = acopl;
+          voz = n > VAD.minimoDb && acopl - C.acopl > VAD.ecoFolgaDb;
+          if(!voz && !C.falou) C.acopl += (acopl - C.acopl) * (acopl > C.acopl ? 0.05 : 0.02); // aprende o eco normal
+        } else voz = n > limiarPausa;
+        if(voz){ C.falou += 50; C.silencio = 0; } else if(C.falou) C.silencio += 50;
+        if(C.falou >= VAD.interromperMs){ // você falou por cima: o Zeus abaixa o volume e escuta (a gravação já pegou o começo)
+          C.interrompeu = C.vez; C.vez++; if(J.ganho) try { J.ganho.gain.value = VAD.volumeAbaixado; } catch(err){}
+          C.estado = "ouvindo"; J.fase = "ouvindo"; T.fim = 0; C.iniRec = Date.now(); C.silencio = 0; pintar();
         } else if(C.falou && C.silencio >= VAD.ruidoMs){ C.falou = 0; C.silencio = 0; }
         return;
       }
+      const limiar = tocandoAinda ? limiarPausa : Math.max(VAD.minimoDb, C.piso + VAD.folgaDb);
+      if(n > limiar){ C.falou += 50; C.silencio = 0; } else if(C.falou){ if(!C.silencio) T.calou = Date.now(); C.silencio += 50; }
       const tempo = Date.now() - C.iniRec;
       if(C.falou >= VAD.minFalaMs && (C.silencio >= VAD.silencioMs || tempo > VAD.maxMs)){ if(!C.silencio) T.calou = Date.now(); medir("fim"); C.estado = "ocupado"; pararRec(false); return; }
       if(C.falou && C.falou < VAD.minFalaMs && C.silencio >= VAD.ruidoMs){ C.falou = 0; C.silencio = 0; } // barulho curto, não era fala
@@ -276,7 +297,16 @@
         texto = String(j.text || "").trim();
       } catch(err){ cfgToast("Não consegui entender o áudio: " + err.message, true); }
       if(!C.ativo) return;
-      if(!texto || ALUCINACAO.test(texto) || texto === vocabulario()){ T.fim = 0; return escutar(); }
+      if(!texto || ALUCINACAO.test(texto) || texto === vocabulario()){
+        T.fim = 0;
+        if(C.interrompeu != null && J.audio){ // era eco ou barulho: o Zeus volta ao volume normal e termina a frase
+          C.vez = C.interrompeu; C.interrompeu = null; if(J.ganho) try { J.ganho.gain.value = 1; } catch(err){}
+          C.estado = "falando"; C.falou = 0; C.silencio = 0; J.fase = "falando"; pintar(); gravar(); return;
+        }
+        return escutar();
+      }
+      if(J.audio){ pararFala(); J.legenda = ""; } // interrupção de verdade: agora sim o Zeus para
+      C.interrompeu = null;
       medir("ouviu"); responder(texto, false);
     }
     async function responder(texto, sistema){
@@ -302,7 +332,7 @@
     // Zeus fala com o microfone aberto: grava de novo do zero para pegar uma interrupção desde o começo
     function dizer(fala, medirTempo){
       const vez = ++C.vez;
-      C.estado = "falando"; C.falou = 0; C.silencio = 0; gravar();
+      C.interrompeu = null; C.outEma = null; C.estado = "falando"; C.falou = 0; C.silencio = 0; gravar();
       falar(fala, () => { if(C.ativo && vez === C.vez) escutar(); }, () => { if(medirTempo){ medir("tocou"); relatar(); } T.fim = 0; });
     }
     // Mensagem do sistema (resultado do Zeus, clique na tela): fala assim que você não estiver falando
@@ -348,27 +378,58 @@
       if(tipo === "zeus-quadro") return " Quadro atualizado na tela. ";
       return " Dados mostrados na tela: " + c.replace(/\s+/g, " ").slice(0, 1200) + " "; }).replace(/!\[[^\]]*\]\([^)]*\)/g, " (imagem na tela) ").trim().slice(0, 4000);
   }
-  function pararFala(){ const a = J.audio; J.audio = null; if(a){ try { a.onended = null; a.onerror = null; a.pause(); a.removeAttribute("src"); a.load(); } catch(err){} } clearTimeout(J.legT); }
+  // Um tocador só para todas as falas, criado e "destravado" no primeiro toque na tela. O Safari do iPhone só deixa
+  // tocar áudio que começou num toque: tocar depois de buscar a resposta dava "The request is not allowed by the user
+  // agent" (visto em 16/11/2026). Tocador destravado uma vez pode tocar de novo depois, mesmo sem toque.
+  // Caminho do som: tocador -> volume (a conversa abaixa enquanto confere uma interrupção) -> analisador (anel) -> caixa;
+  // o medidor (dB da voz do Zeus) separa o eco dele de uma interrupção sua.
+  let _voz = null, _destravado = false;
+  function tocadorVoz(){
+    if(_voz) return _voz;
+    const el = new Audio(); el.crossOrigin = "anonymous"; el.preload = "auto"; el.playsInline = true; el.setAttribute("playsinline", "");
+    const v = { el, ganho: null, analisador: null, medidor: null };
+    try { const ctx = ctxAudio(), g = ctx.createGain(); ctx.createMediaElementSource(el).connect(g);
+      const a = ctx.createAnalyser(); a.fftSize = 128; a.smoothingTimeConstant = 0.75; g.connect(a); a.connect(ctx.destination);
+      const m = ctx.createAnalyser(); m.fftSize = 2048; g.connect(m);
+      Object.assign(v, { ganho: g, analisador: a, medidor: m }); } catch(err){}
+    _voz = v; return v;
+  }
+  const SILENCIO = (() => { // 0,1 s de silêncio (WAV) para destravar o som no toque
+    const n = 800, b = new Uint8Array(44 + n), d = new DataView(b.buffer), txt = (o, t) => { for(let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+    txt(0, "RIFF"); d.setUint32(4, 36 + n, true); txt(8, "WAVE"); txt(12, "fmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+    d.setUint32(24, 8000, true); d.setUint32(28, 8000, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true); txt(36, "data"); d.setUint32(40, n, true); b.fill(128, 44);
+    return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+  })();
+  function destravarSom(){
+    try { ctxAudio(); } catch(err){}
+    if(_destravado || J.audio) return;
+    const v = tocadorVoz(); v.el.src = SILENCIO;
+    try { const p = v.el.play(); if(p && p.then) p.then(() => { _destravado = true; }).catch(() => {}); else _destravado = true; } catch(err){}
+  }
+  ["touchend", "click"].forEach(t => document.addEventListener(t, destravarSom, { capture: true, passive: true }));
+  function pararFala(){ J.falaId = (J.falaId || 0) + 1; J.audio = null; const v = _voz;
+    if(v){ try { v.el.onended = null; v.el.onerror = null; v.el.pause(); v.el.removeAttribute("src"); v.el.load(); } catch(err){} } clearTimeout(J.legT); }
   // Texto falado: sem markdown, blocos, links (o servidor limpa igual; aqui é para a legenda e para caber na URL)
   const limparFala = t => String(t || "").replace(/```[\s\S]*?```/g, " ").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "")
     .replace(/[*_#>`|]/g, "").replace(/^\s*[-•]\s+/gm, "").replace(/[—–]/g, ",").replace(/\s+,/g, ",").replace(/\s+/g, " ").trim().slice(0, 1500);
   // A voz toca enquanto ainda está sendo gerada (o <audio> lê o áudio em fluxo do /api/jarvis/falar)
   async function falar(txt, aoAcabar, aoTocar){
     const falado = limparFala(txt);
-    const falhou = err => { if(J.audio !== a) return; J.audio = null; set("fase", "ocioso"); J.legenda = falado.slice(0, 300); pintarLegenda(); cfgToast("Sem voz agora (" + (err && err.message || "erro") + "). A resposta está na legenda.", true); if(aoAcabar) setTimeout(aoAcabar, 2500); };
     pararFala();
-    const a = new Audio(); J.audio = a; a.crossOrigin = "anonymous"; a.preload = "auto";
-    if(!falado){ J.audio = null; if(aoAcabar) aoAcabar(); return; }
-    try { novoAnalisador(ctxAudio().createMediaElementSource(a)); J.analyser.connect(ctxAudio().destination); } catch(err){}
+    if(!falado){ if(aoAcabar) aoAcabar(); return; }
+    const v = tocadorVoz(), a = v.el, id = J.falaId, minha = () => J.falaId === id && J.audio === a;
+    const falhou = err => { if(!minha()) return; J.audio = null; J.analyser = null; set("fase", "ocioso"); J.legenda = falado.slice(0, 300); pintarLegenda(); cfgToast("Sem voz agora (" + (err && err.message || "erro") + "). A resposta está na legenda.", true); if(aoAcabar) setTimeout(aoAcabar, 2500); };
+    J.audio = a; J.analyser = v.analisador; J.ganho = v.ganho; J.medidorSaida = v.medidor;
+    if(v.ganho) try { v.ganho.gain.value = 1; } catch(err){}
     a.onerror = () => falhou(new Error("a voz não carregou"));
-    a.onended = () => { if(J.audio !== a) return; J.audio = null; J.analyser = null; J.legenda = ""; J.fase = "ocioso";
+    a.onended = () => { if(!minha()) return; J.audio = null; J.analyser = null; J.legenda = ""; J.fase = "ocioso";
       if(aoAcabar){ aoAcabar(); return; }
       pintar();
       if(J.falas.length) setTimeout(proximaFala, 300); // resultado pronto esperando: fala antes de voltar a ouvir
       else if(J.continuo && document.getElementById("jv-root")) setTimeout(ouvir, 400); };
     a.src = "/api/jarvis/falar?t=" + encodeURIComponent(falado);
     set("fase", "falando");
-    try { await a.play(); if(J.audio !== a) return; if(aoTocar) aoTocar(); legendar(falado, isFinite(a.duration) ? a.duration : falado.length * 0.062); }
+    try { await a.play(); _destravado = true; if(!minha()) return; if(aoTocar) aoTocar(); legendar(falado, isFinite(a.duration) ? a.duration : falado.length * 0.062); }
     catch(err){ falhou(err); }
   }
   // Legenda frase a frase, no ritmo da fala (tempo proporcional ao tamanho de cada frase)
