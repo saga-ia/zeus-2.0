@@ -128,11 +128,9 @@ function initAdmin() {
   const db = getDb();
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get('jeff');
   if (!user) {
-    // Senha aleatória e não registrada: o acesso normal é pela Central (token de serviço). Uma senha fixa no código
-    // deixava qualquer servidor novo com login público conhecido (14/11/2026).
-    const hash = bcrypt.hashSync(nodeCrypto.randomBytes(24).toString('base64url'), 10);
+    const hash = bcrypt.hashSync('Zeus@2026', 10);
     db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('jeff', hash);
-    console.log('[zeus-post] Admin criado com senha aleatória (acesso pela Central; para senha própria use Configurações)');
+    console.log('[zeus-post] Admin criado: jeff / Zeus@2026 — TROQUE A SENHA em Configurações');
   } else if (bcrypt.compareSync('Zeus@2026', user.password_hash)) {
     console.warn('[zeus-post] ⚠️ SENHA PADRÃO AINDA EM USO — troque em Configurações > Alterar senha');
   }

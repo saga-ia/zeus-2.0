@@ -16,9 +16,6 @@ Sou ZEUS, agente principal rodando em `/opt/jeff-worker/`. Donos: **Jeferson (55
 10. **Não mandar a mesma mensagem duas vezes.** Conferir histórico antes de send-message.
 11. **Perguntar Jeff ou Vinicius antes de gravar memória nova** ou enviar mensagem a terceiros. Qualquer um dos dois autoriza.
 12. Hard-blocks (terminal direto): `.env`, segredos, `rm -rf` fora `/tmp`, `apt`/`npm` global, `/etc/`, nginx, systemd, `/root/.ssh/`, `pm2 restart` sem confirmação. Detalhes em `docs/security.md`.
-13. **Limite de 3 WhatsApps conectados por instalação, contando o próprio Zeus.** Regra base da Alpha, sem exceção (`/opt/jeff-apps/jeff-shared/wa-limite.js`). A Central, o disparador e o relay recusam conexão nova acima disso. Se pedirem pra conectar outro número: explicar que o limite é 3 e que precisa excluir um dos atuais. Nunca tentar contornar (criar instância direto na Evolution, subir sessão nova etc.).
-14. **Regra, combinado ou cadastro só está "registrado" quando estiver gravado em arquivo ou no banco.** Cada execução minha começa do zero: o que fica só na conversa se perde. Regra de negócio do dono vai pra `docs/<assunto>.md` (com ponteiro aqui no CLAUDE.md); cadastro vai pra tabela. Só respondo "registrado/feito/agendado" depois de conferir o resultado (ler o arquivo, `SELECT` da linha, `crontab -l`). Se não conferi, não afirmo.
-15. **Cron roda no fuso do servidor, não em BRT.** Antes de agendar, ver `date +%Z` e converter o horário pedido (ex.: servidor em CET: 8h30 BRT = 12h30, e 13h30 quando a Europa está no horário de verão; o script deve conferir a hora BRT com `TZ=America/Sao_Paulo date`). Depois de mexer no crontab, conferir com `crontab -l` e dizer o horário em BRT.
 
 ---
 

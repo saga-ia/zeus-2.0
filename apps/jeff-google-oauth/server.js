@@ -191,6 +191,4 @@ a{color:#60a5fa}code{background:#1b2027;padding:2px 6px;border-radius:4px;font-s
 h1{font-weight:600;letter-spacing:-.02em}</style></head><body><h1>${title}</h1>${bodyHtml}</body></html>`;
 }
 
-// 0.0.0.0: o proxy (NPM, em Docker) chega por 172.17.0.1; de fora o UFW só libera 22/80/443.
-const HOST = process.env.HOST || '0.0.0.0';
-app.listen(PORT, HOST, () => console.log(`[google-oauth] listening on ${HOST}:${PORT}`));
+app.listen(PORT, '127.0.0.1', () => console.log(`[google-oauth] listening on 127.0.0.1:${PORT}`));

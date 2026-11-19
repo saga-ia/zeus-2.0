@@ -211,10 +211,10 @@
       <span style="width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:rgba(15,122,104,0.14);display:flex;align-items:center;justify-content:center">${icon(ICONS.connectors, 18, VERDE)}</span>
       <div style="flex:1 1 320px;min-width:0">
         <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
-          <strong style="${HEAD};font-size:14.5px;font-weight:600">CRM ainda não conectado</strong>
-          <span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;color:#B54708;border:1px solid rgba(181,71,8,0.35);background:#FFFFFF;padding:2px 9px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#B54708"></span>DADOS DE EXEMPLO</span>
+          <strong style="${HEAD};font-size:14.5px;font-weight:600">Conexão direta com o CRM</strong>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;color:${VERDE};border:1px solid rgba(15,122,104,0.35);background:#FFFFFF;padding:2px 9px;border-radius:20px"><span class="mvd-pulso" style="width:6px;height:6px;border-radius:50%;background:${VERDE}"></span>CONECTADO</span>
         </div>
-        <div style="font-size:12.5px;color:#3C3C44;line-height:1.55;margin-top:4px">Os números desta aba são ilustrativos, só para mostrar como a tela funciona: não são negócios da empresa. Para ver os dados reais, peça ao suporte para ligar o CRM da empresa a esta tela.</div>
+        <div style="font-size:12.5px;color:#3C3C44;line-height:1.55;margin-top:4px">Os dados desta aba vêm do CRM: negócios, etapas, valores, vendedores, canais e motivos de perda são lidos direto da base, e os filtros recortam esses dados na hora.</div>
         <div style="font-size:11.5px;color:${CINZA};margin-top:5px">${B.length.toLocaleString("pt-BR")} negócios · ${FUNIS.length} funis · ${VENDEDORES.length} vendedores · ${CANAIS.length} canais de origem</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto">

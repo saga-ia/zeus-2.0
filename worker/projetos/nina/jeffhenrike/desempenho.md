@@ -72,3 +72,46 @@ Fonte: scripts/social-metrics.sh ig 12. Mediana, por mil alcançados.
 **DOBRAR:** nenhum formato nessa revisão — imagem já chegou a 2:1 sobre carrossel (meta da semana passada cumprida). Em vez de dobrar mais, observar se a proporção se mantém a próxima semana antes de forçar mais.
 
 **TESTAR:** tema prova social / indicação (2x, substitui o teste de quote-card que não rodou 3 semanas) — hipótese a partir do post "Vinte seguidores engajados, três clientes do mesmo círculo e indicação do mesmo grupo..." (DfIEfYVitXl, 30/10 14h01, alcance 2.014 — 4x a mediana geral e o maior da semana, mesmo com score_mil 0 e n=1). Repetir o ângulo de prova social por indicação em mais 2 posts de imagem na semana, em dias não consecutivos. Métrica que decide: alcance ≥ 1.200 confirma (mediana de imagem x2); abaixo disso, trata como ponto fora da curva e descarta.
+
+## Revisão — 09/11/2026 (últimos 12 posts, 04/11 a 07/11/2026)
+- n = 12 | mediana alcance 337 | mediana salvos/mil 0 | mediana compart/mil 0 | seguidores/mil sem dado.
+- Aviso do script: mediana zero em salvos/mil e compart/mil → decisão por rank/score_mil e por mediana de alcance por formato.
+- Janela de só 4 dias (04/11 a 07/11) pra 12 posts = 3 posts/dia de média, cadência mais apertada que nas revisões anteriores (que cobriam 4 a 7 dias). Mediana geral de alcance caiu pela 3ª revisão seguida: 1.086,5 (26/10) → 512 (02/11) → 337 (09/11). Queda de ~34% essa semana, ~69% em 3 semanas. Hipótese: aumento de frequência pode estar saturando o mesmo público. Registrar e observar se a cadência recua.
+- Mediana de alcance por formato: imagem 331 (7 posts), carrossel 270 (4 posts, média dos 2 do meio), vídeo/reel n=1 (500, sem base de comparação).
+
+**Placar da semana passada (decisões de 02/11):**
+- PARAR carrossel no horário fixo 17h01 (reduzir, não eliminar) → NÃO EXECUTADO, 2ª semana seguida (e 4ª desde 19/10 que a reorientação de carrossel não é seguida na prática). Carrossel saiu nos 4 dias da janela, sempre por volta de 17h: 04/11 (343), 05/11 (196), 06/11 (197), 07/11 (350). Mediana do formato (270) segue abaixo da imagem (331), mas a diferença está encolhendo semana a semana (776→605,5→331 vs 234,5→270 no carrossel). Mantenho o registro de alcance fraco, mas chamo atenção pro ponto novo abaixo.
+- MANTER imagem única padrão → CONFIRMADO. Mediana 331 (bate com a mediana geral) e os 2 maiores alcances absolutos da semana são imagem: "Proposta de doze páginas, seis pacotes e quatro bônus..." (903) e "Tem empresário que acha que o problema é tráfego..." (709).
+- DOBRAR imagem já cumprido (2:1) → PARCIALMENTE MANTIDO. Proporção da semana ficou 7 imagem : 4 carrossel : 1 vídeo ≈ 1,75:1, perto do 2:1 da semana passada, não caiu pra 50/50 de novo.
+- TESTAR prova social/indicação (2x) → NÃO EXECUTADO. Nenhum dos 12 posts tem tema de indicação/círculo/prova social. 2ª tentativa de teste seguida (depois do quote-card, que não rodou em 3 semanas) que não chega a sair do papel. Isso já é padrão de execução, não de estratégia: registrar como ponto de atenção operacional pro Jeff, e não propor um 3º teste novo até entender por que os testes não chegam a quem publica.
+
+**Achado novo (não estava no placar):** o post de melhor score_mil da semana foi de novo um carrossel, 2ª semana seguida — "ELE CORTOU 60% DOS CLIENTES E DOBROU O LUCRO" (DfhBW..., 350 de alcance, 1 salvo, 2,86/mil, rank 1), igual à semana passada quando "7 PASSOS PRA MONTAR 90 DIAS DE CONTEÚDO" (4,37/mil) também foi carrossel e também o melhor score da semana. Os dois são carrossel de "caso com número" (transformação/resultado), não listicle didático genérico. Amostra ainda pequena (n=2, em 2 semanas), mas é repetição do mesmo subformato vencendo em engajamento apesar do alcance fraco do carrossel em geral — vale testar de propósito, não só observar.
+
+**PARAR:** carrossel didático genérico ("4 motivos...", "consistência não é...") fora do formato caso/transformação — alcance mediano do formato (270) segue abaixo da imagem (331) pela 4ª semana, e os 2 carrosséis sem caso numérico da semana ("4 MOTIVOS PRO SEU CONTEÚDO ATRAIR CONCORRENTE" 197, "CONSISTÊNCIA NÃO É POSTAR SEMPRE" 196) ficaram entre os piores alcances da semana, sem nenhum salvo ou compartilhamento.
+
+**MANTER:** imagem como motor de alcance — mediana 331, praticamente a mediana geral, e segura os 2 maiores alcances absolutos da semana (903, 709).
+
+**DOBRAR:** carrossel "caso de transformação com número" (ex: "ele cortou 60% dos clientes e dobrou o lucro") — 2ª semana seguida que esse subformato específico (diferente do listicle didático) entrega o melhor score_mil da semana. Ainda é n=2, então trato como padrão em formação, não confirmado: dobrar a frequência desse subformato especificamente, não do carrossel em geral.
+
+**TESTAR:** carrossel caso/transformação com número, 2x na semana, em dias fixos e marcados no calendário (pra resolver o problema de execução que vem se repetindo) — hipótese: se 2 semanas seguidas um caso numérico ganhou o score_mil da semana, um 3º e 4º caso confirmam o padrão. Métrica que decide: score_mil (salvos+compart por mil) ≥ 2 em pelo menos 1 dos 2 confirma; abaixo disso nos dois, descarta. Os testes de quote-card e prova social/indicação ficam descartados por falta de execução, não por resultado — não entram de novo até ter um motivo pra crer que vão rodar.
+
+## Revisão — 16/11/2026 (últimos 12 posts, 04/11 a 14/11/2026)
+- n = 12 | mediana alcance 517,5 | mediana salvos/mil 0 | mediana compart/mil 0 | seguidores/mil sem dado.
+- Aviso do script: mediana zero em salvos/mil e compart/mil → decisão por rank/score_mil e por mediana de alcance por formato.
+- Mediana de alcance por formato: imagem 529 (7 posts: 290, 414, 506, 529, 529, 592, 1516), carrossel 373,5 (4 posts: 269, 317, 430, 537), vídeo/reel n=1 (613, sem base de comparação).
+- **Achado crítico — cadência parou:** dos 12 posts da janela, 11 já eram os mesmos avaliados na revisão de 09/11 (posts de 04/11 a 07/11). Só 1 post é novo: 14/11 14h40, imagem "TODO MUNDO CORREU PRA BUSCA POR IA. QUASE NINGUÉM PROVOU QUE VENDEU." (506 de alcance). Entre 08/11 e 13/11, zero publicações — 6 dias corridos sem post. 15/11 e 16/11 (hoje) também sem post até o momento desta revisão.
+
+**Placar da semana passada (calendário gerado em 09/11, plano de Ter 10/11 a Seg 16/11):**
+- 0 de 7 dias do calendário saíram como planejado. Nenhum post em 10/11, 11/11, 12/11, 13/11, 15/11 ou 16/11.
+- O único post do período (14/11) devia ser o "TESTE #2": carrossel caso de transformação com número. Saiu como imagem, com tema diferente ("busca por IA"), sem nenhuma relação com o plano.
+- DOBRAR/TESTAR carrossel caso de transformação (2x, 11/11 e 14/11) → NÃO EXECUTADO. 0 de 2 carrosséis de teste saíram. Essa é a 3ª semana seguida em que um teste de formato não chega a rodar (quote-card em 19/10, 26/10 e 02/11; prova social em 02/11 e 09/11; agora carrossel caso/transformação em 09/11 e 16/11).
+- PARAR carrossel didático genérico → sem post novo pra confirmar ou descartar; leitura mantida pelos dados reciclados (abaixo).
+- MANTER imagem → o único post novo da semana (506) ficou dentro da mediana do formato (529), mas é n=1 — leitura fraca.
+
+**PARAR:** carrossel didático genérico fora do formato caso/transformação — nos 3 carrosséis desse subtipo ainda na janela (06/11 "4 MOTIVOS..." 317, 05/11 "CONSISTÊNCIA NÃO É POSTAR SEMPRE..." 269, 04/11 "7 ERROS NA PROPOSTA..." 430, mediana 317), alcance segue bem abaixo da imagem (529). Dado 100% reciclado da semana passada — nenhum carrossel novo saiu pra testar de novo.
+
+**MANTER:** imagem única padrão — único post novo da semana (506) dentro da mediana do formato (529). Amostra de 1 post: leitura fraca, mas é o único dado novo que a semana produziu.
+
+**DOBRAR:** nenhum formato esta semana. Com 1 post publicado em 10 dias corridos (04/11 a 14/11), e 0 nos últimos 6 dias (08/11 a 13/11) e nos 2 dias mais recentes (15 e 16/11), o problema não é proporção de formato — é frequência total, que caiu a praticamente zero.
+
+**TESTAR:** não proponho um 4º teste de formato novo. Quote-card, prova social e carrossel caso/transformação — 3 testes seguidos — falharam em SAIR DO PAPEL, não em resultado. O teste desta semana é operacional, não de conteúdo: 1 post por dia, sem falta, no formato que já comprovou que funciona (imagem). Métrica que decide: 7 de 7 dias da semana com post publicado. Só depois de confirmar que a cadência mínima volta a rodar, retomo teste de formato.

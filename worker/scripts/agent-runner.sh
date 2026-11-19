@@ -16,21 +16,11 @@ POLL=5         # idle poll interval
 COOLDOWN=15    # cooldown after each claude run (or when deferring)
 RUN_TIMEOUT=600 # max seconds per claude -p run (10min)
 
-# Autorizados: AGENT_WHITELIST do .env (dono, suporte e equipe), comparando os 8 últimos dígitos
-# (o WhatsApp às vezes entrega celular brasileiro sem o 9: 558591143501 x 5585991143501).
-WL_RAW="$(sed -n 's/^AGENT_WHITELIST=//p' "$WORKER_DIR/.env" 2>/dev/null | tail -n1 | tr -d "\"' ")"
-# + números guardados de versões antigas (a atualização copia pra cá os que eram fixos no código)
-WL_EXTRA="$(tr -cs '0-9' ',' < "$WORKER_DIR/data/agent-whitelist-extra.txt" 2>/dev/null || true)"
-WL_RAW="$(printf '%s,%s' "$WL_RAW" "$WL_EXTRA" | tr -s ',' | sed 's/^,//; s/,$//')"
-WL_SQL="$(printf '%s' "$WL_RAW" | tr ',' '\n' | tr -cd '0-9\n' | awk 'length>=8{printf "%s\x27%s\x27", (n++?",":""), substr($0,length-7)}')"
-[ -n "$WL_SQL" ] || WL_SQL="'--sem-whitelist--'"
-WL_TEXTO="$(printf '%s' "$WL_RAW" | tr ',' ' ')"
-
 # Only fire for messages from authorized senders. Stale processed_by_agent=0
 # rows from non-whitelist contacts (legacy) are ignored.
 PENDING_QUERY="SELECT COUNT(*) FROM messages
 WHERE processed_by_agent=0 AND from_me=0 AND (
-  substr(contact_phone,-8) IN ($WL_SQL)
+  contact_phone IN ('5511910075450','5585991143501')
   OR is_group=1
   OR chat_id = COALESCE((SELECT value FROM app_settings WHERE key='internal_team_group_jid'),'')
   OR contact_phone IN (
@@ -43,7 +33,7 @@ WHERE processed_by_agent=0 AND from_me=0 AND (
 PENDING_IDS_QUERY="SELECT GROUP_CONCAT(id) FROM (
   SELECT id FROM messages
   WHERE processed_by_agent=0 AND from_me=0 AND (
-    substr(contact_phone,-8) IN ($WL_SQL)
+    contact_phone IN ('5511910075450','5585991143501')
     OR is_group=1
     OR chat_id = COALESCE((SELECT value FROM app_settings WHERE key='internal_team_group_jid'),'')
     OR contact_phone IN (
@@ -58,7 +48,7 @@ PENDING_IDS_QUERY="SELECT GROUP_CONCAT(id) FROM (
 # Text of pending messages for model selection (item 3)
 PENDING_TEXT_QUERY="SELECT GROUP_CONCAT(coalesce(body,transcription,''), ' ') FROM messages
 WHERE processed_by_agent=0 AND from_me=0 AND (
-  substr(contact_phone,-8) IN ($WL_SQL)
+  contact_phone IN ('5511910075450','5585991143501')
   OR is_group=1
   OR chat_id = COALESCE((SELECT value FROM app_settings WHERE key='internal_team_group_jid'),'')
   OR contact_phone IN (
@@ -75,10 +65,6 @@ log() { echo "[$(ts)] $*" >> "$LOG"; }
 
 export PATH="/root/.nvm/versions/node/v20.20.2/bin:$PATH"
 export HOME="/root"
-
-# Alerta de login do Claude (WhatsApp + email pro suporte e pro dono). Ver scripts/alerta-login.sh.
-# shellcheck source=alerta-login.sh
-. "$WORKER_DIR/scripts/alerta-login.sh"
 
 log "agent-runner started (pid $$, claude $($CLAUDE_BIN --version 2>/dev/null | head -1))"
 
@@ -128,7 +114,6 @@ while true; do
     echo "{\"ts\":\"$(ts)\",\"count\":$PENDING2,\"ids\":\"$MSG_IDS\",\"model\":\"$CLAUDE_MODEL\",\"words\":$WORD_COUNT}" >> "$TRIGGER_LOG"
     log "spawning claude -p ($PENDING2 pending, ids=$MSG_IDS, model=$CLAUDE_MODEL, words=$WORD_COUNT)"
     cd "$WORKER_DIR"
-    RUN_OUT=$(mktemp /tmp/agent-run.XXXXXX)
     timeout "$RUN_TIMEOUT" "$CLAUDE_BIN" -p \
       --model "$CLAUDE_MODEL" \
       --strict-mcp-config \
@@ -137,21 +122,11 @@ while true; do
 
 REGRA DE LATÊNCIA (crítica): tente responder em até 30s no caso simples. Se sentir que vai demorar mais (processar áudio longo, ler muito histórico, gerar documento, fazer várias chamadas externas), MANDE PRIMEIRO via wapi.sh um ack curto tipo 'só um minutinho, tô olhando aqui' ou 'me dá X min, tô fazendo', MARQUE IMEDIATAMENTE a msg como processed_by_agent=1 (UPDATE messages SET processed_by_agent=1 WHERE id=...) e SÓ DEPOIS faça o trabalho e mande a resposta final. Isso evita que o agent-runner re-spawne você processando a mesma msg em loop quando o trabalho passa de 5min. Não faça trabalho além do necessário pra responder.
 
-Whitelist (sem pedir confirmação): o dono e a equipe deste servidor (AGENT_WHITELIST: $WL_TEXTO), o suporte técnico e a equipe autorizada. Seja conciso. Termine quando todas estiverem processadas." \
+Whitelist (sem pedir confirmação): Jefferson 5511910075450, Vinicius 5585991143501, equipe autorizada. Seja conciso. Termine quando todas estiverem processadas." \
       < /dev/null \
-      > "$RUN_OUT" 2>&1
+      >> "$LOG" 2>&1
     EC=$?
-    cat "$RUN_OUT" >> "$LOG"
     log "claude -p finished exit=$EC"
-    if [ "$EC" != "0" ] && grep -qiE "$AUTH_RE" "$RUN_OUT"; then
-      rm -f "$RUN_OUT"
-      log "falha de autenticação do Claude: alerta + espera 60s"
-      auth_fail "$PENDING2" "$MSG_IDS"
-      sleep 60
-      continue
-    fi
-    rm -f "$RUN_OUT"
-    [ "$EC" = "0" ] && auth_ok
 
     # Fail-safe contra loop infinito: se o claude -p timou (exit=124), assume
     # que ele provavelmente ja mandou resposta (5min e tempo suficiente pra

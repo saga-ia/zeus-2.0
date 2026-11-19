@@ -51,8 +51,8 @@ principal() {
   command -v tmux >/dev/null || { apt-get update -qq </dev/null; apt-get install -y -qq tmux </dev/null; }
   echo "==> Abrindo o instalador. Se a conexão cair, entre de novo e rode:  tmux attach -t zeus"
   sleep 2
-  # tmux recusa stdin vindo de /dev/tty: usa o terminal real (o mesmo do stderr)
-  if [ -t 2 ]; then exec tmux new-session -A -s zeus "bash /opt/zeus-2.0/instalador/instalar.sh $FORM; exec bash" 0<&2
+  # tmux recusa stdin vindo de /dev/tty: usa o terminal real (o mesmo do stderr); já dentro de um tmux, roda direto
+  if [ -t 2 ] && ! printenv TMUX >/dev/null; then exec tmux new-session -A -s zeus "bash /opt/zeus-2.0/instalador/instalar.sh $FORM; exec bash" 0<&2
   else exec bash /opt/zeus-2.0/instalador/instalar.sh $FORM </dev/tty; fi
 }
 principal "$@"
@@ -149,8 +149,8 @@ principal() {
   command -v tmux >/dev/null || { apt-get update -qq </dev/null; apt-get install -y -qq tmux </dev/null; }
   echo "==> Abrindo o instalador. Se a conexão cair, entre de novo e rode:  tmux attach -t zeus"
   sleep 2
-  # tmux recusa stdin vindo de /dev/tty: usa o terminal real (o mesmo do stderr)
-  if [ -t 2 ]; then exec tmux new-session -A -s zeus "bash /opt/zeus-2.0/instalador/instalar.sh $FORM; exec bash" 0<&2
+  # tmux recusa stdin vindo de /dev/tty: usa o terminal real (o mesmo do stderr); já dentro de um tmux, roda direto
+  if [ -t 2 ] && ! printenv TMUX >/dev/null; then exec tmux new-session -A -s zeus "bash /opt/zeus-2.0/instalador/instalar.sh $FORM; exec bash" 0<&2
   else exec bash /opt/zeus-2.0/instalador/instalar.sh $FORM </dev/tty; fi
 }
 principal "$@"

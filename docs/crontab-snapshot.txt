@@ -13,7 +13,6 @@
 # Board Academy (Farias) — pausa 22h BRT / ativa 5h BRT
 #0 1 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh pause >> /opt/jeff-worker/logs/board-schedule.log 2>&1
 #0 8 * * * /opt/jeff-worker/scripts/board-campaign-schedule.sh activate >> /opt/jeff-worker/logs/board-schedule.log 2>&1
-
 # Refresh proativo OAuth Claude CLI (evita 401 que mata o Zeus)
 */30 * * * * /opt/jeff-worker/scripts/claude-token-refresh.sh >> /opt/jeff-worker/logs/claude-token-refresh.log 2>&1
 # Healthcheck do agent-runner (alerta WhatsApp em transicao OK<->DOWN)
@@ -31,3 +30,8 @@
 30 5 * * * /opt/jeff-worker/scripts/server-map.sh >> /opt/jeff-worker/logs/server-map.log 2>&1
 # Relatório diário Farias Souza — 21h BRT (02h CEST)
 # DESATIVADO 2026-10-10 Jeff pediu: 0 2 * * * /opt/jeff-worker/scripts/farias-daily-report.sh >> /opt/jeff-worker/logs/farias-daily-report.log 2>&1
+CRON_TZ=America/Sao_Paulo
+0 15 * * * /opt/jeff-worker/scripts/vini-oracao-perdao.sh >> /opt/jeff-worker/logs/vini-oracao-perdao.cron.log 2>&1
+CRON_TZ=America/Sao_Paulo
+30 15-22 * * * /opt/jeff-worker/scripts/vini-oracao-followup.sh >> /opt/jeff-worker/logs/vini-oracao-perdao.cron.log 2>&1
+0 16-23 * * * /opt/jeff-worker/scripts/vini-oracao-followup.sh >> /opt/jeff-worker/logs/vini-oracao-perdao.cron.log 2>&1

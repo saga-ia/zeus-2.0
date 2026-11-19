@@ -69,6 +69,56 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 app.get('/health', (req, res) => res.json({ ok: true, service: 'jeff-mapadocloser', ts: Date.now() }));
 
+// Injeta barra de navegação anterior/próximo nas fichas do mapa gerado
+function injectNavigation(html) {
+  if (!html.includes('class="ficha"')) return html;
+  const nav = `
+<style>
+.ficha{display:none!important}
+.ficha.nav-active{display:block!important}
+#nav-closer{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;gap:12px;align-items:center;z-index:9999;
+  background:rgba(10,10,11,.94);border:1px solid #C9A227;
+  border-radius:999px;padding:10px 22px;backdrop-filter:blur(10px);
+  box-shadow:0 4px 24px rgba(0,0,0,.7)
+}
+#nav-closer button{
+  background:#C9A227;color:#0A0A0B;border:none;border-radius:6px;
+  padding:9px 20px;font-weight:700;cursor:pointer;font-size:14px;letter-spacing:.03em
+}
+#nav-closer button:disabled{opacity:.3;cursor:default}
+#nav-counter{color:#F2EDE2;font-size:13px;min-width:72px;text-align:center;font-family:monospace}
+</style>
+<div id="nav-closer">
+  <button id="nav-prev">&#8592; Anterior</button>
+  <span id="nav-counter"></span>
+  <button id="nav-next">Pr&#243;ximo &#8594;</button>
+</div>
+<script>
+(function(){
+  var fichas=Array.from(document.querySelectorAll('.ficha'));
+  if(!fichas.length)return;
+  var cur=0;
+  function show(i){
+    fichas.forEach(function(f,j){f.classList.toggle('nav-active',j===i);});
+    document.getElementById('nav-counter').textContent=(i+1)+' / '+fichas.length;
+    document.getElementById('nav-prev').disabled=i===0;
+    document.getElementById('nav-next').disabled=i===fichas.length-1;
+    window.scrollTo(0,0);
+  }
+  document.getElementById('nav-prev').addEventListener('click',function(){if(cur>0){cur--;show(cur);}});
+  document.getElementById('nav-next').addEventListener('click',function(){if(cur<fichas.length-1){cur++;show(cur);}});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowLeft'&&cur>0){cur--;show(cur);}
+    if(e.key==='ArrowRight'&&cur<fichas.length-1){cur++;show(cur);}
+  });
+  show(0);
+})();
+</script>`;
+  return html.replace(/<\/body>/i, nav + '</body>');
+}
+
 // Root: se tem mapa pronto do evento ativo mais recente, serve ele. Senao, menu de eventos.
 app.get('/', (req, res) => {
   const latest = db.prepare(`
@@ -77,12 +127,18 @@ app.get('/', (req, res) => {
     WHERE a.status='pronto' AND e.status='ativo'
     ORDER BY a.updated_at DESC LIMIT 1
   `).get();
-  if (latest?.result_html) return res.type('html').send(latest.result_html);
+  if (latest?.result_html) return res.type('html').send(injectNavigation(latest.result_html));
   // Se não tem mapa pronto, mostra o menu de eventos
   const events = db.prepare(`SELECT id, name, event_date, theme, status, sheet_url,
      datetime(created_at,'unixepoch','-3 hours') AS created_brt
      FROM events ORDER BY created_at DESC`).all();
   res.type('html').send(renderAdmin(events));
+});
+
+// Dossie legado (formato com abas e navegador SPIN)
+app.get('/closer', (req, res) => {
+  if (fs.existsSync(LEGACY_HTML)) return res.sendFile(LEGACY_HTML);
+  res.status(404).send('arquivo nao encontrado');
 });
 
 // ------- Admin (cadastro de eventos) -------
@@ -180,7 +236,7 @@ app.get('/admin/events/:id/mapa', (req, res) => {
   if (a.status === 'erro') {
     return res.type('html').send(layout('Mapa · erro', `<div class="wrap"><header><div><div class="crumb"><a href="/admin/events/${ev.id}">&larr; evento</a></div><h1>Erro na analise</h1></div></header><div class="card"><pre style="white-space:pre-wrap;color:var(--danger)">${escapeHtml(a.error || 'erro sem detalhe')}</pre><form method="post" action="/admin/events/${ev.id}/analyze" style="margin-top:16px"><button type="submit">Tentar de novo</button></form></div></div>`));
   }
-  return res.type('html').send(a.result_html || '<h1>mapa vazio</h1>');
+  return res.type('html').send(injectNavigation(a.result_html || '<h1>mapa vazio</h1>'));
 });
 
 function updateProgress(analysisId, current, total, message) {

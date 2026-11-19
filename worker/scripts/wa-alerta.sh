@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Alerta de WhatsApp pro Jeff e o Vinicius quando um número cai ou precisa de QR (+ email, ver no fim).
+# Alerta de WhatsApp pro Jeff e o Vinicius quando um número cai ou precisa de QR.
 # Tenta pelo Zeus (whatsapp-worker :3002); se ele estiver fora (é justamente ele que caiu), manda pelo
 # jeff-wa-relay (:3030). Tokens lidos dos .env na hora, nunca impressos.
 # Uso: wa-alerta.sh <chave> "<texto>"
@@ -43,49 +43,5 @@ if [ -z "$enviado" ]; then
   [ $ok = 1 ] && enviado="relay"
 fi
 
-# Email (2026-11-17): o WhatsApp não serve de canal quando é ele que caiu.
-#  - Zeus deslogado (zeus-logout/zeus-qr): email SEMPRE pro suporte e pro cliente, que tem o celular pra ler o QR.
-#  - Outros alertas: email pro suporte só se o WhatsApp não saiu.
-# Cliente, domínio e emails: mesmos dados do alerta de login (CLAUDE.md do servidor; ALERTA_* no .env sobrescreve).
-WORKER_DIR=/opt/jeff-worker; LOG_DIR=/opt/jeff-worker/logs
-# shellcheck source=alerta-login.sh
-. /opt/jeff-worker/scripts/alerta-login.sh
-SUPORTE_EMAIL="$ALERTA_SUPORTE_EMAIL"
-CLIENTE_EMAILS="$ALERTA_EMAILS"           # suporte + dono
-CENTRAL_URL="https://$ALERTA_DOMINIO"
-mail() { # assunto corpo destinos...
-  local out; out=$(timeout 60 python3 /opt/jeff-worker/scripts/email-alerta.py "$@" 2>&1) && { log "[$CHAVE] email: $out"; return 0; }
-  log "[$CHAVE] email falhou: $out"; return 1
-}
-quando=$(TZ=America/Sao_Paulo date '+%d/%m/%Y às %H:%M')
-case "$CHAVE" in
-  zeus-logout|zeus-qr)
-    mail "WhatsApp do Zeus $ALERTA_CLIENTE desconectado: é preciso ler o QR novamente" "Olá,
-
-O WhatsApp do Zeus foi desconectado pelo próprio WhatsApp em $quando (horário de Brasília). Enquanto não for conectado de novo, o Zeus não recebe nem responde mensagens.
-
-O QUE FAZER (leva 1 minuto, com o celular do número do Zeus em mãos):
-1. Abra a Central: $CENTRAL_URL
-2. Vá em Conectores > WhatsApp e clique para mostrar o QR.
-3. No celular do Zeus, abra o WhatsApp > Configurações > Aparelhos conectados > Conectar um aparelho e leia o QR.
-4. Pronto. As mensagens que chegarem a partir daí são respondidas normalmente.
-
-Dica: se isso estiver se repetindo, confira em Aparelhos conectados se não há aparelhos sobrando e evite remover o aparelho \"Zeus\" da lista. Deixe também o celular do Zeus com internet.
-
-Se precisar de ajuda, chame o suporte da Alpha Digital no WhatsApp.
-
-Detalhe técnico: $TEXTO
-
-Zeus (aviso automático)" $CLIENTE_EMAILS && enviado="${enviado:+$enviado+}email"
-    ;;
-  *)
-    if [ -z "$enviado" ]; then
-      mail "[ALERTA ZEUS $ALERTA_DOMINIO] $CHAVE" "$TEXTO
-
-($quando BRT; WhatsApp do Zeus e relay fora, por isso veio por email. Log: $LOG)" $SUPORTE_EMAIL && enviado="email"
-    fi
-    ;;
-esac
-
 if [ -n "$enviado" ]; then touch "$ARQ"; log "[$CHAVE] enviado via $enviado: $TEXTO"
-else log "[$CHAVE] FALHOU (zeus, relay e email): $TEXTO"; exit 1; fi
+else log "[$CHAVE] FALHOU (zeus e relay fora): $TEXTO"; exit 1; fi

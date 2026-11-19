@@ -147,4 +147,4 @@ async function admin(req, res, r, h) {
   return null;
 }
 
-module.exports = { rota, registrar, ultima, admin };
+module.exports = { rota, registrar, ultima, admin, clienteDoToken };

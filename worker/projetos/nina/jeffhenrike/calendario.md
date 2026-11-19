@@ -1,15 +1,15 @@
 # Calendário — próximos 7 dias (@jeffhenrike)
 
-Gerado na revisão semanal de 02/11/2026. Base: PARAR carrossel no slot 17h01 (3ª semana confirmando alcance fraco, reduzir pra 2x na semana em vez de diário), MANTER imagem 10h01, DOBRAR imagem já cumprido (2:1), TESTAR tema prova social/indicação (2x, substitui o quote-card que não rodou 3 semanas).
+Gerado na revisão semanal de 16/11/2026. Base: calendário anterior (10 a 16/11) teve execução zero — 0 de 7 dias publicados conforme plano, só 1 post solto fora do tema. Prioridade desta semana é retomar a cadência mínima (1 post/dia) no formato que já comprovou alcance (imagem), antes de qualquer teste novo de formato.
 
 | Dia | Tema | Gancho | Formato | Função | Métrica que decide |
 |---|---|---|---|---|---|
-| Ter 03/11 | Evento cheio x oferta que não vendeu | "A SALA ENCHEU E A OFERTA NÃO VENDEU? O PROBLEMA NÃO FOI O ANÚNCIO." | Imagem (10h) | Atração | Alcance ≥ 605 (mediana imagem) |
-| Qua 04/11 | Prova social por indicação — TESTE #1 | Frase no estilo "Vinte seguidores engajados, três clientes do mesmo círculo..." aplicada a um caso novo | Imagem (10h) | Atração/autoridade | Alcance ≥ 1.200 confirma |
-| Qui 05/11 | Público largo x ICP (retomada) | "PÚBLICO GRANDE DO TAMANHO ERRADO AINDA É TAMANHO ERRADO." | Imagem (10h) | Atração | Alcance ≥ 605 |
-| Sex 06/11 | Oferta e desconto | "DESCONTO NÃO SALVA OFERTA FRACA. SÓ ATRASA O DIAGNÓSTICO." | Imagem (14h) | Atração | Alcance ≥ 605 |
-| Sáb 07/11 | Carrossel reduzido (1/2 da semana) — passo a passo de diagnóstico de evento | "7 PASSOS PRA MONTAR 90 DIAS DE CONTEÚDO EM UMA TARDE" repetir estrutura listicle que teve o maior score_mil da semana (4,37/mil) | Carrossel | Salvamento/compartilhamento | Compart/mil > 0 confirma o padrão |
-| Dom 08/11 | Prova social por indicação — TESTE #2 | Variação do mesmo ângulo de indicação/círculo fechado, caso ou número diferente | Imagem (10h) | Atração/autoridade | Alcance ≥ 1.200 confirma |
-| Seg 09/11 | CTA lead magnet (filtro de lead antes da call) | "Comenta CRITÉRIO que eu te mando como eu filtro lead antes de chamar pra call." | Imagem com CTA de palavra-chave | Conversão (DM) | N de comentários com a palavra-chave |
+| Ter 17/11 | Lead qualificado x lead barato | "LEAD BARATO NÃO EXISTE. EXISTE LEAD SEM CRITÉRIO." | Imagem (10h) | Atração | Alcance ≥ 529 (mediana imagem) |
+| Qua 18/11 | Oferta no pico de energia, não no fim | "OFERTA NO FIM É OFERTA PRA CADEIRA VAZIA." | Imagem (10h) | Atração | Alcance ≥ 529 |
+| Qui 19/11 | Proposta simples vence proposta longa (callback ao post de maior alcance da semana, 1.516) | "PROPOSTA DE DOZE PÁGINAS NÃO FECHA MAIS RÁPIDO QUE UMA DE UMA." | Imagem (10h) | Atração | Alcance ≥ 529 |
+| Sex 20/11 | Consistência é mensagem, não frequência | "CONSISTÊNCIA NÃO É POSTAR TODO DIA. É REPETIR A MESMA IDEIA." | Imagem (10h) | Atração | Alcance ≥ 529 |
+| Sáb 21/11 | Carrossel caso de transformação — retomada do teste (1x só, não 2x, pra não repetir meta não cumprida) | Caso novo no estilo "ELE CORTOU 60% DOS CLIENTES E DOBROU O LUCRO" | Carrossel (17h) | Salvamento | score_mil ≥ 2 confirma |
+| Dom 22/11 | Critério de cliente (corte, não volume) | "CORTAR CLIENTE ERRADO NÃO É PERDA. É LUCRO QUE SOBRA." | Imagem (10h) | Atração | Alcance ≥ 529 |
+| Seg 23/11 | CTA lead magnet — 3ª tentativa, mesmo CTA que nunca rodou | "Comenta CRITÉRIO que eu te mando como eu filtro lead antes de chamar pra call." | Imagem com CTA de palavra-chave (10h) | Conversão (DM) | N de comentários com a palavra-chave |
 
-Carrossel cai pra 1x esta semana (era diário) — testar se reduzir a frequência do slot de 17h mantém o único ganho real do formato (o listicle com compartilhamento) sem seguir carregando a mediana de alcance pra baixo. Se a próxima revisão mostrar outro carrossel fora desse dia, é falha de execução, não decisão nova.
+Regra desta semana: o que decide se a revisão de 23/11 é boa não é alcance nem score_mil — é quantos dos 7 dias saíram publicados como planejado. Se de novo ficar abaixo de 5 de 7, o problema a resolver na próxima revisão é operação (quem publica, em que horário, com que lembrete), não mais formato ou tema.

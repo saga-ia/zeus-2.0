@@ -465,6 +465,6 @@
   "cwd": "/opt/jeff-apps/jeff-voz",
   "script": "/opt/jeff-apps/jeff-voz/servidor.py",
   "exec_mode": "fork_mode",
-  "instances": null
+  "instances": 1
  }
 ]
