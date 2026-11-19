@@ -3,12 +3,13 @@
 #
 #   bash /root/zeus-2.0/instalador/publicar.sh "o que mudou nesta versão"
 #
-# 1. copia a produção (/opt/jeff-*) pro repositório, com segredos mascarados (docs/atualizar-snapshot.sh)
-#    e faz o commit;  --sem-producao  pula esta parte e publica o repositório como está
+# Sai SEMPRE do ramo main (/root/zeus-2.0), que é a versão validada dos clientes. Não copia mais a produção do Jeff:
+# novidades testadas no Zeus do Jeff (ramo jeff) entram no main uma a uma com instalador/promover.sh.
+# 1. confere que está no main, sem nada pendente e em dia com o GitHub
 # 2. monta o pacote limpo (lib/pacote.py): só o produto, sem nada que é só do Jeff (regras no modelos/fora.txt);
 #    se aparecer nome de cliente do Jeff fora das pendências conhecidas, NÃO publica
-# 3. registra a versão no painel. Nenhum cliente recebe nada até você aprovar em
-#    https://zeus-instalacao.jefersonhenrike.com/admin/versoes (por cliente ou pra todos)
+# 3. registra a versão no painel e envia o main e a marcação zeus-vN pro GitHub. Nenhum cliente recebe nada até
+#    alguém aprovar em https://zeus-instalacao.jefersonhenrike.com/admin/versoes (por cliente ou pra todos)
 set -euo pipefail
 REPO=/root/zeus-2.0
 APP=/opt/jeff-apps/zeus-instalacao
@@ -16,21 +17,24 @@ DIRV="$APP/data/versoes"
 ARQV="$APP/data/versoes.json"
 PAINEL=https://zeus-instalacao.jefersonhenrike.com/admin/versoes
 
-PRODUCAO=1
-[ "${1:-}" = --sem-producao ] && { PRODUCAO=0; shift; }
+[ "${1:-}" = --sem-producao ] && shift   # aceito por compatibilidade: agora nunca copia a produção
+case "${1:-}" in --*) echo "Opção desconhecida: $1 (a cópia da produção do Jeff foi tirada daqui; use promover.sh)"; exit 1 ;; esac
 NOTAS="${1:-}"
-[ -n "$NOTAS" ] || { echo 'Uso: publicar.sh [--sem-producao] "o que mudou nesta versão"'; exit 1; }
+[ -n "$NOTAS" ] || { echo 'Uso: publicar.sh "o que mudou nesta versão"'; exit 1; }
 cd "$REPO"
 exec 9>/tmp/zeus-publicar.lock
 flock -n 9 || { echo "Já tem uma publicação rodando."; exit 1; }
 
-if [ "$PRODUCAO" = 1 ]; then
-  echo "==> Copiando a produção pro repositório (segredos mascarados)..."
-  bash docs/atualizar-snapshot.sh            # sincroniza, mascara, gera modelos e faz git add (trava se achar chave)
-fi
+RAMO="$(git rev-parse --abbrev-ref HEAD)"
+[ "$RAMO" = main ] || { echo "RECUSADO: publicar só sai do ramo main (versão validada dos clientes); aqui é '$RAMO'."; exit 1; }
 if [ -n "$(git status --porcelain)" ]; then
-  git add -A
-  git commit -q -m "publicação: $NOTAS"
+  echo "RECUSADO: há mudanças sem commit em $REPO. Faça o commit (ou desfaça) antes de publicar:"; git status --short | head -20; exit 1
+fi
+echo "==> Conferindo o GitHub..."
+git fetch -q origin main
+if ! git merge-base --is-ancestor origin/main HEAD; then
+  echo "O GitHub tem mudanças no main que não estão aqui. Trazendo (git pull --ff-only)..."
+  git pull -q --ff-only origin main || { echo "RECUSADO: o main daqui e o do GitHub divergiram. Resolva antes de publicar."; exit 1; }
 fi
 COMMIT="$(git rev-parse HEAD)"
 
@@ -71,6 +75,7 @@ with open(os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600),'w') as f: json.d
 os.replace(tmp,arq)
 PY
 git tag -f "zeus-v$V" "$COMMIT" >/dev/null
+git push -q origin main "zeus-v$V" 2>/dev/null || echo "aviso: não consegui enviar o main/zeus-v$V pro GitHub agora (rode: git push origin main --tags)"
 
 # guarda os 6 pacotes mais novos e qualquer um que algum cliente ainda use ou tenha aprovado
 python3 -I - "$DIRV" "$APP/data/clientes-zeus.json" <<'PY'

@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 # Atualiza o snapshot do Zeus 2.0 a partir da produção, mascara segredos e (com --push) envia pro GitHub.
-# Uso: docs/atualizar-snapshot.sh [--push]
+# Uso: bash /root/zeus-2.0-jeff/docs/atualizar-snapshot.sh [--push]   (só no ramo jeff)
 # Sem --push só sincroniza, mascara e mostra o resumo; nada sai do servidor.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Duas versões no mesmo repositório (19/11/2026):
+#   main = versão VALIDADA dos clientes (instalador e atualizações saem só dela) -> pasta /root/zeus-2.0
+#   jeff = cópia do Zeus que o Jeff usa e onde as novidades são testadas        -> pasta /root/zeus-2.0-jeff
+# Esta cópia da produção só pode cair no ramo jeff: no main ela apagava correções feitas só pros clientes (aconteceu na v12).
+RAMO="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$RAMO" != "jeff" ]; then
+  echo "RECUSADO: a cópia da produção do Jeff só vai pro ramo jeff (aqui é '$RAMO')." >&2
+  echo "Use:  bash /root/zeus-2.0-jeff/docs/atualizar-snapshot.sh [--push]" >&2
+  exit 1
+fi
 EXC=docs/rsync-exclude.txt
 
 sync() { mkdir -p "$2"; rsync -a --delete --exclude-from="$EXC" "$1" "$2"; }
@@ -67,7 +77,7 @@ if git diff --cached -U0 | grep -E '^\+' | grep -qE '(EAA[A-Za-z0-9]{40,}|IGAA[A
 fi
 git diff --cached --stat | tail -1
 if [ "${1:-}" = "--push" ]; then
-  git commit -q -m "snapshot $(date +%Y-%m-%d): produção atualizada, segredos mascarados"
-  git push -q origin main
+  git commit -q -m "snapshot $(date +%Y-%m-%d %H:%M): produção do Jeff atualizada, segredos mascarados"
+  git push -q origin jeff
   echo "enviado: $(git log -1 --format='%h %s')"
 fi

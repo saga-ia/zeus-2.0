@@ -201,6 +201,7 @@ arquivo  instalador/lib/gerar_modelos.py
 arquivo  instalador/lib/gerar_extras.py
 arquivo  instalador/lib/pacote.py
 arquivo  instalador/publicar.sh
+arquivo  instalador/promover.sh
 mantem   worker/projetos/clientes/_modelo
 mantem   worker/projetos/clientes/README.md
 mantem   worker/projetos/nina/_modelo

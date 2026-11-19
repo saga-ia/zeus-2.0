@@ -96,23 +96,51 @@ O cliente começa **sem os seus dados**: conversas, contatos, CRMs, sessões e a
 
 O dono informado no instalador tem autorização total. Jeferson e Vinicius ficam na whitelist como suporte técnico e recebem os alertas de saúde.
 
-## Manutenção (no servidor do Jeff)
+## Duas versões: a do Jeff e a validada dos clientes
 
-`docs/atualizar-snapshot.sh --push` atualiza o repo e os modelos do instalador (`gerar-modelos.sh`). Os modelos não guardam nenhum valor secreto, só os nomes das chaves e placeholders.
+O mesmo repositório (GitHub saga-ia/zeus-2.0) tem dois ramos, cada um numa pasta do servidor do Jeff:
+
+| Ramo | Pasta | O que é |
+|---|---|---|
+| `main` | `/root/zeus-2.0` | **Versão validada dos clientes.** Instalador e atualizações saem só daqui. Tem correções que só os clientes têm (WhatsApp @lid, QR comercial, guardião...). |
+| `jeff` | `/root/zeus-2.0-jeff` | **Cópia do Zeus que o Jeff usa** (`/opt/jeff-*`), onde as novidades são testadas antes. Nunca vira pacote. |
+
+Fluxo de uma novidade:
+
+```bash
+# 1. o Jeff muda e testa no Zeus dele (/opt/jeff-*). Validou? Grava uma cópia no ramo jeff:
+bash /root/zeus-2.0-jeff/docs/atualizar-snapshot.sh --push
+
+# 2. vê o que mudou e leva SÓ a novidade pro main (aplica a diferença, não o arquivo inteiro):
+bash /root/zeus-2.0/instalador/promover.sh novidades
+bash /root/zeus-2.0/instalador/promover.sh ver <commit> apps/jeff-central/jarvis.js
+bash /root/zeus-2.0/instalador/promover.sh aplicar <commit> apps/jeff-central/jarvis.js -m "Jarvis: o que mudou"
+
+# 3. gera a versão dos clientes a partir do main:
+bash /root/zeus-2.0/instalador/publicar.sh "o que mudou"
+# 4. aprova em https://zeus-instalacao.jefersonhenrike.com/admin/versoes (por cliente ou pra todos)
+```
+
+Correção que só os clientes precisam (vista num servidor de cliente): faça direto no `main` (`/root/zeus-2.0`), commit, `git push`, e publique.
+
+Travas: a cópia da produção (`atualizar-snapshot.sh`) **recusa** rodar no `main`; o `publicar.sh` **recusa** sair de outro ramo,
+com mudança sem commit ou atrás do GitHub; o `promover.sh` exige escolher os caminhos e nunca promove a cópia-base
+(`jeff-base`, que é a diferença histórica inteira). Motivo: na v12 (15/11/2026) a cópia da produção caiu no main e apagou
+correções dos clientes; foi pega antes de ir pra alguém.
+
+Os modelos do instalador (`gerar-modelos.sh`) são gerados pela cópia da produção no ramo `jeff`; mudança neles também passa pelo `promover.sh`.
 
 ## Versões e atualizações dos clientes
-
-Melhorou alguma coisa no Zeus do servidor do Jeff e quer levar pros clientes:
 
 ```bash
 bash /root/zeus-2.0/instalador/publicar.sh "o que mudou"
 ```
 
-1. Copia a produção (`/opt/jeff-*`) pro repositório com os segredos mascarados e faz o commit (`--sem-producao` pula isso).
+1. Confere que está no `main`, sem nada pendente e em dia com o GitHub (traz o que faltar).
 2. Monta o pacote limpo (`lib/pacote.py`): só o produto. O que é só do Jeff fica de fora pelas regras do `modelos/fora.txt`
    (`app`, `site`, `host`, `cron`... e `arquivo` pra caminhos que nem saem do servidor). Se aparecer nome de cliente do Jeff
    (linhas `sigilo`) fora das pendências conhecidas (`aceito`), **não publica**.
-3. Registra a versão. **Nenhum cliente recebe nada** até você aprovar em
+3. Registra a versão e envia o `main` e a marcação `zeus-vN` pro GitHub. **Nenhum cliente recebe nada** até alguém aprovar em
    https://zeus-instalacao.jefersonhenrike.com/admin/versoes (por cliente ou pra todos).
 
 No servidor do cliente, `instalador/atualizar.sh` roda a cada 15 minutos. Quando há versão aprovada, ele baixa (confere o
